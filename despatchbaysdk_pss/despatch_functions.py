@@ -1,7 +1,6 @@
-import csv
 import json
 import os
-from despatchbaysdk.despatchbay_sdk import DespatchBaySDK
+from despatchbay_sdk import DespatchBaySDK
 from pprint import pprint
 import datetime
 
