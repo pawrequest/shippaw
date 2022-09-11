@@ -2,11 +2,26 @@
   "To Customer": [
     "Andrew Holding"
   ],
-  "Send Out Date": "13/09/2022",
+  "Send Out Date": "20220913",
   "Delivery Postcode": "HD6 2AJ",
   "Delivery Address": "10, Rydings Avenue\r\nBrighouse\r\nWest Yorshire",
   "Delivery Tel": "07833 011648",
   "Delivery Email": "agholding@hotmail.com",
-  "Boxes": "1",
-  "Reference Number": "29,823"
+  "Boxes": "1.00",
+  "Reference Number": "29823",
+  "Address First Line": "",
+  "Building Num": "0.00"
+},{
+  "To Customer": [
+    "United Reformed Church Yorkshire Synod"
+  ],
+  "Send Out Date": "20220913",
+  "Delivery Postcode": "LS27 9EP",
+  "Delivery Address": "Somerset House\r\nSt Paul's Street\r\nMorley",
+  "Delivery Tel": "07773 174909",
+  "Delivery Email": "website@urcyorkshire.org.uk",
+  "Boxes": "1.00",
+  "Reference Number": "39846",
+  "Address First Line": "",
+  "Building Num": "0.00"
 }]}

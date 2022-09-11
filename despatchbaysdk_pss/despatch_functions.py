@@ -1,6 +1,8 @@
 import json
 import os
-from despatchbay_sdk import DespatchBaySDK
+import sys
+
+from .despatchbay_sdk import DespatchBaySDK
 from pprint import pprint
 import datetime
 
@@ -23,23 +25,23 @@ hire_ref_field = 'Reference Number'
 shipment_id_field = 'Shipment_id'
 candidates_field = 'Candidates'
 building_num_field = 'Building Num'
-address_firstline_field = "Address First Line"
-searchterm_field = "Search Term"
-address_object_field = "Address Object"
+address_firstline_field = 'Address First Line'
+searchterm_field = 'Search Term'
+address_object_field = 'Address Object'
+
 
 def adjust_address(manifest):
     # list shipments, prompt and confirm selection
     for count, shipment in enumerate(manifest, start=1):
         print(count, "-", shipment[address_object_field].street)
     adjust = int(input('Which Shipment to Adjust? \n'))
-    print("Adjusting Shipment", adjust, ":", manifest[adjust - 1][customer_field], "-",
+    print("Adjusting Shipment", adjust, ":", manifest[adjust - 1][customer_field[0]], "-",
           manifest[adjust - 1][address_object_field].street, "\n")
 
     # get shipment and candidates for address replacement
     shipment = manifest[adjust - 1]
     candidates = client.get_address_keys_by_postcode(shipment[postcode_field])
     shipment[candidates_field] = candidates
-
 
     # display candidates and prompt selection
     for count, candidate in enumerate(candidates, start=1):
@@ -69,13 +71,13 @@ def get_address_objects(manifest):
         address = client.find_address(shipment[postcode_field], search_string)
         print("\nShipment", count, "of", shipment['Boxes'], "Boxes To", address.street, "On",
               shipment['Send Out Date'], "(Date tbc)")
-        manifest[count-1][address_object_field] = address
+        manifest[count - 1][address_object_field] = address
         return manifest
 
 
-def book_shipments(manifest): # takes dict_list of shipments
+def book_shipments(manifest):  # takes dict_list of shipments
     manifest = get_address_objects(manifest)
-    print ("MANIFEST ", manifest)
+    print("MANIFEST ", manifest)
     proceed = input('\nEnter "yes" to proceed, "exit" to exit, other to adjust an address \n')
     if str(proceed) == "yes":
         deliver_manifest(manifest)
@@ -91,7 +93,7 @@ def book_shipments(manifest): # takes dict_list of shipments
 
 def deliver_manifest(manifest):
     for shipment in manifest:
-        customer = shipment[customer_field]
+        customer = shipment[customer_field][0]
         phone = shipment[phone_field]
         email = shipment[email_field]
         address = shipment[address_object_field].street
@@ -158,7 +160,7 @@ def deliver_manifest(manifest):
 
 ## imports json manifest file, adds Shipment_id of incremenetal 01+ and hire reference, returns dict ##
 def manifest_from_json(jsonfile=jsonfile):
-    with open(jsonfile) as f:
+    with open(sys.argv[1]) as f:
         data = json.load(f)
         # Assign Shipment IDs from count and hire ref and parse address into num or firstline, populate manifest
         manifest = []
@@ -172,13 +174,10 @@ def manifest_from_json(jsonfile=jsonfile):
 def parse_shipment_address(crapstring, shipment):
     first_line = crapstring.split("\r")[0]
     first_block = (crapstring.split(" ")[0]).split(",")[0]
-    #first_char = first_block[0]
-
+    first_char = first_block[0]
     for char in first_line:
-        print (char)
-
-    if (first_char := first_block[0]).isnumeric() == True:
+        pass
+    if first_char.isnumeric():
         shipment[building_num_field] = first_block
     shipment[address_firstline_field] = first_line
     return shipment
-
