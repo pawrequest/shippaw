@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: despatchbay
+Version: 0.5.3
+Summary: Python SDK for the Despatch Bay API v15
+Home-page: https://test.pypi.org/project/despatchbay/
+Author: Despatch Bay
+Author-email: scott.keenan@thesalegroup.co.uk
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+# Despatch Bay Python SDK
+
+
