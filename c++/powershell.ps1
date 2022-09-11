@@ -21,17 +21,19 @@ $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field
 $filter.FieldName = "ShipMe"
 $filter.FieldValue = "TRUE"
 $filter.Qualifier = "True"
+"Records Selected :"
 $cursor.Filters.Apply()
 
 # Filter Columns
-$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Address First Line", "Building Num")
+$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Address First Line", "Building Num")
+"Columns Selected :"
 $cursor.Columns.Apply()
 
 # export settings 
 $settings = $export.Settings
 $settings.ExportFormat = [ExportFormat]::Json # export to JSON
 $settings.SkipConnectedItems = $false
-$settings.Canonical = $true
+#$settings.Canonical = $true
 #$settings.HeaderMode = [HeaderMode]::Columnlabel
 
 # export.ExportView("All Contacts-Report", $exportPath + "Contacts with labels as property names.json", $settings) #

@@ -7,3 +7,4 @@ from despatchbaysdk_pss.despatch_functions import *
 
 manifest = manifest_from_json()
 pprint(manifest)
+book_shipments(manifest)
