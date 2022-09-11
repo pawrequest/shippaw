@@ -11,7 +11,7 @@ api_key = os.getenv('DESPATCH_API_KEY')
 client = DespatchBaySDK(api_user=api_user, api_key=api_key)
 sender_id = '5536'
 logfile = 'AmDespOutputLog.csv'
-jsonfile = "AmShip.Json"
+# jsonfile = PROVIDED AT CLI
 
 # Commence Column Names
 customer_field = 'To Customer'
@@ -28,6 +28,31 @@ building_num_field = 'Building Num'
 address_firstline_field = 'Address First Line'
 searchterm_field = 'Search Term'
 address_object_field = 'Address Object'
+
+
+## imports json manifest file, adds Shipment_id of incremenetal 01+ and hire reference, returns dict ##
+def manifest_from_json(jsonfile=sys.argv[1]):  # calls parse-shipment
+    with open(jsonfile) as f:
+        data = json.load(f)
+        # Assign Shipment IDs from count and hire ref and parse address into num or firstline, populate manifest
+        manifest = []
+        for count, shipment in enumerate(data['Items'], start=1):
+            shipment[shipment_id_field] = str(count).zfill(2) + shipment[hire_ref_field]
+            shipment = parse_shipment_address(shipment[address_field], shipment)
+            manifest.append(shipment)
+        return manifest
+
+
+def parse_shipment_address(crapstring, shipment):
+    first_line = crapstring.split("\r")[0]
+    first_block = (crapstring.split(" ")[0]).split(",")[0]
+    first_char = first_block[0]
+    for char in first_line:
+        pass
+    if first_char.isnumeric():
+        shipment[building_num_field] = first_block
+    shipment[address_firstline_field] = first_line
+    return shipment
 
 
 def adjust_address(manifest):
@@ -156,28 +181,3 @@ def deliver_manifest(manifest):
         #     data = [datetime.datetime.now(), shipment_request.collection_date.date, shipment_request.client_reference,
         #             len(shipment_request.parcels), services[0].name, services[0].cost, label_string]
         #     writer.writerow(data)
-
-
-## imports json manifest file, adds Shipment_id of incremenetal 01+ and hire reference, returns dict ##
-def manifest_from_json(jsonfile=jsonfile):
-    with open(sys.argv[1]) as f:
-        data = json.load(f)
-        # Assign Shipment IDs from count and hire ref and parse address into num or firstline, populate manifest
-        manifest = []
-        for count, shipment in enumerate(data['Items'], start=1):
-            shipment[shipment_id_field] = str(count).zfill(2) + shipment[hire_ref_field]
-            shipment = parse_shipment_address(shipment[address_field], shipment)
-            manifest.append(shipment)
-        return manifest
-
-
-def parse_shipment_address(crapstring, shipment):
-    first_line = crapstring.split("\r")[0]
-    first_block = (crapstring.split(" ")[0]).split(",")[0]
-    first_char = first_block[0]
-    for char in first_line:
-        pass
-    if first_char.isnumeric():
-        shipment[building_num_field] = first_block
-    shipment[address_firstline_field] = first_line
-    return shipment
