@@ -1,0 +1,59 @@
+TODO:
+function to clean up commence addresses
+commence button tracks shipment
+
+100786-20173063
+
+copypasta notes
+
+In Python 3.8+, you can use assignment expressions (operator :=):
+if (x := 3) == 5:
+    print("that's odd")
+
+        # object = dates[date_choice]
+        # object_methods = [method_name for method_name in dir(object)
+        #                  if callable(getattr(object, method_name))]
+        # pprint(object_methods)
+
+
+backup / unused:
+# account_return = client.get_account()
+# print(account_return)
+
+# services_return = client.get_services() 
+# print(services_return)
+#
+# account_balance = client.get_account_balance()
+# print(account_balance)
+#
+# sender_addresses = client.get_sender_addresses()
+# print(sender_addresses)
+#
+# payment_methods = client.get_payment_methods()
+# print(payment_methods)
+
+# automatic_topup_enabled = client.enable_automatic_topups(
+#     '100', payment_methods[0].payment_method_id, payment_methods[0].payment_method_id)
+# print(automatic_topup_enabled)
+
+# automatic_topup_disabled = client.disable_automatic_topups()
+# print(automatic_topup_disabled)
+
+my_parcel_1 = client.parcel(
+    # weight=8,
+    # length=14,
+    # width=15,
+    # height=92,
+    contents='Radios',
+    value=500
+)
+
+# recipient_address = client.address(**address_1
+#     # company_name="Test",
+#     # country_code="GB",
+#     # county="Kent",
+#     # locality="Rainham",
+#     # postal_code="me88sp",
+#     # town_city="Gillingham",
+#     # street="752 Meresborough road"
+# )

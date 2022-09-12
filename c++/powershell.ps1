@@ -44,3 +44,6 @@ $cursor.ExportToFile($JsonPath, $settings)
 $db.Close()
 
 & $python_exe $python_script @JsonPath
+
+# sets ShipMe to False
+# wrties despatchbay references to commence
