@@ -6,6 +6,10 @@ commence button tracks shipment
 
 copypasta notes
 
+On top of the already provided answers there is a very nice pattern in Python that allows you to enumerate both keys and values of a dictionary.
+for i, (k, v) in enumerate(example_dict.items()):
+    print(i, k, v)
+
 In Python 3.8+, you can use assignment expressions (operator :=):
 if (x := 3) == 5:
     print("that's odd")

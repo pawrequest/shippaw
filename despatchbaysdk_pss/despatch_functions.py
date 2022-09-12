@@ -17,7 +17,7 @@ logfile = 'AmLog.json'
 # jsonfile = "files/Amship.json" # from args
 courier_id = 8
 
-# Commence Column Names
+# DB Column Names
 customer_field = 'To Customer'
 phone_field = 'Delivery Tel'
 email_field = 'Delivery Email'
@@ -41,20 +41,22 @@ date_object_field = "Date Object"
 ## receives and parses jsonfile, adds Shipment_id of incremenetal 01+ and hire reference ##
 
 def book_shipments(jsonfile):  # takes dict_list of shipments
-    manifest = manifest_from_json(jsonfile)
-    for count, shipment in enumerate(manifest):
-        if get_shipment_date_object(shipment) == "NO":
-            manifest.remove(shipment)
-            continue
-        shipment = get_shipment_date_object(shipment)
-        shipment = get_shipment_address_object(shipment)
-        manifest[count]=shipment
-        pprint (shipment)
-    # manifest = get_date_objects(manifest)
-    #manifest = get_shipment_address_object(manifest)
-    # print("MANIFEST:")
-    # for shipment in manifest:
-    #     print(shipment[customer_field],"|",shipment[boxes_field],"boxes to",shipment[address_object_field].street)
+    manifest = dict_manifest_from_json(jsonfile)
+    print("JSON imported", "with", len(manifest.keys()), "Shipments.")
+
+    for count, (key, shipment) in enumerate(manifest.items()):
+        print(count+1, "|", key,"|", shipment[send_date_field])
+        shipment = date_from_dict(shipment)
+
+        if shipment != 1:
+            shipment = get_shipment_address_object(shipment)
+            print("Date Object Exists - Adding Address Object", shipment[customer_field], "|", shipment[boxes_field],
+                  "boxes to", shipment[address_object_field].street)
+
+    for shipment in manifest:
+        if shipment == 1:
+            manifest.remove(manifest[count])
+
     proceed = input('\nEnter "yes" to proceed, "exit" to exit, other to adjust an address \n')
     if str(proceed) == "yes":
         deliver_manifest(manifest)
@@ -68,20 +70,18 @@ def book_shipments(jsonfile):  # takes dict_list of shipments
         print("EXITING")
 
 
-def manifest_from_json(jsonfile):  # calls parse-shipment
+def dict_manifest_from_json(jsonfile):  # calls parse-shipment
     with open(jsonfile) as f:
+        manifest = {}
         data = json.load(f)
         # Assign Shipment IDs from count and hire ref and parse address into num or firstline, populate manifest
-        manifest = []
-
         for count, shipment in enumerate(data['Items'], start=1):
             shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
             shipment[shipment_id_field] = str(count).zfill(2) + shipment[
                 hire_ref_field]  # make an id from count and hire-ref
             shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
             shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
-
-            manifest.append(shipment)
+            manifest[shipment[customer_field]] = shipment
         return manifest
 
 
@@ -100,68 +100,106 @@ def parse_address(crapstring, shipment):
     shipment[address_firstline_field] = first_line
     return shipment
 
-def get_shipment_date_object(shipment):
+
+
+def date_from_dict(shipment):
+    # print(shipment[customer_field], "Getting Dates")
     dates = client.get_available_collection_dates(sender, courier_id)
-    print(shipment[customer_field])
+
     send_date_reversed = shipment[send_date_field].split("/")
     send_date_reversed.reverse()
     shipment[send_date_field] = '-'.join(send_date_reversed)
+
     for count, date in enumerate(dates):
-        if date.date == send_date_reversed:  # if date object matches reversed string
+        if date.date == shipment[send_date_field]:  # if date object matches reversed string
             shipment[date_object_field] = date
             print("DATE MATCH - Shipment for", shipment[customer_field], "can be collected on",
                   shipment[date_object_field].date, "\n")
-            continue
-        else:  # no date match
-            print("\nNO COLLECTION ON SEND OUT DATE FOR", shipment[customer_field], "\n")
-            if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
-                for count, date in enumerate(dates):
-                    print(count + 1, date.date)
-                choice = int(input("\nChoose a Date\n")) - 1
-                shipment[date_object_field] = dates[choice]
+            return shipment
+    else:  # looped exhausted, no date match
+        print("\nNO COLLECTION AVAILABLE FOR", shipment[customer_field], "\n")
+        if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
+            for count, date in enumerate(dates):
+                print(count + 1, date.date)
+            choice = int(input("\nChoose a Date, 0 to cancel this shipment and move on to another\n"))
+            if choice == 0:
+                return 1
+            else:
+                shipment[date_object_field] = dates[choice-1]
                 print("Collection Date Is Now ", shipment[date_object_field].date, "\n")
-            print('Shipment Removed "' + shipment[customer_field] + '" .... Moving On\n')
-            return "NO"
-    return(shipment)
+                return shipment
+        else:
+            print("No alternative selected")
+            return 1
+#
+# def get_shipment_date_object(shipment):
+#     print(shipment[customer_field], "Getting Dates")
+#
+#     dates = client.get_available_collection_dates(sender, courier_id)
+#
+#     send_date_reversed = shipment[send_date_field].split("/")
+#     send_date_reversed.reverse()
+#     shipment[send_date_field] = '-'.join(send_date_reversed)
+#
+#     for count, date in enumerate(dates):
+#         if date.date == shipment[send_date_field]:  # if date object matches reversed string
+#             shipment[date_object_field] = date
+#             print("DATE MATCH - Shipment for", shipment[customer_field], "can be collected on",
+#                   shipment[date_object_field].date, "\n")
+#             return shipment
+#     else:  # no date match
+#         print("\nNO COLLECTION AVAILABLE FOR", shipment[customer_field], "\n")
+#         if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
+#             for count, date in enumerate(dates):
+#                 print(count + 1, date.date)
+#             choice = int(input("\nChoose a Date, 0 to cancel and move on\n") + 1)
+#             if choice == 0:
+#                 return 1
+#             else:
+#                 shipment[date_object_field] = dates[choice]
+#                 print("Collection Date Is Now ", shipment[date_object_field].date, "\n")
+#                 return shipment
+#         else:
+#             print("No alternative selected")
+#             return 1
 
 
-
-def get_manifest_date_objects(manifest):
-    dates = client.get_available_collection_dates(sender, courier_id)
-    for count, shipment in enumerate(manifest):
-        ship_count=count
-        print(len(manifest))
-        print ("Shipment",count+1, "-", shipment[customer_field])
-        # # reverse send date and get matching collection dates
-        send_date_reversed = shipment[send_date_field].split("/")
-        send_date_reversed.reverse()
-        shipment[send_date_field] = '-'.join(send_date_reversed)
-        for count, date in enumerate(dates):
-            if date.date == shipment[send_date_field]:  # if date object matches reversed string
-                shipment[date_object_field] = date
-                print("DATE MATCH - Shipment for", shipment[customer_field], "can be collected on",
-                      shipment[date_object_field].date,"\n")
-                manifest[ship_count] = shipment
-                pprint(manifest[ship_count])
-                break # out of the date loop, back to shipment loop
-
-        else: # no date match
-            print("\nNO COLLECTION ON SEND OUT DATE FOR", shipment[customer_field],"\n")
-            if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
-                for count, date in enumerate(dates):
-                        print(count+1, date.date)
-                choice = int(input("\nChoose a Date\n"))-1
-                shipment[date_object_field] = dates[choice]
-                manifest[ship_count]=shipment
-                print("shipcouint",ship_count+1)
-
-                print("Collection Date Is Now ", shipment[date_object_field].date,"\n")
-                #continue
-            manifest.remove(shipment)
-            print('Shipment Removed "'+shipment[customer_field]+'" .... Moving On\n')
-        print(shipment[customer_field])
-            #get_date_objects(manifest)
-    return (manifest)
+# def get_manifest_date_objects(manifest):
+#     dates = client.get_available_collection_dates(sender, courier_id)
+#     for count, shipment in enumerate(manifest):
+#         ship_count = count
+#         print(len(manifest))
+#         print("Shipment", count + 1, "-", shipment[customer_field])
+#         # # reverse send date and get matching collection dates
+#         send_date_reversed = shipment[send_date_field].split("/")
+#         send_date_reversed.reverse()
+#         shipment[send_date_field] = '-'.join(send_date_reversed)
+#         for count, date in enumerate(dates):
+#             if date.date == shipment[send_date_field]:  # if date object matches reversed string
+#                 shipment[date_object_field] = date
+#                 print("DATE MATCH - Shipment for", shipment[customer_field], "can be collected on",
+#                       shipment[date_object_field].date, "\n")
+#                 manifest[ship_count] = shipment
+#                 pprint(manifest[ship_count])
+#                 break  # out of the date loop, back to shipment loop
+#
+#         else:  # no date match
+#             print("\nNO COLLECTION ON SEND OUT DATE FOR", shipment[customer_field], "\n")
+#             if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
+#                 for count, date in enumerate(dates):
+#                     print(count + 1, date.date)
+#                 choice = int(input("\nChoose a Date\n")) - 1
+#                 shipment[date_object_field] = dates[choice]
+#                 manifest[ship_count] = shipment
+#                 print("shipcouint", ship_count + 1)
+#
+#                 print("Collection Date Is Now ", shipment[date_object_field].date, "\n")
+#                 # continue
+#             manifest.remove(shipment)
+#             print('Shipment Removed "' + shipment[customer_field] + '" .... Moving On\n')
+#         print(shipment[customer_field])
+#         # get_date_objects(manifest)
+#     return (manifest)
 
 
 def adjust_address(manifest):
@@ -211,6 +249,7 @@ def get_manifest_address_objects(manifest):
         manifest[count - 1][address_object_field] = address_object
     return manifest
 
+
 def get_shipment_address_object(shipment):
     # set search string - number or firstline
     if shipment[building_num_field] == 0: shipment[building_num_field] = False
@@ -222,6 +261,7 @@ def get_shipment_address_object(shipment):
     address_object = client.find_address(shipment[postcode_field], search_string)
     shipment[address_object_field] = address_object
     return shipment
+
 
 def deliver_manifest(manifest):
     for shipment in manifest:
@@ -276,7 +316,8 @@ def deliver_manifest(manifest):
             print(service.name, service.service_id, service.courier)
         dates = client.get_available_collection_dates(sender, services[0].courier.courier_id)
         print("\n" + customer + "'s shipment of", boxes, "parcels to: ",
-              recipient.recipient_address.street, "on", shipment[date_object_field].date, "BY", services[0].name, "COSTING:",
+              recipient.recipient_address.street, "on", shipment[date_object_field].date, "BY", services[0].name,
+              "COSTING:",
               services[0].cost)
         if input('Type "yes" to book and download pdf \n') != 'yes':
             print("exiting")
