@@ -36,6 +36,7 @@ searchterm_field = 'Search Term'
 address_object_field = 'Address Object'
 delivery_name_field = "Delivery Name"
 
+shipment_string = ""
 
 ## receives and parses jsonfile, adds Shipment_id of incremenetal 01+ and hire reference ##
 def manifest_from_json(jsonfile=sys.argv[1]):  # calls parse-shipment
@@ -87,7 +88,7 @@ def adjust_address(manifest):
     selection = int(input('Which candidate? ("0" to remove shipment from manifest, "exit" to exit) \n'))
     selected_key = candidates[selection - 1].key
     if selection == 0:
-        if input('Remove Shipment From manifest? "yes" to continue') == "yes":
+        if input('Remove Shipment From manifest? "yes" to continue\n') == "yes":
             manifest.remove(shipment)
     elif selection == "exit":
         exit()
@@ -96,28 +97,17 @@ def adjust_address(manifest):
         shipment[address_field] = client.get_address_by_key(selected_key)
         manifest[adjust - 1] = shipment
     print("MANIFEST ADJUSTED:\n")
-    pprint(manifest)
+    for count, shipment in enumerate(manifest, start=1):
+        print(count, "-", shipment[customer_field] +" - " + shipment[address_firstline_field])
     if input('Type "yes" to Adjust Another') == 'yes':
         adjust_address(manifest)
 
 
-def get_address_objects(manifest):
-    for count, shipment in enumerate(manifest, start=1):
-        # set search string - number or firstline
-        if shipment[building_num_field] == 0: shipment[building_num_field] = False
-        if not shipment[building_num_field]:
-            search_string = shipment[address_firstline_field]
-        else:
-            search_string = shipment[building_num_field]
-        # get object
-        address_result = client.find_address(shipment[postcode_field], search_string)
-        print("Shipment", count, "of", shipment['Boxes'], "Boxes To", address_result.street, "On",
-              shipment['Send Out Date'], "(Date tbc)")
-        manifest[count - 1][address_object_field] = address_result
-    return manifest
-
 
 def book_shipments(manifest):  # takes dict_list of shipments
+    # get services and dates
+
+
     manifest = get_address_objects(manifest)
 
     proceed = input('\nEnter "yes" to proceed, "exit" to exit, other to adjust an address \n')
@@ -131,6 +121,22 @@ def book_shipments(manifest):  # takes dict_list of shipments
         if input("\nType yes to deliver manifest \n") == 'yes':
             deliver_manifest(manifest)
         print("EXITING")
+
+
+def get_address_objects(manifest):
+    for count, shipment in enumerate(manifest, start=1):
+        # set search string - number or firstline
+        if shipment[building_num_field] == 0: shipment[building_num_field] = False
+        if not shipment[building_num_field]:
+            search_string = shipment[address_firstline_field]
+        else:
+            search_string = shipment[building_num_field]
+        # get object
+        address_result = client.find_address(shipment[postcode_field], search_string)
+        print("Shipment", count, "of", shipment['Boxes'], "Boxes:", shipment[customer_field]+",", address_result.street, "On",
+              shipment['Send Out Date'], "(Date tbc)")
+        manifest[count - 1][address_object_field] = address_result
+    return manifest
 
 
 def deliver_manifest(manifest):
