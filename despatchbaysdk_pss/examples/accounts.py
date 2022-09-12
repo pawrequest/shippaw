@@ -1,4 +1,4 @@
-from despatchbay.despatchbay_sdk import DespatchBaySDK
+from ..despatchbay_sdk import DespatchBaySDK
 
 client = DespatchBaySDK(api_user='<APIUSER>', api_key='<APIKEY>')
 

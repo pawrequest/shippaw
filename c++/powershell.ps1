@@ -3,7 +3,7 @@ using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
 # paths
-$exportPath = (Resolve-Path ($PSScriptRoot + "\..\files\AmShip.json"))
+$JsonPath = (Resolve-Path ($PSScriptRoot + "\..\files\AmShip.json"))
 $python_exe = "C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe"
 $python_script = "E:\Dev\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll" # the default path of the assembly when you used the installer
@@ -25,7 +25,7 @@ $filter.Qualifier = "True"
 $cursor.Filters.Apply()
 
 # Filter Columns
-$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Address First Line", "Building Num")
+$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Building Num", "Address First Line", "Delivery Contact")
 "Columns Selected :"
 $cursor.Columns.Apply()
 
@@ -38,9 +38,9 @@ $settings.SkipConnectedItems = $false
 
 # export.ExportView("All Contacts-Report", $exportPath + "Contacts with labels as property names.json", $settings) #
 # $export.ExportCategory("Contact", (Join-Path -Path $exportPath -ChildPath "contacts.xml")) # Join-Path is again being pedantic about PS but okay
-$cursor.ExportToFile($exportPath, $settings)
+$cursor.ExportToFile($JsonPath, $settings)
 
 #goodbye
 $db.Close()
 
-& $python_exe $python_script @exportPath
+& $python_exe $python_script @JsonPath
