@@ -54,23 +54,23 @@ def book_shipments(manifest):  # takes dict_list of shipments
     print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
     for count, (key, shipment) in enumerate(manifest.items()):
         print(count + 1, "|", shipment[customer_field], "|", shipment[send_date_field])
-    print("\nChecking Available Collection Dates\n")
+    print("\nChecking Available Collection Dates...")
 
     for key, shipment in list(manifest.items()):
         if not get_dates(shipment, dates):
-            print("SHIPMENT Cancelled", key, "DATE OBJECT FAILURE\n")
+            print("DATE OBJECT FAILURE - Shipment", key, "Cancelled:", shipment[customer_field])
             manifest.pop(key)
             continue
         if not get_address_object(shipment):
-            print("SHIPMENT Cancelled", key, "ADDRESS OBJECT FAILURE\n")
+            print("ADDRESS OBJECT FAILURE - Shipment", key, "Cancelled:", shipment[customer_field])
             manifest.pop(key)
             continue
-        print("Shipment", key, "Validated:", shipment[customer_field], "-", shipment[boxes_field],
-              "box(es) to -", shipment[address_object_field].street, " - On -", shipment[date_object_field].date)
+        print("Shipment", key, "Validated:", shipment[customer_field], "|", shipment[boxes_field],
+              "box(es) |", shipment[address_object_field].street, " | ", shipment[date_object_field].date)
 
     while True:
-        ui = input('\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
-        if ui.isnumeric() == True and int(ui) <= len(manifest.items())+1:
+        ui = input('\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
+        if ui.isnumeric() == True and int(ui) <= len(manifest.items()) + 1:
             shipment = manifest[int(ui)]
             shipment = adjust_address(shipment)
             manifest[int(ui)] = shipment
@@ -130,8 +130,8 @@ def get_dates(shipment, dates):
             shipment[date_object_field] = date
             return shipment
     else:  # looped exhausted, no date match
-        print("\nNO COLLECTION AVAILABLE FOR", shipment[customer_field])
-        if input("\nChoose New Date? (type yes, other to remove shipment and continue)\n") == "yes":
+        print("\n*** ERROR ***\n\t\t--- No Collections Available on",shipment[send_date_field],"for", shipment[customer_field],"---")
+        if input("\nChoose New Date? (type yes, anything else will remove shipment and continue)\n") == "yes":
             for count, date in enumerate(dates):
                 print(count + 1, date.date)
             choice = int(input("\nChoose a Date, 0 to cancel this shipment and move on to another\n"))
@@ -139,7 +139,7 @@ def get_dates(shipment, dates):
                 return None
             else:
                 shipment[date_object_field] = dates[choice - 1]
-                print("Collection Date Is Now ", shipment[date_object_field].date, "\n")
+                print("Collection Date For",shipment[customer_field],"Is Now ", shipment[date_object_field].date, "\n")
                 return shipment
         else:
             return None
@@ -178,7 +178,6 @@ def adjust_address(shipment):  # takes
         return shipment
 
 
-
 def submit_manifest(manifest):
     for key, shipment in manifest.items():
         create_shipment(shipment)
@@ -204,16 +203,20 @@ def submit_manifest(manifest):
             shipment['shipped'] = True
             # records despatch references
             # # format / print label ??
-            continue
         else:
-            print("Shipment",shipment[customer_field],"Skipped by User")
+            print("Shipment", shipment[customer_field], "Skipped by User")
             continue
-    else:
-        print("no shipments confirmed, restarting")
-        book_shipments(manifest)
     with open(logfile, 'w') as f:
         # json.dump(manifest, f)
         json.dumps(manifest, indent=4, sort_keys=True, default=str)
+    print("FINISHED")
+    print_manifest(manifest)
+    if input("Restart?") == "yes":
+        print("no shipments confirmed, restarting")
+        book_shipments(manifest)
+    else:
+        exit()
+
 
 
 def create_shipment(shipment):
@@ -265,4 +268,3 @@ def create_shipment(shipment):
     shipment_request.service_id = services[0].service_id
     shipment[shipping_service_id] = shipment_request.service_id
     shipment[service_object_field] = services[0]
-
