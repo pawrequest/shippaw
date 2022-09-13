@@ -2,10 +2,10 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-# paths
+# system-specific paths
 $JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
-$python_exe = "C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe"
-$python_script = "E:\Dev\AmDesp\main.py"
+$python_exe = "C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe"
+$python_script = "C:\Paul\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll" # the default path of the assembly when you used the installer
 
 # create objects
@@ -24,7 +24,7 @@ $filter.Qualifier = "True"
 $cursor.Filters.Apply()
 
 # Filter Columns
-$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Building Num", "Address First Line", "Delivery Contact")
+$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number",  "Delivery Contact")
 $cursor.Columns.Apply()
 
 # export settings 
@@ -42,7 +42,10 @@ $cursor.ExportToFile($JsonPath, $settings)
 $db.Close()
 
 # call python script supplying json
-& $python_exe $python_script @JsonPath
+powershell $python_exe $python_script @JsonPath
 
-# sets ShipMe to False
-# wrties despatchbay references to commence
+# TODO sets ShipMe to False
+# TODO wrties despatchbay references to commence
+
+# $powershell -executionpolicy ByPass -File .\Get-Printers.ps1
+ #>

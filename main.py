@@ -11,8 +11,9 @@ from despatchbaysdk_pss.despatch_functions import *
 # # jsonfile = sys.argv[0] # run from powershell supplying json
 # jsonfile = ".data/AmShip.json" # run from project json
 #
-# # collections = client.get_collections() # shows upcoming collections
+collections = client.get_collections() # shows upcoming collections
+pprint (collections)
 
-manifest = manifest_from_json(sys.argv[0])
-book_shipments(manifest)
+# manifest = manifest_from_json(sys.argv[0])
+# book_shipments(manifest)
 # print("gsdgsd", os.path.realpath(__file__))
