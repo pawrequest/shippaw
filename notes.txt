@@ -1,8 +1,37 @@
 TODO:
-function to clean up commence addresses
-commence button tracks shipment
+commence VBS:
+    functions:
+        clean up commence addresses
+    buttons:
+        Hires:
+            SEND:
+                book parcelforce,
+                db_printed=true
+                status = booked and packed
+                packed by=PR
+                packed = now
+                close and save
+            RETURN OK:
+                if not date returned:
+                    date returned = now
+                if not unpacked:
+                    unpacked = now
+                    unpacked by = PR
+                status = returned all ok
+                closed = true
+                close and save
+            PACK:
+                print Hiresheet
+                hiresheet printed = true
+                print invoice
+                invoice printed = true
+                save
+                close and save
 
-100786-20173063
+
+
+
+print(os.path.realpath(__file__))
 
 copypasta notes
 
