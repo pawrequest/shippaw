@@ -1,3 +1,10 @@
+import datetime
+
+print()
+
+
+'''
+
 def adjust_address(manifest): # takes dict oif dicts with customer name as keys
 #     print("Which Shipment To Adjust?\n")
 #     for count, (key, shipment) in enumerate(list(manifest.items())):
@@ -139,3 +146,5 @@ def adjust_address(manifest): # takes dict oif dicts with customer name as keys
 #     with open(logfile, 'w') as f:
 #         #json.dump(manifest, f)
 #         json.dumps(manifest, indent=4, sort_keys=True, default=str)
+
+'''

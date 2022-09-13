@@ -1,20 +1,24 @@
 # provide manifest json file at runtime
+import copy
 import json
 import os
 import sys
-
-from .despatchbay_sdk import DespatchBaySDK
+import datetime
+import pathlib
 from pprint import pprint
 import datetime
+from .despatchbay_sdk import DespatchBaySDK
 
+ROOT_DIR = pathlib.Path(__file__).parent.parent
+logfile = ROOT_DIR / 'data' / 'AmLog.json'
 api_user = os.getenv('DESPATCH_API_USER')
 api_key = os.getenv('DESPATCH_API_KEY')
 client = DespatchBaySDK(api_user=api_user, api_key=api_key)
 sender_id = '5536'
 sender = client.sender(address_id=sender_id)
 
-logfile = 'AmLog.json'
-# jsonfile = 'data/AmShip.json'
+logfile = ROOT_DIR / 'data' / 'AmLog.json'
+# jsonfile = ROOT_DIR / 'data' / 'AmShip.json'
 courier_id = 8
 
 # DB Column Names
@@ -37,8 +41,11 @@ delivery_contact_field = "Delivery Contact"
 desp_shipment_id_field = "Despatch ID"
 date_object_field = "Date Object"
 shipnum_field = 'Shipment Number'
-shipping_service_id = "Shipment Service ID"
+shipping_service_id_field = "Shipment Service ID"
 service_object_field = 'Shipping Service Object'
+shipping_service_name_field = "Shipping Service Name"
+shipping_cost_field = "Shipping Cost"
+is_shipped_field = "Is Shipped"
 
 
 def print_manifest(manifest):
@@ -53,7 +60,7 @@ def book_shipments(manifest):  # takes dict_list of shipments
 
     print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
     for count, (key, shipment) in enumerate(manifest.items()):
-        print(count + 1, "|", shipment[customer_field], "|", shipment[send_date_field])
+        print(key, "|", shipment[customer_field], "|", shipment[send_date_field])
     print("\nChecking Available Collection Dates...")
 
     for key, shipment in list(manifest.items()):
@@ -69,15 +76,14 @@ def book_shipments(manifest):  # takes dict_list of shipments
               "box(es) |", shipment[address_object_field].street, " | ", shipment[date_object_field].date)
 
     while True:
-        ui = input('\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
+        ui = input(
+            '\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
         if ui.isnumeric() == True and int(ui) <= len(manifest.items()) + 1:
             shipment = manifest[int(ui)]
             shipment = adjust_address(shipment)
             manifest[int(ui)] = shipment
-            print_manifest(manifest)
             if input("\nType yes to deliver manifest\n") == 'yes':
                 submit_manifest(manifest)
-                # deliver_manifest(manifest)
             else:
                 print("USER SAYS NO, RESTARTING")
                 continue
@@ -105,7 +111,6 @@ def manifest_from_json(jsonfile):
 
 
 def parse_address(crapstring, shipment):
-    # get num / firstline
     first_line = crapstring.split("\r")[0]
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
@@ -130,7 +135,8 @@ def get_dates(shipment, dates):
             shipment[date_object_field] = date
             return shipment
     else:  # looped exhausted, no date match
-        print("\n*** ERROR ***\n\t\t--- No Collections Available on",shipment[send_date_field],"for", shipment[customer_field],"---")
+        print("\n*** ERROR ***\n\t\t--- No Collections Available on", shipment[send_date_field], "for",
+              shipment[customer_field], "---")
         if input("\nChoose New Date? (type yes, anything else will remove shipment and continue)\n") == "yes":
             for count, date in enumerate(dates):
                 print(count + 1, date.date)
@@ -139,14 +145,14 @@ def get_dates(shipment, dates):
                 return None
             else:
                 shipment[date_object_field] = dates[choice - 1]
-                print("Collection Date For",shipment[customer_field],"Is Now ", shipment[date_object_field].date, "\n")
+                print("Collection Date For", shipment[customer_field], "Is Now ", shipment[date_object_field].date,
+                      "\n")
                 return shipment
         else:
             return None
 
 
 def get_address_object(shipment):
-    # set search string - number or firstline
     if shipment[building_num_field] == 0: shipment[building_num_field] = False
     if not shipment[building_num_field]:
         search_string = shipment[address_firstline_field]
@@ -182,10 +188,10 @@ def submit_manifest(manifest):
     for key, shipment in manifest.items():
         create_shipment(shipment)
         print("\n" + shipment[customer_field] + "'s shipment of", shipment[boxes_field], "parcels to: ",
-              shipment[address_object_field].street, "on", shipment[date_object_field].date, "BY",
-              shipment[service_object_field].name,
-              "COSTING:",
-              shipment[service_object_field].cost)
+              shipment[address_object_field].street, "|", shipment[date_object_field].date, "|",
+              shipment[shipping_service_name_field],
+              "| Price =",
+              shipment[shipping_cost_field])
         if input('Type "yes" to book, other to skip shipment\n') == 'yes':
             print("BOOKING SHIPMENT")
 
@@ -200,23 +206,35 @@ def submit_manifest(manifest):
             # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
             # label_pdf.download(label_string)
 
-            shipment['shipped'] = True
+            shipment[is_shipped_field] = True
+
             # records despatch references
             # # format / print label ??
+
+
+
         else:
             print("Shipment", shipment[customer_field], "Skipped by User")
+            shipment[is_shipped_field] = False
             continue
+
+    print("Datetime with out seconds", )
+
     with open(logfile, 'w') as f:
-        # json.dump(manifest, f)
-        json.dumps(manifest, indent=4, sort_keys=True, default=str)
+        new_out = {}
+        exclude_keys = [address_object_field, date_object_field, service_object_field]
+        for count, (key, shipment) in enumerate(manifest.items()):
+            output = {k: shipment[k] for k in set(list(shipment.keys())) - set(exclude_keys)}
+            date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
+            new_out.update({date_blah+" - "+shipment[customer_field]: output})
+            # print("dumped")
+        json.dump(new_out, f)
+
     print("FINISHED")
-    print_manifest(manifest)
     if input("Restart?") == "yes":
-        print("no shipments confirmed, restarting")
         book_shipments(manifest)
     else:
         exit()
-
 
 
 def create_shipment(shipment):
@@ -266,5 +284,6 @@ def create_shipment(shipment):
     )
     services = client.get_available_services(shipment_request)
     shipment_request.service_id = services[0].service_id
-    shipment[shipping_service_id] = shipment_request.service_id
-    shipment[service_object_field] = services[0]
+    shipment[shipping_service_name_field] = services[0].name
+    shipment[shipping_service_id_field] = shipment_request.service_id
+    shipment[shipping_cost_field] = services[0].cost

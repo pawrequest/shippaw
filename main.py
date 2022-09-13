@@ -15,3 +15,4 @@ from despatchbaysdk_pss.despatch_functions import *
 
 manifest = manifest_from_json(sys.argv[0])
 book_shipments(manifest)
+# print("gsdgsd", os.path.realpath(__file__))
