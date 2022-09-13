@@ -260,7 +260,7 @@ def submit_manifest(manifest):
             # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
             # label_pdf.download(label_string)
 
-            shipment[is_shipped_field] = True
+            shipment[is_shipped_field] = "Shipped"
 
             # records despatch references
             # # format / print label ??
@@ -269,7 +269,7 @@ def submit_manifest(manifest):
 
         else:
             print("Shipment", shipment[customer_field], "Skipped by User")
-            shipment[is_shipped_field] = False
+            shipment[is_shipped_field] = "Failed"
             continue
 
     with open(logfile, 'w') as f:
