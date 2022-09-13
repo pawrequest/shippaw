@@ -64,20 +64,23 @@ def book_shipments(manifest):  # takes dict_list of shipments
         print("Shipment",key, "Validated:", shipment[customer_field], "-", shipment[boxes_field],
               "box(es) to -", shipment[address_object_field].street, " - On -", shipment[date_object_field].date)
 
-
-
     while True:
         ui = input('\nEnter "yes" to proceed, "exit" to exit\t' + "Or enter a Shipment Number to change its Address \n")
         if ui.isnumeric()==True and int(ui) <= len(manifest.items()):
-            if adjust_shipment_address(manifest[int(ui)]):
-                if input("\nType yes to deliver manifest \n") == 'yes':
-                    deliver_manifest(manifest)
-                else:
-                    print("USER SAYS NO, RESTARTING")
-                    book_shipments(manifest)
+            shipment = manifest[int(ui)]
+            shipment = adjust_shipment_address(shipment)
+            manifest[int(ui)] = shipment
+            print_manifest(manifest)
+            if input("\nType yes to deliver manifest\n") == 'yes':
+                deliver_manifest(manifest)
             else:
-                print("ADJUST SAYS NO")
                 continue
+                # print("USER SAYS NO, RESTARTING")
+                # book_shipments(manifest)
+        if str(ui) == "yes":
+            deliver_manifest(manifest)
+        if str(ui) == "exit":
+            exit()
         else:
             print("BAD INPUT?")
             continue
@@ -87,26 +90,28 @@ def book_shipments(manifest):  # takes dict_list of shipments
 
 
 
-    proceed = input('Enter "yes" to proceed, "exit" to exit,' + "Or a number to change a Shipment's Address \n")
-    print(proceed)
-    if str(proceed) == "yes":
-        deliver_manifest(manifest)
-    elif str(proceed) == "exit":
-        print("EXITING")
-        exit()
-    else:
-        if proceed.isnumeric() == True:
-            if int(proceed) <= len(manifest.items()):
-                if adjust_shipment_address(manifest[int(proceed)]):
-                    if input("\nType yes to deliver manifest \n") == 'yes':
-                        deliver_manifest(manifest)
-                    else:
-                        print("USER SAYS NO, RESTARTING")
-                        book_shipments(manifest)
-                else:
-                    print("ADJUST SAYS NO")
-        else:
-            print("BAD INPUT?")
+    # proceed = input('Enter "yes" to proceed, "exit" to exit,' + "Or a number to change a Shipment's Address \n")
+    # print(proceed)
+    # if str(proceed) == "yes":
+    #     deliver_manifest(manifest)
+    # elif str(proceed) == "exit":
+    #     print("EXITING")
+    #     exit()
+    # else:
+    #     if proceed.isnumeric() == True:
+    #         if int(proceed) <= len(manifest.items()):
+    #             if adjust_shipment_address(manifest[int(proceed)]):
+    #                 print_manifest(manifest)
+    #                 if input("\nType yes to deliver manifest \n") == 'yes':
+    #
+    #                     deliver_manifest(manifest)
+    #                 else:
+    #                     print("USER SAYS NO, RESTARTING")
+    #                     book_shipments(manifest)
+    #             else:
+    #                 print("ADJUST SAYS NO")
+    #     else:
+    #         print("BAD INPUT?")
 
 
 def manifest_from_json(jsonfile):
@@ -196,19 +201,19 @@ def adjust_shipment_address(shipment):  # takes
         exit()
     else:
         shipment[address_object_field] = client.get_address_by_key(selected_key)
+        print ("New Address:",shipment[address_object_field].street)
         return shipment
 
 
 def deliver_manifest(manifest):
-    for shipment in manifest:
+    for key, shipment in manifest.items():
         customer = shipment[customer_field]
         phone = shipment[phone_field]
         email = shipment[email_field]
         address = shipment[address_object_field]
         boxes = int(float(shipment[boxes_field]))
-        send_date = shipment[send_date_field]
+        send_date = shipment[date_object_field]
         recipient_name = shipment[delivery_contact_field]
-        ###
         recipient_address = client.address(
             company_name=customer,
             country_code="GB",
@@ -247,45 +252,31 @@ def deliver_manifest(manifest):
             follow_shipment='true'
         )
 
+
         services = client.get_available_services(shipment_request)
-        for service in services:
-            print(service.name, service.service_id, service.courier)
-        dates = client.get_available_collection_dates(sender, services[0].courier.courier_id)
+        shipment_request.service_id = services[0].service_id
+
         print("\n" + customer + "'s shipment of", boxes, "parcels to: ",
               recipient.recipient_address.street, "on", shipment[date_object_field].date, "BY", services[0].name,
               "COSTING:",
               services[0].cost)
-        if input('Type "yes" to book and download pdf \n') != 'yes':
-            print("exiting")
-            pass
-        print("Checking Available Dates")
-        shipment_request.service_id = services[0].service_id
-        for count, date in enumerate(dates):
-            print(date.date)
-            if date.date == shipment[send_date_field]:
-                print("DATE MATCH, Booking service")
-                # shipment_request.collection_date = dates[count]
-                # added_shipment = client.add_shipment(shipment_request)
-                # pprint(added_shipment)
-                # shipment_return = client.get_shipment(added_shipment)
+        if input('Type "yes" to book, other to skip shipment\n') != 'yes':
+            print("FIRE AWAY")
 
-                # uncomment to book and get labels / tracking
-                # client.book_shipments([added_shipment])
-                # label_pdf = client.get_labels(shipment_return.shipment_document_id)
-                # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
-                # label_pdf.download(label_string)
+            # shipment_request.collection_date = shipment[date_object_field].date
+            # added_shipment = client.add_shipment(shipment_request)
+            # pprint(added_shipment)
+            # shipment_return = client.get_shipment(added_shipment)
 
-                shipment['shipped'] = True
-                # records despatch references
-                # # format / print label ??
-                pprint(shipment)
-                shipment
-                continue
+            # uncomment to book and get labels / tracking
+            # client.book_shipments([added_shipment])
+            # label_pdf = client.get_labels(shipment_return.shipment_document_id)
+            # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
+            # label_pdf.download(label_string)
 
-        else:
-            print("NO DATES MATCH, passing to next shipment")
-            pprint(shipment)
-            manifest[shipment] = shipment
+            shipment['shipped'] = True
+            # records despatch references
+            # # format / print label ??
             continue
 
     with open(logfile, 'w') as f:
