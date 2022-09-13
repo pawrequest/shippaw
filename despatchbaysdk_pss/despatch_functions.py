@@ -260,8 +260,8 @@ def deliver_manifest(manifest):
               recipient.recipient_address.street, "on", shipment[date_object_field].date, "BY", services[0].name,
               "COSTING:",
               services[0].cost)
-        if input('Type "yes" to book, other to skip shipment\n') != 'yes':
-            print("FIRE AWAY")
+        if input('Type "yes" to book, other to skip shipment\n') == 'yes':
+            print("BOOKING SHIPMENT")
 
             # shipment_request.collection_date = shipment[date_object_field].date
             # added_shipment = client.add_shipment(shipment_request)
@@ -278,6 +278,11 @@ def deliver_manifest(manifest):
             # records despatch references
             # # format / print label ??
             continue
-
+        else:
+            continue
+    else:
+        print("no shipments confirmed, restarting")
+        book_shipments(manifest)
     with open(logfile, 'w') as f:
-        json.dump(manifest, f)
+        #json.dump(manifest, f)
+        json.dumps(manifest, indent=4, sort_keys=True, default=str)
