@@ -7,6 +7,7 @@ commence button tracks shipment
 copypasta notes
 
 On top of the already provided answers there is a very nice pattern in Python that allows you to enumerate both keys and values of a dictionary.
+
 for i, (k, v) in enumerate(example_dict.items()):
     print(i, k, v)
 
@@ -61,3 +62,64 @@ my_parcel_1 = client.parcel(
 #     # town_city="Gillingham",
 #     # street="752 Meresborough road"
 # )
+
+
+def adjust_address(manifest): # takes dict oif dicts with customer name as keys
+#     print("Which Shipment To Adjust?\n")
+#     for count, (key, shipment) in enumerate(list(manifest.items())):
+#         print(count + 1, shipment[customer_field], shipment[date_object_field].date, "To:", shipment[address_object_field].street)
+#     # adjust_input = input('\nSelect Shipment 1 - ' + str(len(manifest.items())) + '. Enter 0 to cancel shipment and move on, "exit" to exit \n')
+#
+#     while True:
+#         try:
+#             adjust = input('\nSelect Shipment 1 - ' + str(len(manifest.items())) + '. Enter 0 to cancel shipment and move on, "exit" to exit \n')
+#         except ValueError:
+#             print("Try A number")
+#             continue
+#         except adjust > len(manifest.items()):
+#             print("Too High")
+#             continue
+#         else:
+#             print("selectyed")
+#             break
+#     if adjust == 0:
+#         print("SHIPMENT Cancelled - ", manifest[adjust], "User Cancelled\n")
+#         return None
+#     if adjust == "exit":
+#         print("USER EXIT")
+#         exit()
+#     else:
+#         print("ADJUSTING")
+#         shipment = manifest[adjust]
+#         shipment = adjust_shipment_address(shipment)
+#         manifest[adjust] = shipment
+#
+#         print("NEW MANIFEST")
+#         for count, (key, shipment) in enumerate(list(manifest.items())):
+#             print(count + 1, shipment[customer_field], shipment[date_object_field].date, "To:", shipment[address_object_field].street)
+#         again_input = input("Adjust Another? yes to again")
+#         if again_input == "yes":
+#             adjust_address(manifest)
+#         return manifest
+
+#
+
+    # # display candidates and prompt selection
+    # for count, candidate in enumerate(candidates, start=1):
+    #     print("Candidate ", count, "|", candidate.address)
+    # selection = int(input('Which candidate? ("0" to remove shipment from manifest, "exit" to exit) \n'))
+    # selected_key = candidates[selection - 1].key
+    # if selection == 0:
+    #     if input('Remove Shipment From manifest? "yes" to continue\n') == "yes":
+    #         manifest.remove(shipment)
+    # elif selection == "exit":
+    #     exit()
+    # # apply cahnges
+    # else:
+    #     shipment[address_field] = client.get_address_by_key(selected_key)
+    #     manifest[adjust_input - 1] = shipment
+    # print("MANIFEST ADJUSTED:\n")
+    # for count, shipment in enumerate(manifest, start=1):
+    #     print(count, "|", shipment[customer_field], "|", shipment[address_firstline_field])
+    # if input('Type "yes" to Adjust Another') == 'yes':
+    #     adjust_address(manifest)
