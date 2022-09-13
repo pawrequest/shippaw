@@ -37,6 +37,8 @@ delivery_contact_field = "Delivery Contact"
 desp_shipment_id_field = "Despatch ID"
 date_object_field = "Date Object"
 shipnum_field = 'Shipment Number'
+shipping_service_id = "Shipment Service ID"
+service_object_field = 'Shipping Service Object'
 
 
 def print_manifest(manifest):
@@ -44,6 +46,8 @@ def print_manifest(manifest):
     for key, shipment in manifest.items():
         print(key, "|", shipment[customer_field], "|", shipment[send_date_field], "|",
               shipment[address_object_field].street)
+
+
 def book_shipments(manifest):  # takes dict_list of shipments
     dates = client.get_available_collection_dates(sender, courier_id)
 
@@ -57,28 +61,28 @@ def book_shipments(manifest):  # takes dict_list of shipments
             print("SHIPMENT Cancelled", key, "DATE OBJECT FAILURE\n")
             manifest.pop(key)
             continue
-        if not get_shipment_address_object(shipment):
+        if not get_address_object(shipment):
             print("SHIPMENT Cancelled", key, "ADDRESS OBJECT FAILURE\n")
             manifest.pop(key)
             continue
-        print("Shipment",key, "Validated:", shipment[customer_field], "-", shipment[boxes_field],
+        print("Shipment", key, "Validated:", shipment[customer_field], "-", shipment[boxes_field],
               "box(es) to -", shipment[address_object_field].street, " - On -", shipment[date_object_field].date)
 
     while True:
-        ui = input('\nEnter "yes" to proceed, "exit" to exit\t' + "Or enter a Shipment Number to change its Address \n")
-        if ui.isnumeric()==True and int(ui) <= len(manifest.items()):
+        ui = input('\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
+        if ui.isnumeric() == True and int(ui) <= len(manifest.items())+1:
             shipment = manifest[int(ui)]
-            shipment = adjust_shipment_address(shipment)
+            shipment = adjust_address(shipment)
             manifest[int(ui)] = shipment
             print_manifest(manifest)
             if input("\nType yes to deliver manifest\n") == 'yes':
-                deliver_manifest(manifest)
+                submit_manifest(manifest)
+                # deliver_manifest(manifest)
             else:
+                print("USER SAYS NO, RESTARTING")
                 continue
-                # print("USER SAYS NO, RESTARTING")
-                # book_shipments(manifest)
         if str(ui) == "yes":
-            deliver_manifest(manifest)
+            submit_manifest(manifest)
         if str(ui) == "exit":
             exit()
         else:
@@ -86,39 +90,10 @@ def book_shipments(manifest):  # takes dict_list of shipments
             continue
 
 
-
-
-
-
-    # proceed = input('Enter "yes" to proceed, "exit" to exit,' + "Or a number to change a Shipment's Address \n")
-    # print(proceed)
-    # if str(proceed) == "yes":
-    #     deliver_manifest(manifest)
-    # elif str(proceed) == "exit":
-    #     print("EXITING")
-    #     exit()
-    # else:
-    #     if proceed.isnumeric() == True:
-    #         if int(proceed) <= len(manifest.items()):
-    #             if adjust_shipment_address(manifest[int(proceed)]):
-    #                 print_manifest(manifest)
-    #                 if input("\nType yes to deliver manifest \n") == 'yes':
-    #
-    #                     deliver_manifest(manifest)
-    #                 else:
-    #                     print("USER SAYS NO, RESTARTING")
-    #                     book_shipments(manifest)
-    #             else:
-    #                 print("ADJUST SAYS NO")
-    #     else:
-    #         print("BAD INPUT?")
-
-
 def manifest_from_json(jsonfile):
     with open(sys.argv[1]) as f:
         manifest = {}
         manifest_data = json.load(f)
-        # Assign Shipment IDs from count and hire ref and parse address into num or firstline, populate manifest
         for count, shipment in enumerate(manifest_data['Items'], start=1):
             shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
             shipment[shipment_id_field] = str(count).zfill(2) + shipment[
@@ -170,7 +145,7 @@ def get_dates(shipment, dates):
             return None
 
 
-def get_shipment_address_object(shipment):
+def get_address_object(shipment):
     # set search string - number or firstline
     if shipment[building_num_field] == 0: shipment[building_num_field] = False
     if not shipment[building_num_field]:
@@ -183,14 +158,12 @@ def get_shipment_address_object(shipment):
     return shipment
 
 
-def adjust_shipment_address(shipment):  # takes
-    print("Adjust Shipping Address for:", shipment[customer_field]+"'s Shipment on", shipment[date_object_field].date,
+def adjust_address(shipment):  # takes
+    print("Adjust Shipping Address for:", shipment[customer_field] + "'s Shipment on", shipment[date_object_field].date,
           "\n")
     candidates = client.get_address_keys_by_postcode(shipment[postcode_field])
     for count, candidate in enumerate(candidates, start=1):
         print("Candidate", count, "|", candidate.address)
-
-
 
     selection = int(input('\nWhich candidate? ("0" to remove shipment from manifest, "exit" to exit) \n'))
     selected_key = candidates[selection - 1].key
@@ -201,65 +174,19 @@ def adjust_shipment_address(shipment):  # takes
         exit()
     else:
         shipment[address_object_field] = client.get_address_by_key(selected_key)
-        print ("New Address:",shipment[address_object_field].street)
+        print("New Address:", shipment[address_object_field].street)
         return shipment
 
 
-def deliver_manifest(manifest):
+
+def submit_manifest(manifest):
     for key, shipment in manifest.items():
-        customer = shipment[customer_field]
-        phone = shipment[phone_field]
-        email = shipment[email_field]
-        address = shipment[address_object_field]
-        boxes = int(float(shipment[boxes_field]))
-        send_date = shipment[date_object_field]
-        recipient_name = shipment[delivery_contact_field]
-        recipient_address = client.address(
-            company_name=customer,
-            country_code="GB",
-            county=address.county,
-            locality=address.locality,
-            postal_code=address.postal_code,
-            town_city=address.town_city,
-            street=address.street
-        )
-
-        recipient = client.recipient(
-            name=recipient_name,
-            telephone=phone,
-            email=email,
-            recipient_address=recipient_address
-
-        )
-        parcels = []
-        for x in range(boxes):
-            parcel = client.parcel(
-                contents="Radios",
-                value=500,
-                weight=6,
-                length=60,
-                width=40,
-                height=40,
-            )
-            parcels.append(parcel)
-
-        shipment_request = client.shipment_request(
-            parcels=parcels,
-            client_reference=customer,
-            collection_date=send_date,
-            sender_address=sender,
-            recipient_address=recipient,
-            follow_shipment='true'
-        )
-
-
-        services = client.get_available_services(shipment_request)
-        shipment_request.service_id = services[0].service_id
-
-        print("\n" + customer + "'s shipment of", boxes, "parcels to: ",
-              recipient.recipient_address.street, "on", shipment[date_object_field].date, "BY", services[0].name,
+        create_shipment(shipment)
+        print("\n" + shipment[customer_field] + "'s shipment of", shipment[boxes_field], "parcels to: ",
+              shipment[address_object_field].street, "on", shipment[date_object_field].date, "BY",
+              shipment[service_object_field].name,
               "COSTING:",
-              services[0].cost)
+              shipment[service_object_field].cost)
         if input('Type "yes" to book, other to skip shipment\n') == 'yes':
             print("BOOKING SHIPMENT")
 
@@ -279,10 +206,63 @@ def deliver_manifest(manifest):
             # # format / print label ??
             continue
         else:
+            print("Shipment",shipment[customer_field],"Skipped by User")
             continue
     else:
         print("no shipments confirmed, restarting")
         book_shipments(manifest)
     with open(logfile, 'w') as f:
-        #json.dump(manifest, f)
+        # json.dump(manifest, f)
         json.dumps(manifest, indent=4, sort_keys=True, default=str)
+
+
+def create_shipment(shipment):
+    customer = shipment[customer_field]
+    phone = shipment[phone_field]
+    email = shipment[email_field]
+    address = shipment[address_object_field]
+    boxes = int(float(shipment[boxes_field]))
+    send_date = shipment[date_object_field]
+    recipient_name = shipment[delivery_contact_field]
+    recipient_address = client.address(
+        company_name=customer,
+        country_code="GB",
+        county=address.county,
+        locality=address.locality,
+        postal_code=address.postal_code,
+        town_city=address.town_city,
+        street=address.street
+    )
+
+    recipient = client.recipient(
+        name=recipient_name,
+        telephone=phone,
+        email=email,
+        recipient_address=recipient_address
+
+    )
+    parcels = []
+    for x in range(boxes):
+        parcel = client.parcel(
+            contents="Radios",
+            value=500,
+            weight=6,
+            length=60,
+            width=40,
+            height=40,
+        )
+        parcels.append(parcel)
+
+    shipment_request = client.shipment_request(
+        parcels=parcels,
+        client_reference=customer,
+        collection_date=send_date,
+        sender_address=sender,
+        recipient_address=recipient,
+        follow_shipment='true'
+    )
+    services = client.get_available_services(shipment_request)
+    shipment_request.service_id = services[0].service_id
+    shipment[shipping_service_id] = shipment_request.service_id
+    shipment[service_object_field] = services[0]
+
