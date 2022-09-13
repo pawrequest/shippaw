@@ -1,6 +1,9 @@
 import sys
-
 from despatchbaysdk_pss.despatch_functions import *
+
+user_location = "admin"
+#user_location = "ryzen"
+
 
 # book_shipments(manifest_csv='Am_ship.csv')
 # book_shipments(manifest_from_json())
@@ -14,5 +17,5 @@ from despatchbaysdk_pss.despatch_functions import *
 # collections = client.get_collections() # shows upcoming collections
 # pprint (collections)
 
-manifest = manifest_from_json(sys.argv[0])
-book_shipments(manifest)
+# manifest = manifest_from_json(sys.argv[0])
+# book_shipments(manifest)

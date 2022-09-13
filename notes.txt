@@ -1,7 +1,18 @@
 TODO:
-commence VBS:
+
+ask user for dimensions or keep using placeholder?
+
+LEARN
+Make Installer
+powershell scripting
+
+QUERIES:
+DB - manual doesn't require parcel dimensions, API does.... how to avoid giving fake info?
+COMMENCE - merge / print as single action?
+
+COMMENCE SCRIPT:
     functions:
-        clean up commence addresses
+        clean up addresses
     buttons:
         Hires:
             SEND:

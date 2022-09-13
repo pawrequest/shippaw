@@ -8,15 +8,17 @@ import pathlib
 from pprint import pprint
 import datetime
 from .despatchbay_sdk import DespatchBaySDK
+from main import user_location
+
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
-logfile = ROOT_DIR / 'data' / 'AmLog.json'
+logfile = ROOT_DIR / 'data/AmLog.json'
 api_user = os.getenv('DESPATCH_API_USER')
 api_key = os.getenv('DESPATCH_API_KEY')
 client = DespatchBaySDK(api_user=api_user, api_key=api_key)
-sender_id = '5536'
-sender = client.sender(address_id=sender_id)
 
+sender_id = '5536' # should be env var?
+sender = client.sender(address_id=sender_id)
 logfile = ROOT_DIR / 'data' / 'AmLog.json'
 # jsonfile = ROOT_DIR / 'data' / 'AmShip.json'
 courier_id = 8
