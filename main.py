@@ -17,5 +17,5 @@ user_location = "admin"
 # collections = client.get_collections() # shows upcoming collections
 # pprint (collections)
 
-# manifest = manifest_from_json(sys.argv[0])
-# book_shipments(manifest)
+manifest = manifest_from_json()
+book_shipments(manifest)
