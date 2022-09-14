@@ -1,14 +1,14 @@
 Dim JsonPath; JsonPath = C:\paul\AmDesp\data\AmShip.json
 
-'create app, db, cur, filter'
+'create app, db, cur'
 Dim app : Set app = CreateObject("CmcLibNet.CommenceApp")
 Dim db : Set db = CreateObject("CmcLibNet.Database")
-Dim cur : set cur = db.GetCursor("Hire") ' specify category'
+Dim cur : set cur = db.GetCursor("Hire")
+MsgBox cur.RowCount & " items in Hire category."
+' create filter
 Dim filters : Set filters = cur.Filters
 ' Create a CTI filter (Connection-To-Item)
 Dim f : Set f = filters.Create(1, 0)
-
-' field
 f.FieldName = "ShipMe"
 f.FieldValue = "TRUE"
 f.Qualifier = "True"
@@ -27,8 +27,6 @@ MsgBox cur.ColumnCount & " columns were set in cursor"
 Dim exportEngine : Set exportEngine = CreateObject("CmcLibNet.Export")
 Dim settings : Set settings = exportEngine.Settings ' The Settings thingie is an object, so we have to use 'Set'
 settings.ExportFormat = 1 ' json format'
-
-
 cur.ExportToFile "C:\temp\sampleContactExport.json", settings
 
 

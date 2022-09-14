@@ -1,9 +1,5 @@
-import pathlib
 
-ROOT_DIR = pathlib.Path(__file__).parent.parent / 'gerbils'  # from despatchbaysdk which is location of despatch functions
-DATA_DIR = ROOT_DIR / 'data'
-
-pathlib.Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+Path("/my/directory").mkdir(parents=True, exist_ok=True)
 
 '''## temporarily removed expunging create shipment
 # def submit_manifest(manifest):
