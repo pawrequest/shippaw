@@ -8,23 +8,22 @@ import pathlib
 from pprint import pprint
 import datetime
 from .despatchbay_sdk import DespatchBaySDK
-# from main import user_location
+# # from main import user_location
 
-
-ROOT_DIR = pathlib.Path(__file__).parent.parent # from despatchbaysdk
-logfile = ROOT_DIR / 'data/AmLog.json'
-api_user = os.getenv('DESPATCH_API_USER')
-api_key = os.getenv('DESPATCH_API_KEY')
-client = DespatchBaySDK(api_user=api_user, api_key=api_key)
-
+API_USER = os.getenv('DESPATCH_API_USER')
+API_KEY = os.getenv('DESPATCH_API_KEY')
+ROOT_DIR = pathlib.Path(__file__).parent.parent # from despatchbaysdk which is location of despatch functions
+DATA_DIR = ROOT_DIR / 'data'
+LABEL_DIR = DATA_DIR / "Parcelforce Labels"
+pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True) # make the data dirs
+LOGFILE = DATA_DIR / 'AmLog.json'
 sender_id = '5536' # should be env var?
+client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
-logfile = ROOT_DIR / 'data' / 'AmLog.json'
+courier_id = 8 # parcelforce
+# jsonfile = DATA_DIR / 'AmShip.json' # from commence via sysargs at runtime
 
-# jsonfile = ROOT_DIR / 'data' / 'AmShip.json'
-courier_id = 8
-
-# DB Column Names
+# Commence Column Names
 customer_field = 'To Customer'
 phone_field = 'Delivery Tel'
 email_field = 'Delivery Email'
@@ -34,25 +33,27 @@ send_date_field = 'Send Out Date'
 postcode_field = 'Delivery Postcode'
 hire_ref_field = 'Reference Number'
 shipment_id_field = 'Shipment_id'
-candidates_field = 'Candidates'
+delivery_contact_field = "Delivery Contact"
+delivery_name_field = "Delivery Name"
+
+# Despatchbay object fields
+despatch_shipped_object_field = "Despatch Shipped Object"
+service_object_field = 'Shipping Service Object'
+date_object_field = "Date Object"
+address_object_field = 'Address Object'
+
+#  other fields
+is_shipped_field = "Is Shipped"
+added_shipment_field = "Despatch Added Shipment"
 building_num_field = 'Building Num'
 address_firstline_field = 'Address First Line'
 searchterm_field = 'Search Term'
-address_object_field = 'Address Object'
-delivery_name_field = "Delivery Name"
-delivery_contact_field = "Delivery Contact"
-desp_shipment_id_field = "Despatch ID"
-date_object_field = "Date Object"
 shipnum_field = 'Shipment Number'
 shipping_service_id_field = "Shipment Service ID"
-service_object_field = 'Shipping Service Object'
 shipping_service_name_field = "Shipping Service Name"
 shipping_cost_field = "Shipping Cost"
-is_shipped_field = "Is Shipped"
-
-#  other fields
-despatch_shipped_object_field = "Despatch Shipped Object"
-added_shipment_field = "Despatch Added Shipment"
+desp_shipment_id_field = "Despatch ID"
+candidates_field = 'Candidates'
 
 def print_manifest(manifest):
     print("\nMANIFEST:")
@@ -266,8 +267,10 @@ def submit_manifest(manifest):
             label_pdf = client.get_labels(shipment_return.shipment_document_id)
 
 
-            label_string = 'C:/paul/AmDesp/data/Parcelforce Labels/'+ shipment[customer_field] + "-" + shipment[date_object_field].date + '.pdf'
-            label_pdf.download(label_string)
+            pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+
+            label_string = 'shipment[customer_field] + "-" + shipment[date_object_field].date + ".pdf"'
+            label_pdf.download(LABEL_DIR + label_string)
 
             shipment[is_shipped_field] = "Shipped"
             shipment['label_downloaded'] = True
@@ -284,7 +287,7 @@ def submit_manifest(manifest):
             shipment[is_shipped_field] = "Failed"
             continue
 
-    with open(logfile, 'w') as f:
+    with open(LOGFILE, 'w') as f:
         print("LOGGING")
         new_out = {}
         exclude_keys = [address_object_field, date_object_field, service_object_field]
