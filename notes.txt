@@ -2,6 +2,10 @@ TODO:
 
 ask user for dimensions or keep using placeholder?
 
+3RD PARTY HYTERA CODE:
+https://github.com/hexagonal-sun/hyrps
+https://github.com/2E0RPT
+
 LEARN
 Make Installer
 powershell scripting
