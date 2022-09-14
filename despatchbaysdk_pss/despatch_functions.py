@@ -85,7 +85,7 @@ def book_shipments(manifest):  # takes dict_list of shipments
     while True:
         ui = input(
             '\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
-        if ui.isnumeric() == True and int(ui) <= len(manifest.items()) + 1:
+        if ui.isnumeric() and int(ui) <= len(manifest.items()) + 1:
             shipment = manifest[int(ui)]
             shipment = adjust_address(shipment)
             manifest[int(ui)] = shipment
