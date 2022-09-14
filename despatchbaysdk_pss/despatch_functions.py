@@ -8,10 +8,10 @@ import pathlib
 from pprint import pprint
 import datetime
 from .despatchbay_sdk import DespatchBaySDK
-from main import user_location
+# from main import user_location
 
 
-ROOT_DIR = pathlib.Path(__file__).parent.parent
+ROOT_DIR = pathlib.Path(__file__).parent.parent # from despatchbaysdk
 logfile = ROOT_DIR / 'data/AmLog.json'
 api_user = os.getenv('DESPATCH_API_USER')
 api_key = os.getenv('DESPATCH_API_KEY')
@@ -20,6 +20,7 @@ client = DespatchBaySDK(api_user=api_user, api_key=api_key)
 sender_id = '5536' # should be env var?
 sender = client.sender(address_id=sender_id)
 logfile = ROOT_DIR / 'data' / 'AmLog.json'
+
 # jsonfile = ROOT_DIR / 'data' / 'AmShip.json'
 courier_id = 8
 
@@ -101,7 +102,7 @@ def book_shipments(manifest):  # takes dict_list of shipments
             continue
 
 
-def manifest_from_json(jsonfile):
+def manifest_from_json():
     with open(sys.argv[1]) as f:
         manifest = {}
         manifest_data = json.load(f)
@@ -257,12 +258,21 @@ def submit_manifest(manifest):
 
 
             # uncomment to book and get labels / tracking
-            # client.book_shipments([added_shipment])
-            # label_pdf = client.get_labels(shipment_return.shipment_document_id)
-            # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
-            # label_pdf.download(label_string)
+            client.book_shipments([added_shipment])
+            shipment_return = client.get_shipment(added_shipment)
+            pprint (shipment_return)
+
+
+            label_pdf = client.get_labels(shipment_return.shipment_document_id)
+
+
+            label_string = 'C:/paul/AmDesp/data/Parcelforce Labels/'+ shipment[customer_field] + "-" + shipment[date_object_field].date + '.pdf'
+            label_pdf.download(label_string)
 
             shipment[is_shipped_field] = "Shipped"
+            shipment['label_downloaded'] = True
+
+            shipment['shipment_return'] = shipment_return
 
             # records despatch references
             # # format / print label ??
@@ -282,7 +292,7 @@ def submit_manifest(manifest):
             output = {k: shipment[k] for k in set(list(shipment.keys())) - set(exclude_keys)}
             date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
             new_out.update({date_blah+" - "+str(shipment[is_shipped_field])+" - "+shipment[customer_field]: output})
-            # print("dumped")
+            print("dumped")
         json.dump(new_out, f)
 
     print("FINISHED")

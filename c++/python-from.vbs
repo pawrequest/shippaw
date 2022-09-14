@@ -17,4 +17,4 @@
 
 ' End Sub
 
-RetVal = Shell('C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe' & 'E:\Dev\Amherst_Despatch\commence scripts\python-from-vbs.py')
+RetVal = Shell('C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe' & 'C:\paul\AmDesp\c++\python-from-vbs.py')

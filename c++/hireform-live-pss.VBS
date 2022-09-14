@@ -10,7 +10,7 @@ DIM length, atpos
 ' and importantly, using the quantities of each item entered to build up the texty "Hire Sheet Text" field that is displayed on the hire
 ' sheet document
 Sub Form_OnSave
- 
+
   ' hstring holds the text description of the items hired in a hire record. It is built up piece by piece according to how many of
   ' each item has been hired. When complete, "hstring" is copied to the "Hire Sheet Text" field of the hire record
   Dim hstring
@@ -911,10 +911,19 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
     
     Case "CommandButton19"
-      RetVal = Shell("C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe" & "E:\Dev\Amherst_Despatch\commence scripts\python-from-vbs.py")
+      Dim app : Set app = CreateObject("CmcLibNet.CommenceApp")
+      MsgBox "Commence database name: " & app.Name ' this is a silly example of course
+      Dim db : Set db = CreateObject("CmcLibNet.Database")
+      Dim cur : set cur = db.GetCursor("Contact")
+
+
+      app.Close
+
 		
     End Select
 End Sub
+
+
 
 
 '****** start of functions
