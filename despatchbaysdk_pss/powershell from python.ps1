@@ -4,7 +4,7 @@ using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 $JsonPath = $($args[0])
 $python_exe = $($args[1])
 $python_script = $($args[2])
-$commence_wrapper = $($args[1])
+$commence_wrapper = $($args[3])
 
 $commence_wrapper
 

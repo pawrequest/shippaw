@@ -6,6 +6,8 @@ import subprocess
 
 parameters = [
     str(JSONFILE),
+    str(PYTHON_EXE),
+    str(PYTHON_MAIN_SCRIPT),
     str(COMMENCE_WRAPPER)
 ]
 
