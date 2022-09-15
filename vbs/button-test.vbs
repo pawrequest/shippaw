@@ -11,7 +11,7 @@ objShell.run(“powershell -noexit -file C:\paul\AmDesp\AmDespPowershellAmherstA
 
 ' working
 ' 		Case "CommandButton20"
-' ' 		    Dim objShell
+' 		    Dim objShell
 '             Set objShell = CreateObject("Wscript.shell")
 '             objShell.run("powershell -executionpolicy bypass -noexit -file c:\fso\helloworld.ps1 C:\paul\AmDesp\test.ps1")
 

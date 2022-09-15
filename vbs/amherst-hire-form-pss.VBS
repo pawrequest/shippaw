@@ -922,11 +922,11 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
-' 		    Dim objShell
             Set objShell = CreateObject("Wscript.shell")
-            objShell.run("powershell -executionpolicy bypass -noexit -file c:\fso\helloworld.ps1 C:\paul\AmDesp\test.ps1")
+            objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\paul\AmDesp\ps1 from vbs.ps1"),1,true
 
-
+'             Set WshShell = CreateObject("WScript.Shell")
+'             WshShell.Run("notepad " & WScript.ScriptFullName, 1, true)
 
 
 

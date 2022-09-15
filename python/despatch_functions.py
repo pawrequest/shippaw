@@ -8,8 +8,6 @@ import datetime
 RYZEN = False
 
 
-
-
 def print_manifest(manifest):
     print("\nMANIFEST:")
     for key, shipment in manifest.items():
@@ -18,7 +16,7 @@ def print_manifest(manifest):
 
 
 def process_manifest(manifest):  # takes dict_list of shipments
-    dates = client.get_available_collection_dates(sender, courier_id) # get dates
+    dates = client.get_available_collection_dates(sender, courier_id)  # get dates
 
     print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
     for count, (key, shipment) in enumerate(manifest.items()):
@@ -26,7 +24,7 @@ def process_manifest(manifest):  # takes dict_list of shipments
     print("\nChecking Available Collection Dates...")
 
     for key, shipment in list(manifest.items()):
-        if not get_dates(shipment, dates):
+        if not check_send_date(shipment, dates):
             print("DATE OBJECT FAILURE - Shipment", key, "Cancelled:", shipment[customer_field])
             manifest.pop(key)
             continue
@@ -62,7 +60,6 @@ def manifest_from_json():
     with open(JSONFILE) as f:
         manifest = {}
         manifest_data = json.load(f)
-        print("MANDATA",manifest_data)
         for count, shipment in enumerate(manifest_data['Items'], start=1):
             shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
             shipment[shipment_id_field] = str(count).zfill(2) + shipment[
@@ -70,18 +67,7 @@ def manifest_from_json():
             shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
             shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
             manifest[count] = shipment
-    print("MANI",manifest)
-    return manifest_data
-
-
-
-def get_commence(type="Hire"):
-    if type == "Hire":
-        # params =
-        pass
-    elif type =="Sale":
-        pass
-
+    return manifest
 
 
 
@@ -100,7 +86,7 @@ def parse_address(crapstring, shipment):
     return shipment
 
 
-def get_dates(shipment, dates):
+def check_send_date(shipment, dates):
     send_date_reversed = shipment[send_date_field].split("/")
     send_date_reversed.reverse()
     shipment[send_date_field] = '-'.join(send_date_reversed)
@@ -224,21 +210,19 @@ def submit_manifest(manifest):
             shipment[added_shipment_field] = added_shipment
             print("Added Shipment")
 
-
-            if input('"yes" to book shipment and get labels')==str("yes"):
+            if input('"yes" to book shipment and get labels') == str("yes"):
                 client.book_shipments([added_shipment])
                 shipment_return = client.get_shipment(added_shipment)
-                pprint (shipment_return)
+                pprint(shipment_return)
 
                 label_pdf = client.get_labels(shipment_return.shipment_document_id)
                 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
                 label_string = 'shipment[customer_field] + "-" + shipment[date_object_field].date + ".pdf"'
                 label_pdf.download(LABEL_DIR + label_string)
-                print("Lablel downloaded to",LABEL_DIR, label_string)
+                print("Lablel downloaded to", LABEL_DIR, label_string)
                 shipment['label_downloaded'] = True
                 shipment['shipment_return'] = shipment_return
             shipment[is_shipped_field] = "Shipped"
-
 
             # records despatch references
             # # format / print label ??
@@ -257,7 +241,8 @@ def submit_manifest(manifest):
         for count, (key, shipment) in enumerate(manifest.items()):
             output = {k: shipment[k] for k in set(list(shipment.keys())) - set(exclude_keys)}
             date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
-            new_out.update({date_blah+" - "+str(shipment[is_shipped_field])+" - "+shipment[customer_field]: output})
+            new_out.update(
+                {date_blah + " - " + str(shipment[is_shipped_field]) + " - " + shipment[customer_field]: output})
             print("dumped")
         json.dump(new_out, f)
 

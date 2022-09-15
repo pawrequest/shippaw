@@ -17,8 +17,8 @@ user_location = "ryzen"
 # collections = client.get_collections() # shows upcoming collections
 # pprint (collections)
 
-# manifest = manifest_from_json()
-# process_manifest(manifest)
+manifest = manifest_from_json()
+process_manifest(manifest)
 #
 # def clean_objects(manifest):
 #     for key, shipment in manifest:

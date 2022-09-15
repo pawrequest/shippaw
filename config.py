@@ -1,5 +1,5 @@
 import os, pathlib
-from despatchbaysdk_pss.despatchbay_sdk import DespatchBaySDK
+from python.despatchbay_sdk import DespatchBaySDK
 import sys
 
 RYZEN = True
