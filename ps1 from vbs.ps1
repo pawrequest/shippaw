@@ -2,17 +2,25 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-
-
+$LOC_ME = "ryzen"
 
 # system-specific paths
-$JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
-$python_exe = "C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe"
-$python_script = "C:\Paul\AmDesp\main.py"
-$commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll" # the default path of the assembly when you used the installer
+if ($LOC_ME = "ryzen") {
+    write "PS LOC = RYZEN"
+    $JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
+    $python_exe = "C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe"
+    $python_script = "E:\Dev\AmDesp\main.py"
+    $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+}
 
-# create objects
-# $cmc = New-Object -TypeName Vovin.CmcLibNet.CommenceApp
+elseif ($LOC_ME = "admin") {
+    write "PS LOC = ADMIN"
+    $JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
+    $python_exe = "C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe"
+    $python_script = "C:\Paul\AmDesp\main.py"
+    $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+}
+
 Add-Type -Path $commence_wrapper
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 $export = New-Object ExportEngine

@@ -922,8 +922,18 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
+		    Dim objShell, strHomeFolder
+
             Set objShell = CreateObject("Wscript.shell")
-            objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\paul\AmDesp\ps1 from vbs.ps1"),1,true
+            objShell.run("powershell -executionpolicy bypass -noexit -file ""E:\Dev\AmDesp\ps1 from vbs.ps1"""),1,true
+
+            strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%")
+            Msgbox strHomeFolder
+            ' Set objShell = CreateObject("Wscript.shell")
+'             objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\paul\AmDesp\ps1 from vbs.ps1"""),1,true
+'             strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%") & "AmDesp"
+'             strDataFolder = strHomeFolder & "data"
+'             Msgbox strDataFolder
 
 '             Set WshShell = CreateObject("WScript.Shell")
 '             WshShell.Run("notepad " & WScript.ScriptFullName, 1, true)
@@ -931,17 +941,6 @@ Sub Form_OnClick(ControlId)
 
 
 
- Dim objShell
-'             Set objShell = CreateObject(“Wscript.shell”)
-'             objShell.run(“powershell -noexit -file C:\paul\AmDesp\AmDespPowershellAmherstAdmin.ps1”)
-
-'       Dim app : Set app = CreateObject("CmcLibNet.CommenceApp")
-'       MsgBox "Commence database name: " & app.Name ' this is a silly example of course
-'       Dim db : Set db = CreateObject("CmcLibNet.Database")
-'       Dim cur : set cur = db.GetCursor("Contact")
-'
-'
-'       app.Close
 
 		
     End Select

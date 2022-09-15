@@ -26,3 +26,5 @@ process_manifest(manifest)
 
 # shipper = Shipment(manifest['Items'][0])
 # print("SHIPPER",shipper)
+
+# TODO: data in appdata folder
