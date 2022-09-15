@@ -23,9 +23,9 @@ sender = client.sender(address_id=sender_id)
 courier_id = 8 # parcelforce
 
 
-
-
 # Commence Column Names
+commence_field_hire_dict = {}
+commence_field_hire_dict = {}
 customer_field = 'To Customer'
 phone_field = 'Delivery Tel'
 email_field = 'Delivery Email'
@@ -56,6 +56,7 @@ shipping_service_name_field = "Shipping Service Name"
 shipping_cost_field = "Shipping Cost"
 desp_shipment_id_field = "Despatch ID"
 candidates_field = 'Candidates'
+
 
 is_sale = 1
 if is_sale:

@@ -8,7 +8,8 @@ parameters = [
     str(JSONFILE),
     str(PYTHON_EXE),
     str(PYTHON_MAIN_SCRIPT),
-    str(COMMENCE_WRAPPER)
+    str(COMMENCE_WRAPPER),
+
 ]
 
 ps = "E:\Dev\AmDesp\despatchbaysdk_pss\ps_test.ps1"
