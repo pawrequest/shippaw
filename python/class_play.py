@@ -22,4 +22,4 @@ class Shipment:
         self.shipping_service_id = 101
 
 
-# powershell -noexit -file C:\paul\AmDesp\python\ps_test.ps1
+# powershell -noexit -file C:\paul\AmDesp\python\test.ps1

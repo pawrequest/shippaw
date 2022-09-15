@@ -912,6 +912,7 @@ Sub Form_OnClick(ControlId)
 
 
         Case "CommandButton19"
+        ' book hire in all ok'
 			Form.Field("Unpacked By").Value = "PR"
 			Form.Field("Unpacked Date").Value = "today"
 			Form.Field("Unpacked Time").Value = "now"
@@ -919,6 +920,11 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 			Form.Field("Closed").Value = 1
 			Form.Save
+
+		Case "CommandButton20"
+' 		    Dim objShell
+            Set objShell = CreateObject("Wscript.shell")
+            objShell.run("powershell -executionpolicy bypass -noexit -file c:\fso\helloworld.ps1 C:\paul\AmDesp\test.ps1")
 
 
 

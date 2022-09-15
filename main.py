@@ -1,5 +1,5 @@
 import sys
-from despatchbaysdk_pss.despatch_functions import *
+from python.despatch_functions import *
 
 # user_location = "admin"
 user_location = "ryzen"
@@ -17,12 +17,12 @@ user_location = "ryzen"
 # collections = client.get_collections() # shows upcoming collections
 # pprint (collections)
 
-manifest = manifest_from_json()
+# manifest = manifest_from_json()
 # process_manifest(manifest)
 #
 # def clean_objects(manifest):
 #     for key, shipment in manifest:
 #         pprint (shipment)
 
-shipper = Shipment(manifest['Items'][0])
-print("SHIPPER",shipper)
+# shipper = Shipment(manifest['Items'][0])
+# print("SHIPPER",shipper)
