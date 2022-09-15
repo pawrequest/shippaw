@@ -933,7 +933,7 @@ class ShipmentReturn(Entity):
         """
         Makes a BookShipment request through the Despatch Bay API client.
         """
-        book_return = self.despatchbay_client.book_shipments([self.shipment_id])
+        book_return = self.despatchbay_client.process_manifest([self.shipment_id])
         if book_return:
             self.shipment_document_id = book_return[0].shipment_document_id
             self.collection_id = book_return[0].collection_id

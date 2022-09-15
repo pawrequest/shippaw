@@ -1,8 +1,8 @@
 import sys
 from despatchbaysdk_pss.despatch_functions import *
 
-user_location = "admin"
-#user_location = "ryzen"
+# user_location = "admin"
+user_location = "ryzen"
 
 
 # book_shipments(manifest_csv='Am_ship.csv')
@@ -18,4 +18,8 @@ user_location = "admin"
 # pprint (collections)
 
 manifest = manifest_from_json()
-book_shipments(manifest)
+process_manifest(manifest)
+
+def clean_objects(manifest):
+    for key, shipment in manifest:
+        pprint (shipment)

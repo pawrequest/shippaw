@@ -1,9 +1,23 @@
 import pathlib
+import subprocess, sys
+from pprint import pprint
 
-ROOT_DIR = pathlib.Path(__file__).parent.parent / 'gerbils'  # from despatchbaysdk which is location of despatch functions
+ROOT_DIR = pathlib.Path(__file__).parent.parent  # from despatchbaysdk which is location of despatch functions
 DATA_DIR = ROOT_DIR / 'data'
+pathlib.Path(DATA_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
+JSONFILE = DATA_DIR / 'AmShip.json'
+PYTHON_EXE = sys.executable
+PYTHON_SCRIPT = ROOT_DIR / 'main.py'
+COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 
-pathlib.Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+
+# making dirs if not there
+# import pathlib
+#
+# ROOT_DIR = pathlib.Path(__file__).parent.parent / 'gerbils'  # from despatchbaysdk which is location of despatch functions
+# DATA_DIR = ROOT_DIR / 'data'
+#
+# pathlib.Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 '''## temporarily removed expunging create shipment
 # def submit_manifest(manifest):
@@ -166,6 +180,7 @@ def get_manifest_address_objects(manifest):
         manifest[count - 1][address_object_field] = address_object
     return manifest
 
+
 #
 # def get_shipment_date_object(shipment):
 #     print(shipment[customer_field], "Getting Dates")
@@ -202,7 +217,6 @@ def get_manifest_address_objects(manifest):
 import datetime
 
 print()
-
 
 '''
 
