@@ -1,6 +1,14 @@
 TODO:
-
 ask user for dimensions or keep using placeholder?
+CLI functions:
+    check collections / labels
+    get / print labels
+    cancel collection / delete label
+    track shipments by customer / date / order
+
+
+
+
 
 3RD PARTY HYTERA CODE:
 https://github.com/hexagonal-sun/hyrps

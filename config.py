@@ -56,3 +56,7 @@ shipping_service_name_field = "Shipping Service Name"
 shipping_cost_field = "Shipping Cost"
 desp_shipment_id_field = "Despatch ID"
 candidates_field = 'Candidates'
+
+is_sale = 1
+if is_sale:
+    pass

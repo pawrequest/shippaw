@@ -847,7 +847,7 @@ Sub Form_OnClick(ControlId)
 		
 		Case "CommandButton11"
 			' this button inserts the description "Parcelforce" into the Send Method field
-      MsgBox ("Commence database name: ")'  & app.Name ' this is a silly example of course
+        MsgBox ("Commence database name: ")'  & app.Name ' this is a silly example of course
 			Form.Field("Send Method").Value = "Parcelforce / DB"
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Parcelforce/DB and we collect"
@@ -909,15 +909,33 @@ Sub Form_OnClick(ControlId)
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
-    
-    Case "CommandButton19"
-      Dim app : Set app = CreateObject("CmcLibNet.CommenceApp")
-      MsgBox "Commence database name: " & app.Name ' this is a silly example of course
-      Dim db : Set db = CreateObject("CmcLibNet.Database")
-      Dim cur : set cur = db.GetCursor("Contact")
 
 
-      app.Close
+        Case "CommandButton19"
+			Form.Field("Unpacked By").Value = "PR"
+			Form.Field("Unpacked Date").Value = "today"
+			Form.Field("Unpacked Time").Value = "now"
+			Form.Field("Status").Value = "Returned all OK"
+			Form.Field("Actual Return Date").Value = "today"
+			Form.Field("Closed").Value = 1
+			Form.Save
+
+
+
+
+
+
+ Dim objShell
+'             Set objShell = CreateObject(“Wscript.shell”)
+'             objShell.run(“powershell -noexit -file C:\paul\AmDesp\AmDespPowershellAmherstAdmin.ps1”)
+
+'       Dim app : Set app = CreateObject("CmcLibNet.CommenceApp")
+'       MsgBox "Commence database name: " & app.Name ' this is a silly example of course
+'       Dim db : Set db = CreateObject("CmcLibNet.Database")
+'       Dim cur : set cur = db.GetCursor("Contact")
+'
+'
+'       app.Close
 
 		
     End Select

@@ -9,6 +9,7 @@ RYZEN = True
 
 
 
+
 def print_manifest(manifest):
     print("\nMANIFEST:")
     for key, shipment in manifest.items():
