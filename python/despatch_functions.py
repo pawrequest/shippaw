@@ -5,7 +5,7 @@ from pprint import pprint
 import datetime
 
 # from main import user_location
-RYZEN = True
+RYZEN = False
 
 
 
@@ -18,7 +18,7 @@ def print_manifest(manifest):
 
 
 def process_manifest(manifest):  # takes dict_list of shipments
-    dates = client.get_available_collection_dates(sender, courier_id)
+    dates = client.get_available_collection_dates(sender, courier_id) # get dates
 
     print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
     for count, (key, shipment) in enumerate(manifest.items()):
@@ -62,6 +62,7 @@ def manifest_from_json():
     with open(JSONFILE) as f:
         manifest = {}
         manifest_data = json.load(f)
+        print("MANDATA",manifest_data)
         for count, shipment in enumerate(manifest_data['Items'], start=1):
             shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
             shipment[shipment_id_field] = str(count).zfill(2) + shipment[
@@ -69,7 +70,19 @@ def manifest_from_json():
             shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
             shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
             manifest[count] = shipment
-        return manifest
+    print("MANI",manifest)
+    return manifest_data
+
+
+
+def get_commence(type="Hire"):
+    if type == "Hire":
+        # params =
+        pass
+    elif type =="Sale":
+        pass
+
+
 
 
 def parse_address(crapstring, shipment):
@@ -254,3 +267,10 @@ def submit_manifest(manifest):
     else:
         exit()
 
+
+class Shipment:
+    def __init__(self, shipment_dict):
+        print("SHIPMENT DICT")
+        pprint(shipment_dict)
+        for key in shipment_dict:
+            self.key = key

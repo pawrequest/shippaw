@@ -6,26 +6,27 @@ RYZEN = True
 
 API_USER = os.getenv('DESPATCH_API_USER')
 API_KEY = os.getenv('DESPATCH_API_KEY')
-ROOT_DIR = pathlib.Path(__file__).parent.parent # from despatchbaysdk which is location of despatch functions
+ROOT_DIR = pathlib.Path(__file__).parent  # DEBUG from despatchbaysdk which is location of despatch functions
 DATA_DIR = ROOT_DIR / 'data'
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 PYTHON_EXE = sys.executable
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 
-pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True) # make the data dirs
+pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
 if RYZEN:
     JSONFILE = DATA_DIR / 'AmShip.json'
+else: JSONFILE = sys.argv[0]
 LOGFILE = DATA_DIR / 'AmLog.json'
-sender_id = '5536' # should be env var?
+sender_id = '5536'  # should be env var?
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
-courier_id = 8 # parcelforce
+courier_id = 8  # parcelforce
 
+cols_from_commence_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name",
+                      "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Delivery Contact"]
 
 # Commence Column Names
-commence_field_hire_dict = {}
-commence_field_hire_dict = {}
 customer_field = 'To Customer'
 phone_field = 'Delivery Tel'
 email_field = 'Delivery Email'
@@ -57,7 +58,10 @@ shipping_cost_field = "Shipping Cost"
 desp_shipment_id_field = "Despatch ID"
 candidates_field = 'Candidates'
 
+parameters = [
+    str(JSONFILE),
+    str(PYTHON_EXE),
+    str(PYTHON_MAIN_SCRIPT),
+    str(COMMENCE_WRAPPER),
 
-is_sale = 1
-if is_sale:
-    pass
+]

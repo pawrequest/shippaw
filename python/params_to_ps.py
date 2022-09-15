@@ -4,15 +4,15 @@ from pprint import pprint
 from config import *
 import subprocess
 
-parameters = [
-    str(JSONFILE),
-    str(PYTHON_EXE),
-    str(PYTHON_MAIN_SCRIPT),
-    str(COMMENCE_WRAPPER),
 
-]
 
-ps = "E:\Dev\AmDesp\despatchbaysdk_pss\ps_test.ps1"
+
+
+
+
+
+
+ps = pathlib.Path(ROOT_DIR / 'python' / 'ps_test.ps1')
 
 def runtingz(script_path, *args, **kwargs):
     commandline_options = ['powershell.exe', '-ExecutionPolicy', 'Unrestricted',

@@ -18,8 +18,11 @@ user_location = "ryzen"
 # pprint (collections)
 
 manifest = manifest_from_json()
-process_manifest(manifest)
+# process_manifest(manifest)
+#
+# def clean_objects(manifest):
+#     for key, shipment in manifest:
+#         pprint (shipment)
 
-def clean_objects(manifest):
-    for key, shipment in manifest:
-        pprint (shipment)
+shipper = Shipment(manifest['Items'][0])
+print("SHIPPER",shipper)
