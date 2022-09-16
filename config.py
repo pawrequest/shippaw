@@ -1,20 +1,15 @@
 import os, pathlib
 from python.despatchbay_sdk import DespatchBaySDK
 import sys
-
-ROOT_DIR = pathlib.Path("C:\AmDesp")
-
 sender_id = '5536'  # should be env var?
 API_USER = os.getenv('DESPATCH_API_USER')
 API_KEY = os.getenv('DESPATCH_API_KEY')
-
-
+ROOT_DIR = pathlib.Path("C:\AmDesp")
 DATA_DIR = ROOT_DIR / 'data'
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 PYTHON_EXE = ROOT_DIR / 'bin' / 'python.exe'
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
 JSONFILE = pathlib.Path(DATA_DIR / "AmShip.json")
 LOGFILE = pathlib.Path(DATA_DIR / 'AmLog.json')
@@ -22,8 +17,13 @@ client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
 
-cols_from_commence_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name",
+cols_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name",
                       "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Delivery Contact"]
+
+
+cols_sale = ['Deliv Name', 'Deliv Address', 'Deliv Contact', 'Deliv Email', 'Deliv Postcode', 'Deliv Telephone']
+
+
 
 # Commence Column Names
 customer_field = 'To Customer'

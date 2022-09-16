@@ -1,28 +1,120 @@
-' things that don't work in commence:
-' 'WScript, Echo,
 
+
+'  ' ship hires
+' Dim objShell
 ' Set objShell = CreateObject("Wscript.shell")
-' objShell.run("powershell -executionpolicy bypass -file ""E:\Dev\AmDesp\ps1 from vbs.ps1"""),1,true
-' strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%") & "AmDesp"
-' strDataFolder = strHomeFolder & "data"
-' Msgbox strDataFolder
+' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
+
+' 'test'
+' Dim val
+' For val = 1 to 4
+' Msgbox "Hello All. I am Number:" & val
+' Next
 '
-' Dim fso, d, f, s
-' Set fso = CreateObject("Scripting.FileSystemObject")
-' Set f = fso.GetFile(filespec)
-' s = UCase(f.Path) & "<BR>"
-' s = s & "Created: " & f.DateCreated & "<BR>"
-' s = s & "Last Accessed: " & f.DateLastAccessed & "<BR>"
-' s = s & "Last Modified: " & f.DateLastModified
-' ShowFileAccessInfo = s
+' ' dim fs,fname
+' ' set fs=Server.CreateObject("Scripting.FileSystemObject")
+' ' set fname=fs.CreateTextFile("c:\test.txt",true)
+' ' fname.WriteLine("Hello World!")
+' ' fname.Close
+' ' set fname=nothing
+' ' set fs=nothing
+
+
+' MyCheck = VarType(IntVar)   ' Returns 2.
+
+' Option Explicit
+'
+' dim list
+' Set list = CreateObject("System.Collections.ArrayList")
+' list.Add "Banana"
+' list.Add "Apple"
+' list.Add "Pear"
+'
+' list.Sort
+' list.Reverse
+'
+' wscript.echo list.Count                 ' --> 3
+' wscript.echo list.Item(0)               ' --> Pear
+' wscript.echo list.IndexOf("Apple", 0)   ' --> 2
+' wscript.echo join(list.ToArray(), ", ") ' --> Pear, Banana, Apple
 '
 
+' Dim oJsonParser, oMySubobject, oMyMainObject, sJsonString
+' Set oJsonParser = CreateJsonParser()
+' Set oMySubobject = CreateObject("Scripting.Dictionary")
+' Set oMyMainObject = CreateObject("Scripting.Dictionary")
+'
+' Call oMySubobject.Add("intVal", CInt(1))
+' Call oMySubobject.Add("doubleVal", CDbl(1.2))
+' Call oMySubobject.Add("stringVal", "TextA")
+'
+' Call oMyMainObject.Add("subobject", oMySubobject)
+' Call oMyMainObject.Add("array", Array("TextB", 5678, True))
+' Call oMyMainObject.Add("timestamp", oJsonParser.CreateDateTime(Now, True))
 
 
-Dim objFSO
-Set objFSO = CreateObject("Scripting.FileSystemObject")
-Dim CurrentDirectory
-CurrentDirectory = objFSO.GetAbsolutePathName(".")
-strFileName = CurrentDirectory & "\test.xlsx"
-Wscript.Echo strFileName
+' Const ENCODE = FALSE
+' Const DECODE = TRUE
+'
+' val = "asdf\\\\nsedfgs"
+' val = JSON(val, DECODE)
+' MsgBox val
+'
+' 'Swap replacement values & dividers + concatenation characters
+' val = JSON(val, ENCODE)
+' MsgBox val
+'
+' Function JSON(ByVal str, ByVal mode)
+'     Dim key, val
+'     Set d = CreateObject("Scripting.Dictionary")
+'
+'     d.Add "\/", "/"
+'     d.Add "\b", Chr(8)
+'     d.Add "\f", Chr(12)
+'     d.Add "\n", Chr(10)
+'     d.Add "\r", Chr(13)
+'     d.Add "\t", Chr(9)
+'
+'     If mode Then
+'         d.Add "\""", """"
+'         d.Add "\\", "\"
+'         div = "\\"
+'         cat = "\"
+'         key = d.Keys
+'         val = d.Items
+'     Else
+'         d.Add "\\", "\"
+'         d.Add "\""", """"
+'         div = "\"
+'         cat = "\\"
+'         key = d.Items
+'         val = d.Keys
+'     End If
+'
+'     arr = Split(str, div)
+'
+'     For i = 0 To UBound(arr)
+'         For j = 0 To UBound(key)
+'             arr(i) = Replace(arr(i), key(j), val(j))
+'         Next
+'
+'         output = output & arr(i)
+'         If i <> UBound(arr) Then output = output & cat
+'     Next
+'
+'     d.RemoveAll
+'     JSON = output
+' End Function
 
+
+'             ' '  runs python
+Dim python_exe, python_script, commence_wrapper, JsonPath
+python_exe = "C:\AmDesp\python\bin\python.exe"
+python_script = "C:\AmDesp\main.py"
+commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+JsonPath = "C:\AmDesp\data\AmShip.json"
+Dim oShell, source_code_path, variable1, currentCommand, my_command
+SET oShell = CreateObject("Wscript.Shell")
+my_command = python_exe & " " & python_script & " " & JsonPath
+currentCommand = "cmd /c " & Chr(34) & python_script & " " & dict & Chr(34)
+oShell.run my_command,1,true

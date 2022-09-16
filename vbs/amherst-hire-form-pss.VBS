@@ -922,14 +922,59 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
-		    'ship hires
+' 		    points to another script
 		    Dim objShell
-            Set objShell = CreateObject("Wscript.shell")
-            objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
+            Set objShell = CreateObject("WScript.Shell")
+            objShell.Run "C:\AmDesp\vbs\button-test.vbs"
+            Set objShell = Nothing
+            Dim Item, fieldName, fieldValue
+
+
+' 		    Dim json, formData, thisone
+' '             Set formData = CreateObject("Scripting.Dictionary")
+' '
+' '             var json = JSON.stringify(NewMember: formData );
+'             thisone = Form.Fields[0]
+'             MsgBox thisone
+' ' 		    Dim dict, Item
+' '             Set dict = CreateObject("Scripting.Dictionary")
+' '             For Each thing In Form.keys
+' '                 fieldName = thing
+' '                 fieldValue = Form(thing)
+' '                 dict.Add fieldName, fieldValue
+' '             Next
+
+
+'             Dim dict
+'
+'             Set dict = CreateObject("Scripting.Dictionary")
+'             dict.Add "Send Out Date", Form.Field("Send Out Date").Value
+'             dict.Add "Delivery Postcode", Form.Field("Delivery Postcode").Value
+'             dict.Add "Delivery Address", Form.Field("Delivery Address").Value
+'             dict.Add "Delivery Name", Form.Field("Delivery Name").Value
+'             dict.Add "Delivery tel", Form.Field("Delivery tel").Value
+'             dict.Add "Delivery Email", Form.Field("Delivery Email").Value
+'             dict.Add "Boxes", Form.Field("Boxes").Value
+'             dict.Add "Reference Number", Form.Field("Reference Number").Value
+'             dict.Add "Delivery Contact", Form.Field("Delivery Contact").Value
+
+
+'             ' '  runs python
+' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
+'             python_exe = "C:\AmDesp\python\bin\python.exe"
+'             python_script = "C:\AmDesp\main.py"
+'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'             JsonPath = "C:\AmDesp\data\AmShip.json"
+'             Dim oShell, source_code_path, variable1, currentCommand, my_command
+'             SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " " & python_script & " " & JsonPath
+'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & dict & Chr(34)
+'             oShell.run
+
+
 
     End Select
 End Sub
-
 
 
 

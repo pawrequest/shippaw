@@ -20,7 +20,4 @@ process_manifest(manifest)
 #     for key, shipment in manifest:
 #         pprint (shipment)
 
-# shipper = Shipment(manifest['Items'][0])
-# print("SHIPPER",shipper)
-
 # TODO: data in appdata folder
