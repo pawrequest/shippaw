@@ -1,10 +1,6 @@
 import sys
 from python.despatch_functions import *
 
-# user_location = "admin"
-user_location = "ryzen"
-
-
 # book_shipments(manifest_csv='Am_ship.csv')
 # book_shipments(manifest_from_json())
 #jsonfile = "data/AmShip.json"

@@ -2,24 +2,22 @@ import os, pathlib
 from python.despatchbay_sdk import DespatchBaySDK
 import sys
 
-LOC = "ryzen"
+print ("THERE ARE THIS MANY ARGS",len(sys.argv))
+print (sys.argv)
 powerscript_test = "E:\Dev\AmDesp\despatchbaysdk_pss\ps_test.ps1"
 
 API_USER = os.getenv('DESPATCH_API_USER')
 API_KEY = os.getenv('DESPATCH_API_KEY')
-ROOT_DIR = pathlib.Path(__file__).parent  # DEBUG from despatchbaysdk which is location of despatch functions
+ROOT_DIR = pathlib.Path("C:\AmDesp")
 DATA_DIR = ROOT_DIR / 'data'
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
-PYTHON_EXE = sys.executable
+PYTHON_EXE = ROOT_DIR / 'bin' / 'python.exe'
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
-if LOC == "ryzen":
-    print("PYTH LOC = RYZEN")
-    JSONFILE = DATA_DIR / 'AmShip.json'
-else: JSONFILE = sys.argv[0]
-LOGFILE = DATA_DIR / 'AmLog.json'
+JSONFILE = pathlib.Path(DATA_DIR / "AmShip.json")
+LOGFILE = pathlib.Path(DATA_DIR / 'AmLog.json')
 sender_id = '5536'  # should be env var?
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)

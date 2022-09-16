@@ -45,10 +45,11 @@ $settings.SkipConnectedItems = $false
 # $export.ExportCategory("Contact", (Join-Path -Path $exportPath -ChildPath "contacts.xml")) # Join-Path is again being pedantic about PS but okay
 $cursor.ExportToFile($JsonPath, $settings)
 
+
 #goodbye
 $db.Close()
 
-# call python script supplying json
+# call python script supplying jsonpath
 powershell $python_exe $python_script @JsonPath
 
 "COMPLETE"

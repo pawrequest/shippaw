@@ -921,26 +921,14 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Closed").Value = 1
 			Form.Save
 
-		Case "CommandButton20"
-		    Dim objFSO, strFileName, CurrentDirectory, strHomeFolder, strDataFolder, objShell, strScriptName
-            Set objShell = CreateObject("WScript.Shell")
-            strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%") & "\AmDesp"
-            strDataFolder = strHomeFolder & "\data"
-            strScriptName = "\AmDespFromCommenceButton.ps1"
-            objShell.run("powershell -executionpolicy bypass -noexit -file strDataFolder & strScriptName"),1,true
-
-'             CurrentDirectory = objFSO.GetAbsolutePathName(".")
-            'strFileName = CurrentDirectory & "\test.xlsx"
-            msgbox strFileName
-
-
+		Case "CommandButton20"0
 		    ''''''''''''
 		    'working'
-' 		    Dim objShell, strHomeFolder
-'             Set objShell = CreateObject("Wscript.shell")
-'             objShell.run("powershell -executionpolicy bypass -noexit -file ""E:\Dev\AmDesp\ps1 from vbs.ps1"""),1,true
-'             strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%")
-'             Msgbox strHomeFolder
+		    Dim objShell, strHomeFolder
+            Set objShell = CreateObject("Wscript.shell")
+            objShell.run("powershell -executionpolicy bypass -noexit -file ""E:\Dev\AmDesp\ps1 from vbs.ps1"""),1,true
+            strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%")
+            Msgbox strHomeFolder
             '''''''''''''''''''
 
 
