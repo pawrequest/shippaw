@@ -4,22 +4,18 @@ using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
 $LOC_ME = "ryzen"
 
-# system-specific paths
-if ($LOC_ME = "ryzen") {
-    write "PS LOC = RYZEN"
-    $JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
-    $python_exe = "C:\Users\RYZEN\AppData\Local\Programs\Python\Python310\python.exe"
-    $python_script = "E:\Dev\AmDesp\main.py"
-    $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-}
 
-elseif ($LOC_ME = "admin") {
-    write "PS LOC = ADMIN"
-    $JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
-    $python_exe = "C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe"
-    $python_script = "C:\Paul\AmDesp\main.py"
-    $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-}
+$python_exe = "C:\AmDesp\python\bin\python.exe"
+$python_script = "C:\AmDesp\main.py"
+$commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+
+$file = "C:\AmDesp\data\AmShip.json"
+if (-not(Test-Path -Path $file -PathType Leaf)) {try {$null = New-Item -ItemType File -Path $file -Force -ErrorAction Stop
+         Write-Host "[$file]created."}
+     catch {throw $_.Exception.Message}}
+ else {Write-Host "[$file] exists."}
+$JsonPath = $file
+
 
 Add-Type -Path $commence_wrapper
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
