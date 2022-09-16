@@ -40,8 +40,8 @@ COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 #             # uncomment to book and get labels / tracking
 #             # client.book_shipments([added_shipment])
 #             # label_pdf = client.get_labels(shipment_return.shipment_document_id)
-#             # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
-#             # label_pdf.download(label_string)
+#             # label_string.pdf = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
+#             # label_pdf.download(label_string.pdf)
 #
 #             shipment[is_shipped_field] = True
 #
@@ -346,8 +346,8 @@ def adjust_address(manifest): # takes dict oif dicts with customer name as keys
 #             # uncomment to book and get labels / tracking
 #             # client.book_shipments([added_shipment])
 #             # label_pdf = client.get_labels(shipment_return.shipment_document_id)
-#             # label_string = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
-#             # label_pdf.download(label_string)
+#             # label_string.pdf = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
+#             # label_pdf.download(label_string.pdf)
 #
 #             shipment['shipped'] = True
 #             # records despatch references

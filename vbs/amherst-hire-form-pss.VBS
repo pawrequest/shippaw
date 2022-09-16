@@ -922,7 +922,8 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
-		' ' 		    points to another script
+		' RUN PYTHON VIA = button-test.vbs -> amdesp.ps1 (gets manifest from commence) -> main.py (process manifest)
+		    Form.Save
 		    Dim objShell
             Set objShell = CreateObject("WScript.Shell")
             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
@@ -930,6 +931,12 @@ Sub Form_OnClick(ControlId)
             Dim Item, fieldName, fieldValue
 
 
+        Case "CommandButton21"
+            Form.Field("Packed By").Value = "PR"
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            Form.Save
 
 
 ' 		    Dim python_exe, python_script, commence_wrapper, JsonPath

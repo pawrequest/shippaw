@@ -17,10 +17,10 @@ def print_manifest(manifest):
 
 
 def process_manifest(manifest):  # takes dict_list of shipments
-    print("process")
+    print("Processing Manifest")
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
 
-    print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
+    print("\nManifest imported", "with", len(manifest.keys()), "Shipments:\n")
     for count, (key, shipment) in enumerate(manifest.items()):
         print(key, "|", shipment[customer_field], "|", shipment[send_date_field])
     print("\nChecking Available Collection Dates...")
@@ -38,6 +38,7 @@ def process_manifest(manifest):  # takes dict_list of shipments
               "box(es) |", shipment[address_object_field].street, " | ", shipment[date_object_field].date)
 
     while True:
+        print_manifest(manifest)
         ui = input(
             '\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
         if ui.isnumeric() and int(ui) <= len(manifest.items()) + 1:
@@ -78,6 +79,7 @@ def manifest_from_json():
 
 def parse_address(crapstring, shipment):
     first_line = crapstring.split("\r")[0]
+    second_line = crapstring.split("\r")[1]
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
     for char in first_line:
@@ -106,21 +108,29 @@ def check_send_date(shipment, dates):
         if input("\nChoose New Date? (type yes, anything else will remove shipment and continue)\n") == "yes":
             for count, date in enumerate(dates):
                 print(count + 1, date.date)
-            choice = int(input("\nChoose a Date, 0 to cancel this shipment and move on to another\n"))
-            if choice == 0:
-                return None
+            choice = ''
+            while not choice.isnumeric():
+                choice = input("\nChoose a Date, 0 to cancel this shipment and move on to another\n")
+                if choice.isnumeric():
+                    if choice == 0:
+                        return None
+                    else:
+                        print("choice not 0")
+                        shipment[date_object_field] = dates[int(choice) - 1]
+                        print("Collection Date For", shipment[customer_field], "Is Now ", shipment[date_object_field].date,
+                              "\n")
+                        return shipment
+                else:
+                    print ("non-numeric input")
             else:
-                shipment[date_object_field] = dates[choice - 1]
-                print("Collection Date For", shipment[customer_field], "Is Now ", shipment[date_object_field].date,
-                      "\n")
-                return shipment
-        else:
-            return None
+                return None
 
 
 def get_address_object(shipment):
+    pprint (shipment)
     if building_num_field in shipment:
         if shipment[building_num_field] == 0: shipment[building_num_field] = False
+        search_string = shipment[building_num_field]
     else: search_string = shipment[address_firstline_field]
     # get object
     address_object = client.find_address(shipment[postcode_field], search_string)
@@ -221,10 +231,11 @@ def submit_manifest(manifest):
                 label_pdf = client.get_labels(shipment_return.shipment_document_id)
                 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
                 label_string = 'shipment[customer_field] + "-" + shipment[date_object_field].date + ".pdf"'
-                label_pdf.download(LABEL_DIR + label_string)
-                print("Lablel downloaded to", LABEL_DIR, label_string)
+                label_pdf.download(LABEL_DIR / label_string)
+                print()
                 shipment['label_downloaded'] = True
                 shipment['shipment_return'] = shipment_return
+                print ("Shipment for ",shipment[customer_field],"has been booked, Label downloaded to", LABEL_DIR, label_string)
             shipment[is_shipped_field] = "Shipped"
 
             # records despatch references
@@ -256,9 +267,9 @@ def submit_manifest(manifest):
         exit()
 
 
-class Shipment:
-    def __init__(self, shipment_dict):
-        print("SHIPMENT DICT")
-        pprint(shipment_dict)
-        for key in shipment_dict:
-            self.key = key
+# class Shipment:
+#     def __init__(self, shipment_dict):
+#         print("SHIPMENT DICT")
+#         pprint(shipment_dict)
+#         for key in shipment_dict:
+#             self.key = key
