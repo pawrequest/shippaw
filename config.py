@@ -7,7 +7,7 @@ API_KEY = os.getenv('DESPATCH_API_KEY')
 ROOT_DIR = pathlib.Path("C:\AmDesp")
 DATA_DIR = ROOT_DIR / 'data'
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
-PYTHON_EXE = ROOT_DIR / 'bin' / 'python.exe'
+PYTHON_EXE = ROOT_DIR / 'python' / 'bin' / 'python.exe'
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 
