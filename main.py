@@ -12,7 +12,6 @@ from python.despatch_functions import *
 #
 # collections = client.get_collections() # shows upcoming collections
 # pprint (collections)
-
 manifest = manifest_from_json()
 process_manifest(manifest)
 #

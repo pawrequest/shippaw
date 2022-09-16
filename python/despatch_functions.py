@@ -3,6 +3,7 @@ import json
 import pathlib
 from pprint import pprint
 import datetime
+import os
 
 # from main import user_location
 RYZEN = False
@@ -16,6 +17,7 @@ def print_manifest(manifest):
 
 
 def process_manifest(manifest):  # takes dict_list of shipments
+    print("process")
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
 
     print("\nJSON imported", "with", len(manifest.keys()), "Shipments:\n")
@@ -57,17 +59,20 @@ def process_manifest(manifest):  # takes dict_list of shipments
 
 
 def manifest_from_json():
-    with open(JSONFILE) as f:
-        manifest = {}
-        manifest_data = json.load(f)
-        for count, shipment in enumerate(manifest_data['Items'], start=1):
-            shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
-            shipment[shipment_id_field] = str(count).zfill(2) + shipment[
-                hire_ref_field]  # make an id from count and hire-ref
-            shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
-            shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
-            manifest[count] = shipment
-    return manifest
+    if os.path.isfile(JSONFILE):
+        with open(JSONFILE) as f:
+            manifest = {}
+            manifest_data = json.load(f)
+            for count, shipment in enumerate(manifest_data['Items'], start=1):
+                shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
+                shipment[shipment_id_field] = str(count).zfill(2) + shipment[
+                    hire_ref_field]  # make an id from count and hire-ref
+                shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
+                shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
+                manifest[count] = shipment
+        return manifest
+    else: print ("NOT A FILE")
+
 
 
 
@@ -114,11 +119,9 @@ def check_send_date(shipment, dates):
 
 
 def get_address_object(shipment):
-    if shipment[building_num_field] == 0: shipment[building_num_field] = False
-    if not shipment[building_num_field]:
-        search_string = shipment[address_firstline_field]
-    else:
-        search_string = shipment[building_num_field]
+    if building_num_field in shipment:
+        if shipment[building_num_field] == 0: shipment[building_num_field] = False
+    else: search_string = shipment[address_firstline_field]
     # get object
     address_object = client.find_address(shipment[postcode_field], search_string)
     shipment[address_object_field] = address_object

@@ -10,12 +10,15 @@ LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 PYTHON_EXE = ROOT_DIR / 'bin' / 'python.exe'
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
-JSONFILE = pathlib.Path(DATA_DIR / "AmShip.json")
+
+JSONFILE = DATA_DIR / "AmShip.json"
+JSONFILE = (DATA_DIR / "AmShip.json")
+print("JSONFILE IS",JSONFILE)
 LOGFILE = pathlib.Path(DATA_DIR / 'AmLog.json')
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
+pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
 
 cols_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name",
                       "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Delivery Contact"]

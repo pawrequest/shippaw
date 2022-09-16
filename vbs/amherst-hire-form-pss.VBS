@@ -922,12 +922,37 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
-' 		    points to another script
+		' ' 		    points to another script
 		    Dim objShell
             Set objShell = CreateObject("WScript.Shell")
             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
             Set objShell = Nothing
             Dim Item, fieldName, fieldValue
+
+
+
+
+' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
+'             python_exe = "C:\AmDesp\python\bin\python.exe"
+'             python_script = "C:\AmDesp\main.py"
+'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'             JsonPath = "C:\AmDesp\data\AmShip.json"
+'
+'
+'             Dim oShell, source_code_path, variable1, currentCommand, my_command
+'             SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & JsonPath & Chr(34)
+'             Msgbox "RUN PYTHON"
+'             oShell.run currentCommand,1,true
+'
+'
+' ' 		    points to another script
+' 		    Dim objShell
+'             Set objShell = CreateObject("WScript.Shell")
+'             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
+'             Set objShell = Nothing
+'             Dim Item, fieldName, fieldValue
 
 
 ' 		    Dim json, formData, thisone
