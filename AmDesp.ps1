@@ -2,27 +2,17 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-$LOC_ME = "ryzen"
-
-
 $python_exe = "C:\AmDesp\python\bin\python.exe"
 $python_script = "C:\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+$JsonPath = "C:\AmDesp\data\AmShip.json"
 
-$file = "C:\AmDesp\data\AmShip.json"
-if (-not(Test-Path -Path $file -PathType Leaf)) {try {$null = New-Item -ItemType File -Path $file -Force -ErrorAction Stop
-         Write-Host "[$file]created."}
-     catch {throw $_.Exception.Message}}
- else {Write-Host "[$file] exists."}
-$JsonPath = $file
-
-
+#cursor properties
 Add-Type -Path $commence_wrapper
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 $export = New-Object ExportEngine
 $cursor = $db.GetCursor("Hire")
 $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
-
 
 # filter properties
 $filter.FieldName = "ShipMe"
@@ -31,8 +21,8 @@ $filter.Qualifier = "True"
 $cursor.Filters.Apply()
 
 # Filter Columns
-$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number",  "Delivery Contact")
-$cursor.Columns.Apply()
+#$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number",  "Delivery Contact")
+#$cursor.Columns.Apply()
 
 # export settings 
 $settings = $export.Settings

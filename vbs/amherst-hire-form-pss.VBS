@@ -921,31 +921,12 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Closed").Value = 1
 			Form.Save
 
-		Case "CommandButton20"0
-		    ''''''''''''
-		    'working'
-		    Dim objShell, strHomeFolder
+		Case "CommandButton20"
+		    'ship hires
+		    Dim objShell
             Set objShell = CreateObject("Wscript.shell")
-            objShell.run("powershell -executionpolicy bypass -noexit -file ""E:\Dev\AmDesp\ps1 from vbs.ps1"""),1,true
-            strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%")
-            Msgbox strHomeFolder
-            '''''''''''''''''''
+            objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
 
-
-            ' Set objShell = CreateObject("Wscript.shell")
-'             objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\paul\AmDesp\ps1 from vbs.ps1"""),1,true
-'             strHomeFolder = objShell.ExpandEnvironmentStrings("%APPDATA%") & "AmDesp"
-'             strDataFolder = strHomeFolder & "data"
-'             Msgbox strDataFolder
-
-'             Set WshShell = CreateObject("WScript.Shell")
-'             WshShell.Run("notepad " & WScript.ScriptFullName, 1, true)
-
-
-
-
-
-		
     End Select
 End Sub
 

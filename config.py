@@ -2,13 +2,13 @@ import os, pathlib
 from python.despatchbay_sdk import DespatchBaySDK
 import sys
 
-print ("THERE ARE THIS MANY ARGS",len(sys.argv))
-print (sys.argv)
-powerscript_test = "E:\Dev\AmDesp\despatchbaysdk_pss\ps_test.ps1"
+ROOT_DIR = pathlib.Path("C:\AmDesp")
 
+sender_id = '5536'  # should be env var?
 API_USER = os.getenv('DESPATCH_API_USER')
 API_KEY = os.getenv('DESPATCH_API_KEY')
-ROOT_DIR = pathlib.Path("C:\AmDesp")
+
+
 DATA_DIR = ROOT_DIR / 'data'
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 PYTHON_EXE = ROOT_DIR / 'bin' / 'python.exe'
@@ -18,7 +18,6 @@ COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
 JSONFILE = pathlib.Path(DATA_DIR / "AmShip.json")
 LOGFILE = pathlib.Path(DATA_DIR / 'AmLog.json')
-sender_id = '5536'  # should be env var?
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
