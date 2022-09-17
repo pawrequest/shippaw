@@ -932,7 +932,7 @@ Sub Form_OnClick(ControlId)
 
 
         Case "CommandButton21"
-            Form.Field("Packed By").Value = "PR"
+            ' packed okForm.Field("Packed By").Value = "PR"
             Form.Field("Packed Date").Value = "today"
             Form.Field("Packed Time").Value = "now"
             Form.Field("Status").Value = "Booked in and packed"

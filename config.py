@@ -1,6 +1,8 @@
-import os, pathlib
+import os
+import pathlib
+
 from python.despatchbay_sdk import DespatchBaySDK
-import sys
+
 sender_id = '5536'  # should be env var?
 API_USER = os.getenv('DESPATCH_API_USER')
 API_KEY = os.getenv('DESPATCH_API_KEY')
@@ -10,11 +12,10 @@ LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 PYTHON_EXE = ROOT_DIR / 'python' / 'bin' / 'python.exe'
 PYTHON_MAIN_SCRIPT = ROOT_DIR / 'main.py'
 COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-
+print(type())
 JSONFILE = DATA_DIR / "AmShip.json"
-JSONFILE = (DATA_DIR / "AmShip.json")
 print("JSONFILE IS",JSONFILE)
-LOGFILE = pathlib.Path(DATA_DIR / 'AmLog.json')
+LOGFILE = (DATA_DIR / 'AmLog.json')
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
@@ -27,7 +28,7 @@ cols_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Addr
 cols_sale = ['Deliv Name', 'Deliv Address', 'Deliv Contact', 'Deliv Email', 'Deliv Postcode', 'Deliv Telephone']
 
 
-
+"Variable is undefined: 'WScript'"
 # Commence Column Names
 customer_field = 'To Customer'
 phone_field = 'Delivery Tel'
