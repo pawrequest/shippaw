@@ -22,6 +22,7 @@ $cursor.Filters.Apply()
 
 # Filter Columns
 #$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number",  "Delivery Contact")
+#$cursor.Columns.AddDirectColumns("To Customer","Reference Number", "Name")
 #$cursor.Columns.Apply()
 
 # export settings 

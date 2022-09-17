@@ -1,44 +1,51 @@
-from config import *
+import datetime
+import inspect
 import json
+import os
 import pathlib
 from pprint import pprint
-import datetime
-import os
 
-# from main import user_location
-RYZEN = False
+from config import *
 
 
-def print_manifest(manifest):
-    print("\nMANIFEST:")
-    for key, shipment in manifest.items():
-        print(key, "|", shipment[customer_field], "|", shipment[send_date_field], "|",
-              shipment[address_object_field].street)
-
-
-def process_manifest(manifest):  # takes dict_list of shipments
-    print("Processing Manifest")
+def process_manifest(manifest):  # takes list of shipments
+    print("--- Processing Manifest ---")
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
 
-    print("\nManifest imported", "with", len(manifest.keys()), "Shipments:\n")
-    for count, (key, shipment) in enumerate(manifest.items()):
-        print(key, "|", shipment[customer_field], "|", shipment[send_date_field])
-    print("\nChecking Available Collection Dates...")
+    print("\n- Manifest imported", "with", len(manifest), "Shipments:\n")
+    for count, (shipment) in enumerate(manifest):
+        print("\t\t", count + 1, "|", shipment[hire_customer_field], "|", shipment[send_date_field])
+    print("\n--- Checking Available Collection Dates...")
+    print('─' * 90)  # U+2500, Box Drawings Light Horizontal
 
-    for key, shipment in list(manifest.items()):
+
+    for count, shipment in enumerate(manifest):
         if not check_send_date(shipment, dates):
-            print("DATE OBJECT FAILURE - Shipment", key, "Cancelled:", shipment[customer_field])
-            manifest.pop(key)
+            shipment[date_check]
+            print("- Date object failure - SHIPMENT", count + 1, "CANCELLED:", shipment[hire_customer_field])
+            print('─' * 90)  # U+2500, Box Drawings Light Horizontal
+            manifest.remove(shipment)
+            continue
+
+
+
+    for count, shipment in enumerate(manifest):
+        if not check_send_date(shipment, dates):
+            print("- Date object failure - SHIPMENT", count + 1, "CANCELLED:", shipment[hire_customer_field])
+            print('─' * 90)  # U+2500, Box Drawings Light Horizontal
+            manifest.remove(shipment)
             continue
         if not get_address_object(shipment):
-            print("ADDRESS OBJECT FAILURE - Shipment", key, "Cancelled:", shipment[customer_field])
-            manifest.pop(key)
+            print("ADDRESS OBJECT FAILURE - Shipment", count + 1, "Cancelled:", shipment[hire_customer_field])
+            manifest.remove(shipment)
             continue
-        print("Shipment", key, "Validated:", shipment[customer_field], "|", shipment[boxes_field],
+        print("Shipment", count + 1, "Validated:", shipment[hire_customer_field], "|", shipment[boxes_field],
               "box(es) |", shipment[address_object_field].street, " | ", shipment[date_object_field].date)
 
     while True:
-        print_manifest(manifest)
+        print("MANIFEST:\n")
+        for count, shipment in enumerate(manifest):
+            print(str(count + 1) + print_shipment(shipment))
         ui = input(
             '\nCONTINUE?:\nEnter a Shipment Number to change its Address, "yes" to proceed, or "exit" to exit \n')
         if ui.isnumeric() and int(ui) <= len(manifest.items()) + 1:
@@ -62,24 +69,44 @@ def process_manifest(manifest):  # takes dict_list of shipments
 def manifest_from_json():
     if os.path.isfile(JSONFILE):
         with open(JSONFILE) as f:
-            manifest = {}
+            manifest = []
             manifest_data = json.load(f)
-            for count, shipment in enumerate(manifest_data['Items'], start=1):
+            for count, shipment in enumerate(manifest_data['Items']):
                 shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
                 shipment[shipment_id_field] = str(count).zfill(2) + shipment[
                     hire_ref_field]  # make an id from count and hire-ref
-                shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
-                shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
-                manifest[count] = shipment
+                # print("Manifets from json shipment in loop", shipment) # debug
+                shipment = parse_address(shipment)  # gets number / firstline
+                shipment[hire_customer_field] = shipment[hire_customer_field][
+                    0]  # remove customer field from spurious list
+                manifest.append(shipment)
         return manifest
-    else: print ("NOT A FILE")
+    else:
+        print("NOT A FILE")
 
 
+# def manifest_from_json():
+#     if os.path.isfile(JSONFILE):
+#         with open(JSONFILE) as f:
+#             manifest = {}
+#             manifest_data = json.load(f)
+#             for count, shipment in enumerate(manifest_data['Items'], start=1):
+#                 shipment[hire_ref_field] = shipment[hire_ref_field].replace(",", "")  # expunge commas from hire ref
+#                 shipment[shipment_id_field] = str(count).zfill(2) + shipment[
+#                     hire_ref_field]  # make an id from count and hire-ref
+#                 shipment = parse_address(shipment[address_field], shipment)  # gets number / firstline
+#                 shipment[customer_field] = shipment[customer_field][0]  # remove customer field from spurious list
+#                 manifest[count] = shipment
+#         return manifest
+#     else: print ("NOT A FILE")
 
 
-def parse_address(crapstring, shipment):
+def parse_address(shipment):
+    crapstring = shipment[address_field]
     first_line = crapstring.split("\r")[0]
     second_line = crapstring.split("\r")[1]
+    # rsecond_line = crapstring.split("\r")[2]
+    # print("FIRSTLINE", first_line,"\n","SECOND",second_line) #debug
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
     for char in first_line:
@@ -103,35 +130,37 @@ def check_send_date(shipment, dates):
             shipment[date_object_field] = date
             return shipment
     else:  # looped exhausted, no date match
-        print("\n*** ERROR ***\n\t\t--- No Collections Available on", shipment[send_date_field], "for",
-              shipment[customer_field], "---")
-        if input("\nChoose New Date? (type yes, anything else will remove shipment and continue)\n") == "yes":
+        print("\n\t\t*** ERROR: No collections available on", shipment[send_date_field], "for",
+              shipment[hire_customer_field], "***")
+        if input("\nChoose new Date? (type yes, anything else will remove shipment and continue)\n") == "yes":
             for count, date in enumerate(dates):
-                print(count + 1, date.date)
+                print("\t\t", count + 1, date.date)
             choice = ''
             while not choice.isnumeric():
-                choice = input("\nChoose a Date, 0 to cancel this shipment and move on to another\n")
+                choice = input("\nEnter a number to choose a date, 0 to cancel this shipment and move on to another\n")
                 if choice.isnumeric():
                     if choice == 0:
                         return None
                     else:
-                        print("choice not 0")
                         shipment[date_object_field] = dates[int(choice) - 1]
-                        print("Collection Date For", shipment[customer_field], "Is Now ", shipment[date_object_field].date,
+                        print("\t\tCollection date for", shipment[hire_customer_field], "is now ",
+                              shipment[date_object_field].date,
                               "\n")
                         return shipment
                 else:
-                    print ("non-numeric input")
+                    print("\t\t Enter a number")
             else:
                 return None
 
 
 def get_address_object(shipment):
-    pprint (shipment)
+    print("shipment in get address")
+    pprint(shipment)
     if building_num_field in shipment:
         if shipment[building_num_field] == 0: shipment[building_num_field] = False
         search_string = shipment[building_num_field]
-    else: search_string = shipment[address_firstline_field]
+    else:
+        search_string = shipment[address_firstline_field]
     # get object
     address_object = client.find_address(shipment[postcode_field], search_string)
     shipment[address_object_field] = address_object
@@ -139,7 +168,9 @@ def get_address_object(shipment):
 
 
 def adjust_address(shipment):  # takes
-    print("Adjust Shipping Address for:", shipment[customer_field] + "'s Shipment on", shipment[date_object_field].date,
+    print("ADJUST ADDRESS")  # debug
+    print("Adjust Shipping Address for:", shipment[hire_customer_field] + "'s Shipment on",
+          shipment[date_object_field].date,
           "\n")
     candidates = client.get_address_keys_by_postcode(shipment[postcode_field])
     for count, candidate in enumerate(candidates, start=1):
@@ -160,7 +191,7 @@ def adjust_address(shipment):  # takes
 
 def submit_manifest(manifest):
     for key, shipment in manifest.items():
-        customer = shipment[customer_field]
+        customer = shipment[hire_customer_field]
         phone = shipment[phone_field]
         email = shipment[email_field]
         address = shipment[address_object_field]
@@ -210,7 +241,7 @@ def submit_manifest(manifest):
         shipment[shipping_service_id_field] = shipment_request.service_id
         shipment[shipping_cost_field] = services[0].cost
 
-        print("\n" + shipment[customer_field] + "'s shipment of", shipment[boxes_field], "parcels to: ",
+        print("\n" + shipment[hire_customer_field] + "'s shipment of", shipment[boxes_field], "parcels to: ",
               shipment[address_object_field].street, "|", shipment[date_object_field].date, "|",
               shipment[shipping_service_name_field],
               "| Price =",
@@ -235,7 +266,8 @@ def submit_manifest(manifest):
                 print()
                 shipment['label_downloaded'] = True
                 shipment['shipment_return'] = shipment_return
-                print ("Shipment for ",shipment[customer_field],"has been booked, Label downloaded to", LABEL_DIR, label_string)
+                print("Shipment for ", shipment[hire_customer_field], "has been booked, Label downloaded to", LABEL_DIR,
+                      label_string)
             shipment[is_shipped_field] = "Shipped"
 
             # records despatch references
@@ -244,7 +276,7 @@ def submit_manifest(manifest):
 
 
         else:
-            print("Shipment", shipment[customer_field], "Skipped by User")
+            print("Shipment", shipment[hire_customer_field], "Skipped by User")
             shipment[is_shipped_field] = "Failed"
             continue
 
@@ -256,7 +288,7 @@ def submit_manifest(manifest):
             output = {k: shipment[k] for k in set(list(shipment.keys())) - set(exclude_keys)}
             date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
             new_out.update(
-                {date_blah + " - " + str(shipment[is_shipped_field]) + " - " + shipment[customer_field]: output})
+                {date_blah + " - " + str(shipment[is_shipped_field]) + " - " + shipment[hire_customer_field]: output})
             print("dumped")
         json.dump(new_out, f)
 
@@ -267,9 +299,21 @@ def submit_manifest(manifest):
         exit()
 
 
-# class Shipment:
-#     def __init__(self, shipment_dict):
-#         print("SHIPMENT DICT")
-#         pprint(shipment_dict)
-#         for key in shipment_dict:
-#             self.key = key
+def print_manifest(manifest):
+    print("\nMANIFEST:")
+    for key, shipment in manifest.items():
+        print(key, "|", shipment[hire_customer_field], "|", shipment[send_date_field], "|",
+              shipment[address_object_field].street)
+
+
+def print_shipment(shipment):
+    pprint(shipment)
+    string = " |", shipment[hire_customer_field], "|", shipment[send_date_field], "|", shipment[
+        address_object_field].street
+    return string
+
+
+def myprint(toprint):
+    print(inspect.currentframe().f_code.co_name.upper(), "Called by",
+          inspect.currentframe().f_back.f_code.co_name.upper(), "at line", inspect.currentframe().f_lineno)
+    print(toprint)

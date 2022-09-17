@@ -1,28 +1,11 @@
-# import sys
-# import time
-#
-# import psutil
-#
-# import win32gui
-#
-# def getActiveProcesses():
-#     return {p.name() for p in psutil.process_iter(["name"])}
-#
-# # Adapted from Martin Thoma on stackoverflow
-# # https://stackoverflow.com/a/36419702/8068814
-# def getActiveWindow():
-#     active_window_name = None
-#     try:
-#         window = win32gui.GetForegroundWindow()
-#         active_window_name = win32gui.GetWindowText(window)
-#     except:
-#         print("Could not get active window: ", sys.exc_info()[0])
-#     return active_window_name
-#
-# while True:
-#     print(getActiveWindow())
-#     print(getActiveWindow())
-#     time.sleep(3)
+import inspect
+from pprint import pprint
 
-myvar : float = 2
+# local namespace
+print(inspect.currentframe().f_locals)
 
+# next outer frame object (this frame’s caller)
+print(inspect.currentframe().f_back)
+
+# sourcecode line
+pprint(inspect.currentframe().f_lineno)
