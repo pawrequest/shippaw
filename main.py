@@ -1,10 +1,15 @@
-from python.despatch_functions import *
+# from python.despatch_functions import *
+# from python.AmDespSingle import *
+from python.AmDespClass import *
 
 ## normal operation ##################
-manifest = manifest_list_from_json()     ##
-process_manifest(manifest)          ##
+# manifest = manifest_list_from_json()     ##
+# process_shipment(manifest)          ##
 ######################################
 
+
+shipment = shipment_from_xml(XMLFILE)
+process_shipment(shipment)
 
 ## get upcoming collection data ##############
 # collections = client.get_collections()    ##

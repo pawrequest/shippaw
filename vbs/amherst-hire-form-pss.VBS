@@ -9,6 +9,9 @@ DIM length, atpos
 ' this will consist of checking consistency - like querying if you have chosen "Returned all OK" and not checked "Closed" etc
 ' and importantly, using the quantities of each item entered to build up the texty "Hire Sheet Text" field that is displayed on the hire
 ' sheet document
+Sub Form_OnLoad
+End Sub
+
 Sub Form_OnSave
 
   ' hstring holds the text description of the items hired in a hire record. It is built up piece by piece according to how many of
@@ -778,6 +781,7 @@ End Sub
 ' Jan 2013: added code for the four buttons that insert the due back dates for 1,2,3 week and month (4 week) hire periods
 ' Mar 2013: added code for the "Student Discount" button, and amended the charity discount rate from 20% to 25%
 ' Oct 2013: added code to allow user to "pull in" hire quantities from the linked customer record - from Autoquote
+
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
@@ -864,20 +868,7 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Collection Method").Value = "Customer Returns"
 
 
-' 		Case "CommandButton14"
-' 			' Check in hire detail form script
-'             MsgBox ("Checking in")    ' debug
-'             Dim categoryName, formName, fileName
-'             categoryName = "Hire"
-'             formName = "hire_pss"
-'             fileName = "C:\AmDesp\vbs\amherst-hire-form-pss.VBS"
-'
-'             Public Function CheckInFormScript (
-'                 categoryName As String,
-'                 formName As String,
-'                 fileName As String
-'             ) As Boolean
-'
+
 
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
@@ -894,8 +885,13 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Closed").Value = 1
 			Form.Save
 
-		Case "CommandButton20"
-		    Call ExportItemDetailForm("C:\AmDesp\item_export.xml")
+        Case "CommandButton20"
+		 ' exports the hire to xml and calls python to ship xml via external vbs script and powershell. powershell checks  in detail-form script
+        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+        Dim objShell, myconnection
+        Set objShell = CreateObject("WScript.Shell")
+        objShell.Run "C:\AmDesp\vbs\button-test.vbs"
+        Set objShell = Nothing
 
         Case "CommandButton21"
             ' packed ok
@@ -905,115 +901,17 @@ Sub Form_OnClick(ControlId)
             Form.Field("Status").Value = "Booked in and packed"
             Form.Save
 
-'
-' 		' makes a dict from some fields and calls button-test.vbs - trying to pass dict...need serialize...json? include / import / wtf?'
-'             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'             ' Makes dict'
-'             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'             Dim json
-'             Dim dict, item
-'             Set dict = CreateObject("Scripting.Dictionary")
-'             dict.Add "Send Out Date", Form.Field("Send Out Date").Value
-'             dict.Add "Delivery Postcode", Form.Field("Delivery Postcode").Value
-'             dict.Add "Delivery Address", Form.Field("Delivery Address").Value
-'             dict.Add "Delivery Name", Form.Field("Delivery Name").Value
-'             dict.Add "Delivery tel", Form.Field("Delivery tel").Value
-'             dict.Add "Delivery Email", Form.Field("Delivery Email").Value
-'             dict.Add "Boxes", Form.Field("Boxes").Value
-'             dict.Add "Reference Number", Form.Field("Reference Number").Value
-'             dict.Add "Delivery Contact", Form.Field("Delivery Contact").Value
-'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'
-'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'             ' ' pass args '
-'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'             Dim objShell, args
-'             Set objShell = CreateObject("WScript.Shell")
-' '             Set args = "one"
-'             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
-'             Set objShell = Nothing
-
-'''''''''''''''''''''''''''''''''''''''
-''''''''    Run AmDesp: Vbs, Ps1, Py ''
-'''''''''''''''''''''''''''''''''''''''
-'             Dim objShell
-'             Set objShell = CreateObject("WScript.Shell")
-'             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
-'             Set objShell = Nothing
-'''''''''''''''''''''''''''''''''''''''
-
-
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with Powershell     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\main.py"
-'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'             JsonPath = "C:\AmDesp\data\AmShip.json"
-'             Dim oShell, source_code_path, variable1, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & JsonPath & Chr(34)
-'             Msgbox "RUN PYTHON"
-'             oShell.run currentCommand,1,true
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' Makes dict in Vbs'
-' 		    Dim json, formData, thisone
-'             Set formData = CreateObject("Scripting.Dictionary")
-'             var json = JSON.stringify(NewMember: formData );
-'             thisone = Form.Fields[0]
-'             MsgBox thisone
-' 		    Dim dict, Item
-'             Set dict = CreateObject("Scripting.Dictionary")
-'             For Each thing In Form.keys
-'                 fieldName = thing
-'                 fieldValue = Form(thing)
-'                 dict.Add fieldName, fieldValue
-'             Next
-
-'             Dim dict
-'
-'             Set dict = CreateObject("Scripting.Dictionary")
-'             dict.Add "Send Out Date", Form.Field("Send Out Date").Value
-'             dict.Add "Delivery Postcode", Form.Field("Delivery Postcode").Value
-'             dict.Add "Delivery Address", Form.Field("Delivery Address").Value
-'             dict.Add "Delivery Name", Form.Field("Delivery Name").Value
-'             dict.Add "Delivery tel", Form.Field("Delivery tel").Value
-'             dict.Add "Delivery Email", Form.Field("Delivery Email").Value
-'             dict.Add "Boxes", Form.Field("Boxes").Value
-'             dict.Add "Reference Number", Form.Field("Reference Number").Value
-'             dict.Add "Delivery Contact", Form.Field("Delivery Contact").Value
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''
-'             ' '  runs AmDesp direct with CMD
-' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\main.py"
-'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'             JsonPath = "C:\AmDesp\data\AmShip.json"
-
-'             Dim oShell, source_code_path, variable1, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " " & python_script & " " & JsonPath
-'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & dict & Chr(34)
-'             oShell.run
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-
     End Select
 End Sub
 
-''*******************************************************
-'***********pss func exports item detail *****************
+'''''''''''''''''''''''''''''''''''''''''''''
+''''''''' arno-pss function to export item field
+'''''''''''''''''''''''''''''''''''''''''''''''''''
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
 Sub ExportItemDetailForm(ByVal strPath)
+
     'will export all values showing on the form,
     'including ones that are not visible(!)
     'any user, if permissioned, can always show these anwyay.
@@ -1025,6 +923,7 @@ Sub ExportItemDetailForm(ByVal strPath)
     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
     xmlDoc.async = false
     xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+
     Dim el
     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
     Set el = xmlDoc.createElement("CategoryName")
@@ -1050,20 +949,22 @@ Sub ExportItemDetailForm(ByVal strPath)
         n.appendChild(el)
         Set el = xmlDoc.createElement("FieldValue")
         el.text = sanitizeXMLString(f.Value)
-        n.appendChild(el)
+    n.appendChild(el)
     Next
 
-    ' process connections
-	strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-	arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+
+    ' process customer connections
+    strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+    arrCons = Split(conv.Request(strDDE), CMC_DELIM)
 
     Dim c, j, tmp
     Set el = xmlDoc.createElement("Connections")
     Dim cnode : Set cnode = objRoot.childNodes.item(0).appendChild(el)
-    For i = 0 To UBound(arrCons) - 1
+
+    For i = 0 To UBound(arrCons)
         tmp = Split(arrCons(i), CMC_DELIM2) 'split Connection name and ToCategory
         On Error Resume Next
-        Set c = Form.Connection(tmp(0), tmp(1)) 'is there such a Connection?
+        Set c = Form.Connection(tmp(0), tmp(1)) 'To, Customer
         On Error GoTo 0
         If c.ConnectedItemCount > 0 Then 'only export if there are values. Do we want this?
             Set el = xmlDoc.createElement("Connection")
@@ -1081,6 +982,14 @@ Sub ExportItemDetailForm(ByVal strPath)
         End If
     Next 'i
 
+
+
+'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
+'     Set el = xmlDoc.createElement("Customer")
+'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
+'     el.text = sanitizeXMLString(connect.ItemName)
+'     Set el = xmlDoc.createElement("ToCategory")
+
     xmlDoc.Save strPath
 
     Set xmlDoc = Nothing
@@ -1088,6 +997,7 @@ Sub ExportItemDetailForm(ByVal strPath)
     Set db = Nothing
 
 End Sub
+
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i

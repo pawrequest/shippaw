@@ -1,6 +1,5 @@
 import pathlib
-import subprocess, sys
-from pprint import pprint
+import sys
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent  # from despatchbaysdk which is location of despatch functions
 DATA_DIR = ROOT_DIR / 'data'
@@ -59,9 +58,9 @@ COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 #
 #     with open(logfile, 'w') as f:
 #         new_out = {}
-#         exclude_keys = [address_object_field, date_object_field, service_object_field]
+#         export_exclude_keys = [address_object_field, date_object_field, service_object_field]
 #         for count, (key, shipment) in enumerate(manifest.items()):
-#             output = {k: shipment[k] for k in set(list(shipment.keys())) - set(exclude_keys)}
+#             output = {k: shipment[k] for k in set(list(shipment.keys())) - set(export_exclude_keys)}
 #             date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
 #             new_out.update({date_blah+" - "+shipment[customer_field]: output})
 #             # print("dumped")
@@ -214,13 +213,11 @@ def get_manifest_address_objects(manifest):
 #             return 1
 
 
-import datetime
-
 print()
 
 '''
 
-def adjust_address(manifest): # takes dict oif dicts with customer name as keys
+def change_address(manifest): # takes dict oif dicts with customer name as keys
 #     print("Which Shipment To Adjust?\n")
 #     for count, (key, shipment) in enumerate(list(manifest.items())):
 #         print(count + 1, shipment[customer_field], shipment[date_object_field].date, "To:", shipment[address_object_field].street)
@@ -255,7 +252,7 @@ def adjust_address(manifest): # takes dict oif dicts with customer name as keys
 #             print(count + 1, shipment[customer_field], shipment[date_object_field].date, "To:", shipment[address_object_field].street)
 #         again_input = input("Adjust Another? yes to again")
 #         if again_input == "yes":
-#             adjust_address(manifest)
+#             change_address(manifest)
 #         return manifest
 
 #
@@ -278,7 +275,7 @@ def adjust_address(manifest): # takes dict oif dicts with customer name as keys
     # for count, shipment in enumerate(manifest, start=1):
     #     print(count, "|", shipment[customer_field], "|", shipment[address_firstline_field])
     # if input('Type "yes" to Adjust Another') == 'yes':
-    #     adjust_address(manifest)
+    #     change_address(manifest)
 
 # def deliver_manifest(manifest):
 #     for key, shipment in manifest.items():
@@ -349,7 +346,7 @@ def adjust_address(manifest): # takes dict oif dicts with customer name as keys
 #             # label_string.pdf = 'data/parcelforce_labels/' + shipment['customer'] + "-" + shipment['collection_date'] + '.pdf'
 #             # label_pdf.download(label_string.pdf)
 #
-#             shipment['shipped'] = True
+#             shipment['collection_booked'] = True
 #             # records despatch references
 #             # # format / print label ??
 #             continue

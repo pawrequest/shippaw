@@ -1,6 +1,7 @@
 import datetime
 import inspect
 import json
+import xml.etree.ElementTree as ET
 from pprint import pprint
 
 from config import *
@@ -15,7 +16,6 @@ def process_manifest(manifest):  # takes list of shipments
         print("\t\t", count + 1, "|", shipment[hire_customer], "|", shipment[send_date])
     print("\n--- Checking Available Collection Dates...")
     print('-' * 90)  # U+2500, Box Drawings Light Horizontal
-
 
     for count, shipment in enumerate(manifest):
         if not check_send_date(shipment, dates):
@@ -57,6 +57,22 @@ def process_manifest(manifest):  # takes list of shipments
             continue
 
 
+def shipment_from_xml(xml):
+    shipment = {}
+    tree = ET.parse(xml)
+    root = tree.getroot()
+    # print(root.items())
+    fields = root[0][2]
+    cat = root[0][0].text
+    for field in fields:
+        fieldname = field[0].text
+        fieldvalue = field[1].text
+        shipment[fieldname] = fieldvalue
+        shipment[category] = cat
+
+    return shipment
+
+
 def manifest_list_from_json():
     if os.path.isfile(JSONFILE):
         with open(JSONFILE) as f:
@@ -73,7 +89,6 @@ def manifest_list_from_json():
         print("NOT A FILE")
 
 
-
 def parse_manifest_addresses(manifest):
     myprint("Parsing Manifest")
     for count, shipment in enumerate(manifest):
@@ -88,7 +103,7 @@ def parse_shipment_address(shipment):
     first_line = crapstring.split("\r")[0]
     second_line = crapstring.split("\r")[1]
     # rsecond_line = crapstring.split("\r")[2]
-    myprint("FIRSTLINE", first_line,"\n","SECOND",second_line) #debug
+    myprint("FIRSTLINE", first_line, "\n", "SECOND", second_line)  # debug
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
     for char in first_line:
