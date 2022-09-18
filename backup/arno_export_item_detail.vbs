@@ -1,31 +1,5 @@
-'''''''''''''''''''''''''''''''''''''''''''''
-''''  run powershell file  ''''''''''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''
-' Dim objShell, args
-' ' runscript = "powershell -executionpolicy bypass -noexit -file"
-' runscript = "powershell -executionpolicy bypass -file"
-' file = "C:\AmDesp\AmDesp.ps1"
-' args = ""
-' Set objShell = CreateObject("WScript.Shell")
-' objShell.Run (runscript & " " & file & " " & args)
-' Set objShell = Nothing
-''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-' ''''''''''''''''''''''''''
-' get args'''''''''''''''''
-' '''''''''''''''''''''''''''
-' Set args = Wscript.Arguments
-' For Each arg In args
-'   Wscript.Echo arg
-' Next
-' '''''''''''''''''''''''''''''
-
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-
-Dim exportfile
-exportfile = "c:\amdesp\export.xml"
-
 
 
 Sub Form_OnClick(ByVal ControlName)
@@ -40,7 +14,7 @@ Sub ExportItemDetailForm(ByVal strPath)
     'will export all values showing on the form,
     'including ones that are not visible(!)
     'any user, if permissioned, can always show these anwyay.
-    Dim db, conv, f, arrFields, arrCons
+    Dim db, conv, f, arrFields, arrCons, strDDE
     Set db = Application.Database
     Set conv = db.GetConversation("Commence", "GetData")
     strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"

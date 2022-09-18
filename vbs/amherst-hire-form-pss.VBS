@@ -846,66 +846,39 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Unpacked Time").Value = "now"
 		
 		Case "CommandButton11"
-			' this button inserts the description "Parcelforce" into the Send Method field
-        MsgBox ("Commence database name: ")'  & app.Name ' this is a silly example of course
-			Form.Field("Send Method").Value = "Parcelforce / DB"
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "Parcelforce/DB and we collect"
-			End If
-		
+			' All Parcelforce
+            MsgBox ("All Parcelforce") ' debug
+			Form.Field("Send Method").Value = "Parcelforce"
+			Form.Field("Collection Method").Value = "Parcelforce"
+
 		Case "CommandButton12"
-			' this button inserts the description "RUSH bike" into the Send Method field
-			Form.Field("Send Method").Value = "RUSH motorbike"
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "RUSH motorbike and we collect"
-			End If
-		
+			' All Courier
+            MsgBox ("All Courier")    ' debug
+			Form.Field("Send Method").Value = "Other Courier"
+			Form.Field("Collection Method").Value = "Other Courier"
+
 		Case "CommandButton13"
-			' this button inserts the description "RUSH car/van" into the Send Method field
-			Form.Field("Send Method").Value = "RUSH car/van"
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "RUSH car/van and we collect"
-			End If
-		
-		Case "CommandButton14"
-			' this button inserts the description "Absolutely motorbike" into the Send Method field
-			Form.Field("Send Method").Value = "Absolutely motorbike"
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
-			End If
-		
-		Case "CommandButton15"
-			' this button writes the delivery details to a CSV text file on the PC's local disk, which can 
-			' then be uploaded into the Despatchbay web site
-			'dim fs,fname
-			'set fs=Server.CreateObject("Scripting.FileSystemObject")
-			'set fname=fs.CreateTextFile("c:\test.txt",true)
-			'fname.WriteLine("Hello World!")
-			'fname.Close
-			'set fname=nothing
-			'set fs=nothing
-			
-			Dim fso, DBtextfilename, DBstring
-			Set fso = CreateObject("Scripting.FileSystemObject")
-			Set DBtextfilename = fso.CreateTextFile("c:\Windows\temp\DBaddressfile.txt",True)
-			DBstring = Form.Field("Delivery Contact").Value + ", " + Form.Field("Delivery Address").Value + ", " + Form.Field("Delivery Postcode").Value + ", " + Form.Field("Delivery Telephone").Value + ", " + Form.Field("Delivery Tel").Value
-			DBtextfilename.WriteLine(DBstring)
-			DBtextfilename.Close
-			
-		Case "CommandButton16"
-			' this button inserts the description "Absolutely car/van" into the Send Method field
-			Form.Field("Send Method").Value = "Absolutely car/van"	
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "Absolutely car/van and we collect"
-			End If
-		
-		Case "CommandButton17"
-			' this button inserts the description "Amherst Staff" into the Send Method field
-			Form.Field("Send Method").Value = "Amherst staff"	
-			If Form.Field("Send / Collect").Value = "We send and pick up" Then
-				Form.Field("Send Method").Value = "Amherst staff and we collect"
-			End If
-		
+			' All Customer
+            MsgBox ("All Customer")    ' debug
+			Form.Field("Send Method").Value = "Customer Collects"
+			Form.Field("Collection Method").Value = "Customer Returns"
+
+
+' 		Case "CommandButton14"
+' 			' Check in hire detail form script
+'             MsgBox ("Checking in")    ' debug
+'             Dim categoryName, formName, fileName
+'             categoryName = "Hire"
+'             formName = "hire_pss"
+'             fileName = "C:\AmDesp\vbs\amherst-hire-form-pss.VBS"
+'
+'             Public Function CheckInFormScript (
+'                 categoryName As String,
+'                 formName As String,
+'                 fileName As String
+'             ) As Boolean
+'
+
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
@@ -922,31 +895,43 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
 		Case "CommandButton20"
-            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            ' Makes dict'
-            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            Dim json
-            Dim dict, item
-            Set dict = CreateObject("Scripting.Dictionary")
-            dict.Add "Send Out Date", Form.Field("Send Out Date").Value
-            dict.Add "Delivery Postcode", Form.Field("Delivery Postcode").Value
-            dict.Add "Delivery Address", Form.Field("Delivery Address").Value
-            dict.Add "Delivery Name", Form.Field("Delivery Name").Value
-            dict.Add "Delivery tel", Form.Field("Delivery tel").Value
-            dict.Add "Delivery Email", Form.Field("Delivery Email").Value
-            dict.Add "Boxes", Form.Field("Boxes").Value
-            dict.Add "Reference Number", Form.Field("Reference Number").Value
-            dict.Add "Delivery Contact", Form.Field("Delivery Contact").Value
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+		    Call ExportItemDetailForm("C:\AmDesp\item_export.xml")
 
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            ' ' pass args '
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            Dim objShell, args
-            Set objShell = CreateObject("WScript.Shell")
-'             Set args = "one"
-            objShell.Run "C:\AmDesp\vbs\button-test.vbs"
-            Set objShell = Nothing
+        Case "CommandButton21"
+            ' packed ok
+            Form.Field("Packed By").Value = "PR"
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            Form.Save
+
+'
+' 		' makes a dict from some fields and calls button-test.vbs - trying to pass dict...need serialize...json? include / import / wtf?'
+'             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'             ' Makes dict'
+'             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'             Dim json
+'             Dim dict, item
+'             Set dict = CreateObject("Scripting.Dictionary")
+'             dict.Add "Send Out Date", Form.Field("Send Out Date").Value
+'             dict.Add "Delivery Postcode", Form.Field("Delivery Postcode").Value
+'             dict.Add "Delivery Address", Form.Field("Delivery Address").Value
+'             dict.Add "Delivery Name", Form.Field("Delivery Name").Value
+'             dict.Add "Delivery tel", Form.Field("Delivery tel").Value
+'             dict.Add "Delivery Email", Form.Field("Delivery Email").Value
+'             dict.Add "Boxes", Form.Field("Boxes").Value
+'             dict.Add "Reference Number", Form.Field("Reference Number").Value
+'             dict.Add "Delivery Contact", Form.Field("Delivery Contact").Value
+'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'
+'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'             ' ' pass args '
+'             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'             Dim objShell, args
+'             Set objShell = CreateObject("WScript.Shell")
+' '             Set args = "one"
+'             objShell.Run "C:\AmDesp\vbs\button-test.vbs"
+'             Set objShell = Nothing
 
 '''''''''''''''''''''''''''''''''''''''
 ''''''''    Run AmDesp: Vbs, Ps1, Py ''
@@ -957,13 +942,7 @@ Sub Form_OnClick(ControlId)
 '             Set objShell = Nothing
 '''''''''''''''''''''''''''''''''''''''
 
-        Case "CommandButton21"
-            ' packed ok
-            Form.Field("Packed By").Value = "PR"
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            Form.Save
+
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   Runs Amdesp direct with Powershell     ''''''''''
@@ -1029,7 +1008,113 @@ Sub Form_OnClick(ControlId)
     End Select
 End Sub
 
+''*******************************************************
+'***********pss func exports item detail *****************
+Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
+Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
+Sub ExportItemDetailForm(ByVal strPath)
+    'will export all values showing on the form,
+    'including ones that are not visible(!)
+    'any user, if permissioned, can always show these anwyay.
+    Dim db, conv, f, arrFields, arrCons, strDDE
+    Set db = Application.Database
+    Set conv = db.GetConversation("Commence", "GetData")
+    strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
+    arrFields = Split(conv.Request(strDDE), CMC_DELIM)
+    Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
+    xmlDoc.async = false
+    xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+    Dim el
+    Dim objRoot : Set objRoot = xmlDoc.DocumentElement
+    Set el = xmlDoc.createElement("CategoryName")
+    el.text = sanitizeXMLString(Form.CategoryName)
+    objRoot.childNodes.item(0).appendChild(el)
+    Set el = xmlDoc.createElement("FormName")
+    el.text = sanitizeXMLString(Form.Name)
+    objRoot.childNodes.item(0).appendChild(el)
+    Set el = xmlDoc.createElement("Fields")
+    Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+    Dim i
+    For i = 0 To UBound(arrFields) - 1
+        ' the idea is that if we cannot instatiate a field,
+        ' it isn't on the form, so we need to catch the errors
+        On Error Resume Next
+        Set f = Form.Field(arrFields(i))
+        On Error Goto 0
+        ' add to xml doc
+        Set el = xmlDoc.createElement("Field")
+        Dim n : Set n = fnode.appendChild(el) 'get reference to node
+        Set el = xmlDoc.createElement("FieldName")
+        el.text = sanitizeXMLString(f.Name)
+        n.appendChild(el)
+        Set el = xmlDoc.createElement("FieldValue")
+        el.text = sanitizeXMLString(f.Value)
+        n.appendChild(el)
+    Next
+
+    ' process connections
+	strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+	arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+
+    Dim c, j, tmp
+    Set el = xmlDoc.createElement("Connections")
+    Dim cnode : Set cnode = objRoot.childNodes.item(0).appendChild(el)
+    For i = 0 To UBound(arrCons) - 1
+        tmp = Split(arrCons(i), CMC_DELIM2) 'split Connection name and ToCategory
+        On Error Resume Next
+        Set c = Form.Connection(tmp(0), tmp(1)) 'is there such a Connection?
+        On Error GoTo 0
+        If c.ConnectedItemCount > 0 Then 'only export if there are values. Do we want this?
+            Set el = xmlDoc.createElement("Connection")
+            el.text = sanitizeXMLString(c.Name)
+            Dim elConName : Set elConName = cnode.appendChild(el) 'get reference to node
+            Set el = xmlDoc.createElement("ToCategory")
+            el.text = sanitizeXMLString(c.ToCategory)
+            Dim elCatName : Set elCatName = elConName.appendChild(el) 'get reference to node
+            For j = 1 To c.ConnectedItemCount 'a populated connection is initialized to 1
+                c.CurrentSelection(j)
+                Set el = xmlDoc.createElement("ItemName")
+                el.text = sanitizeXMLString(c.ItemName)
+                elCatName.appendChild(el)
+            Next 'j
+        End If
+    Next 'i
+
+    xmlDoc.Save strPath
+
+    Set xmlDoc = Nothing
+    Set conv= Nothing
+    Set db = Nothing
+
+End Sub
+
+public Function sanitizeXMLString(invalidString)
+	Dim tmp, i
+	tmp = invalidString
+	'first replace ampersand
+	tmp = Replace(tmp, chr(38), "&amp;")
+	'then the other special characters
+	For i = 160 to 255
+		tmp = Replace(tmp, chr(i), "&#" & i & ";")
+	Next
+	'and then the special characters
+	tmp = Replace(tmp, chr(34), "&quot;")
+	tmp = Replace(tmp, chr(39), "&apos;")
+	tmp = Replace(tmp, chr(60), "&lt;")
+	tmp = Replace(tmp, chr(62), "&gt;")
+	'tmp = Replace(tmp, chr(32), "&nbsp;")
+	sanitizeXMLString = tmp
+end function
+
+Function dq(s)
+
+  dq = Chr(34) & s & Chr(34)
+
+End Function
+'*********************************************
+'********** end of pss************
+''******************************************
 
 '****** start of functions
 
