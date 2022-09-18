@@ -14,6 +14,11 @@ $export = New-Object ExportEngine
 $cursor = $db.GetCursor("Hire")
 $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
 
+$checked = $db.CheckInFormScript("Hire", "hire_pss", "C:\AmDesp\vbs\amherst-hire-form-pss.VBS")
+Write-Host Form checked is $checked
+"Script Checkled In"
+
+
 # filter properties
 $filter.FieldName = "ShipMe"
 $filter.FieldValue = "TRUE"

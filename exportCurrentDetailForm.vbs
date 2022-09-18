@@ -1,37 +1,10 @@
-'''''''''''''''''''''''''''''''''''''''''''''
-''''  run powershell file  ''''''''''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''
-' Dim objShell, args
-' ' runscript = "powershell -executionpolicy bypass -noexit -file"
-' runscript = "powershell -executionpolicy bypass -file"
-' file = "C:\AmDesp\AmDesp.ps1"
-' args = ""
-' Set objShell = CreateObject("WScript.Shell")
-' objShell.Run (runscript & " " & file & " " & args)
-' Set objShell = Nothing
-''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-' ''''''''''''''''''''''''''
-' get args'''''''''''''''''
-' '''''''''''''''''''''''''''
-' Set args = Wscript.Arguments
-' For Each arg In args
-'   Wscript.Echo arg
-' Next
-' '''''''''''''''''''''''''''''
-
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
-Dim exportfile
-exportfile = "c:\amdesp\export.xml"
-
-
-
 Sub Form_OnClick(ByVal ControlName)
     Select Case ControlName
-        Case "CommandButton"
-            Call ExportItemDetailForm(exportfile) 'change this
+        Case "CommandButton1"
+            Call ExportItemDetailForm("e:\temp\exportDetailForm.xml") 'change this
         Exit Sub
     End Select
 End Sub
@@ -59,7 +32,7 @@ Sub ExportItemDetailForm(ByVal strPath)
     Set el = xmlDoc.createElement("Fields")
     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
     Dim i
-    For i = 0 To UBound(arrFields) - 1
+    For i = 0 To UBound(arrFields) - 1 
         ' the idea is that if we cannot instatiate a field,
         ' it isn't on the form, so we need to catch the errors
         On Error Resume Next
@@ -113,10 +86,10 @@ Sub ExportItemDetailForm(ByVal strPath)
 End Sub
 
 public Function sanitizeXMLString(invalidString)
-	Dim tmp, i
+	Dim tmp, i 
 	tmp = invalidString
 	'first replace ampersand
-	tmp = Replace(tmp, chr(38), "&amp;")
+	tmp = Replace(tmp, chr(38), "&amp;") 
 	'then the other special characters
 	For i = 160 to 255
 		tmp = Replace(tmp, chr(i), "&#" & i & ";")

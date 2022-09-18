@@ -1,7 +1,7 @@
 from python.despatch_functions import *
 
 ## normal operation ##################
-manifest = manifest_from_json()     ##
+manifest = manifest_list_from_json()     ##
 process_manifest(manifest)          ##
 ######################################
 
