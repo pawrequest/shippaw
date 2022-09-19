@@ -1,17 +1,137 @@
-Dim objShell
-Set objShell = CreateObject(“Wscript.shell”)
-objShell.run(“powershell -noexit -file C:\paul\AmDesp\AmDespPowershellAmherstAdmin.ps1”)
+'''''''''''''''''''''''''''''''''''''''''''''
+''''  run powershell file  ''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''
+Dim objShell, args
+' runscript = "powershell -executionpolicy bypass -noexit -file"
+runscript = "powershell -executionpolicy bypass -noexit -file"
+file = "C:\AmDesp\AmDespSingle.ps1"
+args = ""
+Set objShell = CreateObject("WScript.Shell")
+objShell.Run (runscript & " " & file & " " & args)
+Set objShell = Nothing
+''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-' It is also possible to run a specific Windows PowerShell command or series of commands from the VBScript script. This technique is shown here.
+' ''''''''''''''''''''''''''
+' get args'''''''''''''''''
+' '''''''''''''''''''''''''''
+' Set args = Wscript.Arguments
+' For Each arg In args
+'   Wscript.Echo arg
+' Next
+' '''''''''''''''''''''''''''''
+
+' Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
+' Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 '
-' objShell.run(“powershell -noexit -command “”&{0..15 | % {Write-Host -foreground $_ ‘Hello World’ }}”””)
+' Dim exportfile
+' exportfile = "c:\amdesp\export.xml"
 '
-' Note   Keep in mind that you are writing in VBScript. Therefore, you need to escape the quotation marks with another pair of quotation marks. Also, remember that you use REM to comment out a line, and not the pound sign character (#) that is used in Windows PowerShell.
-
-
-' working
-' 		Case "CommandButton20"
-' 		    Dim objShell
-'             Set objShell = CreateObject("Wscript.shell")
-'             objShell.run("powershell -executionpolicy bypass -noexit -file c:\fso\helloworld.ps1 C:\paul\AmDesp\test.ps1")
-
+'
+'
+' Sub Form_OnClick(ByVal ControlName)
+'     Select Case ControlName
+'         Case "CommandButton"
+'             Call ExportItemDetailForm(exportfile) 'change this
+'         Exit Sub
+'     End Select
+' End Sub
+'
+' Sub ExportItemDetailForm(ByVal strPath)
+'     'will export all values showing on the form,
+'     'including ones that are not visible(!)
+'     'any user, if permissioned, can always show these anwyay.
+'     Dim db, conv, f, arrFields, arrCons
+'     Set db = Application.Database
+'     Set conv = db.GetConversation("Commence", "GetData")
+'     strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
+'     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
+'     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
+'     xmlDoc.async = false
+'     xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+'     Dim el
+'     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
+'     Set el = xmlDoc.createElement("CategoryName")
+'     el.text = sanitizeXMLString(Form.CategoryName)
+'     objRoot.childNodes.item(0).appendChild(el)
+'     Set el = xmlDoc.createElement("FormName")
+'     el.text = sanitizeXMLString(Form.Name)
+'     objRoot.childNodes.item(0).appendChild(el)
+'     Set el = xmlDoc.createElement("Fields")
+'     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+'     Dim i
+'     For i = 0 To UBound(arrFields) - 1
+'         ' the idea is that if we cannot instatiate a field,
+'         ' it isn't on the form, so we need to catch the errors
+'         On Error Resume Next
+'         Set f = Form.Field(arrFields(i))
+'         On Error Goto 0
+'         ' add to xml doc
+'         Set el = xmlDoc.createElement("Field")
+'         Dim n : Set n = fnode.appendChild(el) 'get reference to node
+'         Set el = xmlDoc.createElement("FieldName")
+'         el.text = sanitizeXMLString(f.Name)
+'         n.appendChild(el)
+'         Set el = xmlDoc.createElement("FieldValue")
+'         el.text = sanitizeXMLString(f.Value)
+'         n.appendChild(el)
+'     Next
+'
+'     ' process connections
+' 	strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+' 	arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+'
+'     Dim c, j, tmp
+'     Set el = xmlDoc.createElement("Connections")
+'     Dim cnode : Set cnode = objRoot.childNodes.item(0).appendChild(el)
+'     For i = 0 To UBound(arrCons) - 1
+'         tmp = Split(arrCons(i), CMC_DELIM2) 'split Connection name and ToCategory
+'         On Error Resume Next
+'         Set c = Form.Connection(tmp(0), tmp(1)) 'is there such a Connection?
+'         On Error GoTo 0
+'         If c.ConnectedItemCount > 0 Then 'only export if there are values. Do we want this?
+'             Set el = xmlDoc.createElement("Connection")
+'             el.text = sanitizeXMLString(c.Name)
+'             Dim elConName : Set elConName = cnode.appendChild(el) 'get reference to node
+'             Set el = xmlDoc.createElement("ToCategory")
+'             el.text = sanitizeXMLString(c.ToCategory)
+'             Dim elCatName : Set elCatName = elConName.appendChild(el) 'get reference to node
+'             For j = 1 To c.ConnectedItemCount 'a populated connection is initialized to 1
+'                 c.CurrentSelection(j)
+'                 Set el = xmlDoc.createElement("ItemName")
+'                 el.text = sanitizeXMLString(c.ItemName)
+'                 elCatName.appendChild(el)
+'             Next 'j
+'         End If
+'     Next 'i
+'
+'     xmlDoc.Save strPath
+'
+'     Set xmlDoc = Nothing
+'     Set conv= Nothing
+'     Set db = Nothing
+'
+' End Sub
+'
+' public Function sanitizeXMLString(invalidString)
+' 	Dim tmp, i
+' 	tmp = invalidString
+' 	'first replace ampersand
+' 	tmp = Replace(tmp, chr(38), "&amp;")
+' 	'then the other special characters
+' 	For i = 160 to 255
+' 		tmp = Replace(tmp, chr(i), "&#" & i & ";")
+' 	Next
+' 	'and then the special characters
+' 	tmp = Replace(tmp, chr(34), "&quot;")
+' 	tmp = Replace(tmp, chr(39), "&apos;")
+' 	tmp = Replace(tmp, chr(60), "&lt;")
+' 	tmp = Replace(tmp, chr(62), "&gt;")
+' 	'tmp = Replace(tmp, chr(32), "&nbsp;")
+' 	sanitizeXMLString = tmp
+' end function
+'
+' Function dq(s)
+'
+'   dq = Chr(34) & s & Chr(34)
+'
+' End Function

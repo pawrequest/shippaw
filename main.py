@@ -1,28 +1,43 @@
-import sys
-from python.despatch_functions import *
+# from python.despatch_functions import *
+# from python.AmDespSingle import *
+from python.AmDespClass import *
 
-# user_location = "admin"
-user_location = "ryzen"
-
-
-# book_shipments(manifest_csv='Am_ship.csv')
-# book_shipments(manifest_from_json())
-#jsonfile = "data/AmShip.json"
-#book_shipments
+## normal operation ##################
+# manifest = manifest_list_from_json()     ##
+# process_shipment(manifest)          ##
+######################################
 
 
-# # jsonfile = sys.argv[0] # run from powershell supplying json
-# jsonfile = ".data/AmShip.json" # run from project json
-#
-# collections = client.get_collections() # shows upcoming collections
-# pprint (collections)
+shipment = shipment_from_xml(XMLFILE)
+process_shipment(shipment)
 
-manifest = manifest_from_json()
-process_manifest(manifest)
-#
+## get upcoming collection data ##############
+# collections = client.get_collections()    ##
+# pprint (collections)                      ##
+##############################################
+
+# manifest = manifest_from_json()
 # def clean_objects(manifest):
-#     for key, shipment in manifest:
-#         pprint (shipment)
+#     for shipment in manifest:
+#         print (shipment)
+# # print(clean_objects(manifest[1]))
+# print (manifest)
 
-# shipper = Shipment(manifest['Items'][0])
-# print("SHIPPER",shipper)
+# if os.path.isfile(JSONFILE):
+#     with open(JSONFILE) as f:
+#         manifest = []
+#         manifest_data = json.load(f)
+#         pprint(manifest_data)
+# else: print ("NOT A FILE")
+
+# def main(foo, bar, **kwargs):
+#     print('Called myscript with:')
+#     print('foo = {}'.format(foo))
+#     print('bar = {}'.format(bar))
+#     for k, v in kwargs.items():
+#         print('keyword argument: {} = {}'.format(k, v))
+#
+# if __name__=='__main__':
+#     main(sys.argv[1], # foo
+#          sys.argv[2], # bar
+#          **dict(arg.split('=') for arg in sys.argv[3:])) # kwargs

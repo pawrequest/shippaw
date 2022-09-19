@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="root" type="rootType"/>
+    <xs:complexType name="FieldType">
+        <xs:sequence>
+            <xs:element type="xs:string" name="FieldName"/>
+            <xs:element type="xs:string" name="FieldValue"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="FieldsType">
+        <xs:sequence>
+            <xs:element type="FieldType" name="Field" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="ItemDetailFormType">
+        <xs:sequence>
+            <xs:element type="xs:string" name="CategoryName"/>
+            <xs:element type="xs:string" name="FormName"/>
+            <xs:element type="FieldsType" name="Fields"/>
+            <xs:element type="xs:string" name="Connections"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="rootType">
+        <xs:sequence>
+            <xs:element type="ItemDetailFormType" name="ItemDetailForm"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

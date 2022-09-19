@@ -1,3 +1,7 @@
+running notes:
+commence backups in office - how often? make more often while dev!
+
+
 TODO:
 ask user for dimensions or keep using placeholder?
 CLI functions:
@@ -5,6 +9,13 @@ CLI functions:
     get / print labels
     cancel collection / delete label
     track shipments by customer / date / order
+
+
+
+
+
+
+
 
 *********************
 python kwargs from cli

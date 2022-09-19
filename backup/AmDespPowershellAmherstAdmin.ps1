@@ -3,12 +3,10 @@ using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
 
-
-
 # system-specific paths
-$JsonPath = (Resolve-Path ($PSScriptRoot + "\data\AmShip.json"))
-$python_exe = "C:\Users\giles\AppData\Local\Programs\Python\Python310\python.exe"
-$python_script = "C:\Paul\AmDesp\main.py"
+$JsonPath = "C:\AmDesp\data\AmShip.json"
+$python_exe = "C:\AmDesp\bin\python.exe"
+$python_script = "C:\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll" # the default path of the assembly when you used the installer
 
 # create objects
