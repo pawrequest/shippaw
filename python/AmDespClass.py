@@ -1,6 +1,9 @@
 import inspect
 import json
 import xml.etree.ElementTree as ET
+from datetime import datetime
+
+from dateutil.parser import parse
 
 from config import *
 from .class_play import *
@@ -11,7 +14,7 @@ def shipment_from_xml(xml):
     tree = ET.parse(xml)
     root = tree.getroot()
     fields = root[0][2]
-    custom = root[0][3][1][0][0].text
+    connected_customer = root[0][3][1][0][0].text
     cat = root[0][0].text.lower()
     for field in fields:
         if field[0].text:
@@ -22,9 +25,7 @@ def shipment_from_xml(xml):
             if " " in fieldname:
                 fieldname = fieldname.replace(" ", "_")
             if fieldname in commence_columns.keys():  # debug
-                print("KEY IN COM", fieldname)
                 fieldname = commence_columns[fieldname]
-                print(fieldname)
             if field[1].text:
                 fieldvalue = field[1].text
                 fieldvalue = unsanitise(fieldvalue)
@@ -34,7 +35,14 @@ def shipment_from_xml(xml):
                         fieldvalue = None
                 setattr(shipment, fieldname, fieldvalue)
     setattr(shipment, category, cat)
-    setattr(shipment, customer, custom)
+    print(shipment.send_date)
+    if cat.lower() == "customer":
+        print("IS A CUSTOMER")
+        shipment.send_date = datetime.today().date()
+    elif cat.lower() == "hire":
+        print("IS A HIRE")
+        setattr(shipment, customer, connected_customer)
+        shipment.send_date = datetime.strptime(shipment.send_date, '%d/%m/%Y').date()
     return shipment
 
 
@@ -45,28 +53,54 @@ def unsanitise(string):
     return string
 
 
+def check_boxes(shipment):
+    ui = ""
+    while True:
+        if shipment.boxes:
+            print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|", shipment.send_date)
+            ui = input("[C]onfirm or Enter a number of boxes\n")
+            if ui.isnumeric():
+                shipment.boxes=int(ui)
+                print("Shipment updated  |  ",shipment.boxes,"  boxes\n")
+            if ui == 'c':
+                return shipment
+            continue
+        else:
+            print("\n\t\t*** ERROR: No boxes added ***\n")
+            ui = input("- How many boxes?\n")
+            if not ui.isnumeric():
+                print("- Enter a number")
+                continue
+            shipment.boxes=int(ui)
+            print("Shipment updated  |  ", shipment.boxes, "  boxes")
+            return shipment
+
+
 def process_shipment(shipment):  # master function takes shipment dict
     # parse address
     shipment = parse_shipment_address(shipment)
-    print("\t\t", shipment.boxes, "box/es |", shipment.customer, "|", shipment.firstline, "|",
+
+
+    print(line,"\n\t\t", shipment.customer, "|", shipment.firstline, "|",
           shipment.send_date)
-    print("\n--- Checking Available Collection Dates...")
-    print('-' * 90)  # U+2500, Box Drawings Light Horizontal # debug
+    print(line)  # U+2500, Box Drawings Light Horizontal # debug
+
+    shipment=check_boxes(shipment)
     # validate date and address
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
-            print("Shipment Validated:", shipment.customer, "|", shipment.boxes,
-                  "box(es) |", shipment.address_object.street, " | ", shipment.date_object.date)
+            print("- Shipment Validated || ", shipment.customer, "|", shipment.boxes,
+                  "box(es) |", shipment.address_object.street, " | ", shipment.date_object.date, "\n", (line))
     # shall we continue?
     userinput = "1"
     while (userinput not in ["p", "c", "e"]):
         userinput = str(
             input(
-                '\nQueue Shipment?:\nEnter "[p]roceed, [c]hange address, or [e]xit\n'))[0].lower()
+                '\n- [Q]uote Shipment, [C]hange address, or [E]xit\n'))[0].lower()
         if len(userinput) < 1:
             continue
-        if userinput[0] == 'p':
+        if userinput[0] == 'q':
             queue_shipment(shipment)
             break
         elif userinput == "c":
@@ -76,7 +110,7 @@ def process_shipment(shipment):  # master function takes shipment dict
         elif userinput == "e":
             userinput = ""
             while len(userinput) < 1:
-                userinput = input("Enter [e]xit, or [c]ontinue booking\n")[0].lower()
+                userinput = input("- [E]xit, or [C]ontinue booking\n")[0].lower()
                 if userinput == "e":
                     log_to_json(shipment)
                     exit()
@@ -84,81 +118,73 @@ def process_shipment(shipment):  # master function takes shipment dict
                     continue
     userinput = ""
     while True:
-        userinput = str(input('\nBook Shipment?:\nEnter "yes" to proceed anything else to exit \n')).lower()
-        if userinput[0].lower() == 'y':
+        userinput = str(input('\n- [B]ook shipment or [E]xit? \n \n')).lower()
+        if userinput[0] == 'b':
             book_shipment(shipment)
-        else:
-            if input("type [y]es to confirm exit")[0].lower() == "y":
+        elif userinput[0] == "e":
+            if input("- [E]xit?")[0].lower() == "e":
                 log_to_json(shipment)
                 exit()
             continue
+        continue
 
 
 def parse_shipment_address(shipment):
     print("\n--- Parsing Address...\n")
     crapstring = shipment.address
-    first_line = crapstring.split("\n")[0]
+    firstline = crapstring.split("\n")[0]
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
-    for char in first_line:
+    shipment.firstline = firstline
+    for char in firstline:
         if not char.isalpha():
             if not char.isnumeric():
                 if not char == " ":
-                    first_line = first_line.replace(char, "")
+                    firstline = firstline.replace(char, "")
     if first_char.isnumeric():
         shipment.building_num = first_block
     else:
-        print("No building number, using firstline:", shipment.address_firstline)
-    shipment.address_firstline = first_line
+        print("- No building number, using firstline:", shipment.firstline,'\n')
 
     return shipment
 
 
 def check_send_date(shipment, dates):
-    # validate_collection_date_object function from sdk
-    '''
-        Converts a string timestamp to a CollectionDate object.
-        if isinstance(collection_date, str):
-            return CollectionDate(self.despatchbay_client, date=collection_date)
-        return collection_date
-    :param shipment:
-    :param dates:
-    :return:
-    '''
-
-    send_date_reversed = shipment.send_date.split("/")
-    send_date_reversed.reverse()
-    shipment.send_date = '-'.join(send_date_reversed)
-
+    print("--- Checking available collection dates...")
+    print(line)  # U+2500, Box Drawings Light Horizontal #
     for count, date in enumerate(dates):
-        if date.date == shipment.send_date:  # if date object matches reversed string
+        if date.date == shipment.send_date:  # if date object matches send date
             shipment.date_object = date
             return shipment
     else:  # looped exhausted, no date match
-        print("\n\t\t*** ERROR: No collections available on", shipment.send_date, "for",
-              shipment.customer, "***\n\n Collections are available on:\n")
+        print("\n*** ERROR: No collections available on", shipment.send_date, "for",
+              shipment.customer, "***\n\n\n- Collections for",shipment.customer,"are available on:\n")
         for count, date in enumerate(dates):
-            print("\t\t", count + 1, date.date)
+            dt = parse(date.date)
+            out = datetime.strftime(dt, '%A %d %B')
+            print("\t\t", count + 1, "|", out)
 
         choice = ""
         while True:
-            choice = input('\nEnter a number to choose a date, 0 to exit\n')
+            choice = input('\n- Enter a number to choose a date, [0] to exit\n')
             if choice == "":
                 continue
             if not choice.isnumeric():
-                print("Enter a number")
+                print("- Enter a number")
                 continue
             if not -1 <= int(choice) <= len(dates) + 1:
-                print('\nWrong Number!\n')
+                print('\nWrong Number!\n-Choose new date for', shipment.customer, '\n')
+                for count, date in enumerate(dates):
+                    print("\t\t", count + 1, "|", date.date, )
                 continue
             if int(choice) == 0:
-                if input('Type "[y]es" to confirm exit: ')[0].lower() == "y":
+                if input('[E]xit?')[0].lower() == "e":
                     log_to_json(shipment)
                     exit()
                 continue
             else:
                 shipment.date_object = dates[int(choice) - 1]
-                print("\t\tCollection date for", shipment.customer, "is now ", shipment.date_object.date, "\n")
+                print("\t\tCollection date for", shipment.customer, "is now ", shipment.date_object.date, "\n\n", line)
                 return shipment
 
 
@@ -169,10 +195,10 @@ def get_address_object(shipment):
         else:
             print("No building number, searching firstline")
             shipment.building_num = False
-            search_string = shipment.address_firstline
+            search_string = shipment.firstline
     else:
         print("No building number, searching firstline")
-        search_string = shipment.address_firstline
+        search_string = shipment.firstline
     # get object
     address_object = client.find_address(shipment.postcode, search_string)
     shipment.address_object = address_object
@@ -185,12 +211,12 @@ def change_address(shipment):  # takes
           "\n")
     candidates = client.get_address_keys_by_postcode(shipment.postcode)
     for count, candidate in enumerate(candidates, start=1):
-        print("Candidate", count, "|", candidate.address)
+        print(" - Candidate", str(count) + ":", candidate.address)
     selection = ""
     while True:
-        selection = input('\nEnter a candidate number, 0 to exit \n')
+        selection = input('\n- Enter a candidate number, [0] to exit \n')
         if selection.isnumeric():
-            selection=int(selection)
+            selection = int(selection)
         else:
             continue
         if selection == 0:
@@ -204,7 +230,7 @@ def change_address(shipment):  # takes
         break
     selected_key = candidates[int(selection) - 1].key
     shipment.address_object = client.get_address_by_key(selected_key)
-    print("New Address:", shipment.address_object.street)
+    print("- New Address:", shipment.address_object.street)
     return shipment
 
 
@@ -220,7 +246,7 @@ def make_request(shipment):
     )
 
     recipient = client.recipient(
-        name=shipment.delivery_contact,
+        name=shipment.contact,
         telephone=shipment.phone,
         email=shipment.email,
         recipient_address=recipient_address
@@ -261,30 +287,33 @@ def queue_shipment(shipment):
     added_shipment = client.add_shipment(shipment_request)
     shipment.added_shipment = added_shipment
 
-    print("\n" + shipment.customer + "'s shipment of", shipment.boxes, "parcels to: ",
+    print("\n", line, '\n-', shipment.customer, "|", shipment.boxes, "|",
           shipment.address_object.street, "|", shipment.date_object.date, "|",
           shipment.shipping_service_name,
           "| Price =",
-          shipment.shipping_cost)
+          shipment.shipping_cost, '\n', line, '\n')
 
-    choice = ""
-    while str(choice) not in ["y", "r"]:
-        choice = input('Type "[y]es" to queue, "r" to restart, anything else will cancel\n')
-        if len(choice) < 1:
-            continue
-        if str(choice)[0].lower() != "y":
-            if str(choice)[0].lower() == "r":
-                print("Restarting")
-                process_shipment(shipment)
-            if input("Type [y]es to exit")[0].lower() == "y":
-                log_to_json(shipment)
-                exit()
-    print("Adding Shipment to Despatchbay Queue")
-    return shipment
+    choice = "n"
+    while choice[0] not in ["q", "r", 'e']:
+        choice = input('- [Q]ueue, [R]estart, or [E]xit\n')
+        choice = str(choice[0].lower())
+        if choice[0] != "q":  # not quote
+            if choice != 'r':  # not restart
+                if choice != 'e':  # not exit either
+                    continue  # try again
+                else:  # exit
+                    if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
+                        log_to_json(shipment)
+                        exit()
+                    continue
+            else:  # restart
+                if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
+                    print("Restarting")
+                    process_shipment(shipment)
+                continue  # not restarting
+        print("Adding Shipment to Despatchbay Queue")
+        return shipment
 
-
-# [a for a in dir(obj) if not a.startswith('__')]
-# ['bar', 'foo', 'func']
 
 def book_shipment(shipment):
     client.book_shipments(shipment.added_shipment)
@@ -320,11 +349,12 @@ def log_to_json(shipment):
     export_keys = [k for k in dir(shipment) if
                    not k.startswith('__') and k not in export_exclude_keys and getattr(shipment, k)]
 
+    shipment.send_date = shipment.send_date.strftime('%d/%m/%Y')
     for key in export_keys:
         export_dict.update({key: getattr(shipment, key)})
     with open(DATA_DIR / 'AmShip.json', 'w') as f:
         json.dump(export_dict, f, sort_keys=True)
-        print("Data dumped to json:",export_keys)
+        print("Data dumped to json:", export_keys)
     return shipment
 
 

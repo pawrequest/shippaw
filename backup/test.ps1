@@ -7,7 +7,7 @@
 
 #$categoryName = "Hire"
 #$formName = "hire_pss"
-#$fileName = "C:\AmDesp\vbs\amherst-hire-form-pss.VBS"
+#$fileName = "C:\AmDesp\vbs\hire_pss.VBS"
 #
 #CheckInFormScript ($categoryName,$formName,$fileName)
 
@@ -18,5 +18,5 @@
 ###################################################################
 #####     calls vbscript passing args     #########################
 ###################################################################
-#CSCRIPT C:\AmDesp\vbs\button-test.vbs arg ar2 "Arg with spaces" ##
+#CSCRIPT C:\AmDesp\vbs\button.vbs arg ar2 "Arg with spaces" ##
 ###################################################################

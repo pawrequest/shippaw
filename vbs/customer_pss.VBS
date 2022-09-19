@@ -214,7 +214,7 @@ Sub Form_OnClick(ControlId)
         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
         Dim objShell, myconnection
         Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "C:\AmDesp\vbs\button-test.vbs"
+        objShell.Run "C:\AmDesp\vbs\button.vbs"
         Set objShell = Nothing
 
 

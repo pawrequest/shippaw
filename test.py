@@ -14,30 +14,26 @@
 # TM5*er1ng
 ### make shipment_dict from xml
 
-import xml.etree.ElementTree as ET
 
-from config import *
-
-
-def shipment_from_xml(xml):
-    shipment = {}
-    tree = ET.parse(xml)
-    root = tree.getroot()
-    fields = root[0][2]
-    connections = root[0][3]
-    for connection in connections.iter():
-        print (connection.text)
-    eltags = [elem.tag for elem in connections.iter()]  # quick look
-    # print(eltags[2])
-
-    cat = root[0][0].text
-    for field in fields:
-        fieldname = field[0].text
-        fieldvalue = field[1].text
-        shipment[fieldname] = fieldvalue
-        shipment[category] = cat
-    return shipment
-shipment_from_xml(xmlfile)
+# def shipment_from_xml(xml):
+#     shipment = {}
+#     tree = ET.parse(xml)
+#     root = tree.getroot()
+#     fields = root[0][2]
+#     connections = root[0][3]
+#     for connection in connections.iter():
+#         print (connection.text)
+#     eltags = [elem.tag for elem in connections.iter()]  # quick look
+#     # print(eltags[2])
+#
+#     cat = root[0][0].text
+#     for field in fields:
+#         fieldname = field[0].text
+#         fieldvalue = field[1].text
+#         shipment[fieldname] = fieldvalue
+#         shipment[category] = cat
+#     return shipment
+# shipment_from_xml(xmlfile)
 # for fields in record:
 #     print(fields.items())
 
