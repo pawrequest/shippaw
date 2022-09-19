@@ -26,18 +26,10 @@ cols_hire = ["To Customer", "Send Out Date", "Delivery Postcode", "Delivery Addr
              "Delivery tel", "Delivery Email", "Boxes", "Reference Number", "Delivery Contact"]
 
 cols_sale = ["Deliv Name", "Deliv Address", "Deliv Contact", "Deliv Email", "Deliv Postcode", "Deliv Telephone"]
-new_sales= {}
-for i in cols_sale:
-    new_sales
 
-
-
-# commence_columns = {'delivery tel': 'phone', 'delivery email': 'email', 'delivery address': 'address', 'boxes': 'boxes',
-#  'send out date': 'send_date', 'delivery postcode': 'postcode', 'reference number': 'hire_ref',
-#  'shipment_id': 'shipment_id', 'delivery contact': 'delivery_contact', 'delivery name': 'delivery_name','delivery cost':'shipping_charged'}
-
+line = '-' * 100
 commence_columns = {'delivery_tel': 'phone', 'delivery_email': 'email', 'delivery_address': 'address',
- 'send_out_date': 'send_date', 'delivery_postcode': 'postcode', 'reference_number': 'hire_ref'}
+ 'send_out_date': 'send_date', 'delivery_postcode': 'postcode', 'reference_number': 'hire_ref', "deliv_name":"customer", "deliv_address" :"address", "deliv_contact":"contact", "deliv_email":"email", "deliv_postcode":"postcode", "deliv_telephone":"tel"}
 
 export_exclude_keys = ["address_object", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
 

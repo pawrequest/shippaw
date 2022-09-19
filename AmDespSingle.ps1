@@ -2,20 +2,30 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-$python_exe = "C:\AmDesp\python\bin\python.exe"
-$python_script = "C:\AmDesp\main.py"
-$commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+$PythonExe = "C:\AmDesp\python\bin\python.exe"
+$PythonScript = "C:\AmDesp\main.py"
+$CommenceWrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 $JsonPath = "C:\AmDesp\data\AmShip.json"
+$HireForm = "hire_pss"
+$CustomerForm = "customer_pss"
+$HireFormVbs = "C:\AmDesp\vbs\hire_pss.VBS"
+$CustomerFormVbs = "C:\AmDesp\vbs\customer_pss.VBS"
 
 ##cursor properties
-Add-Type -Path $commence_wrapper
+Add-Type -Path $CommenceWrapper
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 #$export = New-Object ExportEngine
 #$cursor = $db.GetCursor("Hire")
 #$filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
 
-$checked = $db.CheckInFormScript("Hire", "hire_pss", "C:\AmDesp\vbs\amherst-hire-form-pss.VBS")
-Write-Host "Form checked in" is $checked
+# check in hire-detail-script
+$HireChecked = $db.CheckInFormScript("Hire", $HireForm, $HireFormVbs)
+Write-Host "Hire Form checked in" is $HireChecked
+
+
+# check in customer-detail-script
+$SaleChecked = $db.CheckInFormScript("Customer", $CustomerForm, $CustomerFormVbs )
+Write-Host "Sale Form checked in" is $SaleChecked
 
 
 ## filter properties
@@ -44,7 +54,7 @@ Write-Host "Form checked in" is $checked
 #goodbye
 $db.Close()
 # call python script supplying jsonpath
-powershell $python_exe $python_script @JsonPath
+powershell $PythonExe $PythonScript @JsonPath
 
 "COMPLETE"
 
