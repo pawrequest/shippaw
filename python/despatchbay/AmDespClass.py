@@ -1,96 +1,130 @@
 import inspect
 
-from shipment_class import *
-
-
+# from shipment_class import *
+from python.config import *
+import json
 # def shipmentFactory(x):
 #     for i in xrange(len(x)):
 #         shipment = Shipment([i])
 #         yield shipment
 
+def getmanifest(data, datatype):
+    # is json or xml?
+    datatype = datatype
+    if datatype == "json":
+        with open(data) as f:
+            manifest = []
+            xml_data = json.load(f)
+            cat = xml_data['CommenceCategory']
+            manifest=xml_data['Items']
+            for id, shipment in enumerate(manifest):
+                shipment['category'] = cat
+                shipment['customer'] = shipment['To Customer']
+                for k, v in shipment.items():
+                    if k in com_fields:
+                        k = com_fields[k]
+                    if k in field_fixes:
+                        k = fiels_fixes[k]
+                    k=MakePascal(k)
+                    v=v.title()
 
-def manifest_list_from_json():
-    with open(JSONFILE) as f:
-        manifest = []
-        manifest_data = json.load(f)
-        while True:
-            if isinstance(manifest_data, list):
-                print("IS A LIST")
-                # shipments = [Shipment() for i in range(len(manifest_data))]
-                manifest = manifest_data
-                break
-            elif isinstance(manifest_data, dict):
-                # print("IS A DICT")
-                if "Items" in manifest_data.keys():
-                    # print("Is a Dict of Dicts")
-                    manifest = manifest_data['Items']
-                    break
-                else:
-                    # print("IS A SINGLE DICT")
-                    manifest.append(manifest_data)
-                    break
-            else:
-                print("Something is wrong, type-error")
+                    new_ship[k] = v
+    return manifest
 
-        # shipments = generator
-        # pieces = {item: Pieces(*value) for item, value in Pieces_dict.items()}
-
-            # {k:v for key, value in manifest.items()}
-        shipments = {item: Shipment(manifest_data[items]) for item in manifest_data['Items']}
-        print (shipments)
-
-        for c, item in enumerate(manifest):
-            cat = manifest_data["CommenceCategory"]
-            cust = item["To Customer"][0]
-            # item['send_out_date'] = datetime.strptime(item['send_out_date'], '%d/%m/%Y').date()
-
-            # shipment = Shipment(item)
+manifest = getmanifest(JsonPath, "json")
+print (manifest)
 
 
-            for k,v in item.items():
-                if type(v) == list:
-                    v = v[0]
-                if type(k) == list:
-                    k = k[0]
-                # shipment = Shipment({**item})
-                # kstr = str(k)
-                # vstr = str(v)
-                if " " in k:
-                    k = setattr(shipment, k, k.replace(" ", "_"))
-                    print ("replaced spaces ",k)
 
-                if k in commence_columns.keys():  # debug
-                    k = commence_columns[k]
-                if v.isnumeric():
-                    v = int(v)
-                    if v == 0:
-                        v = None
-                if v in ['delivery_address','deliv_address']:
-                    print("changing v to d_address")
-                    v='d_address'
-
-            # myprint(manifest)
-            # setattr(item, category, cat)
-            item.update({k: v})
-
-            if cat.lower() == "customer":
-                print("IS A CUSTOMER")
-                shipment.send_date = datetime.today().date()
-            elif cat.lower() == "hire":
-                print("IS A HIRE")
-            # setattr(item, customer, cust)
-
-            # item = parse_shipment_address(item)  # gets number / firstline
-        # return shipment
-    #
-    #         shipment. = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
-    #         shipment = parse_shipment_address(shipment)  # gets number / firstline
-    #         shipment[hire_customer] = shipment[hire_customer][
-    #             0]  # remove customer field from spurious list
-    #         manifest.append(shipment)
-    #     return manifest
-    # else:
-    #     print("NOT A FILE")
+# def manifest_list_from_json():
+#     with open(JSONFILE) as f:
+#         manifest = []
+#         xml_data = json.load(f)
+#         for id, shipment in enumerate(xmldata):
+#             print id, shipment
+#             # manifest.append()
+#
+#
+#
+#
+#         while True:
+#             if isinstance(manifest_data, list):
+#                 print("IS A LIST")
+#                 # shipments = [Shipment() for i in range(len(manifest_data))]
+#                 manifest = manifest_data
+#                 break
+#             elif isinstance(manifest_data, dict):
+#                 # print("IS A DICT")
+#                 if "Items" in manifest_data.keys():
+#                     # print("Is a Dict of Dicts")
+#                     manifest = manifest_data['Items']
+#                     break
+#                 else:
+#                     # print("IS A SINGLE DICT")
+#                     manifest.append(manifest_data)
+#                     break
+#             else:
+#                 print("Something is wrong, type-error")
+#
+#         # shipments = generator
+#         # pieces = {item: Pieces(*value) for item, value in Pieces_dict.items()}
+#
+#             # {k:v for key, value in manifest.items()}
+#         shipments = {item: Shipment(manifest_data[items]) for item in manifest_data['Items']}
+#         print (shipments)
+#
+#         for c, item in enumerate(manifest):
+#             cat = manifest_data["CommenceCategory"]
+#             cust = item["To Customer"][0]
+#             # item['send_out_date'] = datetime.strptime(item['send_out_date'], '%d/%m/%Y').date()
+#
+#             # shipment = Shipment(item)
+#
+#
+#             for k,v in item.items():
+#                 if type(v) == list:
+#                     v = v[0]
+#                 if type(k) == list:
+#                     k = k[0]
+#                 # shipment = Shipment({**item})
+#                 # kstr = str(k)
+#                 # vstr = str(v)
+#                 if " " in k:
+#                     k = setattr(shipment, k, k.replace(" ", "_"))
+#                     print ("replaced spaces ",k)
+#
+#                 if k in commence_columns.keys():  # debug
+#                     k = commence_columns[k]
+#                 if v.isnumeric():
+#                     v = int(v)
+#                     if v == 0:
+#                         v = None
+#                 if v in ['delivery_address','deliv_address']:
+#                     print("changing v to d_address")
+#                     v='d_address'
+#
+#             # myprint(manifest)
+#             # setattr(item, category, cat)
+#             item.update({k: v})
+#
+#             if cat.lower() == "customer":
+#                 print("IS A CUSTOMER")
+#                 shipment.send_date = datetime.today().date()
+#             elif cat.lower() == "hire":
+#                 print("IS A HIRE")
+#             # setattr(item, customer, cust)
+#
+#             # item = parse_shipment_address(item)  # gets number / firstline
+#         # return shipment
+#     #
+#     #         shipment. = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
+#     #         shipment = parse_shipment_address(shipment)  # gets number / firstline
+#     #         shipment[hire_customer] = shipment[hire_customer][
+#     #             0]  # remove customer field from spurious list
+#     #         manifest.append(shipment)
+#     #     return manifest
+#     # else:
+#     #     print("NOT A FILE")
 
 
 def shipment_from_xml(xml):

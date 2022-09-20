@@ -874,9 +874,10 @@ Sub Form_OnClick(ControlId)
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
 
-
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   pss                 '''''''''''''''''''''''''''''''
         Case "CommandButton19"
-        ' book hire in all ok'
+        ' book in hire, all ok'
 			Form.Field("Unpacked By").Value = "PR"
 			Form.Field("Unpacked Date").Value = "today"
 			Form.Field("Unpacked Time").Value = "now"
@@ -886,27 +887,47 @@ Sub Form_OnClick(ControlId)
 			Form.Save
 
         Case "CommandButton20"
-		 ' exports the hire to xml and calls python to ship xml via external vbs script and powershell. powershell checks  in detail-form script
-        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-        Dim objShell, myconnection
-        Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "C:\AmDesp\vbs\button.vbs"
-        Set objShell = Nothing
+        ' book in hire, problems'
+			Form.Field("Unpacked By").Value = "PR"
+			Form.Field("Unpacked Date").Value = "today"
+			Form.Field("Unpacked Time").Value = "now"
+			Form.Field("Status").Value = "Returned with problems"
+			Form.Field("Actual Return Date").Value = "today"
 
         Case "CommandButton21"
-            ' packed ok
+        ' packed
             Form.Field("Packed By").Value = "PR"
             Form.Field("Packed Date").Value = "today"
             Form.Field("Packed Time").Value = "now"
             Form.Field("Status").Value = "Booked in and packed"
             Form.Save
 
+        Case "CommandButton22"
+
+
+Case "CommandButton20"
+		 ' exports the hire to xml and calls python to ship xml
+        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+        Dim objShell, myconnection
+        Set objShell = CreateObject("WScript.Shell")
+        objShell.Run "C:\AmDesp\vbs\button.vbs"
+        Set objShell = Nothing
+
+
+		 ' exports the hire to xml and calls python to ship xml
+        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+        Dim objShell, myconnection
+        Set objShell = CreateObject("WScript.Shell")
+        objShell.Run "C:\AmDesp\vbs\button.vbs"
+        Set objShell = Nothing
+
+''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     End Select
 End Sub
 
 '''''''''''''''''''''''''''''''''''''''''''''
 ''''''''' arno-pss function to export item field
-'''''''''''''''''''''''''''''''''''''''''''''''''''
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
@@ -1022,8 +1043,9 @@ Function dq(s)
   dq = Chr(34) & s & Chr(34)
 
 End Function
-'*********************************************
-'********** end of pss************
+
+
+'********** end of pss      ************
 ''******************************************
 
 '****** start of functions

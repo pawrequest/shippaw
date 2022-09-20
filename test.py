@@ -1,6 +1,6 @@
 import json
 
-from config import *
+from python.config import *
 
 with open(DATA_DIR / 'AmShip.json') as x:
     print(type(x))

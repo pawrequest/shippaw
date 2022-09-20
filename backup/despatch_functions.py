@@ -4,7 +4,7 @@ import json
 import xml.etree.ElementTree as ET
 from pprint import pprint
 
-from config import *
+from python.config import *
 
 
 def process_manifest(manifest):  # takes list of shipments

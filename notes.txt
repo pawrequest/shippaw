@@ -1,3 +1,11 @@
+Buttons:
+packed
+unpacked all ok
+ship this hire
+ship this customer
+ship all ShipMe
+
+
 running notes:
 commence backups in office - how often? make more often while dev!
 
@@ -10,6 +18,8 @@ CLI functions:
     cancel collection / delete label
     track shipments by customer / date / order
 
+VBS:
+todo: button("ship all shipMe") -> confirmation dialgoue lists included hires  -> if confirmed: do smth
 
 
 

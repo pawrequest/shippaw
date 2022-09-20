@@ -2,11 +2,11 @@ import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-from dateutil.parser import parse
+import parse
 
 from config import *
 from config import commence_columns
-
+from python.utils_pss.utils_pss import *
 
 class Shipment:
     def __init__(self, id, d=None):
@@ -35,7 +35,6 @@ class Shipment:
         self.boxes = 0
         self.shipping_service_id = 101
         self.d_key = 0
-
 
     def GetJson(self, json):
         pass

@@ -14,23 +14,13 @@ $export = New-Object ExportEngine
 $cursor = $db.GetCursor("Hire")
 $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
 
-$checked = $db.CheckInFormScript("Hire", "hire_pss", "C:\AmDesp\vbs\amherst-hire-form-pss.VBS")
-Write-Host Form checked is $checked
-"Script Checkled In"
-
-
 # filter properties
 $filter.FieldName = "ShipMe"
 $filter.FieldValue = "TRUE"
 $filter.Qualifier = "True"
 $cursor.Filters.Apply()
 
-# Filter Columns
-#$cursor.Columns.AddDirectColumns("To Customer", "Send Out Date", "Delivery Postcode", "Delivery Address", "Delivery Name", "Delivery tel", "Delivery Email", "Boxes", "Reference Number",  "Delivery Contact")
-#$cursor.Columns.AddDirectColumns("To Customer","Reference Number", "Name")
-#$cursor.Columns.Apply()
-
-# export settings 
+# export settings
 $settings = $export.Settings
 $settings.ExportFormat = [ExportFormat]::Json # export to JSON
 $settings.SkipConnectedItems = $false

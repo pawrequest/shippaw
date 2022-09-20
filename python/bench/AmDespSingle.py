@@ -3,8 +3,14 @@ import inspect
 import json
 import xml.etree.ElementTree as ET
 from pprint import pprint
+from python.config import *
 
-from config import *
+
+def unsanitise(string):
+    string = string.replace("&amp;", chr(38)).replace("&quot;", chr(34)).replace("&apos;", chr(39)).replace("&lt;",
+                                                                                                            chr(60)).replace(
+        "&gt;", chr(62)).replace("&gt;", chr(32)).replace("&#", "").replace(";", "").replace(",", "")
+    return string
 
 
 def shipment_from_xml(xml):
@@ -14,25 +20,31 @@ def shipment_from_xml(xml):
     fields = root[0][2]
     customer = root[0][3][1][0][0].text
     cat = root[0][0].text
-
     for field in fields:
-        fieldname = field[0].text
-        if fieldname:
-            fieldname = unsanitise(fieldname)
-        fieldvalue = field[1].text
-        if fieldvalue:
-            fieldvalue = unsanitise(fieldvalue)
-        if fieldvalue == "0":
-            fieldvalue = False
-        shipment[fieldname] = fieldvalue
+        # keys
+        k = field[0].text
+        k = unsanitise(k)
+        k = MakePascal(k)
+
+        # values
+        v = field[1].text
+        if v:
+            v = unsanitise(v)
+            v = v.title()
+        if v == "0":
+            v = False
+
+        # make shipment.dict
+        shipment[k] = v
+
+        # add shipment-wide
         shipment[category] = cat
         shipment['customer'] = customer
+
+
+    print("IN SHIXML", shipment)
     return shipment
 
-
-def unsanitise(string):
-    string = string.replace("&amp;", chr(38)).replace("&quot;", chr(34)).replace("&apos;", chr(39)).replace("&lt;", chr(60)).replace("&gt;", chr(62)).replace("&gt;", chr(32)).replace("&#", "").replace(";", "").replace(",", "")
-    return string
 
 # def unsanitise(string):
 #     string = string.replace("&amp;", chr(38))
@@ -53,13 +65,14 @@ def process_shipment(shipment):  # master function, takes list of shipments
 
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
-            print("YES FUCKING OBJECT",shipment["address_object"])
+            print("YES FUCKING OBJECT", shipment["address_object"])
             print("Shipment Validated:", shipment['customer'], "|", shipment[boxes],
-              "box(es) |", shipment["address_object"].street, " | ", shipment["date_object"].date)
+                  "box(es) |", shipment["address_object"].street, " | ", shipment["date_object"].date)
 
-    userinput="m"
-    while (userinput not in ["yes","edit","exit"]):
-        userinput = str(input('\nCONTINUE?:\nEnter "yes" to proceed, "edit" to change address, or "exit" to exit \n')).lower()
+    userinput = "m"
+    while (userinput not in ["yes", "edit", "exit"]):
+        userinput = str(
+            input('\nCONTINUE?:\nEnter "yes" to proceed, "edit" to change address, or "exit" to exit \n')).lower()
         if input("\nType yes to submit shipment\n")[0].lower() == 'y':
             submit_shipment(shipment)
         elif userinput == "edit":
@@ -67,6 +80,7 @@ def process_shipment(shipment):  # master function, takes list of shipments
             submit_shipment(shipment)
         elif userinput == "exit":
             exit()
+
 
 def parse_shipment_address(shipment):
     crapstring = shipment[address]
@@ -109,7 +123,7 @@ def check_send_date(shipment, dates):
                     return None
             else:
                 shipment["date_object"] = dates[int(choice) - 1]
-                print("\t\tCollection date for", shipment['customer'], "is now ",shipment["date_object"].date, "\n")
+                print("\t\tCollection date for", shipment['customer'], "is now ", shipment["date_object"].date, "\n")
                 return shipment
 
 
@@ -221,7 +235,7 @@ def submit_shipment(shipment):
 
             label_pdf = client.get_labels(shipment_return.shipment_document_id)
             pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
-            label_string = shipment['customer'], "-", shipment["date_object"].date+".pdf"
+            label_string = shipment['customer'], "-", shipment["date_object"].date + ".pdf"
             # label_string = 'shipment['customer'] + "-" + shipment["date_object"].date + ".pdf"'
             label_pdf.download(LABEL_DIR / label_string)
             print()
@@ -263,6 +277,7 @@ def print_shipment(shipment):
 
 def myprint(*args):
     print(inspect.currentframe().f_code.co_name.upper(), "Called by",
-          inspect.currentframe().f_back.f_code.co_name.upper(), "at line", inspect.currentframe().f_back.f_lineno, inspect.currentframe().f_back.f_back.f_code.co_names)
+          inspect.currentframe().f_back.f_code.co_name.upper(), "at line", inspect.currentframe().f_back.f_lineno,
+          inspect.currentframe().f_back.f_back.f_code.co_names)
     for arg in args:
         print(arg)

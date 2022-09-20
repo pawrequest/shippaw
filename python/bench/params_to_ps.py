@@ -1,6 +1,6 @@
 import subprocess
 
-from config import *
+from python.config import *
 
 ps = pathlib.Path(ROOT_DIR / 'python' / 'test.ps1')
 
