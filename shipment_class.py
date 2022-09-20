@@ -34,6 +34,8 @@ class Shipment:
         self.contact = None
         self.boxes = 0
         self.shipping_service_id = 101
+        self.d_key = 0
+
 
     def GetJson(self, json):
         pass

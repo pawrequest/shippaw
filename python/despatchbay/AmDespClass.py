@@ -1,6 +1,6 @@
 import inspect
 
-from class_play import *
+from shipment_class import *
 
 
 # def shipmentFactory(x):
