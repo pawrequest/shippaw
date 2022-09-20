@@ -1,5 +1,7 @@
-from ..despatchbay_sdk import DespatchBaySDK
 import os
+
+from python.despatchbay.despatchbay_sdk import DespatchBaySDK
+
 #client = DespatchBaySDK(api_user='<APIUSER>', api_key='<APIKEY>')
 
 api_user = os.getenv('DESPATCH_API_USER')

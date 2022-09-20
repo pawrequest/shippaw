@@ -4,12 +4,12 @@ Classes for working with the despatchbay documents api
 https://github.com/despatchbay/despatchbay-api-v15/wiki/Documents-API
 """
 
-from urllib.parse import urlencode
 import base64
+from urllib.parse import urlencode
 
 import requests
 
-from . import exceptions
+from python.despatchbay import exceptions
 
 
 class Document:

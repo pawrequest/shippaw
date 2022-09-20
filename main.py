@@ -1,6 +1,6 @@
 # from python.despatch_functions import *
 # from python.AmDespSingle import *
-from python.AmDespClass import *
+from python.despatchbay.AmDespClass import *
 
 ## normal operation ##################
 # manifest = manifest_list_from_json()     ##
@@ -8,8 +8,16 @@ from python.AmDespClass import *
 ######################################
 
 
-shipment = shipment_from_xml(XMLFILE)
-process_shipment(shipment)
+# shipment = shipment_from_xml(XMLFILE)
+# process_shipment(shipment)
+
+
+
+
+manifest = manifest_list_from_json()
+# for ship in manifest:
+#     print(ship)
+
 
 ## get upcoming collection data ##############
 # collections = client.get_collections()    ##

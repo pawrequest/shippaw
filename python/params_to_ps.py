@@ -1,16 +1,6 @@
-import pathlib
-import subprocess, sys
-from pprint import pprint
-from config import *
 import subprocess
 
-
-
-
-
-
-
-
+from config import *
 
 ps = pathlib.Path(ROOT_DIR / 'python' / 'test.ps1')
 

@@ -1,3 +1,29 @@
+import json
+
+from config import *
+
+with open(DATA_DIR / 'AmShip.json') as x:
+    print(type(x))
+    obj = json.load(x)
+    ship_list = []
+    ship_list.append(obj)
+
+    print(ship_list)
+
+# python object to be appended
+
+# parsing JSON string:
+
+# appending the data
+# z.update(y)
+#
+# # the result is a JSON string:
+# print(json.dumps(z))
+
+
+
+
+
 # import inspect
 # from pprint import pprint
 #

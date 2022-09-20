@@ -4,7 +4,7 @@
 Dim objShell, args
 ' runscript = "powershell -executionpolicy bypass -noexit -file"
 runscript = "powershell -executionpolicy bypass -noexit -file"
-file = "C:\AmDesp\AmDespSingle.ps1"
+file = "C:\AmDesp\AmDespMulti.ps1"
 args = ""
 Set objShell = CreateObject("WScript.Shell")
 objShell.Run (runscript & " " & file & " " & args)

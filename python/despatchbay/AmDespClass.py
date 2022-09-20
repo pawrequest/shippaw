@@ -1,12 +1,96 @@
 import inspect
-import json
-import xml.etree.ElementTree as ET
-from datetime import datetime
 
-from dateutil.parser import parse
+from class_play import *
 
-from config import *
-from .class_play import *
+
+# def shipmentFactory(x):
+#     for i in xrange(len(x)):
+#         shipment = Shipment([i])
+#         yield shipment
+
+
+def manifest_list_from_json():
+    with open(JSONFILE) as f:
+        manifest = []
+        manifest_data = json.load(f)
+        while True:
+            if isinstance(manifest_data, list):
+                print("IS A LIST")
+                # shipments = [Shipment() for i in range(len(manifest_data))]
+                manifest = manifest_data
+                break
+            elif isinstance(manifest_data, dict):
+                # print("IS A DICT")
+                if "Items" in manifest_data.keys():
+                    # print("Is a Dict of Dicts")
+                    manifest = manifest_data['Items']
+                    break
+                else:
+                    # print("IS A SINGLE DICT")
+                    manifest.append(manifest_data)
+                    break
+            else:
+                print("Something is wrong, type-error")
+
+        # shipments = generator
+        # pieces = {item: Pieces(*value) for item, value in Pieces_dict.items()}
+
+            # {k:v for key, value in manifest.items()}
+        shipments = {item: Shipment(manifest_data[items]) for item in manifest_data['Items']}
+        print (shipments)
+
+        for c, item in enumerate(manifest):
+            cat = manifest_data["CommenceCategory"]
+            cust = item["To Customer"][0]
+            # item['send_out_date'] = datetime.strptime(item['send_out_date'], '%d/%m/%Y').date()
+
+            # shipment = Shipment(item)
+
+
+            for k,v in item.items():
+                if type(v) == list:
+                    v = v[0]
+                if type(k) == list:
+                    k = k[0]
+                # shipment = Shipment({**item})
+                # kstr = str(k)
+                # vstr = str(v)
+                if " " in k:
+                    k = setattr(shipment, k, k.replace(" ", "_"))
+                    print ("replaced spaces ",k)
+
+                if k in commence_columns.keys():  # debug
+                    k = commence_columns[k]
+                if v.isnumeric():
+                    v = int(v)
+                    if v == 0:
+                        v = None
+                if v in ['delivery_address','deliv_address']:
+                    print("changing v to d_address")
+                    v='d_address'
+
+            # myprint(manifest)
+            # setattr(item, category, cat)
+            item.update({k: v})
+
+            if cat.lower() == "customer":
+                print("IS A CUSTOMER")
+                shipment.send_date = datetime.today().date()
+            elif cat.lower() == "hire":
+                print("IS A HIRE")
+            # setattr(item, customer, cust)
+
+            # item = parse_shipment_address(item)  # gets number / firstline
+        # return shipment
+    #
+    #         shipment. = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
+    #         shipment = parse_shipment_address(shipment)  # gets number / firstline
+    #         shipment[hire_customer] = shipment[hire_customer][
+    #             0]  # remove customer field from spurious list
+    #         manifest.append(shipment)
+    #     return manifest
+    # else:
+    #     print("NOT A FILE")
 
 
 def shipment_from_xml(xml):
@@ -20,8 +104,6 @@ def shipment_from_xml(xml):
         if field[0].text:
             fieldname = field[0].text.lower()
             fieldname = unsanitise(fieldname)
-            if "delivery" in fieldname:
-                fieldname = fieldname.replace("delivery ", "")
             if " " in fieldname:
                 fieldname = fieldname.replace(" ", "_")
             if fieldname in commence_columns.keys():  # debug
@@ -60,8 +142,8 @@ def check_boxes(shipment):
             print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|", shipment.send_date)
             ui = input("[C]onfirm or Enter a number of boxes\n")
             if ui.isnumeric():
-                shipment.boxes=int(ui)
-                print("Shipment updated  |  ",shipment.boxes,"  boxes\n")
+                shipment.boxes = int(ui)
+                print("Shipment updated  |  ", shipment.boxes, "  boxes\n")
             if ui == 'c':
                 return shipment
             continue
@@ -71,7 +153,7 @@ def check_boxes(shipment):
             if not ui.isnumeric():
                 print("- Enter a number")
                 continue
-            shipment.boxes=int(ui)
+            shipment.boxes = int(ui)
             print("Shipment updated  |  ", shipment.boxes, "  boxes")
             return shipment
 
@@ -80,12 +162,11 @@ def process_shipment(shipment):  # master function takes shipment dict
     # parse address
     shipment = parse_shipment_address(shipment)
 
-
-    print(line,"\n\t\t", shipment.customer, "|", shipment.firstline, "|",
+    print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|",
           shipment.send_date)
     print(line)  # U+2500, Box Drawings Light Horizontal # debug
 
-    shipment=check_boxes(shipment)
+    shipment = check_boxes(shipment)
     # validate date and address
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
     if check_send_date(shipment, dates):
@@ -131,7 +212,7 @@ def process_shipment(shipment):  # master function takes shipment dict
 
 def parse_shipment_address(shipment):
     print("\n--- Parsing Address...\n")
-    crapstring = shipment.address
+    crapstring = shipment.d_address
     firstline = crapstring.split("\n")[0]
     first_block = (crapstring.split(" ")[0]).split(",")[0]
     first_char = first_block[0]
@@ -144,7 +225,7 @@ def parse_shipment_address(shipment):
     if first_char.isnumeric():
         shipment.building_num = first_block
     else:
-        print("- No building number, using firstline:", shipment.firstline,'\n')
+        print("- No building number, using firstline:", shipment.firstline, '\n')
 
     return shipment
 
@@ -158,7 +239,7 @@ def check_send_date(shipment, dates):
             return shipment
     else:  # looped exhausted, no date match
         print("\n*** ERROR: No collections available on", shipment.send_date, "for",
-              shipment.customer, "***\n\n\n- Collections for",shipment.customer,"are available on:\n")
+              shipment.customer, "***\n\n\n- Collections for", shipment.customer, "are available on:\n")
         for count, date in enumerate(dates):
             dt = parse(date.date)
             out = datetime.strftime(dt, '%A %d %B')

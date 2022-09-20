@@ -6,7 +6,8 @@ https://github.com/despatchbay/despatchbay-api-v15/wiki
 import suds
 from suds.client import Client
 from suds.transport.http import HttpAuthenticated
-from . import despatchbay_entities, documents_client, exceptions
+
+from python.despatchbay import documents_client, exceptions, despatchbay_entities
 
 MIN_SOAP_API_VERSION = 15
 MIN_DOCUMENTS_API_VERSION = 1
