@@ -1,16 +1,22 @@
-from pprint import pprint
-
 from python.ADFuncs import *
-from python.shipment_class import *
 
-# shipment = shipmentFromXml(XMLFILE)
-manifest = manifestFromJson(JSONFILE)
-for c, shipment in enumerate(manifest):
-    shippy = Shipment(c,shipment)
+json_exist = True
+xml_exist = True
 
-print("SHIPPY")
-pprint(vars(shippy))
+if json_exist:
+    manifest = manifestFromJson(JSONFILE)
 
+if xml_exist:
+    shipment = shipmentFromXml(XMLFILE)
+    # pprint(shipment)
+
+
+
+# for c, shipment in enumerate(manifest):
+#     shippy = Shipment(c,shipment)
+#
+# print("VARS IN SHIPPY")
+# pprint(vars(shippy))
 # for k,v in vars(objship):
 #     if v:
 #         print(k,v)

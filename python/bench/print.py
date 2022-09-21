@@ -1,12 +1,12 @@
 # # import os
 # #
-# # os.startfile("C:\AmDesp\data\Parcelforce Labels\label_string.pdf", "print")
+# # os.startfile("C:\AmDesp\shipmentJson\Parcelforce Labels\label_string.pdf", "print")
 #
 # import tempfile
 # import win32api
 # import win32print
 #
-# filename = "C:\AmDesp\data\Parcelforce Labels\label_string.pdf"
+# filename = "C:\AmDesp\shipmentJson\Parcelforce Labels\label_string.pdf"
 # open(filename, "w").write("This is a test")
 # win32api.ShellExecute(
 #     0,

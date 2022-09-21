@@ -3,24 +3,27 @@ import sys
 import psutil
 import win32gui
 
-x="'delivery tel'"
+x = "'delivery tel'"
+
 
 def toPascal(x):
-    x=x.title()
+    x = x.title()
     for y in x:
         if not y.isalpha():
             if not y.isnumeric():
-                x = x.replace(y,'')
+                x = x.replace(y, '')
     s = x.split()
+    print("JOIN", ''.join(i.capitalize() for i in s[1:]))
     return ''.join(i.capitalize() for i in s[1:])
+
 
 def toCamel(x):
     for i in str(x):
-        if not i.isalpha():
-            x = x.replace(x(i,''))
-    # s = x.replace("-", " ").replace("_", " ")
-    s = x.split()
+        if not i.isalnum():
+            x = x.replace(i, ' ')
+    s = x.lower().split()
     return s[0] + ''.join(i.capitalize() for i in s[1:])
+
 
 def getActiveProcesses():
     return {p.name() for p in psutil.process_iter(["name"])}
@@ -34,3 +37,8 @@ def getActiveWindow():
     except:
         print("Could not get active window: ", sys.exc_info()[0])
     return active_window_name
+
+
+def withoutKeys(d, keys):
+    ...
+    return {x: d[x] for x in d if x not in keys}

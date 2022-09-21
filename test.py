@@ -14,7 +14,7 @@ with open(DATA_DIR / 'AmShip.json') as x:
 
 # parsing JSON string:
 
-# appending the data
+# appending the shipmentJson
 # z.update(y)
 #
 # # the result is a JSON string:

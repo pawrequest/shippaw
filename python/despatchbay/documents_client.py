@@ -23,13 +23,13 @@ class Document:
 
     def get_raw(self):
         """
-        Returns the raw data used to create the entity.
+        Returns the raw shipmentJson used to create the entity.
         """
         return self.data
 
     def get_base64(self):
         """
-        Base 64 encodes the document data before returning it.
+        Base 64 encodes the document shipmentJson before returning it.
         """
         return base64.b64encode(self.data)
 

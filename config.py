@@ -23,7 +23,7 @@ LOGFILE = (DATA_DIR / "AmLog.json")
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
-pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
+pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJson dirs
 
 
 
@@ -45,6 +45,8 @@ com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Addr
      'Deliv Telephone': 'tel'}
 export_exclude_keys = ["address_object", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
 field_fixes = {}
+expungedFields = ["Name"] #"toCustomer",
+
 
 
 # #  other fields

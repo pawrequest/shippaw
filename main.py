@@ -1,5 +1,5 @@
-# from python.despatch_functions import *
-# from python.AmDespSingle import *
+from python.AmDespSingle import *
+from python.despatch_functions import *
 
 ## normal operation ##################
 manifest = manifest_list_from_json()     ##
@@ -15,7 +15,7 @@ process_shipment(manifest)          ##
 #     print(ship)
 
 
-## get upcoming collection data ##############
+## get upcoming collection shipmentJson ##############
 # collections = client.get_collections()    ##
 # pprint (collections)                      ##
 ##############################################
