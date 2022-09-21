@@ -1,39 +1,44 @@
 import inspect
 
 # from shipment_class import *
+from datetime import datetime
+
 from python.config import *
 import json
+
+
 # def shipmentFactory(x):
 #     for i in xrange(len(x)):
 #         shipment = Shipment([i])
 #         yield shipment
 
-def getmanifest(data, datatype):
+def getmanifest(data, datatype=None):
     # is json or xml?
-    datatype = datatype
+    if datatype: datatype = datatype
     if datatype == "json":
         with open(data) as f:
             manifest = []
             xml_data = json.load(f)
             cat = xml_data['CommenceCategory']
-            manifest=xml_data['Items']
-            for id, shipment in enumerate(manifest):
+            manifest_dict = xml_data['Items']
+            for id, shipment in enumerate(manifest_dict):
                 shipment['category'] = cat
-                shipment['customer'] = shipment['To Customer']
+                shipment['customer'] = shipment['To Customer'][0]
                 for k, v in shipment.items():
                     if k in com_fields:
                         k = com_fields[k]
                     if k in field_fixes:
-                        k = fiels_fixes[k]
-                    k=MakePascal(k)
-                    v=v.title()
+                        k = field_fixes[k]
+                    k = MakePascal(k)
+                    v = v.title()
 
-                    new_ship[k] = v
+                    new_ship = {[k]: v}
+                    manifest.append(new_ship)
     return manifest
 
-manifest = getmanifest(JsonPath, "json")
-print (manifest)
 
+manifest = getmanifest(JsonPath, "json")
+print(manifest)
 
 
 # def manifest_list_from_json():
@@ -140,8 +145,8 @@ def shipment_from_xml(xml):
             fieldname = unsanitise(fieldname)
             if " " in fieldname:
                 fieldname = fieldname.replace(" ", "_")
-            if fieldname in commence_columns.keys():  # debug
-                fieldname = commence_columns[fieldname]
+            if fieldname in com_fields.keys():  # debug
+                fieldname = com_fields[fieldname]
             if field[1].text:
                 fieldvalue = field[1].text
                 fieldvalue = unsanitise(fieldvalue)
