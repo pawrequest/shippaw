@@ -1,10 +1,9 @@
 import datetime
 import inspect
 import json
-import xml.etree.ElementTree as ET
 from pprint import pprint
 
-from python.config import *
+from config import *
 
 
 def process_manifest(manifest):  # takes list of shipments
@@ -56,21 +55,6 @@ def process_manifest(manifest):  # takes list of shipments
             print("BAD INPUT?")
             continue
 
-
-def shipment_from_xml(xml):
-    shipment = {}
-    tree = ET.parse(xml)
-    root = tree.getroot()
-    # print(root.items())
-    fields = root[0][2]
-    cat = root[0][0].text
-    for field in fields:
-        fieldname = field[0].text
-        fieldvalue = field[1].text
-        shipment[fieldname] = fieldvalue
-        shipment[category] = cat
-
-    return shipment
 
 
 def manifest_list_from_json():

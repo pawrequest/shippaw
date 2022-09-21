@@ -2,21 +2,22 @@ import os
 import pathlib
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-from python.utils_pss.utils_pss import *
 
 ####  CONFIG PATHS HERE ########
 ROOT_DIR = pathlib.Path("/")
-
+AMDESP_DIR = ROOT_DIR / "AmDesp"
+# ROOT_DIR = os.path.abspath(ROOT_DIR)
 sender_id = "5536"  # should be env var?
 API_USER = os.getenv("DESPATCH_API_USER")
 API_KEY = os.getenv("DESPATCH_API_KEY")
-DATA_DIR = ROOT_DIR / "data"
+DATA_DIR = AMDESP_DIR / "data"
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
-PYTHON_EXE = ROOT_DIR / "python" / "bin" / "python.exe"
-PYTHON_MAIN_SCRIPT = ROOT_DIR / "main.py"
-COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+# LABEL_DIR = RootDirAbs + "Parcelforce Labels"
+# PYTHON_EXE = ROOT_DIR / "python" / "bin" / "python.exe"
+# PYTHON_MAIN_SCRIPT = ROOT_DIR / "main.py"
+# COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 JSONFILE = DATA_DIR / "AmShip.json"
-JsonPath = str(JSONFILE)
+# JSONFILE = RootDirAbs + "AmShip.json"
 XMLFILE = DATA_DIR / "AmShip.xml"
 LOGFILE = (DATA_DIR / "AmLog.json")
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
@@ -24,6 +25,12 @@ sender = client.sender(address_id=sender_id)
 courier_id = 8  # parcelforce
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the data dirs
 
+
+
+
+
+# with open(JSONFILE) as j:
+#     pass
 line = '-' * 100
 # com_cols_lower = {'delivery tel': 'phone', 'delivery email': 'email', 'delivery address': 'address',
 #             'send out date': 'send date', 'delivery postcode': 'postcode', 'reference number': 'hire ref',
@@ -40,25 +47,25 @@ export_exclude_keys = ["address_object", "date_object", 'service_object', 'servi
 field_fixes = {}
 
 
-#  other fields
-is_shipped = "is collection booked"
-added_shipment = "despatch added shipment"
-building_num = "building num"
-address_firstline = "address first line"
-searchterm = "search term"
-shipnum = "shipment number"
-shipping_service_id = "shipment service id"
-shipping_service_name = "shipping service name"
-shipping_cost = "shipping cost"
-desp_shipment_id = "despatch id"
-candidates = "candidates"
-date_check = "date check"
-category = "category"  # hire or customer
-customer = "customer"
+# #  other fields
+# is_shipped = "is collection booked"
+# added_shipment = "despatch added shipment"
+# building_num = "building num"
+# address_firstline = "address first line"
+# searchterm = "search term"
+# shipnum = "shipment number"
+# shipping_service_id = "shipment service id"
+# shipping_service_name = "shipping service name"
+# shipping_cost = "shipping cost"
+# desp_shipment_id = "despatch id"
+# candidates = "candidates"
+# date_check = "date check"
+# category = "category"  # hire or customer
+# customer = "customer"
 
-parameters = [
-    str(JSONFILE),
-    str(PYTHON_EXE),
-    str(PYTHON_MAIN_SCRIPT),
-    str(COMMENCE_WRAPPER),
-]
+# parameters = [
+#     str(JSONFILE),
+#     str(PYTHON_EXE),
+#     str(PYTHON_MAIN_SCRIPT),
+#     str(COMMENCE_WRAPPER),
+# ]

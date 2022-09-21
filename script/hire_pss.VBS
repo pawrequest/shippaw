@@ -914,12 +914,12 @@ Case "CommandButton20"
         Set objShell = Nothing
 
 
-		 ' exports the hire to xml and calls python to ship xml
-        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-        Dim objShell, myconnection
-        Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "C:\AmDesp\vbs\button.vbs"
-        Set objShell = Nothing
+' 		 ' exports the hire to xml and calls python to ship xml
+'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+'         Dim objShell, myconnection
+'         Set objShell = CreateObject("WScript.Shell")
+'         objShell.Run "C:\AmDesp\vbs\button.vbs"
+'         Set objShell = Nothing
 
 ''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

@@ -1,51 +1,61 @@
+
 import inspect
+import json
 
 # from shipment_class import *
-from python.config import *
-import json
-# def shipmentFactory(x):
-#     for i in xrange(len(x)):
-#         shipment = Shipment([i])
-#         yield shipment
+from config import *
 
-def getmanifest(data, datatype):
-    # is json or xml?
-    datatype = datatype
-    if datatype == "json":
-        with open(data) as f:
+
+def getmanifest(data):
+    with open(JSONFILE) as jsonfile:
+        if os.path.isfile(jsonfile):
+            # is json or xml?
             manifest = []
-            xml_data = json.load(f)
-            cat = xml_data['CommenceCategory']
-            manifest=xml_data['Items']
-            for id, shipment in enumerate(manifest):
-                shipment['category'] = cat
-                shipment['customer'] = shipment['To Customer']
-                for k, v in shipment.items():
-                    if k in com_fields:
-                        k = com_fields[k]
-                    if k in field_fixes:
-                        k = fiels_fixes[k]
-                    k=MakePascal(k)
-                    v=v.title()
+            datatype = "json"
+            print(type(jsonfile))
+            if datatype == "json":
+                with open(data) as f:
+                    manifest = []
+                    xml_data = json.load(f)
+                    cat = xml_data['CommenceCategory']
+                    manifest=xml_data['Items']
+                    for id, shipment in enumerate(manifest):
+                        shipment['category'] = cat
+                        shipment['customer'] = shipment['To Customer']
+                        for k, v in shipment.items():
+                            if k in com_fields:
+                                k = com_fields[k]
+                            if k in field_fixes:
+                                k = field_fixes[k]
+                            k=ToPascal(k)
+                            v=v.title()
+                            new_ship = {}
+                            [k] = v
+            return manifest
 
-                    new_ship[k] = v
-    return manifest
-
-manifest = getmanifest(JsonPath, "json")
-print (manifest)
+        manifest = getmanifest(str(JSONFILE))
+        print (manifest)
 
 
-
+# ######################################
 # def manifest_list_from_json():
-#     with open(JSONFILE) as f:
-#         manifest = []
-#         xml_data = json.load(f)
-#         for id, shipment in enumerate(xmldata):
-#             print id, shipment
-#             # manifest.append()
-#
-#
-#
+#     if os.path.isfile(JSONFILE):
+#         with open(JSONFILE) as f:
+#             manifest = []
+#             manifest_data = json.load(f)
+#             for count, shipment in enumerate(manifest_data['Items']):
+#                 shipment[hire_ref] = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
+#                 shipment = parse_shipment_address(shipment)  # gets number / firstline
+#                 shipment[hire_customer] = shipment[hire_customer][
+#                     0]  # remove customer field from spurious list
+#                 manifest.append(shipment)
+#         return manifest
+#     else:
+#         print("NOT A FILE")
+# ################################
+
+
+
 #
 #         while True:
 #             if isinstance(manifest_data, list):
