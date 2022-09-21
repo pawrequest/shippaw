@@ -1,22 +1,36 @@
-# change case
-# camel
+import sys
 
-# blah = "one lc string"
-# # pascal
+import psutil
+import win32gui
 
 x="'delivery tel'"
-y="'delivery tel'"
-def MakePascal(x):
+
+def toPascal(x):
     x=x.title()
     for y in x:
         if not y.isalpha():
             if not y.isnumeric():
                 x = x.replace(y,'')
-    return x
+    s = x.split()
+    return ''.join(i.capitalize() for i in s[1:])
 
-
-
-def to_camel_case(text):
-    s = text.replace("-", " ").replace("_", " ")
-    s = s.split()
+def toCamel(x):
+    for i in str(x):
+        if not i.isalpha():
+            x = x.replace(x(i,''))
+    # s = x.replace("-", " ").replace("_", " ")
+    s = x.split()
     return s[0] + ''.join(i.capitalize() for i in s[1:])
+
+def getActiveProcesses():
+    return {p.name() for p in psutil.process_iter(["name"])}
+
+
+def getActiveWindow():
+    active_window_name = None
+    try:
+        window = win32gui.GetForegroundWindow()
+        active_window_name = win32gui.GetWindowText(window)
+    except:
+        print("Could not get active window: ", sys.exc_info()[0])
+    return active_window_name

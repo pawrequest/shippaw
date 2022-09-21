@@ -877,76 +877,49 @@ Sub Form_OnClick(ControlId)
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   pss                 '''''''''''''''''''''''''''''''
         Case "CommandButton19"
-        ' book in hire'
-           dim paul, paulok
-            paulok = msgbox("Unpacked now by paul and all OK?", 4 , "Select yes or no")
-            If paulok=6 then
-                Form.Field("Unpacked By").Value = "PR"
-                Form.Field("Unpacked Date").Value = "today"
-                Form.Field("Unpacked Time").Value = "now"
-                Form.Field("Actual Return Date").Value = "today"
-                Form.Field("Status").Value = "Returned all OK"
-                Form.Field("Closed").Value = 1
-                Form.Save
-                Else
-                    paul = msgbox("Unpacked now by paul?", 4 , "Select yes or no")
-                    If paul=6 then
-                    Form.Field("Unpacked By").Value = "PR"
-                    Form.Field("Unpacked Date").Value = "today"
-                    Form.Field("Unpacked Time").Value = "now"
-                    Form.Field("Actual Return Date").Value = "today"
-                Else
-                end if
-            end if
+        ' book in hire, all ok'
+			Form.Field("Unpacked By").Value = "PR"
+			Form.Field("Unpacked Date").Value = "today"
+			Form.Field("Unpacked Time").Value = "now"
+			Form.Field("Status").Value = "Returned all OK"
+			Form.Field("Actual Return Date").Value = "today"
+			Form.Field("Closed").Value = 1
+			Form.Save
 
-
+        Case "CommandButton20"
+        ' book in hire, problems'
+			Form.Field("Unpacked By").Value = "PR"
+			Form.Field("Unpacked Date").Value = "today"
+			Form.Field("Unpacked Time").Value = "now"
+			Form.Field("Status").Value = "Returned with problems"
+			Form.Field("Actual Return Date").Value = "today"
 
         Case "CommandButton21"
         ' packed
-            dim unpacked
-            unpacked = msgbox("Please select  Yes or No", 4 , "Select yes or no")
-            If unpacked=6 then
-                Form.Field("Packed By").Value = "PR"
-                Form.Field("Packed Date").Value = "today"
-                Form.Field("Packed Time").Value = "now"
-                Form.Field("Status").Value = "Booked in and packed"
-                Form.Save
-            Else
-            end if
+            Form.Field("Packed By").Value = "PR"
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            Form.Save
+
+        Case "CommandButton22"
 
 
-        Case "CommandButton23"
-        ' ships hire'
-            Dim xmlfile, python_exe, python_script, oShell, runCmd, runscript, objShell
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-            python_exe = "C:\AmDesp\python\bin\python.exe"
-            python_script = "C:\AmDesp\main.py"
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-
-            SET oShell = CreateObject("Wscript.Shell")
-            ExportItemDetailForm(xmlfile) ' write xml
-            runscript = ("powershell -executionpolicy bypass -noexit" & " C:\AmDesp\python\bin\python.exe " & " C:\AmDesp\python\frozen\ShipHire_f.py " & " C:\AmDesp\data\AmShip.xml")
-            SET objShell = CreateObject("WScript.Shell")
-            objShell.Run (runscript & " " & xmlfile)
-            SET oShell = Nothing
-
-'             ' runscript = "powershell -executionpolicy bypass -noexit -file"
-'             Dim runscript, file, objShell
-'             runscript = "powershell -executionpolicy bypass -noexit -file"
-'             file = "C:\AmDesp\AmDespMulti.ps1"
-'             Set objShell = CreateObject("WScript.Shell")
-'             objShell.Run (runscript & " " & file & " ")
-'             Set objShell = Nothing
-'
+Case "CommandButton20"
+		 ' exports the hire to xml and calls python to ship xml
+        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+        Dim objShell, myconnection
+        Set objShell = CreateObject("WScript.Shell")
+        objShell.Run "C:\AmDesp\vbs\button.vbs"
+        Set objShell = Nothing
 
 
-'         ' calls button 1'
-'             Dim objShell2
-'             Set objShell2 = CreateObject("WScript.Shell")
-'             objShell.Run "C:\AmDesp\vbs\button1.vbs"
-'             Set objShell2 = Nothing
-
-        '
+' 		 ' exports the hire to xml and calls python to ship xml
+'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+'         Dim objShell, myconnection
+'         Set objShell = CreateObject("WScript.Shell")
+'         objShell.Run "C:\AmDesp\vbs\button.vbs"
+'         Set objShell = Nothing
 
 ''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -1001,7 +974,7 @@ Sub ExportItemDetailForm(ByVal strPath)
     Next
 
 
-    ' process customer connection, is brittle #debug
+    ' process customer connections
     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
 

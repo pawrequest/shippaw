@@ -1,9 +1,9 @@
 import datetime
 import inspect
 import json
-import xml.etree.ElementTree as ET
 from pprint import pprint
-from python.config import *
+
+from config import *
 
 
 def unsanitise(string):
@@ -11,42 +11,7 @@ def unsanitise(string):
                                                                                                             chr(60)).replace(
         "&gt;", chr(62)).replace("&gt;", chr(32)).replace("&#", "").replace(";", "").replace(",", "")
     return string
-
-
-def shipment_from_xml(xml):
-    shipment = {}
-    tree = ET.parse(xml)
-    root = tree.getroot()
-    fields = root[0][2]
-    customer = root[0][3][1][0][0].text
-    cat = root[0][0].text
-    for field in fields:
-        # keys
-        k = field[0].text
-        k = unsanitise(k)
-        k = MakePascal(k)
-
-        # values
-        v = field[1].text
-        if v:
-            v = unsanitise(v)
-            v = v.title()
-        if v == "0":
-            v = False
-
-        # make shipment.dict
-        shipment[k] = v
-
-        # add shipment-wide
-        shipment[category] = cat
-        shipment['customer'] = customer
-
-
-    print("IN SHIXML", shipment)
-    return shipment
-
-
-# def unsanitise(string):
+# santisised by arnoi in vbs like this
 #     string = string.replace("&amp;", chr(38))
 #     string = string.replace("&quot;", chr(34))
 #     string = string.replace("&apos;", chr(39))
@@ -56,6 +21,8 @@ def shipment_from_xml(xml):
 #     string = string.replace("&#", "")
 #     string = string.replace(";", "")
 #     return string
+
+
 
 def process_shipment(shipment):  # master function, takes list of shipments
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates

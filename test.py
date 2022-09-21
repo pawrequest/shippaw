@@ -1,6 +1,6 @@
 import json
 
-from python.config import *
+from config import *
 
 with open(DATA_DIR / 'AmShip.json') as x:
     print(type(x))
@@ -41,7 +41,7 @@ with open(DATA_DIR / 'AmShip.json') as x:
 ### make shipment_dict from xml
 
 
-# def shipment_from_xml(xml):
+# def shipmentFromXml(xml):
 #     shipment = {}
 #     tree = ET.parse(xml)
 #     root = tree.getroot()
@@ -59,7 +59,7 @@ with open(DATA_DIR / 'AmShip.json') as x:
 #         shipment[fieldname] = fieldvalue
 #         shipment[category] = cat
 #     return shipment
-# shipment_from_xml(xmlfile)
+# shipmentFromXml(xmlfile)
 # for fields in record:
 #     print(fields.items())
 

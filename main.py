@@ -1,16 +1,13 @@
-from python.frozen import *
+# from python.despatch_functions import *
 # from python.AmDespSingle import *
-from python import *
 
 ## normal operation ##################
-# manifest = manifest_list_from_json()     ##
-# process_shipment(manifest)          ##
-# ######################################
+manifest = manifest_list_from_json()     ##
+process_shipment(manifest)          ##
+######################################
 
-print ("HERHRDHYERH")
-
-shipment = shipment_from_xml(XMLFILE)
-process_shipment(shipment)
+# shipment = shipmentFromXml(XMLFILE)
+# process_shipment(shipment)
 
 
 # manifest = manifest_list_from_json()
