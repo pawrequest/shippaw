@@ -911,9 +911,9 @@ Sub Form_OnClick(ControlId)
             runscript = "powershell -executionpolicy bypass -noexit -file"
             powershell = "C:\AmDesp\script\AmDespSingle.ps1"
 		    ExportItemDetailForm(XmlPath)
-            args = ""
+'             args = ""
             Set objShell = CreateObject("WScript.Shell")
-            objShell.Run (runscript & " " & powershell & " " & args)
+            objShell.Run (runscript & " " & powershell) ' & " " & args
             Set objShell = Nothing
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   Runs Amdesp direct with Powershell     ''''''''''
@@ -992,18 +992,22 @@ Sub ExportItemDetailForm(ByVal strPath)
     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
     xmlDoc.async = false
-    xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+    xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
 
     Dim el
     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-    Set el = xmlDoc.createElement("CategoryName")
+
+    Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
     el.text = sanitizeXMLString(Form.CategoryName)
     objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("FormName")
+    Set el = xmlDoc.createElement("FormName")       ' create Root/itemdetailform/FormName'
     el.text = sanitizeXMLString(Form.Name)
     objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("Fields")
+    Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+
+
+
     Dim i
     For i = 0 To UBound(arrFields) - 1
         ' the idea is that if we cannot instatiate a field,
@@ -1026,7 +1030,9 @@ Sub ExportItemDetailForm(ByVal strPath)
     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
     Dim connect, CustomerName
     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-    Set el = xmlDoc.createElement("Customer")
+
+
+    Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
     el.text = sanitizeXMLString(connect.ItemName)
     Set el = xmlDoc.createElement("ToCategory")
@@ -1034,7 +1040,69 @@ Sub ExportItemDetailForm(ByVal strPath)
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
-End Sub
+
+
+' End Sub
+' '''''''''''''''''''''''''''''''''''''''''''''
+' ''''''''' arno-pss function to export item field
+' Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
+' Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
+'
+' Sub ExportItemDetailForm(ByVal strPath)
+'
+'     'will export all values showing on the form,
+'     'including ones that are not visible(!)
+'     'any user, if permissioned, can always show these anwyay.
+'     Dim db, conv, f, arrFields, arrCons, strDDE
+'     Set db = Application.Database
+'     Set conv = db.GetConversation("Commence", "GetData")
+'     strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
+'     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
+'     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
+'     xmlDoc.async = false
+'     xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+'
+'     Dim el
+'     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
+'     Set el = xmlDoc.createElement("CategoryName")
+'     el.text = sanitizeXMLString(Form.CategoryName)
+'     objRoot.childNodes.item(0).appendChild(el)
+'     Set el = xmlDoc.createElement("FormName")
+'     el.text = sanitizeXMLString(Form.Name)
+'     objRoot.childNodes.item(0).appendChild(el)
+'     Set el = xmlDoc.createElement("Fields")
+'     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+'     Dim i
+'     For i = 0 To UBound(arrFields) - 1
+'         ' the idea is that if we cannot instatiate a field,
+'         ' it isn't on the form, so we need to catch the errors
+'         On Error Resume Next
+'         Set f = Form.Field(arrFields(i))
+'         On Error Goto 0
+'         ' add to xml doc
+'         Set el = xmlDoc.createElement("Field")
+'         Dim n : Set n = fnode.appendChild(el) 'get reference to node
+'         Set el = xmlDoc.createElement("FieldName")
+'         el.text = sanitizeXMLString(f.Name)
+'         n.appendChild(el)
+'         Set el = xmlDoc.createElement("FieldValue")
+'         el.text = sanitizeXMLString(f.Value)
+'     n.appendChild(el)
+'     Next
+'     ' process customer connections
+'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+'     Dim connect, CustomerName
+'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
+'     Set el = xmlDoc.createElement("Customer")
+'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
+'     el.text = sanitizeXMLString(connect.ItemName)
+'     Set el = xmlDoc.createElement("ToCategory")
+'     xmlDoc.Save strPath
+'     Set xmlDoc = Nothing
+'     Set conv= Nothing
+'     Set db = Nothing
+' End Sub
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i

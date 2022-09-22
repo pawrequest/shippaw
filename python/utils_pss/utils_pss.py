@@ -4,10 +4,18 @@ import sys
 import psutil
 import win32gui
 
-x = "'delivery tel'"
+
+def printel(*els): # elementtree elements
+    print("printel")
+    if isinstance(els, str):
+        els = [els]
+    for el in els:
+        print(el)
+        for elem in el.iter():
+            print(elem.tag, elem.text)
 
 
-def toPascal(x):
+def toPascal(x): #LikeThis
     x = x.title()
     for y in x:
         if not y.isalpha():
@@ -18,7 +26,7 @@ def toPascal(x):
     return ''.join(i.capitalize() for i in s[1:])
 
 
-def toCamel(x):
+def toCamel(x): #likeThis
     for i in str(x):
         if not i.isalnum():
             x = x.replace(i, ' ')
@@ -80,7 +88,8 @@ def unsanitise(string):
     # string = string.replace(";", "")
     # return string
 
-#elephant class has a memory - note the underscores
+
+# elephant class has a memory - note the underscores
 class Elephant:
     def __init__(self, fnc):
         self._fnc = fnc
@@ -93,12 +102,12 @@ class Elephant:
 
     def memory(self):
         return self._memory
+
+
 @Elephant
 def random_odd():
-    return random.choice([1,3,5,7,9])
+    return random.choice([1, 3, 5, 7, 9])
 # print(random_odd())
 # print(random_odd.memory())
 # print(random_odd())
 # print(random_odd.memory())
-
-

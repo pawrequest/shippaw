@@ -10,6 +10,15 @@ $XmlPath = "C:\AmDesp\data\AmShip.xml"
 powershell $python_exe $python_script @XmlPath
 
 "COMPLETE"
+$exit = Read-Host -Prompt '[E]xit?'
+if ( $exit = "e" )
+{
+    Exit
+}
+
+write-host -nonewline "[e]xit?] "
+$response = read-host
+if ( $response -eq "n" ) { exit }
 
 # TODO sets ShipMe to False
 # TODO wrties despatchbay references to commence

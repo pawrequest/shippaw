@@ -39,7 +39,7 @@ class Shipment:
         self.dates = None
         self.firstline = None
         self.hireRef = None
-        self.id = None
+        self.id = shipid
         self.labeLocation = None
         self.labelDownloaded = False
         self.labelUrl = None
@@ -53,15 +53,17 @@ class Shipment:
         self.shippingServiceName = None
         self.shippingCost = None
         self.shippingServiceName = None
+        self.dates = self.client.get_available_collection_dates(sender, self.courier_id)  # get dates
 
         if shipdict:
             if isinstance(shipdict, dict):
                 print("- Dictionary passed in - Getting Attrs from shipdict:")
                 for k, v in shipdict.items():
-                    if k == 'hireRef':
-                        setattr(self, 'id', v)
+                    if not shipid:
+                        if k == 'hireRef':
+                            setattr(self, 'id', v)
                     setattr(self, k, v)
-        print("Shipment", shipid, "created")
+        print("Shipment with id=",self.id,"created")
 
         def parseAddress():
             print("\n--- Parsing Address...\n")
@@ -83,9 +85,19 @@ class Shipment:
 
         parseAddress()
 
-        self.dates = self.client.get_available_collection_dates(sender, self.courier_id)  # get dates
 
-    # end init
+
+        def checkDate(self):
+            print("--- Checking available collection dates...")
+            dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
+            for date in dates:
+                if date.date == self.sendDate:  # if date object matches send date
+                    self.dateObject = date
+                    print("Shipment date for",self.customer, "validated - ", self.dateObject.date)
+                    return
+            else: print("\n*** ERROR: No collections available on", self.sendDate, "for", self.customer, " ***\n")
+        checkDate(self)
+################### end init  ######################################################################################
     def CheckBoxes(self):
         while True:
             if self.boxes:
@@ -108,17 +120,15 @@ class Shipment:
                 print("self updated  |  ", self.boxes, "  boxes")
                 return self
 
-    #
-
     # need client
     def ValDates(self):
         dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
         print("--- Checking available collection dates...")
         print(line)  # U+2500, Box Drawings Light Horizontal #
+
         for count, date in enumerate(dates):
             if date.date == self.sendDate:  # if date object matches send date
                 self.dateObject = date
-                return
         else:  # looped exhausted, no date match
             print("\n*** ERROR: No collections available on", self.sendDate, "for",
                   self.customer, "***\n\n\n- Collections for", self.customer, "are available on:\n")

@@ -2,7 +2,29 @@ import json
 import xml.etree.ElementTree as ET
 
 from config import *
-from python.utils_pss.utils_pss import *
+from .AmDespClasses import Shipment
+
+
+# from python.utils_pss.utils_pss import *
+
+
+def JsonToShippies(jsondata):
+    shippies = []
+    manifest = manifestFromJson(jsondata)
+    for shipment in manifest:
+        shippies.append(Shipment(shipment, shipment['id']))
+    print("SHIPPIES:", shippies)
+    return shippies
+
+
+def XmlToShippy(xmlda):  # xmldata name being used?
+    shipment = shipmentFromXml(xmlda)
+    shippy = Shipment(shipment, shipment['customer'])
+    print("Shippy:", shippy)
+    return shippy
+
+
+#
 
 
 # def unsanitise(string):
@@ -24,12 +46,15 @@ from python.utils_pss.utils_pss import *
 def shipmentFromXml(xml):
     # TODO handle xmls with multiple shipments
     shipment = {}
-    # newxml = "C:\AmDesp\shipmentJson\AmShip.xml"
-    tree = ET.parse(xml)
+    newxml = "C:\AmDesp\data\AmShip.xml"
+    tree = ET.parse(XMLFILE)
     root = tree.getroot()
     fields = root[0][2]
     # add shipment-wide
-    customer = root[0][3][1][0][0].text
+
+    customer = root[0][3].text  # debug
+
+    print(customer)
     cat = root[0][0].text
     shipment['category'] = cat
     shipment['customer'] = customer
@@ -43,7 +68,7 @@ def shipmentFromXml(xml):
     return shipment
 
 
-def manifestFromJson(manifest_list_dict):
+def manifestFromJson(manifest_list_dict) -> list:
     print("Parsing Json\n")
     manifest = []
     with open(manifest_list_dict) as f:
@@ -66,26 +91,28 @@ def cleanDict(dict):  # if list takes first item!
     # print("Cleaning your shipdict\n")
     newdict = {}
     for k, v in dict.items():
+        k=unsanitise(k)
+        if v: v=unsanitise(v)
         if k in com_fields: k = com_fields[k]
         k = toCamel(k)
-        # k = inflection.camelize(k, False).replace(" ","")
         if isinstance(v, list):
             v = v[0]
-        if v.replace(",", "").isnumeric() and int(v.replace(',', '')) == 0:
-            v = None
+        if v.replace(",", "").isnumeric():
+            v=v.replace(",", "")
+        if v.isnumeric():
+            v=int(v)
+            if v == 0:
+                v = None
         elif v.isalnum():
             v = v.title()
 
-        if k == "hireRef":
-            v = v.replace(",", "")
-            if v.isnumeric():
-                v = int(v)
-            newdict.update({"id": int(v)})
-
+        newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
         newdict = withoutKeys(newdict, expungedFields)  # in confiig
         newdict.update({k: v})
+        # if v: print("UPDATED:",k," - ", v)
     return (newdict)
+
 
 
 def parse_shipment_address(shipment):

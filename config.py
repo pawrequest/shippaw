@@ -6,6 +6,7 @@ from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 ####  CONFIG PATHS HERE ########
 ROOT_DIR = pathlib.Path("/")
 AMDESP_DIR = ROOT_DIR / "AmDesp"
+
 # ROOT_DIR = os.path.abspath(ROOT_DIR)
 sender_id = "5536"  # should be env var?
 API_USER = os.getenv("DESPATCH_API_USER")
@@ -19,11 +20,12 @@ LABEL_DIR = DATA_DIR / "Parcelforce Labels"
 JSONFILE = DATA_DIR / "AmShip.json"
 # JSONFILE = RootDirAbs + "AmShip.json"
 XMLFILE = DATA_DIR / "AmShip.xml"
+XMLCUSTOMERSTR = "root[0][1].text"
+
 LOGFILE = (DATA_DIR / "AmLog.json")
 
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
-
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJson dirs
 
 
