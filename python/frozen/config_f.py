@@ -35,7 +35,7 @@ com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Addr
      'Delivery Postcode': 'postcode', 'Reference Number': 'hire ref', 'Deliv Name': 'customer',
      'Deliv Address': 'address', 'Deliv Contact': 'contact', 'Deliv Email': 'email', 'Deliv Postcode': 'postcode',
      'Deliv Telephone': 'tel'}
-export_exclude_keys = ["address_object", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
+export_exclude_keys = ["addressObject", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
 field_fixes = {}
 
 

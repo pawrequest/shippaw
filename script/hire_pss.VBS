@@ -885,14 +885,14 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 			Form.Field("Closed").Value = 1
 			Form.Save
-
-        Case "CommandButton20"
-        ' book in hire, problems'
-			Form.Field("Unpacked By").Value = "PR"
-			Form.Field("Unpacked Date").Value = "today"
-			Form.Field("Unpacked Time").Value = "now"
-			Form.Field("Status").Value = "Returned with problems"
-			Form.Field("Actual Return Date").Value = "today"
+'
+'         Case "CommandButton20"
+'         ' book in hire, problems'
+' 			Form.Field("Unpacked By").Value = "PR"
+' 			Form.Field("Unpacked Date").Value = "today"
+' 			Form.Field("Unpacked Time").Value = "now"
+' 			Form.Field("Status").Value = "Returned with problems"
+' 			Form.Field("Actual Return Date").Value = "today"
 
         Case "CommandButton21"
         ' packed
@@ -905,13 +905,60 @@ Sub Form_OnClick(ControlId)
         Case "CommandButton22"
 
 
-Case "CommandButton20"
-		 ' exports the hire to xml and calls python to ship xml
-        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-        Dim objShell, myconnection
-        Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "C:\AmDesp\vbs\button.vbs"
-        Set objShell = Nothing
+        Case "CommandButton20"
+            Dim objShell, args, runscript, powershell, XmlPath
+            XmlPath = "C:\AmDesp\data\AmShip.xml"
+            runscript = "powershell -executionpolicy bypass -noexit -file"
+            powershell = "C:\AmDesp\script\AmDespSingle.ps1"
+		    ExportItemDetailForm(XmlPath)
+            args = ""
+            Set objShell = CreateObject("WScript.Shell")
+            objShell.Run (runscript & " " & powershell & " " & args)
+            Set objShell = Nothing
+            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   Runs Amdesp direct with Powershell     ''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' 		    Dim python_exe, python_script, XmlPath
+' '             ' '  runs AmDesp direct with CMD
+'             python_exe = "C:\AmDesp\python\bin\python.exe"
+'             python_script = "C:\AmDesp\AmDespMain.py"
+'             XmlPath = "C:\AmDesp\data\AmShip.xml"
+' 		    ExportItemDetailForm(XmlPath)
+'             Dim oShell, currentCommand, my_command
+'             SET oShell = CreateObject("Wscript.Shell")
+'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
+'             oShell.run RunCmd,1,true
+
+
+'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & JsonPath & Chr(34)
+'             Msgbox "RUN PYTHON"
+
+' C:\AmDesp\script\AmDespSingle.ps1
+
+'''''''''''''''''''''''''''''''''''''''''
+
+
+' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
+'             python_exe = "C:\AmDesp\python\bin\python.exe"
+'             python_script = "C:\AmDesp\AmDespMain.py"
+'             XmlPath = "C:\AmDesp\data\AmShip.xml"
+'             Dim oShell, source_code_path, variable1, currentCommand, my_command
+'             SET oShell = CreateObject("Wscript.Shell")
+'             pyPs = "powershell -executionpolicy bypass -noexit -file" & python_exe & python_script & XmlPath
+'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
+'             my_command = python_exe &  python_script & " " & JsonPath
+' '             Msgbox "RUN PYTHON"
+'             oShell.run pyPs,1,true
+' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
+' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
+
+'
+' 		 ' exports the hire to xml and calls python to ship xml
+'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
+'         Dim objShell, myconnection
+'         Set objShell = CreateObject("WScript.Shell")
+'         objShell.Run "C:\AmDesp\vbs\button.vbs"
+'         Set objShell = Nothing
 
 
 ' 		 ' exports the hire to xml and calls python to ship xml
@@ -925,6 +972,8 @@ Case "CommandButton20"
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     End Select
 End Sub
+
+
 
 '''''''''''''''''''''''''''''''''''''''''''''
 ''''''''' arno-pss function to export item field
@@ -972,53 +1021,20 @@ Sub ExportItemDetailForm(ByVal strPath)
         el.text = sanitizeXMLString(f.Value)
     n.appendChild(el)
     Next
-
-
     ' process customer connections
     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-
-    Dim c, j, tmp
-    Set el = xmlDoc.createElement("Connections")
-    Dim cnode : Set cnode = objRoot.childNodes.item(0).appendChild(el)
-
-    For i = 0 To UBound(arrCons)
-        tmp = Split(arrCons(i), CMC_DELIM2) 'split Connection name and ToCategory
-        On Error Resume Next
-        Set c = Form.Connection(tmp(0), tmp(1)) 'To, Customer
-        On Error GoTo 0
-        If c.ConnectedItemCount > 0 Then 'only export if there are values. Do we want this?
-            Set el = xmlDoc.createElement("Connection")
-            el.text = sanitizeXMLString(c.Name)
-            Dim elConName : Set elConName = cnode.appendChild(el) 'get reference to node
-            Set el = xmlDoc.createElement("ToCategory")
-            el.text = sanitizeXMLString(c.ToCategory)
-            Dim elCatName : Set elCatName = elConName.appendChild(el) 'get reference to node
-            For j = 1 To c.ConnectedItemCount 'a populated connection is initialized to 1
-                c.CurrentSelection(j)
-                Set el = xmlDoc.createElement("ItemName")
-                el.text = sanitizeXMLString(c.ItemName)
-                elCatName.appendChild(el)
-            Next 'j
-        End If
-    Next 'i
-
-
-
-'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-'     Set el = xmlDoc.createElement("Customer")
-'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-'     el.text = sanitizeXMLString(connect.ItemName)
-'     Set el = xmlDoc.createElement("ToCategory")
-
+    Dim connect, CustomerName
+    Set connect = Form.Connection("To", "Customer") ' customer connection please'
+    Set el = xmlDoc.createElement("Customer")
+    Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
+    el.text = sanitizeXMLString(connect.ItemName)
+    Set el = xmlDoc.createElement("ToCategory")
     xmlDoc.Save strPath
-
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
-
 End Sub
-
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i

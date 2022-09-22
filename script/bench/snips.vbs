@@ -1,3 +1,19 @@
+'Public Function CheckInFormScript (Hire, hire_pss, "C:\AmDesp\vbs\amherst-hire-form-pss.VBS") As Boolean
+Dim categoryName, formName, fileName
+categoryName = "Hire"
+formName = "hire_pss"
+fileName = "C:\AmDesp\vbs\amherst-hire-form-pss.VBS"
+
+
+' Public Function CheckInFormScript (
+' 	categoryName As String,
+' 	formName As String,
+' 	fileName As String
+' ) As Boolean
+
+CheckInFormScript (categoryName,formName,fileName)
+
+
 ' check for and make file'
 Dim oTxtFile
 With (CreateObject("Scripting.FileSystemObject"))
@@ -9,7 +25,18 @@ With (CreateObject("Scripting.FileSystemObject"))
   End If
 End With
 
-
+            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   Runs Amdesp direct with Powershell     ''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+		    Dim python_exe, python_script, commence_wrapper, JsonPath
+            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_script = "C:\AmDesp\AmDespMain.py"
+            XmlPath = "C:\AmDesp\data\AmShip.xml"
+            Dim oShell, source_code_path, variable1, currentCommand, my_command
+            SET oShell = CreateObject("Wscript.Shell")
+            RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
+'             Msgbox "RUN PYTHON"
+            oShell.run RunCmd,1,true
 
 
 '  ' ship hires

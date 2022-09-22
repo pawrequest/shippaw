@@ -63,7 +63,7 @@ def manifestFromJson(manifest_list_dict):
 
 
 def cleanDict(dict):  # if list takes first item!
-    # print("Cleaning your shipDict\n")
+    # print("Cleaning your shipdict\n")
     newdict = {}
     for k, v in dict.items():
         if k in com_fields: k = com_fields[k]

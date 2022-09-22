@@ -158,8 +158,8 @@ class Shipment(id=1):
 #             print("No building number, searching firstline")
 #             search_string = self.firstline
 #         # get object
-#         address_object = client.find_address(self.d_postcode, search_string)
-#         self.address_object = address_object
+#         addressObject = client.find_address(self.d_postcode, search_string)
+#         self.addressObject = addressObject
 #         return
 #
 #     def ChangeAdd(self):
@@ -186,19 +186,19 @@ class Shipment(id=1):
 #                 continue
 #             break
 #         selected_key = candidates[int(selection) - 1].key
-#         self.address_object = client.get_address_by_key(selected_key)
-#         print("- New Address:", self.address_object.street)
+#         self.addressObject = client.get_address_by_key(selected_key)
+#         print("- New Address:", self.addressObject.street)
 #         return
 #
 #     def MakeRequest(self):
 #         recipient_address = client.address(
 #             company_name=self.customer,
 #             country_code="GB",
-#             county=self.address_object.county,
-#             locality=self.address_object.locality,
-#             postal_code=self.address_object.postal_code,
-#             town_city=self.address_object.town_city,
-#             street=self.address_object.street
+#             county=self.addressObject.county,
+#             locality=self.addressObject.locality,
+#             postal_code=self.addressObject.postal_code,
+#             town_city=self.addressObject.town_city,
+#             street=self.addressObject.street
 #         )
 #
 #         recipient = client.recipient(
@@ -231,8 +231,8 @@ class Shipment(id=1):
 #         shipment_request.collection_date = self.date_object.date
 #         services = client.get_available_services(shipment_request)
 #         shipment_request.service_id = 101
-#         self.shipping_service_name = services[0].name
-#         self.shipping_cost = services[0].cost
+#         self.shippingServiceName = services[0].name
+#         self.shippingCost = services[0].cost
 #         self.services = services
 #         atest = [a for a in dir(shipment_request) if not a.startswith('__')]
 #         return shipment_request
@@ -243,10 +243,10 @@ class Shipment(id=1):
 #         self.added_shipment = added_shipment
 #
 #         print("\n", line, '\n-', self.customer, "|", self.boxes, "|",
-#               self.address_object.street, "|", self.date_object.date, "|",
-#               self.shipping_service_name,
+#               self.addressObject.street, "|", self.date_object.date, "|",
+#               self.shippingServiceName,
 #               "| Price =",
-#               self.shipping_cost, '\n', line, '\n')
+#               self.shippingCost, '\n', line, '\n')
 #
 #         choice = "n"
 #         while choice[0] not in ["q", "r", 'e']:
@@ -269,7 +269,7 @@ class Shipment(id=1):
 #             print("Adding Shipment to Despatchbay Queue")
 #             return shipment
 #
-#     def Book(self, shipment):
+#     def BookCollection(self, shipment):
 #         client.book_shipments(self.added_shipment)
 #         shipment_return = client.get_shipment(self.added_shipment)
 #
@@ -280,15 +280,15 @@ class Shipment(id=1):
 #         print(label_string)
 #         print(type(label_string))
 #         label_pdf.download(LABEL_DIR / label_string)
-#         tracking_numbers = []
+#         trackingNumbers = []
 #         for parcel in shipment_return.parcels:
-#             tracking_numbers.append(parcel.tracking_number)
+#             trackingNumbers.append(parcel.tracking_number)
 #
 #         self.shipment_return = shipment_return
 #         self.shipment_doc_id = shipment_return.shipment_document_id
 #         self.label_url = shipment_return.labels_url
 #         self.parcels = shipment_return.parcels
-#         self.tracking = tracking_numbers
+#         self.tracking = trackingNumbers
 #         self.label_location = str(LABEL_DIR) + label_string
 #
 #         self.collection_booked = True

@@ -32,9 +32,9 @@ def process_shipment(shipment):  # master function, takes list of shipments
 
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
-            print("YES FUCKING OBJECT", shipment["address_object"])
+            print("YES FUCKING OBJECT", shipment["addressObject"])
             print("Shipment Validated:", shipment['customer'], "|", shipment[boxes],
-                  "box(es) |", shipment["address_object"].street, " | ", shipment["date_object"].date)
+                  "box(es) |", shipment["addressObject"].street, " | ", shipment["date_object"].date)
 
     userinput = "m"
     while (userinput not in ["yes", "edit", "exit"]):
@@ -108,7 +108,7 @@ def get_address_object(shipment):
         search_string = shipment[address_firstline]
     # get object
     address_object = client.find_address(shipment[postcode], search_string)
-    shipment["address_object"] = address_object
+    shipment["addressObject"] = address_object
     return shipment
 
 
@@ -126,8 +126,8 @@ def adjust_address(shipment):  # takes
         if input("Type yes to confirm exit")[0].lower() == "y":
             exit()
     else:
-        shipment["address_object"] = client.get_address_by_key(selected_key)
-        print("New Address:", shipment["address_object"].street)
+        shipment["addressObject"] = client.get_address_by_key(selected_key)
+        print("New Address:", shipment["addressObject"].street)
         return shipment
 
 
@@ -135,7 +135,7 @@ def submit_shipment(shipment):
     customer = shipment['customer']
     phone = shipment['phone']
     email = shipment['email']
-    address = shipment["address_object"]
+    address = shipment["addressObject"]
     boxes = int(float(shipment['boxes']))
     send_date = shipment["date_object"]
     recipient_name = shipment[delivery_contact]
@@ -183,7 +183,7 @@ def submit_shipment(shipment):
     shipment[shipping_cost] = services[0].cost
 
     print("\n" + shipment['customer'] + "'s shipment of", shipment[boxes], "parcels to: ",
-          shipment["address_object"].street, "|", shipment["date_object"].date, "|",
+          shipment["addressObject"].street, "|", shipment["date_object"].date, "|",
           shipment[shipping_service_name],
           "| Price =",
           shipment[shipping_cost])
@@ -222,7 +222,7 @@ def submit_shipment(shipment):
     with open(DATA_DIR / 'AmShip.json', 'w') as f:
         print("LOGGING")
         output = {}
-        exclude_keys = ["address_object", "date_object", 'service_object', 'despatch_shipped_object']
+        exclude_keys = ["addressObject", "dateObject", 'service_object', 'despatch_shipped_object']
         for key, value in shipment:
             if "object" not in key:
                 output[key] = output[value]
@@ -238,7 +238,7 @@ def submit_shipment(shipment):
 def print_shipment(shipment):
     pprint(shipment)
     string = " |", shipment['customer'], "|", shipment[send_date], "|", shipment[
-        "address_object"].street
+        "addressObject"].street
     return string
 
 

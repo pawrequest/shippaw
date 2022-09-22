@@ -45,12 +45,12 @@ def withoutKeys(d, keys):
     return {x: d[x] for x in d if x not in keys}
 
 
-# clean shipDict
+# clean shipdict
 # needs generalising
-# def cleanDict(shipDict):  # if list takes first item!
-#     print("Cleaning your shipDict")
+# def cleanDict(shipdict):  # if list takes first item!
+#     print("Cleaning your shipdict")
 #     newdict={}
-#     for k, v in shipDict.items():
+#     for k, v in shipdict.items():
 #         if k in com_fields: k = com_fields[k]
 #         k = toCamel(k)
 #         if isinstance(v,list):

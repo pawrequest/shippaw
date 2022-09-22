@@ -55,7 +55,7 @@ from python.config import *
 #                 # shipments = [Shipment() for i in range(len(manifest_data))]
 #                 manifest = manifest_data
 #                 break
-#             elif isinstance(manifest_data, shipDict):
+#             elif isinstance(manifest_data, shipdict):
 #                 # print("IS A DICT")
 #                 if "Items" in manifest_data.keys():
 #                     # print("Is a Dict of Dicts")
@@ -194,9 +194,9 @@ def check_boxes(shipment):
             return shipment
 
 
-def process_shipment(shipment):  # master function takes shipment shipDict
+def process_shipment(shipment):  # master function takes shipment shipdict
     # parse address
-    shipment = parse_shipment_address(shipment)
+    # shipment = parse_shipment_address(shipment)
 
     print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|",
           shipment.send_date)
@@ -208,7 +208,7 @@ def process_shipment(shipment):  # master function takes shipment shipDict
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
             print("- Shipment Validated || ", shipment.customer, "|", shipment.boxes,
-                  "box(es) |", shipment.address_object.street, " | ", shipment.date_object.date, "\n", (line))
+                  "box(es) |", shipment.addressObject.street, " | ", shipment.date_object.date, "\n", (line))
     # shall we continue?
     userinput = "1"
     while (userinput not in ["p", "c", "e"]):
@@ -318,7 +318,7 @@ def get_address_object(shipment):
         search_string = shipment.firstline
     # get object
     address_object = client.find_address(shipment.postcode, search_string)
-    shipment.address_object = address_object
+    shipment.addressObject = address_object
     return shipment
 
 
@@ -346,8 +346,8 @@ def change_address(shipment):  # takes
             continue
         break
     selected_key = candidates[int(selection) - 1].key
-    shipment.address_object = client.get_address_by_key(selected_key)
-    print("- New Address:", shipment.address_object.street)
+    shipment.addressObject = client.get_address_by_key(selected_key)
+    print("- New Address:", shipment.addressObject.street)
     return shipment
 
 
@@ -355,11 +355,11 @@ def make_request(shipment):
     recipient_address = client.address(
         company_name=shipment.customer,
         country_code="GB",
-        county=shipment.address_object.county,
-        locality=shipment.address_object.locality,
-        postal_code=shipment.address_object.postal_code,
-        town_city=shipment.address_object.town_city,
-        street=shipment.address_object.street
+        county=shipment.addressObject.county,
+        locality=shipment.addressObject.locality,
+        postal_code=shipment.addressObject.postal_code,
+        town_city=shipment.addressObject.town_city,
+        street=shipment.addressObject.street
     )
 
     recipient = client.recipient(
@@ -392,8 +392,8 @@ def make_request(shipment):
     shipment_request.collection_date = shipment.date_object.date
     services = client.get_available_services(shipment_request)
     shipment_request.service_id = 101
-    shipment.shipping_service_name = services[0].name
-    shipment.shipping_cost = services[0].cost
+    shipment.shippingServiceName = services[0].name
+    shipment.shippingCost = services[0].cost
     shipment.services = services
     atest = [a for a in dir(shipment_request) if not a.startswith('__')]
     return shipment_request
@@ -405,10 +405,10 @@ def queue_shipment(shipment):
     shipment.added_shipment = added_shipment
 
     print("\n", line, '\n-', shipment.customer, "|", shipment.boxes, "|",
-          shipment.address_object.street, "|", shipment.date_object.date, "|",
-          shipment.shipping_service_name,
+          shipment.addressObject.street, "|", shipment.date_object.date, "|",
+          shipment.shippingServiceName,
           "| Price =",
-          shipment.shipping_cost, '\n', line, '\n')
+          shipment.shippingCost, '\n', line, '\n')
 
     choice = "n"
     while choice[0] not in ["q", "r", 'e']:

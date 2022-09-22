@@ -38,7 +38,7 @@
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with Powershell     ''''''''''
+'''''''''   Runs Amdesp direct with cmd     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
 '             python_exe = "C:\AmDesp\python\bin\python.exe"

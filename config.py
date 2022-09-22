@@ -20,11 +20,18 @@ JSONFILE = DATA_DIR / "AmShip.json"
 # JSONFILE = RootDirAbs + "AmShip.json"
 XMLFILE = DATA_DIR / "AmShip.xml"
 LOGFILE = (DATA_DIR / "AmLog.json")
+
 client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
-courier_id = 8  # parcelforce
+
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJson dirs
 
+
+################
+### removing becasue in class
+# client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
+# sender = client.sender(address_id=sender_id)
+# courier_id = 8  # parcelforce
 
 
 
@@ -43,7 +50,7 @@ com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Addr
      'Delivery Postcode': 'd postcode', 'Reference Number': 'hire ref', 'Deliv Name': 'customer',
      'Deliv Address': 'd address', 'Deliv Contact': 'contact', 'Deliv Email': 'd email', 'Deliv Postcode': 'd postcode',
      'Deliv Telephone': 'd tel'}
-export_exclude_keys = ["address_object", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
+export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
 field_fixes = {}
 expungedFields = ["Name"] #"toCustomer",
 addFields = {
@@ -60,8 +67,8 @@ addFields = {
 # searchterm = "search term"
 # shipnum = "shipment number"
 # shipping_service_id = "shipment service id"
-# shipping_service_name = "shipping service name"
-# shipping_cost = "shipping cost"
+# shippingServiceName = "shipping service name"
+# shippingCost = "shipping cost"
 # desp_shipment_id = "despatch id"
 # candidates = "candidates"
 # date_check = "date check"
