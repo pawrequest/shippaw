@@ -1,38 +1,40 @@
 import inspect
+import json
 
 # from shipment_class import *
 from python.config import *
-import json
+
+
 # def shipmentFactory(x):
 #     for i in xrange(len(x)):
 #         shipment = Shipment([i])
 #         yield shipment
 
-def getmanifest(data, datatype):
-    # is json or xml?
-    datatype = datatype
-    if datatype == "json":
-        with open(data) as f:
-            manifest = []
-            xml_data = json.load(f)
-            cat = xml_data['CommenceCategory']
-            manifest=xml_data['Items']
-            for id, shipment in enumerate(manifest):
-                shipment['category'] = cat
-                shipment['customer'] = shipment['To Customer']
-                for k, v in shipment.items():
-                    if k in com_fields:
-                        k = com_fields[k]
-                    if k in field_fixes:
-                        k = fiels_fixes[k]
-                    k=MakePascal(k)
-                    v=v.title()
-
-                    new_ship[k] = v
-    return manifest
-
-manifest = getmanifest(JsonPath, "json")
-print (manifest)
+# def getmanifest(data, datatype):
+#     # is json or xml?
+#     datatype = datatype
+#     if datatype == "json":
+#         with open(data) as f:
+#             manifest = []
+#             xml_data = json.load(f)
+#             cat = xml_data['CommenceCategory']
+#             manifest=xml_data['Items']
+#             for id, shipment in enumerate(manifest):
+#                 shipment['category'] = cat
+#                 shipment['customer'] = shipment['To Customer']
+#                 for k, v in shipment.items():
+#                     if k in com_fields:
+#                         k = com_fields[k]
+#                     if k in field_fixes:
+#                         k = fiels_fixes[k]
+#                     k=MakePascal(k)
+#                     v=v.title()
+#
+#                     new_ship[k] = v
+#     return manifest
+#
+# manifest = getmanifest(JsonPath, "json")
+# print (manifest)
 
 
 
@@ -53,7 +55,7 @@ print (manifest)
 #                 # shipments = [Shipment() for i in range(len(manifest_data))]
 #                 manifest = manifest_data
 #                 break
-#             elif isinstance(manifest_data, dict):
+#             elif isinstance(manifest_data, shipDict):
 #                 # print("IS A DICT")
 #                 if "Items" in manifest_data.keys():
 #                     # print("Is a Dict of Dicts")
@@ -127,39 +129,39 @@ print (manifest)
 #     #     print("NOT A FILE")
 
 
-def shipment_from_xml(xml):
-    shipment = Shipment()
-    tree = ET.parse(xml)
-    root = tree.getroot()
-    fields = root[0][2]
-    connected_customer = root[0][3][1][0][0].text
-    cat = root[0][0].text.lower()
-    for field in fields:
-        if field[0].text:
-            fieldname = field[0].text.lower()
-            fieldname = unsanitise(fieldname)
-            if " " in fieldname:
-                fieldname = fieldname.replace(" ", "_")
-            if fieldname in commence_columns.keys():  # debug
-                fieldname = commence_columns[fieldname]
-            if field[1].text:
-                fieldvalue = field[1].text
-                fieldvalue = unsanitise(fieldvalue)
-                if fieldvalue.isnumeric():
-                    fieldvalue = int(fieldvalue)
-                    if fieldvalue == 0:
-                        fieldvalue = None
-                setattr(shipment, fieldname, fieldvalue)
-    setattr(shipment, category, cat)
-    print(shipment.send_date)
-    if cat.lower() == "customer":
-        print("IS A CUSTOMER")
-        shipment.send_date = datetime.today().date()
-    elif cat.lower() == "hire":
-        print("IS A HIRE")
-        setattr(shipment, customer, connected_customer)
-        shipment.send_date = datetime.strptime(shipment.send_date, '%d/%m/%Y').date()
-    return shipment
+# def shipment_from_xml(xml):
+    # shipment = Shipment()
+    # tree = ET.parse(xml)
+    # root = tree.getroot()
+    # fields = root[0][2]
+    # connected_customer = root[0][3][1][0][0].text
+    # cat = root[0][0].text.lower()
+    # for field in fields:
+    #     if field[0].text:
+    #         fieldname = field[0].text.lower()
+    #         fieldname = unsanitise(fieldname)
+    #         if " " in fieldname:
+    #             fieldname = fieldname.replace(" ", "_")
+    #         if fieldname in commence_columns.keys():  # debug
+    #             fieldname = commence_columns[fieldname]
+    #         if field[1].text:
+    #             fieldvalue = field[1].text
+    #             fieldvalue = unsanitise(fieldvalue)
+    #             if fieldvalue.isnumeric():
+    #                 fieldvalue = int(fieldvalue)
+    #                 if fieldvalue == 0:
+    #                     fieldvalue = None
+    #             setattr(shipment, fieldname, fieldvalue)
+    # setattr(shipment, category, cat)
+    # print(shipment.send_date)
+    # if cat.lower() == "customer":
+    #     print("IS A CUSTOMER")
+    #     shipment.send_date = datetime.today().date()
+    # elif cat.lower() == "hire":
+    #     print("IS A HIRE")
+    #     setattr(shipment, customer, connected_customer)
+    #     shipment.send_date = datetime.strptime(shipment.send_date, '%d/%m/%Y').date()
+    # return shipment
 
 
 def unsanitise(string):
@@ -192,7 +194,7 @@ def check_boxes(shipment):
             return shipment
 
 
-def process_shipment(shipment):  # master function takes shipment dict
+def process_shipment(shipment):  # master function takes shipment shipDict
     # parse address
     shipment = parse_shipment_address(shipment)
 

@@ -36,13 +36,14 @@ def shipmentFromXml(xml):
         k = field[0].text
         v = field[1].text
         if v:
-            shipment.update({k:v})
-    shipment=cleanDict(shipment)
-    print("Xml shipment with",len(shipment),"fields imported")
+            shipment.update({k: v})
+    shipment = cleanDict(shipment)
+    print("Xml shipment with", len(shipment), "fields imported\n")
     return shipment
 
+
 def manifestFromJson(manifest_list_dict):
-    print("Parsing Json")
+    print("Parsing Json\n")
     manifest = []
     with open(manifest_list_dict) as f:
         json_data = json.load(f)
@@ -52,30 +53,78 @@ def manifestFromJson(manifest_list_dict):
             # newship = {}
             shipment.update({'category': cat})
             shipment.update({'customer': shipment['To Customer']})
-            shipment.update({'hireName':shipment['Name']})
+            shipment.update({'hireName': shipment['Name']})
+            shipment.update({'dAddress': shipment['Delivery Address']})
             shipment = cleanDict(shipment)
-            shipment
             manifest.append(shipment)
-    print("Manifest imported with ", len(manifest), "shipments")
+    print("Manifest imported with ", len(manifest), "shipments\n")
     return manifest
 
 
 def cleanDict(dict):  # if list takes first item!
-    print("Cleaning your dict")
-    newdict={}
+    # print("Cleaning your shipDict\n")
+    newdict = {}
     for k, v in dict.items():
         if k in com_fields: k = com_fields[k]
         k = toCamel(k)
-        if isinstance(v,list):
+        # k = inflection.camelize(k, False).replace(" ","")
+        if isinstance(v, list):
             v = v[0]
-        if v.replace(",","").isnumeric() and int(v.replace(',','')) == 0:
+        if v.replace(",", "").isnumeric() and int(v.replace(',', '')) == 0:
             v = None
         elif v.isalnum():
             v = v.title()
+
+        if k == "hireRef":
+            v = v.replace(",", "")
+            if v.isnumeric():
+                v = int(v)
+            newdict.update({"id": int(v)})
+
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-        newdict = withoutKeys(newdict, expungedFields)
-        newdict.update({k:v})
-    return(newdict)
+        newdict = withoutKeys(newdict, expungedFields)  # in confiig
+        newdict.update({k: v})
+    return (newdict)
 
 
+def parse_shipment_address(shipment):
+    print("\n--- Parsing Address...\n")
+    crapstring = shipment.d_address
+    firstline = crapstring.split("\n")[0]
+    first_block = (crapstring.split(" ")[0]).split(",")[0]
+    first_char = first_block[0]
+    shipment.firstline = firstline
+    for char in firstline:
+        if not char.isalpha():
+            if not char.isnumeric():
+                if not char == " ":
+                    firstline = firstline.replace(char, "")
+    if first_char.isnumeric():
+        shipment.building_num = first_block
+    else:
+        print("- No building number, using firstline:", shipment.firstline, '\n')
 
+    return shipment
+
+
+def check_boxes(shipment):  # sent to class
+    ui = ""
+    while True:
+        if shipment.boxes:
+            print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|", shipment.send_date)
+            ui = input("[C]onfirm or Enter a number of boxes\n")
+            if ui.isnumeric():
+                shipment.boxes = int(ui)
+                print("Shipment updated  |  ", shipment.boxes, "  boxes\n")
+            if ui == 'c':
+                return shipment
+            continue
+        else:
+            print("\n\t\t*** ERROR: No boxes added ***\n")
+            ui = input("- How many boxes?\n")
+            if not ui.isnumeric():
+                print("- Enter a number")
+                continue
+            shipment.boxes = int(ui)
+            print("Shipment updated  |  ", shipment.boxes, "  boxes\n")
+            return shipment

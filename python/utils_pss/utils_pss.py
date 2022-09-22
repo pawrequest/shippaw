@@ -1,3 +1,4 @@
+import random
 import sys
 
 import psutil
@@ -42,3 +43,62 @@ def getActiveWindow():
 def withoutKeys(d, keys):
     ...
     return {x: d[x] for x in d if x not in keys}
+
+
+# clean shipDict
+# needs generalising
+# def cleanDict(shipDict):  # if list takes first item!
+#     print("Cleaning your shipDict")
+#     newdict={}
+#     for k, v in shipDict.items():
+#         if k in com_fields: k = com_fields[k]
+#         k = toCamel(k)
+#         if isinstance(v,list):
+#             v = v[0]
+#         if v.replace(",","").isnumeric() and int(v.replace(',','')) == 0:
+#             v = None
+#         elif v.isalnum():
+#             v = v.title()
+#         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+#         newdict = withoutKeys(newdict, expungedFields)
+#         newdict.update({k:v})
+#     return(newdict)
+
+
+def unsanitise(string):
+    string = string.replace("&amp;", chr(38)).replace("&quot;", chr(34)).replace("&apos;", chr(39)).replace("&lt;",
+                                                                                                            chr(60)).replace(
+        "&gt;", chr(62)).replace("&gt;", chr(32)).replace("&#", "").replace(";", "").replace(",", "")
+    return string
+    # string = string.replace("&amp;", chr(38))
+    # string = string.replace("&quot;", chr(34))
+    # string = string.replace("&apos;", chr(39))
+    # string = string.replace("&lt;", chr(60))
+    # string = string.replace("&gt;", chr(62))
+    # string = string.replace("&gt;", chr(32))
+    # string = string.replace("&#", "")
+    # string = string.replace(";", "")
+    # return string
+
+#elephant class has a memory - note the underscores
+class Elephant:
+    def __init__(self, fnc):
+        self._fnc = fnc
+        self._memory = []
+
+    def __call__(self):
+        retval = self._fnc()
+        self._memory.append(retval)
+        return retval
+
+    def memory(self):
+        return self._memory
+@Elephant
+def random_odd():
+    return random.choice([1,3,5,7,9])
+# print(random_odd())
+# print(random_odd.memory())
+# print(random_odd())
+# print(random_odd.memory())
+
+

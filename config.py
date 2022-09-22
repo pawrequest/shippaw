@@ -39,13 +39,16 @@ line = '-' * 100
 
 # new_com = {key.title(): value for (key, value) in com_cols.items()}
 
-com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Address': 'address', 'Send Out Date': 'send date',
-     'Delivery Postcode': 'postcode', 'Reference Number': 'hire ref', 'Deliv Name': 'customer',
-     'Deliv Address': 'address', 'Deliv Contact': 'contact', 'Deliv Email': 'email', 'Deliv Postcode': 'postcode',
-     'Deliv Telephone': 'tel'}
+com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Address': 'd Address', 'Send Out Date': 'send date',
+     'Delivery Postcode': 'd postcode', 'Reference Number': 'hire ref', 'Deliv Name': 'customer',
+     'Deliv Address': 'd address', 'Deliv Contact': 'contact', 'Deliv Email': 'd email', 'Deliv Postcode': 'd postcode',
+     'Deliv Telephone': 'd tel'}
 export_exclude_keys = ["address_object", "date_object", 'service_object', 'services', 'parcels', 'shipment_return']
 field_fixes = {}
 expungedFields = ["Name"] #"toCustomer",
+addFields = {
+
+}
 
 
 

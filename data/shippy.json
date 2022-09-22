@@ -1,0 +1,82 @@
+{"added_shipment": None,
+ "address": "1-7 Crescent East\nHadley Wood\nHertfordshire",
+ "address_object": None,
+ "allAddress": "Louise\n"
+               "The Hadley Wood Association\n"
+               "1-7 Crescent East\n"
+               "Hadley Wood\n"
+               "Hertfordshire\n"
+               "EN4 0EL\n"
+               "\n"
+               "020 8449 7193\n"
+               "\n"
+               "HADLEY.WOODASSOC@BTCONNECT.COM",
+ "bookedDate": "15/08/2022",
+ "boxes": "1",
+ "building_num": None,
+ "category": "Hire",
+ "collectionMethod": "Parcelforce",
+ "collection_booked": None,
+ "contact": None,
+ "customer": "The Hadley Wood Association",
+ "d_address": None,
+ "d_email": None,
+ "d_key": 0,
+ "d_name": None,
+ "d_phone": None,
+ "d_postcode": None,
+ "deliveryCharge": "28.00",
+ "deliveryContact": "Louise",
+ "deliveryName": "The Hadley Wood Association",
+ "discountDescription": "Charity Discount",
+ "discountPercentage": "25%",
+ "dueBackDate": "09/11/2022",
+ "email": "HADLEY.WOODASSOC@BTCONNECT.COM",
+ "hireRef": "39,187",
+ "hireSheetText": "\n"
+                  "* 8 x Kirisun VHF radios\n"
+                  "\n"
+                  "* 1 x six-slot radio charger units\n"
+                  "\n"
+                  "* 2 x single radio charger units\n"
+                  "\n"
+                  "* 4 x extra radio battery packs",
+ "hire_ref": None,
+ "id": 1,
+ "invBattDesc": "Hire of spare battery pack",
+ "invBattPrice": "1.00",
+ "invBattQty": "4",
+ "invBookedDate": "Mon 15 August 2022",
+ "invChargerDesc": "Radio chargers included in price",
+ "invDeliveryDesc": "Delivery &amp; Collection",
+ "invDueBackDate": "Wed 9 November 2022",
+ "invReturnDesc": "Cust. to advise when ready for collection",
+ "invSendDesc": "Send Date",
+ "invSendOutDate": "Tue 1 November 2022",
+ "invUhfDesc": "Hire of Kirisun VHF walkie-talkie",
+ "invUhfPrice": "12.00",
+ "invUhfQty": "8",
+ "invoice": "E:\\Dev\\Amherst\\commence-database\\FILES\\a22865.docx",
+ "label_downloaded": None,
+ "label_location": None,
+ "label_url": None,
+ "name": "The Hadley Wood Association - 01/11/2022 ref 19427",
+ "numberBatteries": "4",
+ "numberSglCharger": "2",
+ "numberUhf": "8",
+ "numberUhf6Way": "1",
+ "parcels": None,
+ "paymentTerms": "To be paid before hire date",
+ "phone": "020 8449 7193",
+ "postcode": "EN4 0EL",
+ "purpose": "for fireworks event 6th Nov",
+ "radioType": "Kirisun VHF",
+ "sendDate": "01/11/2022",
+ "sendMethod": "Customer Collects",
+ "send_date": None,
+ "sendingStatus": "Fine no problem",
+ "shipment_doc_id": None,
+ "shipment_return": None,
+ "shipping_service_id": 101,
+ "shipping_service_name": None,
+ "status": "Quote given"}
