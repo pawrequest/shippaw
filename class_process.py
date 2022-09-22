@@ -1,5 +1,5 @@
 from python.ADFuncs import *
-
+from python.AmDespClasses import *
 json_exist = True
 xml_exist = True
 
@@ -19,9 +19,9 @@ xml_exist = True
 
 if xml_exist:
     shipment = shipmentFromXml(XMLFILE)
-    shippy = Shipment(shipment, 1)
+    shippy = Shipment(shipment, "shippy"+str(1))
 
-print("VARS IN SHIPPY")
+# print("VARS IN SHIPPY")
 # pprint(vars(shippy))
 
 print ("Shippy", shippy)
