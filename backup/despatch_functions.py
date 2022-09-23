@@ -64,9 +64,9 @@ def manifest_list_from_json():
             manifest_data = json.load(f)
             for count, shipment in enumerate(manifest_data['Items']):
                 shipment[hire_ref] = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
-                shipment = parse_shipment_address(shipment)  # gets number / firstline
+                shipment = parse_shipment_address(shipment)  # gets number / deliveryFirstline
                 shipment[hire_customer] = shipment[hire_customer][
-                    0]  # remove customer field from spurious list
+                    0]  # remove deliveryCustomer field from spurious list
                 manifest.append(shipment)
         return manifest
     else:

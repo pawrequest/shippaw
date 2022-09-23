@@ -1042,7 +1042,9 @@ Sub ExportItemDetailForm(ByVal strPath)
     Set db = Nothing
 
 
-' End Sub
+End Sub
+
+
 ' '''''''''''''''''''''''''''''''''''''''''''''
 ' ''''''''' arno-pss function to export item field
 ' Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field

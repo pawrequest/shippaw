@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-from shipment_class_f import *
 from config_f import *
+from shipment_class_f import *
 
 
 def unsanitise(string):
@@ -36,7 +36,7 @@ def shipment_from_xml(xml):
                 setattr(shipment, fieldname, fieldvalue)
     setattr(shipment, category, cat)
     print(shipment.send_date)
-    if cat.lower() == "customer":
+    if cat.lower() == "deliveryCustomer":
         print("IS A CUSTOMER")
         shipment.send_date = datetime.today().date()
     elif cat.lower() == "hire":

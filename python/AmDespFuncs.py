@@ -1,11 +1,11 @@
 import json
 import xml.etree.ElementTree as ET
+from datetime import datetime
+from pprint import pprint
 
 from config import *
+from python.utils_pss.utils_pss import *
 from .AmDespClasses import Shipment
-
-
-# from python.utils_pss.utils_pss import *
 
 
 def JsonToShippies(jsondata):
@@ -19,31 +19,12 @@ def JsonToShippies(jsondata):
 
 def XmlToShippy(xmlda):  # xmldata name being used?
     shipment = shipmentFromXml(xmlda)
-    shippy = Shipment(shipment, shipment['customer'])
+    shippy = Shipment(shipment, shipment['deliveryCustomer'])
     print("Shippy:", shippy)
     return shippy
 
 
-#
-
-
-# def unsanitise(string):
-#     # string = string.replace("&amp;", chr(38)).replace("&quot;", chr(34)).replace("&apos;", chr(39)).replace("&lt;",
-#     #                                                                                                         chr(60)).replace(
-#     #     "&gt;", chr(62)).replace("&gt;", chr(32)).replace("&#", "").replace(";", "").replace(",", "")
-#     # return string
-#     string = string.replace("&amp;", chr(38))
-#     string = string.replace("&quot;", chr(34))
-#     string = string.replace("&apos;", chr(39))
-#     string = string.replace("&lt;", chr(60))
-#     string = string.replace("&gt;", chr(62))
-#     string = string.replace("&gt;", chr(32))
-#     string = string.replace("&#", "")
-#     string = string.replace(";", "")
-#     return string
-
-
-def shipmentFromXml(xml):
+def shipmentFromXml(xml):  # currently hardcoded xml link.... breaks otherwise... how to passfile refs/paths?
     # TODO handle xmls with multiple shipments
     shipment = {}
     newxml = "C:\AmDesp\data\AmShip.xml"
@@ -54,17 +35,40 @@ def shipmentFromXml(xml):
 
     customer = root[0][3].text  # debug
 
-    print(customer)
     cat = root[0][0].text
     shipment['category'] = cat
-    shipment['customer'] = customer
+    shipment['deliveryCustomer'] = customer
     for field in fields:
         k = field[0].text
         v = field[1].text
         if v:
             shipment.update({k: v})
-    shipment = cleanDict(shipment)
-    print("Xml shipment with", len(shipment), "fields imported\n")
+    shipment = cleanDictShip(shipment)
+    print("Xml shipment with", len(shipment), "fields imported")
+    return shipment
+
+
+def shipmentFromXml(xml):  # currently hardcoded xml link.... breaks otherwise... how to passfile refs/paths?
+    # TODO handle xmls with multiple shipments
+    shipment = {}
+    newxml = "C:\AmDesp\data\AmShip.xml"
+    tree = ET.parse(XMLFILE)
+    root = tree.getroot()
+    fields = root[0][2]
+    # add shipment-wide
+
+    customer = root[0][3].text  # debug
+
+    cat = root[0][0].text
+    shipment['category'] = cat
+    shipment['deliveryCustomer'] = customer
+    for field in fields:
+        k = field[0].text
+        v = field[1].text
+        if v:
+            shipment.update({k: v})
+    shipment = cleanDictShip(shipment)
+    print("Xml shipment with", len(shipment), "fields imported")
     return shipment
 
 
@@ -78,33 +82,63 @@ def manifestFromJson(manifest_list_dict) -> list:
         for shipment in manifest_data:
             # newship = {}
             shipment.update({'category': cat})
-            shipment.update({'customer': shipment['To Customer']})
+            shipment.update({'deliveryCustomer': shipment['To Customer']})
             shipment.update({'hireName': shipment['Name']})
-            shipment.update({'dAddress': shipment['Delivery Address']})
-            shipment = cleanDict(shipment)
+            shipment.update({'deliveryAddress': shipment['Delivery Address']})
+            shipment = cleanDictShip(shipment)
             manifest.append(shipment)
     print("Manifest imported with ", len(manifest), "shipments\n")
     return manifest
 
 
-def cleanDict(dict):  # if list takes first item!
+def cleanDictHire(dict):  # if list takes first item!
     # print("Cleaning your shipdict\n")
     newdict = {}
     for k, v in dict.items():
-        k=unsanitise(k)
-        if v: v=unsanitise(v)
+        k = unsanitise(k)
+        if v: v = unsanitise(v)
+        print("CLEANDICT, unsanitised, keys are:",k," - ",v)
         if k in com_fields: k = com_fields[k]
         k = toCamel(k)
         if isinstance(v, list):
             v = v[0]
         if v.replace(",", "").isnumeric():
-            v=v.replace(",", "")
+            v = v.replace(",", "")
         if v.isnumeric():
-            v=int(v)
+            v = int(v)
             if v == 0:
                 v = None
         elif v.isalnum():
             v = v.title()
+        if k == "sendDate":
+            v = datetime.strptime(v, '%d/%m/%Y').date()
+        newdict.update({k: v})
+    else:
+        newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+        newdict = {k: v for k, v in newdict.items() if k in hireFields}
+        newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
+        return (newdict)
+
+def cleanDictShip(dict):  # if list takes first item!
+    # print("Cleaning your shipdict\n")
+    newdict = {}
+    for k, v in dict.items():
+        k = unsanitise(k)
+        if v: v = unsanitise(v)
+        if k in com_fields: k = com_fields[k]
+        k = toCamel(k)
+        if isinstance(v, list):
+            v = v[0]
+        if v.replace(",", "").isnumeric():
+            v = v.replace(",", "")
+        if v.isnumeric():
+            v = int(v)
+            if v == 0:
+                v = None
+        elif v.isalnum():
+            v = v.title()
+        if k == "sendDate":
+            v = datetime.strptime(v, '%d/%m/%Y').date()
 
         newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
@@ -114,45 +148,27 @@ def cleanDict(dict):  # if list takes first item!
     return (newdict)
 
 
+def hireFromXml(xml):  # currently hardcoded xml link.... breaks otherwise... how to passfile refs/paths?
+    # TODO handle xmls with multiple shipments
+    hire_dict = {}
+    newxml = "C:\AmDesp\data\AmShip.xml"
+    tree = ET.parse(XMLFILE)
+    root = tree.getroot()
+    fields = root[0][2]
+    # add shipment-wide
 
-def parse_shipment_address(shipment):
-    print("\n--- Parsing Address...\n")
-    crapstring = shipment.d_address
-    firstline = crapstring.split("\n")[0]
-    first_block = (crapstring.split(" ")[0]).split(",")[0]
-    first_char = first_block[0]
-    shipment.firstline = firstline
-    for char in firstline:
-        if not char.isalpha():
-            if not char.isnumeric():
-                if not char == " ":
-                    firstline = firstline.replace(char, "")
-    if first_char.isnumeric():
-        shipment.building_num = first_block
-    else:
-        print("- No building number, using firstline:", shipment.firstline, '\n')
+    customer = root[0][3].text  # debug
 
-    return shipment
+    cat = root[0][0].text
+    for field in fields:
+        k = field[0].text
+        v = field[1].text
+        if v:
+            hire_dict.update({k: v})
+    hire_dict = cleanDictHire(hire_dict)
+    print("Xml hire with", len(hire_dict), "fields imported")
+    pprint(hire_dict)
+    return hire_dict
 
-
-def check_boxes(shipment):  # sent to class
-    ui = ""
-    while True:
-        if shipment.boxes:
-            print(line, "\n\t\t", shipment.customer, "|", shipment.firstline, "|", shipment.send_date)
-            ui = input("[C]onfirm or Enter a number of boxes\n")
-            if ui.isnumeric():
-                shipment.boxes = int(ui)
-                print("Shipment updated  |  ", shipment.boxes, "  boxes\n")
-            if ui == 'c':
-                return shipment
-            continue
-        else:
-            print("\n\t\t*** ERROR: No boxes added ***\n")
-            ui = input("- How many boxes?\n")
-            if not ui.isnumeric():
-                print("- Enter a number")
-                continue
-            shipment.boxes = int(ui)
-            print("Shipment updated  |  ", shipment.boxes, "  boxes\n")
-            return shipment
+def shipmentFromHire():
+    pass

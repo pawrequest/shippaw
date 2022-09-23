@@ -11,10 +11,10 @@ $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 ## check in hire-detail-script
 $HireForm = "hire_pss"
 $HireFormVbs = "C:\AmDesp\script\hire_pss.VBS"
-$HireChecked = $db.CheckInFormScript("Hire", $HireForm, $HireFormVbs)
-Write-Host "Hire Form checked in" is $HireChecked
+$HireChecked = $db.CheckInFormScript("HireShipment", $HireForm, $HireFormVbs)
+Write-Host "HireShipment Form checked in" is $HireChecked
 
-##check in customer-detail-script
+##check in deliveryCustomer-detail-script
 $CustomerForm = "customer_pss"
 $CustomerFormVbs = "C:\AmDesp\script\customer_pss.VBS"
 $CustomerChecked = $db.CheckInFormScript("Customer", $CustomerForm, $CustomerFormVbs )

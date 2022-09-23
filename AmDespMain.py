@@ -1,12 +1,10 @@
-from config import *
 from python.AmDespClasses import *
 from python.AmDespFuncs import *
 
-# shippies = JsonToShippies(JSONFILE)
-# for shippy in shippies:
-#     shippy.CheckBoxes() #shippy =
-#     shippy.ValDates()
-#     shippy.ValAddress()
-shipment = shipmentFromXml(XMLFILE)
-shippy = Shipment(shipment,12)
-print (shippy)
+# shipment = shipmentFromXml(XMLFILE)
+# shippy = Shipment(shipment, 12)
+# shippy.ProcessShipment()
+hire = hireFromXml(XMLFILE)
+herman = HireShipment(hire, 32)
+herman.Ship()
+

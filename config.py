@@ -28,7 +28,6 @@ client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
 sender = client.sender(address_id=sender_id)
 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJson dirs
 
-
 ################
 ### removing becasue in class
 # client = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
@@ -36,30 +35,28 @@ pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJ
 # courier_id = 8  # parcelforce
 
 
-
-
 # with open(JSONFILE) as j:
 #     pass
 line = '-' * 100
 # com_cols_lower = {'delivery tel': 'phone', 'delivery email': 'email', 'delivery address': 'address',
 #             'send out date': 'send date', 'delivery postcode': 'postcode', 'reference number': 'hire ref',
-#             "deliv name": "customer", "deliv address": "address", "deliv contact": "contact", "deliv email": "email",
+#             "deliv name": "deliveryCustomer", "deliv address": "address", "deliv deliveryContact": "deliveryContact", "deliv email": "email",
 #             "deliv postcode": "postcode", "deliv telephone": "tel"}
 
 # new_com = {key.title(): value for (key, value) in com_cols.items()}
 
-com_fields = {'Delivery Tel': 'phone', 'Delivery Email': 'email', 'Delivery Address': 'd Address', 'Send Out Date': 'send date',
-     'Delivery Postcode': 'd postcode', 'Reference Number': 'hire ref', 'Deliv Name': 'customer',
-     'Deliv Address': 'd address', 'Deliv Contact': 'contact', 'Deliv Email': 'd email', 'Deliv Postcode': 'd postcode',
-     'Deliv Telephone': 'd tel'}
+com_fields = {} # 'Reference Number': 'hire ref', 'Deliv Name': 'customer', 'Deliv Address': 'Delivery address',
+              # 'Deliv Contact': 'delivery contact', 'Deliv Email': 'delivery email',
+              # 'Delivery Postcode': 'delivery postcode',
+              # 'Deliv Telephone': 'delivery tel'
+
 export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
 field_fixes = {}
-expungedFields = ["Name"] #"toCustomer",
-addFields = {
+expungedFields = []  # "Name" "toCustomer",
+addFields = {}
+shipmentFields = ["deliveryName", "deliveryContact", "deliveryPhone", "deliveryEmail", "deliveryAddress", "deliveryPostcode"]
 
-}
-
-
+hireFields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryName','deliveryEmail', 'deliveryAddress', 'sendOutDate', 'deliveryPostcode', 'referenceNumber', 'To Customer"']
 
 # #  other fields
 # is_shipped = "is collection booked"
@@ -74,8 +71,8 @@ addFields = {
 # desp_shipment_id = "despatch id"
 # candidates = "candidates"
 # date_check = "date check"
-# category = "category"  # hire or customer
-# customer = "customer"
+# category = "category"  # hire or deliveryCustomer
+# deliveryCustomer = "deliveryCustomer"
 
 # parameters = [
 #     str(JSONFILE),
