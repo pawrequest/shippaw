@@ -1,7 +1,6 @@
 # PYTHON_EXE = ROOT_DIR / "python" / "bin" / "python.exe"
 # PYTHON_MAIN_SCRIPT = ROOT_DIR / "main.py"
 # COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-
 import os
 import pathlib
 

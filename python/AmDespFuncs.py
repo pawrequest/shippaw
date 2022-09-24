@@ -7,6 +7,7 @@ from .AmDespClasses import Hire
 
 
 def manifestFromJson(manifest_list_dict) -> list:
+    # TODO: does this still work?
     print("Parsing Json\n")
     manifest = []
     with open(manifest_list_dict) as f:
@@ -16,7 +17,7 @@ def manifestFromJson(manifest_list_dict) -> list:
         for shipment in manifest_data:
             # newship = {}
             shipment.update({'category': cat})
-            shipment.update({'Customer': shipment['To Customer']})
+            shipment.update({'customer': shipment['To Customer']})
             shipment.update({'hireName': shipment['Name']})
             shipment.update({'deliveryAddress': shipment['Delivery Address']})
             shipment = cleanDictShip(shipment)
@@ -25,7 +26,7 @@ def manifestFromJson(manifest_list_dict) -> list:
     return manifest
 
 
-def clean_hire_dict(dict):  # if list takes first item!
+def clean_xml_hire(dict) -> dict:
     newdict = {}
     for k, v in dict.items():
         k = unsanitise(k)
@@ -51,34 +52,34 @@ def clean_hire_dict(dict):  # if list takes first item!
     # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
     return (newdict)
 
-
-def cleanDictShip(dict):  # if list takes first item!
-    # print("Cleaning your shipdict\n")
-    newdict = {}
-    for k, v in dict.items():
-        k = unsanitise(k)
-        if v: v = unsanitise(v)
-        if k in com_fields: k = com_fields[k]
-        k = toCamel(k)
-        if isinstance(v, list):
-            v = v[0]
-        if v.replace(",", "").isnumeric():
-            v = v.replace(",", "")
-        if v.isnumeric():
-            v = int(v)
-            if v == 0:
-                v = None
-        elif v.isalnum():
-            v = v.title()
-        if k == "SendOutDate":
-            v = datetime.strptime(v, '%d/%m/%Y').date()
-
-        newdict.update({k: v})
-        newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-        newdict = withoutKeys(newdict, expungedFields)  # in confiig
-        newdict.update({k: v})
-        # if v: print("UPDATED:",k," - ", v)
-    return (newdict)
+#
+# def cleanDictShip(dict):  # if list takes first item!
+#     # print("Cleaning your shipdict\n")
+#     newdict = {}
+#     for k, v in dict.items():
+#         k = unsanitise(k)
+#         if v: v = unsanitise(v)
+#         if k in com_fields: k = com_fields[k]
+#         k = toCamel(k)
+#         if isinstance(v, list):
+#             v = v[0]
+#         if v.replace(",", "").isnumeric():
+#             v = v.replace(",", "")
+#         if v.isnumeric():
+#             v = int(v)
+#             if v == 0:
+#                 v = None
+#         elif v.isalnum():
+#             v = v.title()
+#         if k == "SendOutDate":
+#             v = datetime.strptime(v, '%d/%m/%Y').date()
+#
+#         newdict.update({k: v})
+#         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+#         newdict = withoutKeys(newdict, expungedFields)  # in confiig
+#         newdict.update({k: v})
+#         # if v: print("UPDATED:",k," - ", v)
+#     return (newdict)
 
 
 def hire_from_xml(xml):  # currently hardcoded xml link.... breaks otherwise... how to passfile refs/paths?
@@ -96,7 +97,7 @@ def hire_from_xml(xml):  # currently hardcoded xml link.... breaks otherwise... 
         if v:
             hire_dict.update({k: v})
     hire_dict.update({'customer': customer})
-    hire_dict = clean_hire_dict(hire_dict)
+    hire_dict = clean_xml_hire(hire_dict)
     print("Xml hire with", len(hire_dict), "fields imported")
     return hire_dict
 
