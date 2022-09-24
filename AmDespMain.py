@@ -20,9 +20,12 @@ else:
 
 
 
-hiredict = hire_from_xml(XMLFILE)
-oHire = Hire(hiredict)
-oHire.ship_hire()
+# hiredict = hire_from_xml(XMLFILE)
+# oHire = Hire(hiredict)
+# oHire.ship_hire()
+pro = Product()
+rad=Radio(PD705)
 
+print("DFH")
 
 # ship_hire(hiredict)

@@ -2,7 +2,6 @@
 # PYTHON_MAIN_SCRIPT = ROOT_DIR / "main.py"
 # COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 
-
 import os
 import pathlib
 
@@ -37,19 +36,4 @@ HIREFIELDS = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deli
               'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
               'customer']
 
-RADIOBINS = {'A66' : "somepath"}
 
-
-
-# config = {
-#     'API_USER': os.getenv("DESPATCH_API_USER"),
-#     'API_KEY': os.getenv("DESPATCH_API_KEY"),
-#     'DATA_DIR': ROOT_DIR / 'AmDesp' / "data",
-#     'LABEL_DIR': ROOT_DIR / 'data' / "Parcelforce Labels",
-#     'AMDESP_DIR': ROOT_DIR / "AmDesp",
-#     'SENDER_ID': 5536,  # should be env var?
-#     'JSONFILE': ROOT_DIR / 'data' / "AmShip.json",
-#     'XMLFILE': ROOT_DIR / 'data' / "AmShip.xml",
-#     'xmlfile' : .joinpath()
-#     'LOGFILE': ROOT_DIR / 'data' / "AmLog.json",
-# }

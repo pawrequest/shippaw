@@ -352,7 +352,13 @@ class Hire:
 
 class Product:
     def __init__(self):
-        ...
+        self.manufacturer = None
+        self.model = None
+        self.type = None
+        self.buy_price = None
 
 class Radio(Product):
-        ...
+    def __init__(self,dict):
+        if dict:
+            for k,v in dict.items():
+                setattr(self,k,v)
