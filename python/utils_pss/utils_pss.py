@@ -55,7 +55,7 @@ def withoutKeys(d, keys):
 
 # clean shipdict
 # needs generalising
-# def cleanDict(shipdict):  # if list takes first item!
+# def cleanDictShip(shipdict):  # if list takes first item!
 #     print("Cleaning your shipdict")
 #     newdict={}
 #     for k, v in shipdict.items():

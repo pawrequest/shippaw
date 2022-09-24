@@ -906,15 +906,34 @@ Sub Form_OnClick(ControlId)
 
 
         Case "CommandButton20"
-            Dim objShell, args, runscript, powershell, XmlPath
-            XmlPath = "C:\AmDesp\data\AmShip.xml"
-            runscript = "powershell -executionpolicy bypass -noexit -file"
-            powershell = "C:\AmDesp\script\AmDespSingle.ps1"
-		    ExportItemDetailForm(XmlPath)
-'             args = ""
-            Set objShell = CreateObject("WScript.Shell")
-            objShell.Run (runscript & " " & powershell) ' & " " & args
-            Set objShell = Nothing
+            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   Runs Amdesp direct with cmd     ''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+		    Dim python_exe, python_script, commence_wrapper, xmlfile
+            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_script = "C:\AmDesp\AmDespMain.py"
+            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+            xmlfile = "C:\AmDesp\data\AmShip.xml"
+            Dim oShell, currentCommand, my_command
+            SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+            Msgbox "RUN PYTHON"
+            oShell.run currentCommand,1,true
+
+
+'             Dim objShell, args, runscript, powershell, XmlPath, RunCmd, python_script
+'             XmlPath = "C:\AmDesp\data\AmShip.xml"
+'             python_script = "C:\AmDesp\AmDespMain.py"
+'             RunCmd = "powershell -executionpolicy bypass -noexit -file"
+' '             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
+'             powershell = "C:\AmDesp\script\AmDespSingle.ps1"
+' 		    ExportItemDetailForm(XmlPath)
+'             args = "XmlPath"
+'             Set objShell = CreateObject("WScript.Shell")
+'             objShell.Run (RunCmd & " " & powershell & " ") ' & " " & args
+' '             objShell.Run (RunCmd & " " & python_script),1,true
+'             Set objShell = Nothing
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   Runs Amdesp direct with Powershell     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

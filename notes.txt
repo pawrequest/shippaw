@@ -1,3 +1,44 @@
+# narrative:
+make oHire from xml with method 'makeshipment'
+ship creates a shipment object with oShip
+
+
+
+#########################planning
+# classes:
+#
+Customer
+Item
+    Radio
+    megaphone
+    psu
+    cable
+    radioaccessory
+        audio
+            d-type
+            covert
+            aircraft
+            madonna
+Transaction
+    Sale
+    Repair
+    Hire
+Organisation
+    client
+    supplier
+    amherst
+person
+    Staff
+    AccountsContact
+    ManagementContact
+
+address
+shipment
+Stock
+
+#################################
+
+
 Buttons:
 packed
 unpacked all ok

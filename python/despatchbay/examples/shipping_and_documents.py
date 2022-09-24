@@ -2,7 +2,7 @@ import os
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 
-#client = DespatchBaySDK(api_user='<APIUSER>', api_key='<APIKEY>')
+#CLIENT = DespatchBaySDK(api_user='<APIUSER>', api_key='<APIKEY>')
 
 api_user = os.getenv('DESPATCH_API_USER')
 api_key = os.getenv('DESPATCH_API_KEY')
@@ -67,13 +67,13 @@ shipment_request = client.shipment_request(
     follow_shipment='true'
 )
 
-# services = client.get_available_services(shipment_request)
+# services = CLIENT.get_available_services(shipment_request)
 # shipment_request.service_id = services[0].service_id
-# dates = client.get_available_collection_dates(sender, services[0].courier.courier_id)
+# dates = CLIENT.get_available_collection_dates(SENDER, services[0].courier.courier_id)
 # shipment_request.collection_date = dates[0]
-# added_shipment = client.add_shipment(shipment_request)
-# client.book_shipments([added_shipment])
-# shipment_return = client.get_shipment(added_shipment)
-# label_pdf = client.get_labels(shipment_return.shipment_document_id)
+# added_shipment = CLIENT.add_shipment(shipment_request)
+# CLIENT.book_shipments([added_shipment])
+# shipment_return = CLIENT.get_shipment(added_shipment)
+# label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
 # label_pdf.download('./new_label.pdf')
 

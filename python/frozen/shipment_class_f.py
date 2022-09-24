@@ -59,19 +59,19 @@ class Shipment(id=1):
 #                     setattr(self, fieldname, fieldvalue)
 #         setattr(self, self.category, cat)
 #         print(self.send_date)
-#         if cat.lower() == "deliveryCustomer":
+#         if cat.lower() == "Customer":
 #             print("IS A CUSTOMER")
 #             self.send_date = datetime.today().date()
 #         elif cat.lower() == "hire":
 #             print("IS A HIRE")
-#             setattr(self, self.deliveryCustomer, connected_customer)
+#             setattr(self, self.Customer, connected_customer)
 #             self.send_date = datetime.strftime(self.send_date, '%d/%m/%Y')
 #
 #     def ValBoxes(self, shipment):
 #         ui = ""
 #         while True:
 #             if self.boxes:
-#                 print(line, "\n\t\t", self.deliveryCustomer, "|", self.deliveryFirstline, "|", self.send_date)
+#                 print(line, "\n\t\t", self.Customer, "|", self.deliveryFirstline, "|", self.send_date)
 #                 ui = input("[C]onfirm or Enter a number of boxes\n")
 #                 if ui.isnumeric():
 #                     self.boxes = int(ui)
@@ -107,7 +107,7 @@ class Shipment(id=1):
 #             print("- No building number, using deliveryFirstline:", self.deliveryFirstline, '\n')
 #
 #     def ValDates(self):
-#         dates = client.get_available_collection_dates(sender, courier_id)  # get dates
+#         dates = CLIENT.get_available_collection_dates(SENDER, courier_id)  # get dates
 #         print("--- Checking available collection dates...")
 #         print(line)  # U+2500, Box Drawings Light Horizontal #
 #         for count, date in enumerate(dates):
@@ -116,7 +116,7 @@ class Shipment(id=1):
 #                 return
 #         else:  # looped exhausted, no date match
 #             print("\n*** ERROR: No collections available on", self.send_date, "for",
-#                   self.deliveryCustomer, "***\n\n\n- Collections for", self.deliveryCustomer, "are available on:\n")
+#                   self.Customer, "***\n\n\n- Collections for", self.Customer, "are available on:\n")
 #             for count, date in enumerate(dates):
 #                 dt = parse(date.date)
 #                 out = datetime.strftime(dt, '%A %d %B')
@@ -131,7 +131,7 @@ class Shipment(id=1):
 #                     print("- Enter a number")
 #                     continue
 #                 if not -1 <= int(choice) <= len(dates) + 1:
-#                     print('\nWrong Number!\n-Choose new date for', self.deliveryCustomer, '\n')
+#                     print('\nWrong Number!\n-Choose new date for', self.Customer, '\n')
 #                     for count, date in enumerate(dates):
 #                         print("\t\t", count + 1, "|", date.date, )
 #                     continue
@@ -142,7 +142,7 @@ class Shipment(id=1):
 #                     continue
 #                 else:
 #                     self.date_object = dates[int(choice) - 1]
-#                     print("\t\tCollection date for", self.deliveryCustomer, "is now ", self.date_object.date, "\n\n",
+#                     print("\t\tCollection date for", self.Customer, "is now ", self.date_object.date, "\n\n",
 #                           line)
 #                     return
 #
@@ -158,15 +158,15 @@ class Shipment(id=1):
 #             print("No building number, searching deliveryFirstline")
 #             search_string = self.deliveryFirstline
 #         # get object
-#         addressObject = client.find_address(self.d_postcode, search_string)
+#         addressObject = CLIENT.find_address(self.d_postcode, search_string)
 #         self.addressObject = addressObject
 #         return
 #
 #     def ChangeAdd(self):
-#         print("Changing shipping address  | ", self.deliveryCustomer, " | ",
+#         print("Changing shipping address  | ", self.Customer, " | ",
 #               str(self.date_object.date),
 #               "\n")
-#         candidates = client.get_address_keys_by_postcode(self.d_postcode)
+#         candidates = CLIENT.get_address_keys_by_postcode(self.d_postcode)
 #         for count, candidate in enumerate(candidates, start=1):
 #             print(" - Candidate", str(count) + ":", candidate.address)
 #         selection = ""
@@ -186,13 +186,13 @@ class Shipment(id=1):
 #                 continue
 #             break
 #         selected_key = candidates[int(selection) - 1].key
-#         self.addressObject = client.get_address_by_key(selected_key)
+#         self.addressObject = CLIENT.get_address_by_key(selected_key)
 #         print("- New Address:", self.addressObject.street)
 #         return
 #
 #     def MakeRequest(self):
-#         recipient_address = client.address(
-#             company_name=self.deliveryCustomer,
+#         recipient_address = CLIENT.address(
+#             company_name=self.Customer,
 #             country_code="GB",
 #             county=self.addressObject.county,
 #             locality=self.addressObject.locality,
@@ -201,7 +201,7 @@ class Shipment(id=1):
 #             street=self.addressObject.street
 #         )
 #
-#         recipient = client.recipient(
+#         recipient = CLIENT.recipient(
 #             name=self.deliveryContact,
 #             telephone=self.d_phone,
 #             email=self.d_email,
@@ -210,7 +210,7 @@ class Shipment(id=1):
 #         )
 #         parcels = []
 #         for x in range(self.boxes):
-#             parcel = client.parcel(
+#             parcel = CLIENT.parcel(
 #                 contents="Radios",
 #                 value=500,
 #                 weight=6,
@@ -220,16 +220,16 @@ class Shipment(id=1):
 #             )
 #             parcels.append(parcel)
 #
-#         shipment_request = client.shipment_request(
+#         shipment_request = CLIENT.shipment_request(
 #             parcels=parcels,
-#             client_reference=self.deliveryCustomer,
+#             client_reference=self.Customer,
 #             collection_date=self.date_object.date,
-#             sender_address=sender,
+#             sender_address=SENDER,
 #             recipient_address=recipient,
 #             follow_shipment='true'
 #         )
 #         shipment_request.collection_date = self.date_object.date
-#         services = client.get_available_services(shipment_request)
+#         services = CLIENT.get_available_services(shipment_request)
 #         shipment_request.service_id = 101
 #         self.shippingServiceName = services[0].name
 #         self.shippingCost = services[0].cost
@@ -239,10 +239,10 @@ class Shipment(id=1):
 #
 #     def Queue(self, shipment):
 #         shipment_request = self.MakeRequest(self)
-#         added_shipment = client.add_shipment(shipment_request)
+#         added_shipment = CLIENT.add_shipment(shipment_request)
 #         self.added_shipment = added_shipment
 #
-#         print("\n", line, '\n-', self.deliveryCustomer, "|", self.boxes, "|",
+#         print("\n", line, '\n-', self.Customer, "|", self.boxes, "|",
 #               self.addressObject.street, "|", self.date_object.date, "|",
 #               self.shippingServiceName,
 #               "| Price =",
@@ -270,13 +270,13 @@ class Shipment(id=1):
 #             return shipment
 #
 #     def BookCollection(self, shipment):
-#         client.book_shipments(self.added_shipment)
-#         shipment_return = client.get_shipment(self.added_shipment)
+#         CLIENT.book_shipments(self.added_shipment)
+#         shipment_return = CLIENT.get_shipment(self.added_shipment)
 #
-#         label_pdf = client.get_labels(shipment_return.shipment_document_id)
+#         label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
 #         pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
 #         label_string = ""
-#         label_string = label_string + self.deliveryCustomer + "-" + str(self.date_object.date) + ".pdf"
+#         label_string = label_string + self.Customer + "-" + str(self.date_object.date) + ".pdf"
 #         print(label_string)
 #         print(type(label_string))
 #         label_pdf.download(LABEL_DIR / label_string)
@@ -293,14 +293,14 @@ class Shipment(id=1):
 #
 #         self.collection_booked = True
 #         self.label_downloaded = True
-#         print("Shipment for ", self.deliveryCustomer, "has been booked, Label downloaded to", self.label_location)
+#         print("Shipment for ", self.Customer, "has been booked, Label downloaded to", self.label_location)
 #         self.LogJson(self)
 #         exit()
 #
 #     def LogJson(self, shipment):
 #         export_dict = {}
 #         export_keys = [k for k in dir(shipment) if
-#                        not k.startswith('__') and k not in export_exclude_keys and getattr(shipment, k)]
+#                        not k.startswith('__') and k not in EXPORT_EXCLUDE_KEYS and getattr(shipment, k)]
 #
 #         self.send_date = self.send_date.strftime('%d/%m/%Y')
 #         for key in export_keys:

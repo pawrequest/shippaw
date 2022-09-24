@@ -25,15 +25,15 @@ def unsanitise(string):
 
 
 def process_shipment(shipment):  # master function, takes list of shipments
-    dates = client.get_available_collection_dates(sender, courier_id)  # get dates
-    print("\t\t", shipment['deliveryCustomer'], "|", shipment['send_date'])
+    dates = CLIENT.get_available_collection_dates(SENDER, courier_id)  # get dates
+    print("\t\t", shipment['Customer'], "|", shipment['send_date'])
     print("\n--- Checking Available Collection Dates...")
     print('-' * 90)  # U+2500, Box Drawings Light Horizontal # debug
 
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
             print("YES FUCKING OBJECT", shipment["addressObject"])
-            print("Shipment Validated:", shipment['deliveryCustomer'], "|", shipment[boxes],
+            print("Shipment Validated:", shipment['Customer'], "|", shipment[boxes],
                   "box(es) |", shipment["addressObject"].street, " | ", shipment["date_object"].date)
 
     userinput = "m"
@@ -79,7 +79,7 @@ def check_send_date(shipment, dates):
             return shipment
     else:  # looped exhausted, no date match
         print("\n\t\t*** ERROR: No collections available on", shipment[send_date], "for",
-              shipment['deliveryCustomer'], "***")
+              shipment['Customer'], "***")
 
         if input("\nChoose new Date? (type yes, anything else will exit)\n")[0].lower() == "y":
             for count, date in enumerate(dates):
@@ -90,7 +90,7 @@ def check_send_date(shipment, dates):
                     return None
             else:
                 shipment["date_object"] = dates[int(choice) - 1]
-                print("\t\tCollection date for", shipment['deliveryCustomer'], "is now ", shipment["date_object"].date, "\n")
+                print("\t\tCollection date for", shipment['Customer'], "is now ", shipment["date_object"].date, "\n")
                 return shipment
 
 
@@ -107,16 +107,16 @@ def get_address_object(shipment):
         print("No building number, searching deliveryFirstline")
         search_string = shipment[address_firstline]
     # get object
-    address_object = client.find_address(shipment[postcode], search_string)
+    address_object = CLIENT.find_address(shipment[postcode], search_string)
     shipment["addressObject"] = address_object
     return shipment
 
 
 def adjust_address(shipment):  # takes
-    print("Adjust Shipping Address for:", shipment['deliveryCustomer'] + "'s Shipment on",
+    print("Adjust Shipping Address for:", shipment['Customer'] + "'s Shipment on",
           shipment["date_object"].date,
           "\n")
-    candidates = client.get_address_keys_by_postcode(shipment[postcode])
+    candidates = CLIENT.get_address_keys_by_postcode(shipment[postcode])
     for count, candidate in enumerate(candidates, start=1):
         print("Candidate", count, "|", candidate.address)
 
@@ -126,20 +126,20 @@ def adjust_address(shipment):  # takes
         if input("Type yes to confirm exit")[0].lower() == "y":
             exit()
     else:
-        shipment["addressObject"] = client.get_address_by_key(selected_key)
+        shipment["addressObject"] = CLIENT.get_address_by_key(selected_key)
         print("New Address:", shipment["addressObject"].street)
         return shipment
 
 
 def submit_shipment(shipment):
-    customer = shipment['deliveryCustomer']
+    customer = shipment['Customer']
     phone = shipment['phone']
     email = shipment['email']
     address = shipment["addressObject"]
     boxes = int(float(shipment['boxes']))
     send_date = shipment["date_object"]
     recipient_name = shipment[delivery_contact]
-    recipient_address = client.address(
+    recipient_address = CLIENT.address(
         company_name=customer,
         country_code="GB",
         county=address.county,
@@ -149,7 +149,7 @@ def submit_shipment(shipment):
         street=address.street
     )
 
-    recipient = client.recipient(
+    recipient = CLIENT.recipient(
         name=recipient_name,
         telephone=phone,
         email=email,
@@ -158,7 +158,7 @@ def submit_shipment(shipment):
     )
     parcels = []
     for x in range(boxes):
-        parcel = client.parcel(
+        parcel = CLIENT.parcel(
             contents="Radios",
             value=500,
             weight=6,
@@ -168,21 +168,21 @@ def submit_shipment(shipment):
         )
         parcels.append(parcel)
 
-    shipment_request = client.shipment_request(
+    shipment_request = CLIENT.shipment_request(
         parcels=parcels,
         client_reference=customer,
         collection_date=send_date,
-        sender_address=sender,
+        sender_address=SENDER,
         recipient_address=recipient,
         follow_shipment='true'
     )
-    services = client.get_available_services(shipment_request)
+    services = CLIENT.get_available_services(shipment_request)
     shipment_request.service_id = services[0].service_id
     shipment[shipping_service_name] = services[0].name
     shipment[shipping_service_id] = shipment_request.service_id
     shipment[shipping_cost] = services[0].cost
 
-    print("\n" + shipment['deliveryCustomer'] + "'s shipment of", shipment[boxes], "parcels to: ",
+    print("\n" + shipment['Customer'] + "'s shipment of", shipment[boxes], "parcels to: ",
           shipment["addressObject"].street, "|", shipment["date_object"].date, "|",
           shipment[shipping_service_name],
           "| Price =",
@@ -191,24 +191,24 @@ def submit_shipment(shipment):
         print("BOOKING SHIPMENT")
 
         shipment_request.collection_date = shipment["date_object"].date
-        added_shipment = client.add_shipment(shipment_request)
+        added_shipment = CLIENT.add_shipment(shipment_request)
         shipment[added_shipment] = added_shipment
         print("Added Shipment")
 
         if input('"yes" to book shipment and get labels') == str("yes"):
-            client.book_shipments([added_shipment])
-            shipment_return = client.get_shipment(added_shipment)
+            CLIENT.book_shipments([added_shipment])
+            shipment_return = CLIENT.get_shipment(added_shipment)
             pprint(shipment_return)
 
-            label_pdf = client.get_labels(shipment_return.shipment_document_id)
+            label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
             pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
-            label_string = shipment['deliveryCustomer'], "-", shipment["date_object"].date + ".pdf"
-            # label_string = 'shipment['deliveryCustomer'] + "-" + shipment["date_object"].date + ".pdf"'
+            label_string = shipment['Customer'], "-", shipment["date_object"].date + ".pdf"
+            # label_string = 'shipment['Customer'] + "-" + shipment["date_object"].date + ".pdf"'
             label_pdf.download(LABEL_DIR / label_string)
             print()
             shipment['label_downloaded'] = True
             shipment['shipment_return'] = shipment_return
-            print("Shipment for ", shipment['deliveryCustomer'], "has been booked, Label downloaded to", LABEL_DIR,
+            print("Shipment for ", shipment['Customer'], "has been booked, Label downloaded to", LABEL_DIR,
                   label_string)
             shipment[is_shipped] = "Shipped"
 
@@ -216,7 +216,7 @@ def submit_shipment(shipment):
         # # format / print label ??
 
         else:
-            print("Shipment", shipment['deliveryCustomer'], "Skipped by User")
+            print("Shipment", shipment['Customer'], "Skipped by User")
             shipment[is_shipped] = "Failed"
 
     with open(DATA_DIR / 'AmShip.json', 'w') as f:
@@ -227,7 +227,7 @@ def submit_shipment(shipment):
             if "object" not in key:
                 output[key] = output[value]
                 date_blah = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
-                output.update({date_blah + " - " + str(shipment[is_shipped]) + " - " + shipment['deliveryCustomer']: output})
+                output.update({date_blah + " - " + str(shipment[is_shipped]) + " - " + shipment['Customer']: output})
             print("dumped")
         json.dump(output, f)
 
@@ -237,7 +237,7 @@ def submit_shipment(shipment):
 
 def print_shipment(shipment):
     pprint(shipment)
-    string = " |", shipment['deliveryCustomer'], "|", shipment[send_date], "|", shipment[
+    string = " |", shipment['Customer'], "|", shipment[send_date], "|", shipment[
         "addressObject"].street
     return string
 

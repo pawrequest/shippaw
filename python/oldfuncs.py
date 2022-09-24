@@ -21,7 +21,7 @@ from python.config import *
 #             manifest=xml_data['Items']
 #             for id, shipment in enumerate(manifest):
 #                 shipment['category'] = cat
-#                 shipment['deliveryCustomer'] = shipment['To Customer']
+#                 shipment['Customer'] = shipment['To Customer']
 #                 for k, v in shipment.items():
 #                     if k in com_fields:
 #                         k = com_fields[k]
@@ -109,12 +109,12 @@ from python.config import *
 #             # setattr(item, category, cat)
 #             item.update({k: v})
 #
-#             if cat.lower() == "deliveryCustomer":
+#             if cat.lower() == "Customer":
 #                 print("IS A CUSTOMER")
 #                 shipment.send_date = datetime.today().date()
 #             elif cat.lower() == "hire":
 #                 print("IS A HIRE")
-#             # setattr(item, deliveryCustomer, cust)
+#             # setattr(item, Customer, cust)
 #
 #             # item = parse_shipment_address(item)  # gets number / deliveryFirstline
 #         # return shipment
@@ -122,7 +122,7 @@ from python.config import *
 #     #         shipment. = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
 #     #         shipment = parse_shipment_address(shipment)  # gets number / deliveryFirstline
 #     #         shipment[hire_customer] = shipment[hire_customer][
-#     #             0]  # remove deliveryCustomer field from spurious list
+#     #             0]  # remove Customer field from spurious list
 #     #         manifest.append(shipment)
 #     #     return manifest
 #     # else:
@@ -154,12 +154,12 @@ from python.config import *
     #             setattr(shipment, fieldname, fieldvalue)
     # setattr(shipment, category, cat)
     # print(shipment.send_date)
-    # if cat.lower() == "deliveryCustomer":
+    # if cat.lower() == "Customer":
     #     print("IS A CUSTOMER")
     #     shipment.send_date = datetime.today().date()
     # elif cat.lower() == "hire":
     #     print("IS A HIRE")
-    #     setattr(shipment, deliveryCustomer, connected_customer)
+    #     setattr(shipment, Customer, connected_customer)
     #     shipment.send_date = datetime.strptime(shipment.send_date, '%d/%m/%Y').date()
     # return shipment
 
@@ -175,7 +175,7 @@ def check_boxes(shipment):
     ui = ""
     while True:
         if shipment.boxes:
-            print(line, "\n\t\t", shipment.deliveryCustomer, "|", shipment.deliveryFirstline, "|", shipment.send_date)
+            print(line, "\n\t\t", shipment.customer, "|", shipment.deliveryFirstline, "|", shipment.send_date)
             ui = input("[C]onfirm or Enter a number of boxes\n")
             if ui.isnumeric():
                 shipment.boxes = int(ui)
@@ -198,7 +198,7 @@ def process_shipment(shipment):  # master function takes shipment shipdict
     # parse address
     # shipment = parse_shipment_address(shipment)
 
-    print(line, "\n\t\t", shipment.deliveryCustomer, "|", shipment.deliveryFirstline, "|",
+    print(line, "\n\t\t", shipment.customer, "|", shipment.deliveryFirstline, "|",
           shipment.send_date)
     print(line)  # U+2500, Box Drawings Light Horizontal # debug
 
@@ -207,7 +207,7 @@ def process_shipment(shipment):  # master function takes shipment shipdict
     dates = client.get_available_collection_dates(sender, courier_id)  # get dates
     if check_send_date(shipment, dates):
         if get_address_object(shipment):
-            print("- Shipment Validated || ", shipment.deliveryCustomer, "|", shipment.boxes,
+            print("- Shipment Validated || ", shipment.customer, "|", shipment.boxes,
                   "box(es) |", shipment.addressObject.street, " | ", shipment.date_object.date, "\n", (line))
     # shall we continue?
     userinput = "1"
@@ -275,7 +275,7 @@ def check_send_date(shipment, dates):
             return shipment
     else:  # looped exhausted, no date match
         print("\n*** ERROR: No collections available on", shipment.send_date, "for",
-              shipment.deliveryCustomer, "***\n\n\n- Collections for", shipment.deliveryCustomer, "are available on:\n")
+              shipment.customer, "***\n\n\n- Collections for", shipment.customer, "are available on:\n")
         for count, date in enumerate(dates):
             dt = parse(date.date)
             out = datetime.strftime(dt, '%A %d %B')
@@ -290,7 +290,7 @@ def check_send_date(shipment, dates):
                 print("- Enter a number")
                 continue
             if not -1 <= int(choice) <= len(dates) + 1:
-                print('\nWrong Number!\n-Choose new date for', shipment.deliveryCustomer, '\n')
+                print('\nWrong Number!\n-Choose new date for', shipment.customer, '\n')
                 for count, date in enumerate(dates):
                     print("\t\t", count + 1, "|", date.date, )
                 continue
@@ -301,7 +301,7 @@ def check_send_date(shipment, dates):
                 continue
             else:
                 shipment.date_object = dates[int(choice) - 1]
-                print("\t\tCollection date for", shipment.deliveryCustomer, "is now ", shipment.date_object.date, "\n\n", line)
+                print("\t\tCollection date for", shipment.customer, "is now ", shipment.date_object.date, "\n\n", line)
                 return shipment
 
 
@@ -323,7 +323,7 @@ def get_address_object(shipment):
 
 
 def change_address(shipment):  # takes
-    print("Changing shipping address  | ", shipment.deliveryCustomer, " | ",
+    print("Changing shipping address  | ", shipment.customer, " | ",
           str(shipment.date_object.date),
           "\n")
     candidates = client.get_address_keys_by_postcode(shipment.postcode)
@@ -353,7 +353,7 @@ def change_address(shipment):  # takes
 
 def make_request(shipment):
     recipient_address = client.address(
-        company_name=shipment.deliveryCustomer,
+        company_name=shipment.customer,
         country_code="GB",
         county=shipment.addressObject.county,
         locality=shipment.addressObject.locality,
@@ -383,7 +383,7 @@ def make_request(shipment):
 
     shipment_request = client.shipment_request(
         parcels=parcels,
-        client_reference=shipment.deliveryCustomer,
+        client_reference=shipment.customer,
         collection_date=shipment.date_object.date,
         sender_address=sender,
         recipient_address=recipient,
@@ -404,7 +404,7 @@ def queue_shipment(shipment):
     added_shipment = client.add_shipment(shipment_request)
     shipment.added_shipment = added_shipment
 
-    print("\n", line, '\n-', shipment.deliveryCustomer, "|", shipment.boxes, "|",
+    print("\n", line, '\n-', shipment.customer, "|", shipment.boxes, "|",
           shipment.addressObject.street, "|", shipment.date_object.date, "|",
           shipment.shippingServiceName,
           "| Price =",
@@ -439,7 +439,7 @@ def book_shipment(shipment):
     label_pdf = client.get_labels(shipment_return.shipment_document_id)
     pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
     label_string = ""
-    label_string = label_string + shipment.deliveryCustomer + "-" + str(shipment.date_object.date) + ".pdf"
+    label_string = label_string + shipment.customer + "-" + str(shipment.date_object.date) + ".pdf"
     print(label_string)
     print(type(label_string))
     label_pdf.download(LABEL_DIR / label_string)
@@ -456,7 +456,7 @@ def book_shipment(shipment):
 
     shipment.collection_booked = True
     shipment.label_downloaded = True
-    print("Shipment for ", shipment.deliveryCustomer, "has been booked, Label downloaded to", shipment.label_location)
+    print("Shipment for ", shipment.customer, "has been booked, Label downloaded to", shipment.label_location)
     log_to_json(shipment)
     exit()
 

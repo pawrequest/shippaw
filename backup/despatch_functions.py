@@ -8,7 +8,7 @@ from config import *
 
 def process_manifest(manifest):  # takes list of shipments
     print("--- Processing Manifest ---")
-    dates = client.get_available_collection_dates(sender, courier_id)  # get dates
+    dates = CLIENT.get_available_collection_dates(SENDER, courier_id)  # get dates
 
     print("\n- Manifest imported", "with", len(manifest), "Shipments:\n")
     for count, (shipment) in enumerate(manifest):
@@ -66,7 +66,7 @@ def manifest_list_from_json():
                 shipment[hire_ref] = shipment[hire_ref].replace(",", "")  # expunge commas from hire ref
                 shipment = parse_shipment_address(shipment)  # gets number / deliveryFirstline
                 shipment[hire_customer] = shipment[hire_customer][
-                    0]  # remove deliveryCustomer field from spurious list
+                    0]  # remove Customer field from spurious list
                 manifest.append(shipment)
         return manifest
     else:
@@ -143,7 +143,7 @@ def get_address_object(shipment):
     else:
         search_string = shipment[address_firstline]
     # get object
-    address_object = client.find_address(shipment[postcode], search_string)
+    address_object = CLIENT.find_address(shipment[postcode], search_string)
     shipment[address_object] = address_object
     return shipment
 
@@ -153,7 +153,7 @@ def adjust_address(shipment):  # takes
     print("Adjust Shipping Address for:", shipment[hire_customer] + "'s Shipment on",
           shipment[date_object].date,
           "\n")
-    candidates = client.get_address_keys_by_postcode(shipment[postcode])
+    candidates = CLIENT.get_address_keys_by_postcode(shipment[postcode])
     for count, candidate in enumerate(candidates, start=1):
         print("Candidate", count, "|", candidate.address)
 
@@ -165,7 +165,7 @@ def adjust_address(shipment):  # takes
     elif selection == "exit":
         exit()
     else:
-        shipment[address_object] = client.get_address_by_key(selected_key)
+        shipment[address_object] = CLIENT.get_address_by_key(selected_key)
         print("New Address:", shipment[address_object].street)
         return shipment
 
@@ -179,7 +179,9 @@ def submit_manifest(manifest):
         boxes = int(float(shipment[boxes]))
         send_date = shipment[date_object]
         recipient_name = shipment[delivery_contact]
-        recipient_address = client.address(
+
+
+        recipient_address = CLIENT.address(
             company_name=customer,
             country_code="GB",
             county=address.county,
@@ -189,7 +191,7 @@ def submit_manifest(manifest):
             street=address.street
         )
 
-        recipient = client.recipient(
+        recipient = CLIENT.recipient(
             name=recipient_name,
             telephone=phone,
             email=email,
@@ -198,7 +200,7 @@ def submit_manifest(manifest):
         )
         parcels = []
         for x in range(boxes):
-            parcel = client.parcel(
+            parcel = CLIENT.parcel(
                 contents="Radios",
                 value=500,
                 weight=6,
@@ -208,15 +210,15 @@ def submit_manifest(manifest):
             )
             parcels.append(parcel)
 
-        shipment_request = client.shipment_request(
+        shipment_request = CLIENT.shipment_request(
             parcels=parcels,
             client_reference=customer,
             collection_date=send_date,
-            sender_address=sender,
+            sender_address=SENDER,
             recipient_address=recipient,
             follow_shipment='true'
         )
-        services = client.get_available_services(shipment_request)
+        services = CLIENT.get_available_services(shipment_request)
         shipment_request.service_id = services[0].service_id
         shipment[shipping_service_name] = services[0].name
         shipment[shipping_service_id] = shipment_request.service_id
@@ -231,16 +233,16 @@ def submit_manifest(manifest):
             print("BOOKING SHIPMENT")
 
             shipment_request.collection_date = shipment[date_object].date
-            added_shipment = client.add_shipment(shipment_request)
+            added_shipment = CLIENT.add_shipment(shipment_request)
             shipment[added_shipment] = added_shipment
             print("Added Shipment")
 
             if input('"yes" to book shipment and get labels') == str("yes"):
-                client.book_shipments([added_shipment])
-                shipment_return = client.get_shipment(added_shipment)
+                CLIENT.book_shipments([added_shipment])
+                shipment_return = CLIENT.get_shipment(added_shipment)
                 pprint(shipment_return)
 
-                label_pdf = client.get_labels(shipment_return.shipment_document_id)
+                label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
                 pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
                 label_string = 'shipment[hire_customer] + "-" + shipment[date_object].date + ".pdf"'
                 label_pdf.download(LABEL_DIR / label_string)

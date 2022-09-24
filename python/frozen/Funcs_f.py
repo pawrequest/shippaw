@@ -36,7 +36,7 @@ def shipment_from_xml(xml):
                 setattr(shipment, fieldname, fieldvalue)
     setattr(shipment, category, cat)
     print(shipment.send_date)
-    if cat.lower() == "deliveryCustomer":
+    if cat.lower() == "Customer":
         print("IS A CUSTOMER")
         shipment.send_date = datetime.today().date()
     elif cat.lower() == "hire":

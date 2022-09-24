@@ -16,7 +16,7 @@ process_shipment(manifest)          ##
 
 
 ## get upcoming collection shipmentJson ##############
-# collections = client.get_collections()    ##
+# collections = CLIENT.get_collections()    ##
 # pprint (collections)                      ##
 ##############################################
 

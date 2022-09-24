@@ -117,7 +117,7 @@ class DespatchBaySDK:
 
     def sender(self, **kwargs):
         """
-        Creates a dbp sender address entity
+        Creates a dbp SENDER address entity
         """
         return despatchbay_entities.Sender(self, **kwargs)
 

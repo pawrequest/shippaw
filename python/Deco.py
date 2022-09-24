@@ -1,73 +1,53 @@
-from datetime import datetime
-
-from dateutil.parser import parse
-
-from config import *
-
-line = '-' * 100
-
 
 class Shipment:
-    def __init__(self, shipdict, shipid=None, shipref=None):
-
-        for field in SHIPFIELDS:
-            if field in shipdict:
-                v = shipdict[field]
-                setattr(self, field, v)
-            else:
-                print(f"*** ERROR - {field} not found in shipdict")
-        ## DespatchBay API config
+    def __init__(self, shipdict, shipid=None):
+        # self.addedShipment = None
+        # self.addressObject = None
+        # print(type(shipdict),type(self))
+        self.boxes = shipdict['boxes'] #shipdict['boxes']
+        # self.category = None
         self.client = CLIENT
+        # self.collectionBooked = False
         self.courier_id = 8
-        self.collectionBooked = False
-        self.dbAddressKey = 0
-        self.sender = SENDER
-        # self.ServiceId = 101 # WRONG CODE?  parcelforce 24... change for others
-        self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
+        # self.deliveryBuildingNum = None
+        # self.dbAddressKey = 0
+        # self.dateObject = None
         self.dates = self.client.get_available_collection_dates(SENDER, self.courier_id)  # get dates
-
-        ## provided shipment details
-        if shipid:
-            self.id = shipid
-        else:
-            self.id = shipdict['referenceNumber']
-        self.customer = shipdict['customer']
+        # self.deliveryAddress = shipdict['deliveryAddress']
+        # self.deliveryContact = shipdict['deliveryContact']
+        self.Customer = shipdict['customer']
         self.deliveryEmail = shipdict['deliveryEmail']
+        # self.deliveryFirstline = None
         self.deliveryName = shipdict['deliveryName']
         self.deliveryTel = shipdict['deliveryTel']
-        self.deliveryContact = shipdict['deliveryContact']
-        self.deliveryAddress = shipdict['deliveryAddress']
         self.deliveryPostcode = shipdict['deliveryPostcode']
-        self.sendOutDate = shipdict['sendOutDate']
-        self.boxes = shipdict['boxes']
-        if shipref:
-            self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
-        else:
-            self.shipRef = self.customer
+        # self.id = shipid
+        # self.labeLocation = None
+        # self.labelDownloaded = False
+        # self.labelLocation = None
+        # self.labelUrl = None
+        # self.parcels = None
+        # self.recipient = None
+        # self.SendOutDate = shipdict['sendOutDate']
+        self.sender = SENDER
+        # self.services = None
+        # self.shipmentDocId = None
+        # self.shipmentRequest = None
+        # self.shipmentReturn = None
+        # self.shippingCost = None
+        self.shippingServiceId = 101
+        # self.shippingServiceName = None
+        # self.trackingNumbers = None
 
-        ## obtained shipment details
-        self.deliveryBuildingNum = None
-        self.deliveryFirstline = None
-        self.shippingCost = None
-        self.trackingNumbers = None
-        self.labeLocation = None
-        self.labelDownloaded = False
-        self.labelLocation = None
-        self.labelUrl = None
-        self.parcels = None
-        self.shipmentDocId = None
-        self.shippingServiceName = None
-
-        # DespatchBay Objects
-
-        self.addedShipment = None
-        self.addressObject = None
-        self.dateObject = None
-        self.shipmentRequest = None
-        self.shipmentReturn = None
-        self.recipient = None
-
-        print("Shipment with id=", self.id, "created")
+        if shipdict:
+            if isinstance(shipdict, dict):
+                # print("- Dictionary passed in - Getting Attrs from shipdict:")
+                for k, v in shipdict.items():
+                    if not shipid:
+                        if k == 'hireRef':
+                            setattr(self, 'id', v)
+                    setattr(self, k, v)
+        # print("Shipment with id=", self.id, "created")
 
         def parse_address():
             print("--- Parsing Address...")
@@ -78,18 +58,17 @@ class Shipment:
             self.deliveryFirstline = firstline
             for char in firstline:
                 if not char.isalnum() and char != " ":
-                    firstline = firstline.replace(char, "")
+                        firstline = firstline.replace(char, "")
             if first_char.isnumeric():
                 self.deliveryBuildingNum = first_block
 
         def val_date_init(self):
-            # dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
-            for candidate in self.dates:
-                if candidate.date == datetime.strftime(self.sendOutDate,
-                                                       '%Y-%m-%d'):  # if date object matches send date
-                    self.dateObject = candidate
-                    print(line, '\n',
-                          f"Shipment date for {self.customer} validated - {datetime.strftime(self.sendOutDate, '%A %B %#d')}")
+            dates = self.CLIENT.get_available_collection_dates(self.SENDER, self.courier_id)  # get dates
+            for date in dates:
+                if date.date == self.SendOutDate:  # if date object matches send date
+                    self.dateObject = date
+                    print("Shipment date for", self.customer, "validated - ", self.dateObject.date)
+                    return
 
         parse_address()
         val_date_init(self)
@@ -97,14 +76,14 @@ class Shipment:
     def val_boxes(self):
         while True:
             if self.boxes:
-                print(line, "\n",
-                      f"Shipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
-                ui = input(f"[C]onfirm or Enter a number of boxes\n")
+                print(line, "\n\t\t", self.Customer, "|", self.deliveryFirstline, "|", self.deliverySendOutDate, "|", self.boxes,
+                      "box/es\n")
+                ui = input("[C]onfirm or Enter a number of boxes\n")
                 if ui.isnumeric():
                     self.boxes = int(ui)
-                    print(f"Shipment updated  |  {self.boxes}  boxes\n")
+                    print("Shipment updated  |  ", self.boxes, "  boxes\n")
                 if ui == 'c':
-                    print("Confirmed\n", line)
+                    print("Confirmed")
                     return self
                 continue
             else:
@@ -117,24 +96,26 @@ class Shipment:
                 print("self updated  |  ", self.boxes, "  boxes")
                 return self
 
+    # need CLIENT
     def val_dates(self):
         dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
         print("--- Checking available collection dates...")
-        send_date = datetime.strftime(self.sendOutDate, '%Y-%m-%d')
+        print(line)  # U+2500, Box Drawings Light Horizontal #
+        # self.SendOutDate=datetime.strptime(self.SendOutDate, '%d/%m/%Y').date()
+        send_date = datetime.strftime(self.deliverySendOutDate, '%Y-%m-%d')
+        # item['send_out_date'] = datetime.strptime(item['send_out_date'], '%d/%m/%Y').date()
 
         for despdate in dates:
             compdate = str(despdate.date)
             if compdate == send_date:  # if date object matches send date
                 self.dateObject = despdate
-                da = datetime.strftime(self.sendOutDate, '%A %B %#d')
-                print(f"Collection date match - shipment for {self.customer} will be collected on {da}\n", line)
                 return
         else:  # loop exhausted, no date match
-            print("\n*** ERROR: No collections available on", self.sendOutDate, "for",
-                  self.customer, "***\n\n\n- Collections for", self.customer, "are available on:\n")
+            print("\n*** ERROR: No collections available on", self.deliverySendOutDate, "for",
+                  self.Customer, "***\n\n\n- Collections for", self.Customer, "are available on:\n")
             for count, date in enumerate(dates):
                 dt = parse(date.date)
-                out = datetime.strftime(dt, '%A - %B %#d')
+                out = datetime.strftime(dt, '%A %d %B')
                 print("\t\t", count + 1, "|", out)
 
             while True:
@@ -145,7 +126,7 @@ class Shipment:
                     print("- Enter a number")
                     continue
                 if not -1 <= int(choice) <= len(dates) + 1:
-                    print('\nWrong Number!\n-Choose new date for', self.customer, '\n')
+                    print('\nWrong Number!\n-Choose new date for', self.Customer, '\n')
                     for count, date in enumerate(dates):
                         print("\t\t", count + 1, "|", date.date, )
                     continue
@@ -156,7 +137,7 @@ class Shipment:
                     continue
                 else:
                     self.dateObject = dates[int(choice) - 1]
-                    print("\t\tCollection date for", self.customer, "is now ", self.dateObject.date, "\n\n",
+                    print("\t\tCollection date for", self.Customer, "is now ", self.dateObject.date, "\n\n",
                           line)
                     return
 
@@ -177,9 +158,8 @@ class Shipment:
         return self
 
     def change_add(self):
-        ui = input(
-            f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
-        if ui[0].lower() == "c":
+        ui = input(f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address")
+        if ui[0].lower()=="c":
             return
         candidates = self.client.get_address_keys_by_postcode(self.deliveryPostcode)
         for count, candidate in enumerate(candidates, start=1):
@@ -206,8 +186,8 @@ class Shipment:
         return
 
     def make_request(self):
-        self.recipient_address = self.client.address(
-            company_name=self.customer,
+        self.DespAddress = self.client.address(
+            company_name=self.Customer,
             country_code="GB",
             county=self.addressObject.county,
             locality=self.addressObject.locality,
@@ -220,7 +200,7 @@ class Shipment:
             name=self.deliveryContact,
             telephone=self.deliveryTel,
             email=self.deliveryEmail,
-            recipient_address=self.recipient_address
+            recipient_address=self.DespAddress
 
         )
         self.parcels = []
@@ -237,26 +217,25 @@ class Shipment:
 
         self.shipmentRequest = self.client.shipment_request(
             parcels=self.parcels,
-            client_reference=self.shipRef,
+            client_reference=self.Customer,
             collection_date=self.dateObject.date,
             sender_address=SENDER,
             recipient_address=self.recipient,
-            follow_shipment='true',
-            service_id=101  # debug i added this manually?
+            follow_shipment='true'
         )
-        self.shipmentRequest.collection_date = self.dateObject.date  #
-        self.services = self.client.get_available_services(self.shipmentRequest)
-        if self.services[0].service_id != self.shipping_service_id:
+        self.shipmentRequest.collection_date = self.dateObject.date  # careful of case! despatchj stuff is _s
+        services = self.client.get_available_services(self.shipmentRequest)
+        if services[0].id != self.shippingServiceId:
             print("Something is wrong with the shipping service name")
-        self.shippingServiceName = self.services[0].name
-        self.shippingCost = self.services[0].cost
-        self.shipping_service_id = self.shipmentRequest.service_id
-        self.services = self.services
+        self.shippingServiceName = services[0].name
+        self.shippingCost = services[0].cost
+        self.services = services
 
     def queue(self):
-        self.addedShipment = self.client.add_shipment(self.shipmentRequest)
+        addedShipment = self.client.add_shipment(self.shipmentRequest)
+        self.addedShipment = addedShipment
 
-        print("\n", line, '\n-', self.customer, "|", self.boxes, "|",
+        print("\n", line, '\n-', self.Customer, "|", self.boxes, "|",
               self.addressObject.street, "|", self.dateObject.date, "|",
               self.shippingServiceName,
               "| Price =",
@@ -290,9 +269,9 @@ class Shipment:
         pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
         label_string = ""
         try:
-            label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
+            label_string = label_string + self.Customer + "-" + str(self.dateObject.date) + ".pdf"
         except:
-            label_string = label_string, self.customer, ".pdf"
+            label_string = label_string, self.Customer, ".pdf"
         label_pdf.download(LABEL_DIR / label_string)
         self.trackingNumbers = []
         for parcel in shipment_return.parcels:
@@ -306,9 +285,35 @@ class Shipment:
 
         self.collectionBooked = True
         self.labelDownloaded = True
-        print("Shipment for ", self.customer, "has been booked, Label downloaded to", self.labelLocation)
+        print("Shipment for ", self.Customer, "has been booked, Label downloaded to", self.labelLocation)
         self.log_json()
         exit()
+
+    def process_shipment(self):
+        if self.deliveryBuildingNum:
+            print("Building No. Found, address search using no.", self.deliveryBuildingNum)
+        else: print("- No building number, address search using deliveryFirstline:", self.deliveryFirstline)
+        if self.dateObject:
+            print("Send-Out date validated - collection on:", self.dateObject.date)
+        else:
+            self.val_dates()
+        self.val_boxes()
+        self.val_address()
+        self.change_add()
+        self.make_request()
+
+
+        # if self.boxes == 0:
+        #     print("\n\t\t*** ERROR: No boxes added ***\n")
+        #     if input("add boxes (y/n)?")[0].lower() == "y":
+        #         self.ValBoxes()
+        # if self.boxes > 0:
+        #     ui = input(
+        #         f"{self.boxes} boxes in shipment for {self.Customer} - is this correct? [Y] to confirm or a number of boxers to send")
+        #     if ui.isnumeric():
+        #         self.boxes = int(ui)
+        #     elif [0].lower() == "y":
+        #         print("SOME BOLOX")
 
     def log_json(self):
         pass
@@ -318,7 +323,7 @@ class Shipment:
         # export_keys = [k for k in dir(shipment) if
         #                not k.startswith('__') and k not in EXPORT_EXCLUDE_KEYS and getattr(shipment, k)]
         #
-        # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
+        # self.SendOutDate = self.SendOutDate.strftime('%d/%m/%Y')
         # for key in export_keys:
         #     export_dict.update({key: getattr(shipment, key)})
         # with open(DATA_DIR / 'AmShip.json', 'w') as f:
@@ -326,33 +331,3 @@ class Shipment:
         #     print("Data dumped to json:", export_keys)
         # return
 
-
-class Hire:
-    def __init__(self, hiredict: dict, hireid=None):
-        self.hiredict = hiredict
-        for k, v in hiredict.items():
-            if k == 'hireRef':
-                k = k.replace(",", "")
-            setattr(self, k, v)
-            setattr(self, 'id', hireid)
-
-    def make_shipment(self):
-        oShip = Shipment(self.hiredict, self.referenceNumber)
-        self.oShip = oShip
-        return oShip
-
-    def ship_hire(self):  # Runs class methods to ship a hire object
-        oShip = self.make_shipment()
-        oShip.val_boxes()
-        oShip.val_dates()
-        oShip.val_address()
-        oShip.change_add()
-        oShip.make_request()
-        oShip.queue()
-
-class Product:
-    def __init__(self):
-        ...
-
-class Radio(Product):
-        ...
