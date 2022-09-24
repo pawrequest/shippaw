@@ -352,7 +352,16 @@ class Hire:
 
 class Product:
     def __init__(self):
-        ...
+        self.manufacturer = None
+        self.model = None
+        self.supplier = None
+        self.type = None
+        self.manufacturer = None
+        self.manufacturer = None
+        self.manufacturer = None
+
 
 class Radio(Product):
         ...
+
+

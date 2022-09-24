@@ -9,7 +9,6 @@ import pathlib
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 
 ####  PATHS ########
-
 ROOT_DIR = pathlib.Path("/Amdesp/")
 DATA_DIR = ROOT_DIR / "data"
 LABEL_DIR = DATA_DIR / "Parcelforce Labels"
