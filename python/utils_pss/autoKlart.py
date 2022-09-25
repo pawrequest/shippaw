@@ -2,7 +2,7 @@ from pyexcel_ods3 import get_data
 
 sheets = get_data(r"C:\AmDesp\data\AmDespConfig.ods")
 clarts_dict = dict()
-attrs = sheets['CLASS_ATTRS']
+attrs = sheets['PRODUCT_ATTRS']
 for field in attrs:
     if field:
         k = field[0]
@@ -12,7 +12,7 @@ for field in attrs:
 
 
 
-# for clart in sheets['CLASS_ATTRS']:
+# for clart in sheets['PRODUCT_ATTRS']:
 #     if not clart:
 #         print (f"notclat, {clart}")
 #         continue
@@ -20,7 +20,7 @@ for field in attrs:
 #     v= clart[1:]
 #     clarts.update({k: v})
 
-# with open('C:\AmDesp\data\CLASS_ATTRS.csv','r') as f:
+# with open('C:\AmDesp\data\PRODUCT_ATTRS.csv','r') as f:
 #     clarts = csv.reader(f)
 #     for clart in clarts:
 #         print(clart)

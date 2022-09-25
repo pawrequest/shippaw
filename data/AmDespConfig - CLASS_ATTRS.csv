@@ -3,4 +3,4 @@ RADIO,acc_port,battery,band,charger,variant,cps
 BATTERY,suits,voltage,capacity,belt_clip,charged_by,charged_by
 CHARGER,variant,suits,,,,
 AUDIO_ACC,suits,format,acc_port,,,
-PRICE_LIST,buy_price,sell_price_min,sell_price_sgl,sell_price_6,,
+PRICES,buy_price,sell_price_min,sell_price_sgl,sell_price_6,,

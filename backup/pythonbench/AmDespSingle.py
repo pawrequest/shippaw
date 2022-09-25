@@ -201,14 +201,14 @@ def submit_shipment(shipment):
             pprint(shipment_return)
 
             label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
-            pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+            pathlib.Path(DIR_LABEL).mkdir(parents=True, exist_ok=True)
             label_string = shipment['Customer'], "-", shipment["date_object"].date + ".pdf"
             # label_string = 'shipment['Customer'] + "-" + shipment["date_object"].date + ".pdf"'
-            label_pdf.download(LABEL_DIR / label_string)
+            label_pdf.download(DIR_LABEL / label_string)
             print()
             shipment['label_downloaded'] = True
             shipment['shipment_return'] = shipment_return
-            print("Shipment for ", shipment['Customer'], "has been booked, Label downloaded to", LABEL_DIR,
+            print("Shipment for ", shipment['Customer'], "has been booked, Label downloaded to", DIR_LABEL,
                   label_string)
             shipment[is_shipped] = "Shipped"
 
@@ -219,7 +219,7 @@ def submit_shipment(shipment):
             print("Shipment", shipment['Customer'], "Skipped by User")
             shipment[is_shipped] = "Failed"
 
-    with open(DATA_DIR / 'AmShip.json', 'w') as f:
+    with open(DIR_DATA / 'AmShip.json', 'w') as f:
         print("LOGGING")
         output = {}
         exclude_keys = ["addressObject", "dateObject", 'service_object', 'despatch_shipped_object']

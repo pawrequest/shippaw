@@ -288,13 +288,13 @@ class Shipment:
         shipment_return = self.client.get_shipment(self.addedShipment)
 
         label_pdf = self.client.get_labels(shipment_return.shipment_document_id)
-        pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(DIR_LABEL).mkdir(parents=True, exist_ok=True)
         label_string = ""
         try:
             label_string = label_string + self.Customer + "-" + str(self.dateObject.date) + ".pdf"
         except:
             label_string = label_string, self.Customer, ".pdf"
-        label_pdf.download(LABEL_DIR / label_string)
+        label_pdf.download(DIR_LABEL / label_string)
         self.trackingNumbers = []
         for parcel in shipment_return.parcels:
             self.trackingNumbers.append(parcel.tracking_number)
@@ -303,7 +303,7 @@ class Shipment:
         self.shipmentDocId = shipment_return.shipment_document_id
         self.labelUrl = shipment_return.labels_url
         self.parcels = shipment_return.parcels
-        self.labelLocation = str(LABEL_DIR) + label_string
+        self.labelLocation = str(DIR_LABEL) + label_string
 
         self.collectionBooked = True
         self.labelDownloaded = True
@@ -348,7 +348,7 @@ class Shipment:
         # self.SendOutDate = self.SendOutDate.strftime('%d/%m/%Y')
         # for key in export_keys:
         #     export_dict.update({key: getattr(shipment, key)})
-        # with open(DATA_DIR / 'AmShip.json', 'w') as f:
+        # with open(DIR_DATA / 'AmShip.json', 'w') as f:
         #     json.dump(export_dict, f, sort_keys=True)
         #     print("Data dumped to json:", export_keys)
         # return

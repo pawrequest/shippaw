@@ -131,7 +131,7 @@
 #     # TODO handle xmls with multiple shipments
 #     shipment = {}
 #     newxml = "C:\AmDesp\sheets\AmShip.xml"
-#     tree = ET.parse(XMLFILE)
+#     tree = ET.parse(CONFIG_PATH['XMLCUSTOMERSTRMERSTR0'])
 #     root = tree.getroot()
 #     fields = root[0][2]
 #     # add shipment-wide

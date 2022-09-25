@@ -51,7 +51,7 @@ codeplug_fields = [
 def get_from_csv():
     sheets = get_data(r"C:\AmDesp\data\AmDespConfig.ods")
     clarts_dict = dict()
-    attrs = sheets['CLASS_ATTRS']
+    attrs = sheets['PRODUCT_ATTRS']
     for field in attrs:
         if field:
             k = field[0]

@@ -8,7 +8,8 @@ from config import *
 class Shipment:
     def __init__(self, shipdict, shipid=None, shipref=None):
 
-        for field in SHIPFIELDS:
+        # for field in SHIPFIELDS:
+        for field in CONFIG_FIELD['SHIPFIELDS']:
             if field in shipdict:
                 v = shipdict[field]
                 setattr(self, field, v)
@@ -285,13 +286,13 @@ class Shipment:
         shipment_return = self.client.get_shipment(self.addedShipment)
 
         label_pdf = self.client.get_labels(shipment_return.shipment_document_id)
-        pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(CONFIG_PATH['DIR_LABEL']).mkdir(parents=True, exist_ok=True)
         label_string = ""
         try:
             label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
         except:
             label_string = label_string, self.customer, ".pdf"
-        label_pdf.download(LABEL_DIR / label_string)
+        label_pdf.download(CONFIG_PATH['DIR_LABEL'] / label_string)
         self.trackingNumbers = []
         for parcel in shipment_return.parcels:
             self.trackingNumbers.append(parcel.tracking_number)
@@ -300,7 +301,7 @@ class Shipment:
         self.shipmentDocId = shipment_return.shipment_document_id
         self.labelUrl = shipment_return.labels_url
         self.parcels = shipment_return.parcels
-        self.labelLocation = str(LABEL_DIR) + label_string
+        self.labelLocation = str(CONFIG_PATH['DIR_LABEL']) + label_string
 
         self.collectionBooked = True
         self.labelDownloaded = True
@@ -319,7 +320,7 @@ class Shipment:
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
         # for key in export_keys:
         #     export_dict.update({key: getattr(shipment, key)})
-        # with open(DATA_DIR / 'AmShip.json', 'w') as f:
+        # with open(DIR_DATA / 'AmShip.json', 'w') as f:
         #     json.dump(export_dict, f, sort_keys=True)
         #     print("Data dumped to json:", export_keys)
         # return
@@ -347,9 +348,6 @@ class Hire:
         oShip.change_add()
         oShip.make_request()
         oShip.queue()
-
-
-
 
 
 class Product:
@@ -404,24 +402,10 @@ class AUDIO_ACC(Product):
 class Price_List(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_DICT['PRICE_LIST']:
+        for field in CLASS_DICT['PRICES']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
                 print(f"ERROR - input missing {field}")
 
-# class Product:
-#     def __init__(self, dict):
-#         for field in product_fields:
-#             if field in dict.keys():
-#                 setattr(self, field, dict[field])
-#             else:print(f"ERROR - input missing {field}")
 #
-# class Radio(Product):
-#     def __init__(self,dict):
-#         Product.__init__(self,dict)
-#         for field in radio_fields:
-#             if field in dict.keys():
-#                 setattr(self, field, dict[field])
-#             else:
-#                 print(f"ERROR - input missing {field}")
