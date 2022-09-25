@@ -9,13 +9,13 @@ line = '-' * 100
 
 # sheets = get_data(r"C:\AmDesp\data\AmDespConfig.ods")
 # sheets = get_data(CONFIG_FILE)
-# clarts_dict = dict()
+# CLASS_DICT = dict()
 # attrs = sheets['CLASS_ATTRS']
 # for field in attrs:
 #     if field:
 #         k = field[0]
 #         v = field[1:]
-#         clarts_dict.update({k: v})
+#         CLASS_DICT.update({k: v})
 
 
 ####  PATHS ########
@@ -42,28 +42,58 @@ line = '-' * 100
 ## Field Control
 EXPORT_EXCLUDE_KEYS = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
 SHIPFIELDS = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
-                  "deliveryPostcode", "sendOutDate", "referenceNumber"]
+              "deliveryPostcode", "sendOutDate", "referenceNumber"]
 
 HIREFIELDS = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
               'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
               'customer']
 
-CLASS_LIST = []
-config=str(CONFIG_FILE)
-sheets = get_data(config)
-CLASS_CONFIG = dict()
 
-for k in sheets.keys():
-    CLASS_LIST.append(k)
-
-# def get_config_ods(config=CONFIG_FILE):
-for clart in CLASS_LIST:
-    attrs = sheets[clart]
+def get_class_config():
+    # sheets = get_data(config)
+    CLASS_CONFIG = dict()
+    sheets = get_data(str(CONFIG_FILE))
+    config_dict = dict()
+    attrs = sheets['CLASS_ATTRS']
     for field in attrs:
         if field:
             k = field[0]
             v = field[1:]
-            CLASS_CONFIG.update({k: v})
-print(clart)
-    # get_config_ods()
+            config_dict.update({k: v})
+    return config_dict
 
+
+CLASS_CONFIG = get_class_config()
+
+
+def get_radio_config_dict():
+    sheets = get_data(str(CONFIG_FILE))
+    RADIO_DICT = dict()
+    radios = sheets['RADIO_DICT']
+    headers = radios[0]
+    for radio in radios[1:]:
+        if radio:
+            k = radio[0] + radio[1]
+            v = dict()
+            for d, header in enumerate(headers):
+                v.update({headers[d]: radio[d]})
+            RADIO_DICT.update({k: v})
+    return RADIO_DICT
+
+
+print(get_radio_config_dict())
+
+## trying to generalise
+# def get_config():
+#     CLARI = dict()
+#     sheets = get_data(str(CONFIG_FILE))
+#     for clart in :
+#         config_dict = dict()
+#         items = sheets[clart]
+#         headers = items[0]
+#         for item in items[1:]:
+#             if item:
+#                 k = item[0]+item[1]
+#                 v=dict()
+#                 for c, header in enumerate(headers):
+#                     v.update({headers[c]:item[c]})

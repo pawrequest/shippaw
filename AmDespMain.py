@@ -14,9 +14,8 @@ else:
 # oHire.ship_hire()
 # ship_hire(hiredict)
 ##########################################
-pd = radios_dict['PD705']
-# pro = Product()
-rad=Radio(pd)
-print (rad)
-
+# pd = radios_dict['PD705']
+# # pro = Product()
+# rad=Radio(pd)
+# print (rad)
 

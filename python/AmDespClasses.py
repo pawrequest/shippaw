@@ -374,7 +374,7 @@ class Radio(Product):
 class Battery(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in clarts_dict['BATTERY']:
+        for field in CLASS_CONFIG['BATTERY']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -384,7 +384,7 @@ class Battery(Product):
 class Charger(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in clarts_dict['CHARGER']:
+        for field in CLASS_DICT['CHARGER']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -394,7 +394,7 @@ class Charger(Product):
 class AUDIO_ACC(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in clarts_dict['AUDIO_ACC']:
+        for field in CLASS_DICT['AUDIO_ACC']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -404,7 +404,7 @@ class AUDIO_ACC(Product):
 class Price_List(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in clarts_dict['PRICE_LIST']:
+        for field in CLASS_DICT['PRICE_LIST']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
