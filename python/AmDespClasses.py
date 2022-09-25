@@ -4,8 +4,6 @@ from dateutil.parser import parse
 
 from config import *
 
-line = '-' * 100
-
 
 class Shipment:
     def __init__(self, shipdict, shipid=None, shipref=None):
@@ -350,15 +348,80 @@ class Hire:
         oShip.make_request()
         oShip.queue()
 
+
+
+
+
 class Product:
-    def __init__(self):
-        self.manufacturer = None
-        self.model = None
-        self.type = None
-        self.buy_price = None
+    def __init__(self, dict):
+        for field in CLASS_CONFIG['PRODUCT']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
 
 class Radio(Product):
-    def __init__(self,dict):
-        if dict:
-            for k,v in dict.items():
-                setattr(self,k,v)
+    def __init__(self, dict):
+        Product.__init__(self, dict)
+        for field in CLASS_CONFIG['RADIO']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
+
+class Battery(Product):
+    def __init__(self, dict):
+        Product.__init__(self, dict)
+        for field in clarts_dict['BATTERY']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
+
+class Charger(Product):
+    def __init__(self, dict):
+        Product.__init__(self, dict)
+        for field in clarts_dict['CHARGER']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
+
+class AUDIO_ACC(Product):
+    def __init__(self, dict):
+        Product.__init__(self, dict)
+        for field in clarts_dict['AUDIO_ACC']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
+
+class Price_List(Product):
+    def __init__(self, dict):
+        Product.__init__(self, dict)
+        for field in clarts_dict['PRICE_LIST']:
+            if field in dict.keys():
+                setattr(self, field, dict[field])
+            else:
+                print(f"ERROR - input missing {field}")
+
+# class Product:
+#     def __init__(self, dict):
+#         for field in product_fields:
+#             if field in dict.keys():
+#                 setattr(self, field, dict[field])
+#             else:print(f"ERROR - input missing {field}")
+#
+# class Radio(Product):
+#     def __init__(self,dict):
+#         Product.__init__(self,dict)
+#         for field in radio_fields:
+#             if field in dict.keys():
+#                 setattr(self, field, dict[field])
+#             else:
+#                 print(f"ERROR - input missing {field}")

@@ -130,7 +130,7 @@
 # def shipmentFromXml(xml):  # currently hardcoded xml link.... breaks otherwise... how to passfile refs/paths?
 #     # TODO handle xmls with multiple shipments
 #     shipment = {}
-#     newxml = "C:\AmDesp\data\AmShip.xml"
+#     newxml = "C:\AmDesp\sheets\AmShip.xml"
 #     tree = ET.parse(XMLFILE)
 #     root = tree.getroot()
 #     fields = root[0][2]

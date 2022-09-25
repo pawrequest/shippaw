@@ -1,4 +1,3 @@
-from config import *
 from python.AmDespClasses import *
 from python.AmDespFuncs import *
 
@@ -15,8 +14,9 @@ else:
 # oHire.ship_hire()
 # ship_hire(hiredict)
 ##########################################
-
-pro = Product()
-rad=Radio(PD705)
+pd = radios_dict['PD705']
+# pro = Product()
+rad=Radio(pd)
+print (rad)
 
 

@@ -10,11 +10,11 @@ from python.config import *
 #         shipment = Shipment([i])
 #         yield shipment
 
-# def getmanifest(data, datatype):
+# def getmanifest(sheets, datatype):
 #     # is json or xml?
 #     datatype = datatype
 #     if datatype == "json":
-#         with open(data) as f:
+#         with open(sheets) as f:
 #             manifest = []
 #             xml_data = json.load(f)
 #             cat = xml_data['CommenceCategory']
