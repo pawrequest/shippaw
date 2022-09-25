@@ -10,6 +10,7 @@ line = '-' * 100
 ####  PATHS ########
 DIR_ROOT = pathlib.Path("/Amdesp")
 DIR_DATA = pathlib.Path("/Amdesp/data/")
+pathlib.Path(DIR_DATA / "Parcelforce Labels").mkdir(parents=True, exist_ok=True)  # make the labels dirs (and parents)
 CONFIG_PATH = {
     'DIR_LABEL': DIR_DATA / "Parcelforce Labels",
     'JSONFILE': DIR_DATA / "AmShip.json",
@@ -17,8 +18,6 @@ CONFIG_PATH = {
     'LOGFILE': DIR_DATA.joinpath("AmLog.json"),
     'CONFIG_FILE': DIR_DATA.joinpath("AmDespConfig.Ods"),
 }
-pathlib.Path(DIR_DATA / "Parcelforce Labels").mkdir(parents=True, exist_ok=True)  # make the labels dirs (and parents)
-
 CONFIG_FIELD = {
     'EXPORT_EXCLUDE_KEYS': ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return'],
     'SHIPFIELDS': ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
