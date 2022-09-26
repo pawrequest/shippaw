@@ -878,12 +878,16 @@ Sub Form_OnClick(ControlId)
 '''''''''   pss                 '''''''''''''''''''''''''''''''
         Case "CommandButton19"
         ' book in hire, all ok'
+            Dim ui
+            ui = MsgBox("unpacked by paul, all ok?",3)
+            if ui = 6 Then
 			Form.Field("Unpacked By").Value = "PR"
 			Form.Field("Unpacked Date").Value = "today"
 			Form.Field("Unpacked Time").Value = "now"
 			Form.Field("Status").Value = "Returned all OK"
 			Form.Field("Actual Return Date").Value = "today"
 			Form.Field("Closed").Value = 1
+			End if
 			Form.Save
 '
 '         Case "CommandButton20"
@@ -910,6 +914,7 @@ Sub Form_OnClick(ControlId)
 '''''''''   Runs Amdesp direct with cmd     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 		    Dim python_exe, python_script, commence_wrapper, xmlfile
+		    ExportItemDetailForm(xmlfile)
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
