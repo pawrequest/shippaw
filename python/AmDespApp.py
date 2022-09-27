@@ -67,9 +67,6 @@ class App:  # put here functions to be directly called by user interface
     def import_xml(self):
         XmlImporter()
 
-    # def make_hire_shipment(self):
-    #     hire = Hire()
-    #     self.shipment = Shipment(hire)
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
@@ -84,8 +81,7 @@ class App:  # put here functions to be directly called by user interface
         # CNFG = config
 
 
-
-class Shipment:  # taking an object
+class Shipment:  # taking an xmlimporter object
     def __init__(self, parsed_xml_object, shipid=None,
                  shipref=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
         self.sender = CNFG.dbay_cnfg.sender
@@ -102,7 +98,6 @@ class Shipment:  # taking an object
                 setattr(self, field, v)
             else:
                 print(f"*** ERROR - {field} not found in ship_dict - ERROR ***")
-        ## DespatchBay API config
 
         ## provided shipment details
         if shipid:
@@ -124,40 +119,6 @@ class Shipment:  # taking an object
         else:
             self.shipRef = self.customer
 
-        # class Shipment:
-        #     def __init__(self, parsed_xml_object, shipid=None, shipref=None):
-        #         self.sender = CNFG.dbay_cnfg.sender
-        #         self.client = CNFG.dbay_cnfg.client
-        #         self.collectionBooked = False
-        #         self.dbAddressKey = 0
-        #         self.dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender, CNFG.dbay_cnfg.courier_id)  # get dates
-        #
-        #         for field in CNFG.fields.shipment_fields:
-        #             if field in parsed_xml_object:
-        #                 v = parsed_xml_object[field]
-        #                 setattr(self, field, v)
-        #             else:
-        #                 print(f"*** ERROR - {field} not found in parsed_xml_object")
-        #         ## DespatchBay API config
-        #
-        #         ## provided shipment details
-        #         if shipid:
-        #             self.id = shipid
-        #         else:
-        #             self.id = parsed_xml_object['referenceNumber']
-        #         self.customer = parsed_xml_object['customer']
-        #         self.deliveryEmail = parsed_xml_object['deliveryEmail']
-        #         self.deliveryName = parsed_xml_object['deliveryName']
-        #         self.deliveryTel = parsed_xml_object['deliveryTel']
-        #         self.deliveryContact = parsed_xml_object['deliveryContact']
-        #         self.deliveryAddress = parsed_xml_object['deliveryAddress']
-        #         self.deliveryPostcode = parsed_xml_object['deliveryPostcode']
-        #         self.sendOutDate = parsed_xml_object['sendOutDate']
-        #         self.boxes = parsed_xml_object['boxes']
-        #         if shipref:
-        #             self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
-        #         else:
-        #             self.shipRef = self.customer
 
         ## obtained shipment details
         self.deliveryBuildingNum = None
@@ -223,12 +184,12 @@ class Shipment:  # taking an object
                 continue
             else:
                 print("\n\t\t*** ERROR: No boxes added ***\n")
-                ui = input("- How many boxes?\n")
+                ui = input(f"- How many boxes for shipment to {self.customer}?\n")
                 if not ui.isnumeric():
                     print("- Enter a number")
                     continue
                 self.boxes = int(ui)
-                print("self updated  |  ", self.boxes, "  boxes")
+                print(f"{self.customer} updated  |  ", self.boxes, "  boxes")
                 # return self
 
     def val_dates(self):
