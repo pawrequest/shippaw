@@ -1,9 +1,13 @@
 from python.AmDespApp import *
 
 app = App()
-app.make_hire_shipment()
+
+app.import_xml()
+# app.make_hire_shipment()
 app.queue_shipment()
 app.book_collection()
+
+
 '''
 
 

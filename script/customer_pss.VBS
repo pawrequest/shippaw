@@ -211,8 +211,21 @@ End Sub
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
-	    ' update the last contacted date to today's date - button deleted April 2019 because this field is updated automatically
-            Form.Field("Date Last Contact").Value = "today"
+                        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   Runs Amdesp via cmd     ''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+		    Dim python_exe, python_script, commence_wrapper, xmlfile
+            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_script = "C:\AmDesp\AmDespMain.py"
+            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+            xmlfile = "C:\AmDesp\data\AmShip.xml"
+		    ExportItemDetailForm(xmlfile)
+            Dim oShell, currentCommand, my_command
+            SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+            Msgbox "RUN PYTHON"
+            oShell.run currentCommand,1,true
         Case "CommandButton2"
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
             Form.Field("Name").Value = PCase(Form.Field("Name").Value, "")
@@ -472,6 +485,104 @@ End Sub
 
 
 
+'''''''''''''''''''''''''''''''''''''''''''''
+''''''''' arno-pss function to export item field
+Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
+Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
+
+Sub ExportItemDetailForm(ByVal strPath)
+
+    'will export all values showing on the form,
+    'including ones that are not visible(!)
+    'any user, if permissioned, can always show these anwyay.
+    Dim db, conv, f, arrFields, arrCons, strDDE
+    Set db = Application.Database
+    Set conv = db.GetConversation("Commence", "GetData")
+    strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
+    arrFields = Split(conv.Request(strDDE), CMC_DELIM)
+    Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
+    xmlDoc.async = false
+    xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
+
+    Dim el
+    Dim objRoot : Set objRoot = xmlDoc.DocumentElement
+
+    Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
+    el.text = sanitizeXMLString(Form.CategoryName)
+    objRoot.childNodes.item(0).appendChild(el)
+    Set el = xmlDoc.createElement("FormName")       ' create Root/itemdetailform/FormName'
+    el.text = sanitizeXMLString(Form.Name)
+    objRoot.childNodes.item(0).appendChild(el)
+    Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
+    Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+
+
+
+    Dim i
+    For i = 0 To UBound(arrFields) - 1
+        ' the idea is that if we cannot instatiate a field,
+        ' it isn't on the form, so we need to catch the errors
+        On Error Resume Next
+        Set f = Form.Field(arrFields(i))
+        On Error Goto 0
+        ' add to xml doc
+        Set el = xmlDoc.createElement("Field")
+        Dim n : Set n = fnode.appendChild(el) 'get reference to node
+        Set el = xmlDoc.createElement("FieldName")
+        el.text = sanitizeXMLString(f.Name)
+        n.appendChild(el)
+        Set el = xmlDoc.createElement("FieldValue")
+        el.text = sanitizeXMLString(f.Value)
+    n.appendChild(el)
+    Next
+'     ' process customer connections
+'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+'     Dim connect, CustomerName
+'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
+'
+'
+'     Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
+'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
+'     el.text = sanitizeXMLString(connect.ItemName)
+'     Set el = xmlDoc.createElement("ToCategory")
+    xmlDoc.Save strPath
+    Set xmlDoc = Nothing
+    Set conv= Nothing
+    Set db = Nothing
+
+
+End Sub
+
+public Function sanitizeXMLString(invalidString)
+	Dim tmp, i
+	tmp = invalidString
+	'first replace ampersand
+	tmp = Replace(tmp, chr(38), "&amp;")
+	'then the other special characters
+	For i = 160 to 255
+		tmp = Replace(tmp, chr(i), "&#" & i & ";")
+	Next
+	'and then the special characters
+	tmp = Replace(tmp, chr(34), "&quot;")
+	tmp = Replace(tmp, chr(39), "&apos;")
+	tmp = Replace(tmp, chr(60), "&lt;")
+	tmp = Replace(tmp, chr(62), "&gt;")
+	'tmp = Replace(tmp, chr(32), "&nbsp;")
+	sanitizeXMLString = tmp
+end function
+
+Function dq(s)
+
+  dq = Chr(34) & s & Chr(34)
+
+End Function
+
+
+'********** end of pss      ************
+''******************************************
+
+
 ' ***** start of functions etc *****
 
 ' New Sep 2013 - general function to remove un-needed characters from telephone number fields and try to format the numbers correctly
@@ -706,96 +817,3 @@ For f = 0 To UBound(v)
 End Function 
  
 
-
-'''''''''''''''''''''''''''''''''''''''''''''
-''''''''' arno-pss function to export item field
-Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
-Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-
-Sub ExportItemDetailForm(ByVal strPath)
-
-    'will export all values showing on the form,
-    'including ones that are not visible(!)
-    'any user, if permissioned, can always show these anwyay.
-    Dim db, conv, f, arrFields, arrCons, strDDE
-    Set db = Application.Database
-    Set conv = db.GetConversation("Commence", "GetData")
-    strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
-    arrFields = Split(conv.Request(strDDE), CMC_DELIM)
-    Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
-    xmlDoc.async = false
-    xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
-
-    Dim el
-    Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-
-    Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
-    el.text = sanitizeXMLString(Form.CategoryName)
-    objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("FormName")       ' create Root/itemdetailform/FormName'
-    el.text = sanitizeXMLString(Form.Name)
-    objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
-    Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
-
-
-
-    Dim i
-    For i = 0 To UBound(arrFields) - 1
-        ' the idea is that if we cannot instatiate a field,
-        ' it isn't on the form, so we need to catch the errors
-        On Error Resume Next
-        Set f = Form.Field(arrFields(i))
-        On Error Goto 0
-        ' add to xml doc
-        Set el = xmlDoc.createElement("Field")
-        Dim n : Set n = fnode.appendChild(el) 'get reference to node
-        Set el = xmlDoc.createElement("FieldName")
-        el.text = sanitizeXMLString(f.Name)
-        n.appendChild(el)
-        Set el = xmlDoc.createElement("FieldValue")
-        el.text = sanitizeXMLString(f.Value)
-    n.appendChild(el)
-    Next
-    ' process customer connections
-    strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-    arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-    Dim connect, CustomerName
-    Set connect = Form.Connection("To", "Customer") ' customer connection please'
-
-
-    Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
-    Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-    el.text = sanitizeXMLString(connect.ItemName)
-    Set el = xmlDoc.createElement("ToCategory")
-    xmlDoc.Save strPath
-    Set xmlDoc = Nothing
-    Set conv= Nothing
-    Set db = Nothing
-
-
-End Sub
-
-public Function sanitizeXMLString(invalidString)
-	Dim tmp, i
-	tmp = invalidString
-	'first replace ampersand
-	tmp = Replace(tmp, chr(38), "&amp;")
-	'then the other special characters
-	For i = 160 to 255
-		tmp = Replace(tmp, chr(i), "&#" & i & ";")
-	Next
-	'and then the special characters
-	tmp = Replace(tmp, chr(34), "&quot;")
-	tmp = Replace(tmp, chr(39), "&apos;")
-	tmp = Replace(tmp, chr(60), "&lt;")
-	tmp = Replace(tmp, chr(62), "&gt;")
-	'tmp = Replace(tmp, chr(32), "&nbsp;")
-	sanitizeXMLString = tmp
-end function
-
-Function dq(s)
-
-  dq = Chr(34) & s & Chr(34)
-
-End Function

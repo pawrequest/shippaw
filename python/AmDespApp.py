@@ -1,12 +1,15 @@
 import os
 import pathlib
+import xml.etree.ElementTree as ET
+from datetime import datetime
 
 from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-from .AmDespFuncs import *
+from python.utils_pss.utils_pss import *
 
 line = '-' * 100
+
 
 class Config:
     def __init__(self):
@@ -58,13 +61,15 @@ class App:  # put here functions to be directly called by user interface
     def __init__(self):  # make app
         self.client = CNFG.dbay_cnfg.client
         self.sender = CNFG.dbay_cnfg.sender
+        # self.shipment.queue()  # confirm details and queue shipment - label available to print
+        # return
 
-    def make_hire_shipment(self):
-        hire = Hire()
-        self.shipment = Shipment(hire)
+    def import_xml(self):
+        XmlImporter()
 
-    def make_cust_shipment(self):
-        ...
+    # def make_hire_shipment(self):
+    #     hire = Hire()
+    #     self.shipment = Shipment(hire)
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
@@ -72,16 +77,16 @@ class App:  # put here functions to be directly called by user interface
         self.shipment.val_address()  # queries DB address database
         self.shipment.change_add()  # check and / or change the address
         self.shipment.make_request()  # make a shipment request
-        self.shipment.queue()  # confirm details and queue shipment - label available to print
-        # return
+        self.shipment.queue()
 
     def book_collection(self):
         self.shipment.book_collection()
         # CNFG = config
 
 
-class Shipment:  # taking a hire object
-    def __init__(self, ship_dict, shipid=None,
+
+class Shipment:  # taking an object
+    def __init__(self, parsed_xml_object, shipid=None,
                  shipref=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
         self.sender = CNFG.dbay_cnfg.sender
         self.client = CNFG.dbay_cnfg.client
@@ -92,34 +97,35 @@ class Shipment:  # taking a hire object
 
         for field in CNFG.fields.shipment_fields:
 
-            if field in vars(ship_dict):
-                v = getattr(ship_dict, field)
+            if field in vars(parsed_xml_object):
+                v = getattr(parsed_xml_object, field)
                 setattr(self, field, v)
             else:
-                print(f"*** ERROR - {field} not found in ship_dict")
+                print(f"*** ERROR - {field} not found in ship_dict - ERROR ***")
         ## DespatchBay API config
 
         ## provided shipment details
         if shipid:
             self.id = shipid
-        else:
-            self.id = ship_dict.referenceNumber
-        self.customer = ship_dict.customer
-        self.deliveryEmail = ship_dict.deliveryEmail
-        self.deliveryName = ship_dict.deliveryName
-        self.deliveryTel = ship_dict.deliveryTel
-        self.deliveryContact = ship_dict.deliveryContact
-        self.deliveryAddress = ship_dict.deliveryAddress
-        self.deliveryPostcode = ship_dict.deliveryPostcode
-        self.sendOutDate = ship_dict.sendOutDate
-        self.boxes = ship_dict.boxes
+        elif 'referenceNumber' in vars(parsed_xml_object):
+            self.id = parsed_xml_object.referenceNumber
+        else: self.id= "101"
+        self.customer = parsed_xml_object.customer
+        self.deliveryEmail = parsed_xml_object.deliveryEmail
+        self.deliveryName = parsed_xml_object.deliveryName
+        self.deliveryTel = parsed_xml_object.deliveryTel
+        self.deliveryContact = parsed_xml_object.deliveryContact
+        self.deliveryAddress = parsed_xml_object.deliveryAddress
+        self.deliveryPostcode = parsed_xml_object.deliveryPostcode
+        self.sendOutDate = parsed_xml_object.sendOutDate
+        self.boxes = parsed_xml_object.boxes
         if shipref:
             self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
         else:
             self.shipRef = self.customer
 
         # class Shipment:
-        #     def __init__(self, ship_dict, shipid=None, shipref=None):
+        #     def __init__(self, parsed_xml_object, shipid=None, shipref=None):
         #         self.sender = CNFG.dbay_cnfg.sender
         #         self.client = CNFG.dbay_cnfg.client
         #         self.collectionBooked = False
@@ -127,27 +133,27 @@ class Shipment:  # taking a hire object
         #         self.dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender, CNFG.dbay_cnfg.courier_id)  # get dates
         #
         #         for field in CNFG.fields.shipment_fields:
-        #             if field in ship_dict:
-        #                 v = ship_dict[field]
+        #             if field in parsed_xml_object:
+        #                 v = parsed_xml_object[field]
         #                 setattr(self, field, v)
         #             else:
-        #                 print(f"*** ERROR - {field} not found in ship_dict")
+        #                 print(f"*** ERROR - {field} not found in parsed_xml_object")
         #         ## DespatchBay API config
         #
         #         ## provided shipment details
         #         if shipid:
         #             self.id = shipid
         #         else:
-        #             self.id = ship_dict['referenceNumber']
-        #         self.customer = ship_dict['customer']
-        #         self.deliveryEmail = ship_dict['deliveryEmail']
-        #         self.deliveryName = ship_dict['deliveryName']
-        #         self.deliveryTel = ship_dict['deliveryTel']
-        #         self.deliveryContact = ship_dict['deliveryContact']
-        #         self.deliveryAddress = ship_dict['deliveryAddress']
-        #         self.deliveryPostcode = ship_dict['deliveryPostcode']
-        #         self.sendOutDate = ship_dict['sendOutDate']
-        #         self.boxes = ship_dict['boxes']
+        #             self.id = parsed_xml_object['referenceNumber']
+        #         self.customer = parsed_xml_object['customer']
+        #         self.deliveryEmail = parsed_xml_object['deliveryEmail']
+        #         self.deliveryName = parsed_xml_object['deliveryName']
+        #         self.deliveryTel = parsed_xml_object['deliveryTel']
+        #         self.deliveryContact = parsed_xml_object['deliveryContact']
+        #         self.deliveryAddress = parsed_xml_object['deliveryAddress']
+        #         self.deliveryPostcode = parsed_xml_object['deliveryPostcode']
+        #         self.sendOutDate = parsed_xml_object['sendOutDate']
+        #         self.boxes = parsed_xml_object['boxes']
         #         if shipref:
         #             self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
         #         else:
@@ -216,14 +222,14 @@ class Shipment:  # taking a hire object
                     return self
                 continue
             else:
-                # print("\n\t\t*** ERROR: No boxes added ***\n")
+                print("\n\t\t*** ERROR: No boxes added ***\n")
                 ui = input("- How many boxes?\n")
                 if not ui.isnumeric():
                     print("- Enter a number")
                     continue
                 self.boxes = int(ui)
                 print("self updated  |  ", self.boxes, "  boxes")
-                return self
+                # return self
 
     def val_dates(self):
         dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender,
@@ -311,10 +317,11 @@ class Shipment:  # taking a hire object
             break
         selected_key = candidates[int(selection) - 1].key
         self.addressObject = self.client.get_address_by_key(selected_key)
-        print("- New Address:", self.addressObject.street)
-        return
+        print(f"- New Address: {self.addressObject.company_name},{self.addressObject.street}")
+        # return
 
     def make_request(self):
+        print("MAKING REQUEST")
         self.recipient_address = self.client.address(
             company_name=self.customer,
             country_code="GB",
@@ -457,6 +464,7 @@ class Shipment:  # taking a hire object
         #     print("Data dumped to json:", export_keys)
 
 
+''' now in xml importer
 class Hire:  # gets details from xmlfile
     def __init__(self, hireid=None):
         # self.id = None
@@ -516,20 +524,157 @@ class Hire:  # gets details from xmlfile
         # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
         return (newdict)
 
-    # def ship_hire(self):  # Runs class methods to ship a hire object
-    #     oShip = self.make_shipment()
-    #     oShip.val_boxes()
-    #     oShip.val_dates()
-    #     oShip.val_address()
-    #     oShip.change_add()
-    #     oShip.make_request()
-    #     oShip.queue()
-    #     self.line = '-' * 100
-    #     # return
-    #     print("Adding Shipment to Despatchbay Queue")
+'''
 
 
-# a class which takes a commence record
+class XmlImporter:
+    def __init__(self, hireid=None):
+        print("XML IMPORTER ACTIVATED")
+        # self.id = None
+        ship_dict = {}
+        tree = ET.parse(CNFG.paths.xml_file)
+        root = tree.getroot()
+        fields = root[0][2]
+        category = root[0][0].text
+        for field in fields:
+            k = field[0].text
+            v = field[1].text
+            if v:
+                if "Number" in k:
+                    v = v.replace(",", "")
+                ship_dict.update({k: v})
+        if category == "Hire":
+            print("Xml is a hire record")
+            customer = root[0][3].text  # debug
+            ship_dict['id'] = ship_dict['Reference Number']
+
+        elif category == "Customer":
+            print("Xml is a customer record")
+            customer = fields[0][1].text
+            ship_dict['send Out Date'] = datetime.today().strftime('%Y-%m-%d')
+            ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
+
+        else:
+            print("no customer found")
+            print("ERROR NO CUSTOMER")
+        ship_dict.update({'customer': customer})
+        ship_dict = self.clean_xml(ship_dict)
+        if 'boxes' not in ship_dict.keys():
+            ship_dict['boxes'] = 0
+        for k, v in ship_dict.items():
+            setattr(self,k,v)
+        print("making shipment object")
+        App.shipment = Shipment(self) # object
+
+        # setattr()
+        print("Xml  with", len(ship_dict), "fields imported")
+        # for k, v in parsed_xml_object.items():
+        #     if v:
+        #         setattr(self, k, v)
+        # for k, v in parsed_xml_object.items():
+        #     if v:
+        #         setattr(self, k, v)
+        #     if hireid:
+        #         setattr(self, 'id', hireid)
+        #     # else:
+        #     #     setattr(self, 'id', "noname")
+
+    def clean_xml(self, dict) -> dict:
+        newdict = {}
+        for k, v in dict.items():
+
+            # k = unsanitise(k)
+            k = toCamel(k)
+
+            if "deliv" in k:
+                if "delivery" not in k:
+                    k = k.replace('deliv', 'delivery')
+
+            if v:
+                # v = unsanitise(v)
+                if isinstance(v, list):
+                    v = v[0]
+                if v.isnumeric():
+                    v = int(v)
+                    if v == 0:
+                        v = None
+                elif v.isalnum():
+                    v = v.title()
+                if 'Price' in k:
+                    v = float(v)
+                # if "Number" in k: # elsewhere?
+                #     v = v.replace(",", "")
+                if k == "sendOutDate":
+                    v = datetime.strptime(v, '%Y-%m-%d').date()
+
+            newdict.update({k: v})
+        newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+        # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
+        # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
+        return newdict
+    #
+    # def clean_xml_hire(self, dict) -> dict:
+    #     newdict = {}
+    #     for k, v in dict.items():
+    #
+    #         k = unsanitise(k)
+    #         k = toCamel(k)
+    #
+    #         if v:
+    #             v = unsanitise(v)
+    #             if isinstance(v, list):
+    #                 v = v[0]
+    #             if v.isnumeric():
+    #                 v = int(v)
+    #                 if v == 0:
+    #                     v = None
+    #             elif v.isalnum():
+    #                 v = v.title()
+    #             if 'Price' in k:
+    #                 v = float(v)
+    #             # if "Number" in k: # elsewhere?
+    #             #     v = v.replace(",", "")
+    #             if k == "sendOutDate":
+    #                 v = datetime.strptime(v, '%d/%m/%Y').date()
+    #
+    #         newdict.update({k: v})
+    #     newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+    #     # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
+    #     # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
+    #     return (newdict)
+
+
+# class Customer:
+#     def __init__(self, hireid=None):
+#         # self.id = None
+#         cust_dict = {}
+#         tree = ET.parse(CNFG.paths.xml_file)
+#         root = tree.getroot()
+#         fields = root[0][2]
+#         customer = root[0][3].text  # debug
+#         for field in fields:
+#             k = field[0].text
+#             v = field[1].text
+#             if v:
+#                 if "Number" in k:
+#                     v = v.replace(",", "")
+#                 hire_dict.update({k: v})
+#         hire_dict.update({'customer': customer})
+#         hire_dict = self.clean_xml_hire(hire_dict)
+#         print("Xml hire with", len(hire_dict), "fields imported")
+#         for k, v in hire_dict.items():
+#             if v:
+#                 setattr(self, k, v)
+#         for k, v in hire_dict.items():
+#             if v:
+#                 setattr(self, k, v)
+#             if hireid:
+#                 setattr(self, 'id', hireid)
+#             # else:
+#             #     setattr(self, 'id', "noname")
+
+
+# agnostic class which takes a commence record
 class CmcRecord:
     ...
 
