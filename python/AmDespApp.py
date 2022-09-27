@@ -61,12 +61,9 @@ class App:  # put here functions to be directly called by user interface
     def __init__(self):  # make app
         self.client = CNFG.dbay_cnfg.client
         self.sender = CNFG.dbay_cnfg.sender
-        # self.shipment.queue()  # confirm details and queue shipment - label available to print
-        # return
 
     def import_xml(self):
         XmlImporter()
-
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
@@ -78,7 +75,6 @@ class App:  # put here functions to be directly called by user interface
 
     def book_collection(self):
         self.shipment.book_collection()
-        # CNFG = config
 
 
 class Shipment:  # taking an xmlimporter object
@@ -104,7 +100,8 @@ class Shipment:  # taking an xmlimporter object
             self.id = shipid
         elif 'referenceNumber' in vars(parsed_xml_object):
             self.id = parsed_xml_object.referenceNumber
-        else: self.id= "101"
+        else:
+            self.id = "101"
         self.customer = parsed_xml_object.customer
         self.deliveryEmail = parsed_xml_object.deliveryEmail
         self.deliveryName = parsed_xml_object.deliveryName
@@ -118,7 +115,6 @@ class Shipment:  # taking an xmlimporter object
             self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
         else:
             self.shipRef = self.customer
-
 
         ## obtained shipment details
         self.deliveryBuildingNum = None
@@ -425,69 +421,6 @@ class Shipment:  # taking an xmlimporter object
         #     print("Data dumped to json:", export_keys)
 
 
-''' now in xml importer
-class Hire:  # gets details from xmlfile
-    def __init__(self, hireid=None):
-        # self.id = None
-        hire_dict = {}
-        tree = ET.parse(CNFG.paths.xml_file)
-        root = tree.getroot()
-        fields = root[0][2]
-        customer = root[0][3].text  # debug
-        for field in fields:
-            k = field[0].text
-            v = field[1].text
-            if v:
-                if "Number" in k:
-                    v = v.replace(",", "")
-                hire_dict.update({k: v})
-        hire_dict.update({'customer': customer})
-        hire_dict = self.clean_xml_hire(hire_dict)
-        print("Xml hire with", len(hire_dict), "fields imported")
-        for k, v in hire_dict.items():
-            if v:
-                setattr(self, k, v)
-        for k, v in hire_dict.items():
-            if v:
-                setattr(self, k, v)
-            if hireid:
-                setattr(self, 'id', hireid)
-            # else:
-            #     setattr(self, 'id', "noname")
-
-    def clean_xml_hire(self, dict) -> dict:
-        newdict = {}
-        for k, v in dict.items():
-
-            k = unsanitise(k)
-            k = toCamel(k)
-
-            if v:
-                v = unsanitise(v)
-                if isinstance(v, list):
-                    v = v[0]
-                if v.isnumeric():
-                    v = int(v)
-                    if v == 0:
-                        v = None
-                elif v.isalnum():
-                    v = v.title()
-                if 'Price' in k:
-                    v = float(v)
-                # if "Number" in k: # elsewhere?
-                #     v = v.replace(",", "")
-                if k == "sendOutDate":
-                    v = datetime.strptime(v, '%d/%m/%Y').date()
-
-            newdict.update({k: v})
-        newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-        # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
-        # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
-        return (newdict)
-
-'''
-
-
 class XmlImporter:
     def __init__(self, hireid=None):
         print("XML IMPORTER ACTIVATED")
@@ -523,22 +456,12 @@ class XmlImporter:
         if 'boxes' not in ship_dict.keys():
             ship_dict['boxes'] = 0
         for k, v in ship_dict.items():
-            setattr(self,k,v)
+            setattr(self, k, v)
         print("making shipment object")
-        App.shipment = Shipment(self) # object
+        App.shipment = Shipment(self)  # object
 
         # setattr()
         print("Xml  with", len(ship_dict), "fields imported")
-        # for k, v in parsed_xml_object.items():
-        #     if v:
-        #         setattr(self, k, v)
-        # for k, v in parsed_xml_object.items():
-        #     if v:
-        #         setattr(self, k, v)
-        #     if hireid:
-        #         setattr(self, 'id', hireid)
-        #     # else:
-        #     #     setattr(self, 'id', "noname")
 
     def clean_xml(self, dict) -> dict:
         newdict = {}
@@ -570,76 +493,9 @@ class XmlImporter:
 
             newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-        # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
-        # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
         return newdict
-    #
-    # def clean_xml_hire(self, dict) -> dict:
-    #     newdict = {}
-    #     for k, v in dict.items():
-    #
-    #         k = unsanitise(k)
-    #         k = toCamel(k)
-    #
-    #         if v:
-    #             v = unsanitise(v)
-    #             if isinstance(v, list):
-    #                 v = v[0]
-    #             if v.isnumeric():
-    #                 v = int(v)
-    #                 if v == 0:
-    #                     v = None
-    #             elif v.isalnum():
-    #                 v = v.title()
-    #             if 'Price' in k:
-    #                 v = float(v)
-    #             # if "Number" in k: # elsewhere?
-    #             #     v = v.replace(",", "")
-    #             if k == "sendOutDate":
-    #                 v = datetime.strptime(v, '%d/%m/%Y').date()
-    #
-    #         newdict.update({k: v})
-    #     newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-    #     # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
-    #     # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
-    #     return (newdict)
 
-
-# class Customer:
-#     def __init__(self, hireid=None):
-#         # self.id = None
-#         cust_dict = {}
-#         tree = ET.parse(CNFG.paths.xml_file)
-#         root = tree.getroot()
-#         fields = root[0][2]
-#         customer = root[0][3].text  # debug
-#         for field in fields:
-#             k = field[0].text
-#             v = field[1].text
-#             if v:
-#                 if "Number" in k:
-#                     v = v.replace(",", "")
-#                 hire_dict.update({k: v})
-#         hire_dict.update({'customer': customer})
-#         hire_dict = self.clean_xml_hire(hire_dict)
-#         print("Xml hire with", len(hire_dict), "fields imported")
-#         for k, v in hire_dict.items():
-#             if v:
-#                 setattr(self, k, v)
-#         for k, v in hire_dict.items():
-#             if v:
-#                 setattr(self, k, v)
-#             if hireid:
-#                 setattr(self, 'id', hireid)
-#             # else:
-#             #     setattr(self, 'id', "noname")
-
-
-# agnostic class which takes a commence record
-class CmcRecord:
-    ...
-
-
+# product classes
 '''
 class Product:
     def __init__(self, dict):
@@ -700,120 +556,3 @@ class Price_List(Product):
                 print(f"ERROR - input missing {field}")
 
 #'''
-
-'''
-    def __init__(self, xml):
-
-        self.xml = xml
-        self.category = None
-        tree = ET.parse(xml)
-        root = tree.getroot()
-        fields = root[0][2]
-
-        # def hire_from_xml(xml):
-        #     # TODO handle xmls with multiple shipments
-        #     hire_dict = {}
-        #     tree = ET.parse(xml)
-        #     root = tree.getroot()
-        #     fields = root[0][2]
-        #     customer = root[0][3].text  # debug
-        #     for field in fields:
-        #         k = field[0].text
-        #         if "Number" in k:
-        #             v = v.replace(",", "")
-        #         v = field[1].text
-        #         if v:
-        #             hire_dict.update({k: v})
-        #     hire_dict.update({'customer': customer})
-        #     hire_dict = clean_xml_hire(hire_dict)
-        #     print("Xml hire with", len(hire_dict), "fields imported")
-        #     return hire_dict
-        # def get_category(self):
-        #
-
-    def __init__(self):
-        class Config:
-            def __init__(self):
-                class DespatchConfig:
-                    def __init__(self):
-                        self.api_user = os.getenv("DESPATCH_API_USER")
-                        self.api_key = os.getenv("DESPATCH_API_KEY")
-                        self.sender_id = "5536"  # should be env var?
-                        self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
-                        self.sender = self.client.sender(address_id=self.sender_id)
-
-                class FieldsCnfg:
-                    def __init__(self):
-                        self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
-                                                    'parcels',
-                                                    'shipment_return']
-                        self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
-                                            'deliveryEmail',
-                                            'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
-                                            'referenceNumber',
-                                            'customer']
-                        self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
-                                                "deliveryAddress",
-                                                "deliveryPostcode", "sendOutDate", "referenceNumber"]
-
-                class PathsConfig:
-                    def __init__(self):
-                        self.root = pathlib.Path("/Amdesp")
-                        self.data_dir = pathlib.Path("/Amdesp/data/")
-                        self.label_dir = self.data_dir / "Parcelforce Labels"
-                        self.Json_File = self.data_dir / "AmShip.json"
-                        self.xml_file = self.data_dir.joinpath('AmShip.xml')
-                        self.log_file = self.data_dir.joinpath("AmLog.json")
-                        self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
-                        pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
-                                                                                 exist_ok=True)  # make the labels dirs (and parents)
-
-                self.fields = FieldsCnfg()
-                self.paths = PathsConfig()
-                self.dbay = DespatchConfig()
-
-        CNFG = Config()
-        
-        '''
-
-'''
-  # def hire_dict_from_xml(self, xml):
-    #     hire_dict = {}
-    #     tree = ET.parse(xml)
-    #     root = tree.getroot()
-    #     fields = root[0][2]
-    #     customer = root[0][3].text  # debug
-    #     for field in fields:
-    #         k = field[0].text
-    #         if "Number" in k:
-    #             v = v.replace(",", "")
-    #         v = field[1].text
-    #         if v:
-    #             hire_dict.update({k: v})
-    #     hire_dict.update({'customer': customer})
-    #     self.hire_dict = self.clean_xml_hire(hire_dict)
-    #     print("Xml hire with", len(hire_dict), "fields imported")
-    #     # return hire_dict
-
-    # def make_hire(self, config):
-    #     self.config = config
-    #     hire_dict = {}
-    #     tree = ET.parse(CNFG.paths.xml_file)
-    #     root = tree.getroot()
-    #     fields = root[0][2]
-    #     customer = root[0][3].text  # debug
-    #     for field in fields:
-    #         k = field[0].text
-    #         v = field[1].text
-    #         if v:
-    #             if "Number" in k:
-    #                 v = v.replace(",", "")
-    #             hire_dict.update({k: v})
-    #     hire_dict.update({'customer': customer})
-    #     hire_dict = self.clean_xml_hire(hire_dict)
-    #     print("Xml hire with", len(hire_dict), "fields imported")
-    # 
-    #     self.oHire = Hire(hire_dict)
-    #     self.oHire.ship_hire()
-    
-    '''
