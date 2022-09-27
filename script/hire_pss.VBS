@@ -928,19 +928,30 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Closed").Value = 1
 			Form.Save
 			End if
-'
-'         Case "CommandButton20"
-'         ' book in hire, problems'
+
+'        Case "CommandButton19"
+'         ' book in hire, PR'
+'             Dim ui, uii
+'             ui = MsgBox("unpacked by paul, all ok?",3)
+'             if ui = 6 Then
+' 			Form.Field("Unpacked By").Value = "PR"
+' 			Form.Field("Unpacked Date").Value = "today"
+' 			Form.Field("Unpacked Time").Value = "now"
+' 			Form.Field("Status").Value = "Returned all OK"
+' 			Form.Field("Actual Return Date").Value = "today"
+' 			Form.Field("Closed").Value = 1
+' 			Form.Save
+' 			ElseIf uii = MsgBox("unpacked by paul?",3)
+' 			if uii = 6 Then
 ' 			Form.Field("Unpacked By").Value = "PR"
 ' 			Form.Field("Unpacked Date").Value = "today"
 ' 			Form.Field("Unpacked Time").Value = "now"
 ' 			Form.Field("Status").Value = "Returned with problems"
-' 			Form.Field("Actual Return Date").Value = "today"
+' 			End if
+
+
 
         Case "CommandButton20"
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp via cmd     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 		    Dim python_exe, python_script, commence_wrapper, xmlfile
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"

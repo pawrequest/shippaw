@@ -69,7 +69,7 @@ class App:  # put here functions to be directly called by user interface
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.val_address()  # queries DB address database
-        self.shipment.change_add()  # check and / or change the address
+        self.shipment.ammend_address()  # check and / or change the address
         self.shipment.make_request()  # make a shipment request
         self.shipment.queue()
 
@@ -244,15 +244,24 @@ class Shipment:  # taking an xmlimporter object
             print("No building number, searching deliveryFirstline")
             search_string = self.deliveryFirstline
         # get object
-        address_object = self.client.find_address(self.deliveryPostcode, search_string)
-        self.addressObject = address_object
+        try:
+            address_object = self.client.find_address(self.deliveryPostcode, search_string)
+        except:
+            print("No address match found")
+            self.ammend_address()
+            return self
+        else:
+            self.addressObject = address_object
         return self
 
-    def change_add(self):
-        ui = input(
-            f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
-        if ui[0].lower() == "c":
-            return
+    def ammend_address(self):
+        if self.addressObject:
+            ui = input(
+                f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
+            if ui[0].lower() == "c":
+                return
+        else:
+            print("NO ADDRESS OBJECT")
         candidates = self.client.get_address_keys_by_postcode(self.deliveryPostcode)
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
@@ -422,9 +431,8 @@ class Shipment:  # taking an xmlimporter object
 
 
 class XmlImporter:
-    def __init__(self, hireid=None):
+    def __init__(self):
         print("XML IMPORTER ACTIVATED")
-        # self.id = None
         ship_dict = {}
         tree = ET.parse(CNFG.paths.xml_file)
         root = tree.getroot()
@@ -465,6 +473,8 @@ class XmlImporter:
 
     def clean_xml(self, dict) -> dict:
         newdict = {}
+        if "Send Out Date" not in dict.keys():
+            dict['Send Out Date'] = datetime.today().strftime('%d/%m/%Y')
         for k, v in dict.items():
 
             # k = unsanitise(k)
@@ -489,7 +499,9 @@ class XmlImporter:
                 # if "Number" in k: # elsewhere?
                 #     v = v.replace(",", "")
                 if k == "sendOutDate":
-                    v = datetime.strptime(v, '%Y-%m-%d').date()
+                    # v = datetime.strftime(v, '%Y-%m-%d')   #debug wtf?
+                    # # v = datetime.strptime(v, '%Y%m-%d').date()
+                    v = datetime.strptime(v, 'Xd/%m/%Y').date()
 
             newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
