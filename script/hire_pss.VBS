@@ -850,25 +850,64 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Unpacked Time").Value = "now"
 		
 		Case "CommandButton11"
-			' All Parcelforce
-            MsgBox ("All Parcelforce") ' debug
-			Form.Field("Send Method").Value = "Parcelforce"
-			Form.Field("Collection Method").Value = "Parcelforce"
+			' this button inserts the description "Parcelforce" into the Send Method field
+			Form.Field("Send Method").Value = "Parcelforce / DB"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Parcelforce/DB and we collect"
+			End If
 
 		Case "CommandButton12"
-			' All Courier
-            MsgBox ("All Courier")    ' debug
-			Form.Field("Send Method").Value = "Other Courier"
-			Form.Field("Collection Method").Value = "Other Courier"
+			' this button inserts the description "RUSH bike" into the Send Method field
+			Form.Field("Send Method").Value = "RUSH motorbike"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "RUSH motorbike and we collect"
+			End If
 
 		Case "CommandButton13"
-			' All Customer
-            MsgBox ("All Customer")    ' debug
-			Form.Field("Send Method").Value = "Customer Collects"
-			Form.Field("Collection Method").Value = "Customer Returns"
+			' this button inserts the description "RUSH car/van" into the Send Method field
+			Form.Field("Send Method").Value = "RUSH car/van"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "RUSH car/van and we collect"
+			End If
 
+		Case "CommandButton14"
+			' this button inserts the description "Absolutely motorbike" into the Send Method field
+			Form.Field("Send Method").Value = "Absolutely motorbike"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
+			End If
+'
+' 		Case "CommandButton15"
+' 			' this button writes the delivery details to a CSV text file on the PC's local disk, which can
+' 			' then be uploaded into the Despatchbay web site
+' 			'dim fs,fname
+' 			'set fs=Server.CreateObject("Scripting.FileSystemObject")
+' 			'set fname=fs.CreateTextFile("c:\test.txt",true)
+' 			'fname.WriteLine("Hello World!")
+' 			'fname.Close
+' 			'set fname=nothing
+' 			'set fs=nothing
+'
+' 			Dim fso, DBtextfilename, DBstring
+' 			Set fso = CreateObject("Scripting.FileSystemObject")
+' 			Set DBtextfilename = fso.CreateTextFile("c:\Windows\temp\DBaddressfile.txt",True)
+' 			DBstring = Form.Field("Delivery Contact").Value + ", " + Form.Field("Delivery Address").Value + ", " + Form.Field("Delivery Postcode").Value + ", " + Form.Field("Delivery Telephone").Value + ", " + Form.Field("Delivery Telephone").Value
+' 			DBtextfilename.WriteLine(DBstring)
+' 			DBtextfilename.Close
 
+		Case "CommandButton16"
+			' this button inserts the description "Absolutely car/van" into the Send Method field
+			Form.Field("Send Method").Value = "Absolutely car/van"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Absolutely car/van and we collect"
+			End If
 
+		Case "CommandButton17"
+			' this button inserts the description "Amherst Staff" into the Send Method field
+			Form.Field("Send Method").Value = "Amherst staff"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Amherst staff and we collect"
+			End If
 
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
@@ -878,6 +917,9 @@ Sub Form_OnClick(ControlId)
 '''''''''   pss                 '''''''''''''''''''''''''''''''
         Case "CommandButton19"
         ' book in hire, all ok'
+            Dim ui
+            ui = MsgBox("unpacked by paul, all ok?",3)
+            if ui = 6 Then
 			Form.Field("Unpacked By").Value = "PR"
 			Form.Field("Unpacked Date").Value = "today"
 			Form.Field("Unpacked Time").Value = "now"
@@ -885,6 +927,7 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 			Form.Field("Closed").Value = 1
 			Form.Save
+			End if
 '
 '         Case "CommandButton20"
 '         ' book in hire, problems'
@@ -894,26 +937,16 @@ Sub Form_OnClick(ControlId)
 ' 			Form.Field("Status").Value = "Returned with problems"
 ' 			Form.Field("Actual Return Date").Value = "today"
 
-        Case "CommandButton21"
-        ' packed
-            Form.Field("Packed By").Value = "PR"
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            Form.Save
-
-        Case "CommandButton22"
-
-
         Case "CommandButton20"
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with cmd     ''''''''''
+'''''''''   Runs Amdesp via cmd     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 		    Dim python_exe, python_script, commence_wrapper, xmlfile
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
             xmlfile = "C:\AmDesp\data\AmShip.xml"
+		    ExportItemDetailForm(xmlfile)
             Dim oShell, currentCommand, my_command
             SET oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
@@ -922,70 +955,18 @@ Sub Form_OnClick(ControlId)
             oShell.run currentCommand,1,true
 
 
-'             Dim objShell, args, runscript, powershell, XmlPath, RunCmd, python_script
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file"
-' '             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             powershell = "C:\AmDesp\script\AmDespSingle.ps1"
-' 		    ExportItemDetailForm(XmlPath)
-'             args = "XmlPath"
-'             Set objShell = CreateObject("WScript.Shell")
-'             objShell.Run (RunCmd & " " & powershell & " ") ' & " " & args
-' '             objShell.Run (RunCmd & " " & python_script),1,true
-'             Set objShell = Nothing
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with Powershell     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' 		    Dim python_exe, python_script, XmlPath
-' '             ' '  runs AmDesp direct with CMD
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-' 		    ExportItemDetailForm(XmlPath)
-'             Dim oShell, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             oShell.run RunCmd,1,true
+        Case "CommandButton21"
+        ' packed
+            Dim uii
+            ui = MsgBox("unpacked by paul, all ok?",3)
+            if uii = 6 Then
+            Form.Field("Packed By").Value = "PR"
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            Form.Save
+            End if
 
-
-'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & JsonPath & Chr(34)
-'             Msgbox "RUN PYTHON"
-
-' C:\AmDesp\script\AmDespSingle.ps1
-
-'''''''''''''''''''''''''''''''''''''''''
-
-
-' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-'             Dim oShell, source_code_path, variable1, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             pyPs = "powershell -executionpolicy bypass -noexit -file" & python_exe & python_script & XmlPath
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             my_command = python_exe &  python_script & " " & JsonPath
-' '             Msgbox "RUN PYTHON"
-'             oShell.run pyPs,1,true
-' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
-' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
-
-'
-' 		 ' exports the hire to xml and calls python to ship xml
-'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-'         Dim objShell, myconnection
-'         Set objShell = CreateObject("WScript.Shell")
-'         objShell.Run "C:\AmDesp\vbs\button.vbs"
-'         Set objShell = Nothing
-
-
-' 		 ' exports the hire to xml and calls python to ship xml
-'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-'         Dim objShell, myconnection
-'         Set objShell = CreateObject("WScript.Shell")
-'         objShell.Run "C:\AmDesp\vbs\button.vbs"
-'         Set objShell = Nothing
 
 ''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -1062,68 +1043,6 @@ Sub ExportItemDetailForm(ByVal strPath)
 
 
 End Sub
-
-
-' '''''''''''''''''''''''''''''''''''''''''''''
-' ''''''''' arno-pss function to export item field
-' Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
-' Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-'
-' Sub ExportItemDetailForm(ByVal strPath)
-'
-'     'will export all values showing on the form,
-'     'including ones that are not visible(!)
-'     'any user, if permissioned, can always show these anwyay.
-'     Dim db, conv, f, arrFields, arrCons, strDDE
-'     Set db = Application.Database
-'     Set conv = db.GetConversation("Commence", "GetData")
-'     strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
-'     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
-'     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
-'     xmlDoc.async = false
-'     xmlDoc.loadXML("<root><ItemDetailForm/></root>")
-'
-'     Dim el
-'     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-'     Set el = xmlDoc.createElement("CategoryName")
-'     el.text = sanitizeXMLString(Form.CategoryName)
-'     objRoot.childNodes.item(0).appendChild(el)
-'     Set el = xmlDoc.createElement("FormName")
-'     el.text = sanitizeXMLString(Form.Name)
-'     objRoot.childNodes.item(0).appendChild(el)
-'     Set el = xmlDoc.createElement("Fields")
-'     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
-'     Dim i
-'     For i = 0 To UBound(arrFields) - 1
-'         ' the idea is that if we cannot instatiate a field,
-'         ' it isn't on the form, so we need to catch the errors
-'         On Error Resume Next
-'         Set f = Form.Field(arrFields(i))
-'         On Error Goto 0
-'         ' add to xml doc
-'         Set el = xmlDoc.createElement("Field")
-'         Dim n : Set n = fnode.appendChild(el) 'get reference to node
-'         Set el = xmlDoc.createElement("FieldName")
-'         el.text = sanitizeXMLString(f.Name)
-'         n.appendChild(el)
-'         Set el = xmlDoc.createElement("FieldValue")
-'         el.text = sanitizeXMLString(f.Value)
-'     n.appendChild(el)
-'     Next
-'     ' process customer connections
-'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-'     Dim connect, CustomerName
-'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-'     Set el = xmlDoc.createElement("Customer")
-'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-'     el.text = sanitizeXMLString(connect.ItemName)
-'     Set el = xmlDoc.createElement("ToCategory")
-'     xmlDoc.Save strPath
-'     Set xmlDoc = Nothing
-'     Set conv= Nothing
-'     Set db = Nothing
-' End Sub
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i
