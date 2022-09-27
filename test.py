@@ -1,14 +1,18 @@
-import json
+from python.AmDespApp import *
 
-from config import *
+app = App()
+app.make_hire_shipment()
+app.queue_shipment()
+app.book_collection()
 
-with open(DIR_DATA / 'AmShip.json') as x:
-    print(type(x))
-    obj = json.load(x)
-    ship_list = []
-    ship_list.append(obj)
 
-    print(ship_list)
+# with open(DIR_DATA / 'AmShip.json') as x:
+#     print(type(x))
+#     obj = json.load(x)
+#     ship_list = []
+#     ship_list.append(obj)
+#
+#     print(ship_list)
 
 # python object to be appended
 

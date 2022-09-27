@@ -1,44 +1,140 @@
-from datetime import datetime
-
 from dateutil.parser import parse
 
 from config import *
+from python.AmDespFuncs import *
+
+
+class App:  # put here functions to be directly called by user interface
+    def __init__(self):  # make app
+        class Config:
+            def __init__(self):
+                class DespatchConfig:
+                    def __init__(self):
+                        self.api_user = os.getenv("DESPATCH_API_USER")
+                        self.api_key = os.getenv("DESPATCH_API_KEY")
+                        self.sender_id = "5536"  # should be env var?
+                        self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
+                        self.sender = self.client.sender(address_id=self.sender_id)
+
+                class FieldsCnfg:
+                    def __init__(self):
+                        self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
+                                                    'parcels',
+                                                    'shipment_return']
+                        self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
+                                            'deliveryEmail',
+                                            'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
+                                            'referenceNumber',
+                                            'customer']
+                        self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
+                                                "deliveryAddress",
+                                                "deliveryPostcode", "sendOutDate", "referenceNumber"]
+
+                class PathsConfig:
+                    def __init__(self):
+                        self.root = pathlib.Path("/Amdesp")
+                        self.data_dir = pathlib.Path("/Amdesp/data/")
+                        self.label_dir = self.data_dir / "Parcelforce Labels"
+                        self.Json_File = self.data_dir / "AmShip.json"
+                        self.xml_file = self.data_dir.joinpath('AmShip.xml')
+                        self.log_file = self.data_dir.joinpath("AmLog.json")
+                        self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
+                        pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
+                                                                                 exist_ok=True)  # make the labels dirs (and parents)
+
+                self.fields = FieldsCnfg()
+                self.paths = PathsConfig()
+                self.dbay_cnfg = DespatchConfig()
+
+        self.cnfg = Config()
+
+    def clean_xml_hire(self, dict) -> dict:
+        newdict = {}
+        for k, v in dict.items():
+
+            k = unsanitise(k)
+            k = toCamel(k)
+
+            if v:
+                v = unsanitise(v)
+                if isinstance(v, list):
+                    v = v[0]
+                if v.isnumeric():
+                    v = int(v)
+                    if v == 0:
+                        v = None
+                elif v.isalnum():
+                    v = v.title()
+                if 'Price' in k:
+                    v = float(v)
+                # if "Number" in k: # done elsewhere?
+                #     v = v.replace(",", "")
+                if k == "sendOutDate":
+                    v = datetime.strptime(v, '%d/%m/%Y').date()
+
+            newdict.update({k: v})
+        newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
+        # newdict = {k: v for k, v in newdict.items() if k in HIREFIELDS}
+        # newdict = {k: v for k, v in newdict.items() if k not in expungedFields}
+        return (newdict)
+
+    def make_hire_shipment(self):
+        hire_dict = {}
+        tree = ET.parse(self.cnfg.paths.xml_file)
+        root = tree.getroot()
+        fields = root[0][2]
+        customer = root[0][3].text  # debug
+        for field in fields:
+            k = field[0].text
+            v = field[1].text
+            if v:
+                if "Number" in k:
+                    v = v.replace(",", "")
+                hire_dict.update({k: v})
+        hire_dict.update({'customer': customer})
+        hire_dict = self.clean_xml_hire(hire_dict)
+        print("Xml hire with", len(hire_dict), "fields imported")
+
+        oHire = Hire(hire_dict, self.cnfg)
+        oHire.make_shipment()
+        oHire.ship_hire()
+
+    def cust_dict_from_xml(self):
+        ...
 
 
 class Shipment:
-    def __init__(self, shipdict, shipid=None, shipref=None):
-
-        # for field in SHIPFIELDS:
-        for field in CONFIG_FIELD['SHIPFIELDS']:
-            if field in shipdict:
-                v = shipdict[field]
+    def __init__(self, ship_dict, shipid=None, shipref=None):
+        self.sender = None
+        for field in self.cnfg.fields.shipment_fields:
+            if field in ship_dict:
+                v = ship_dict[field]
                 setattr(self, field, v)
             else:
-                print(f"*** ERROR - {field} not found in shipdict")
+                print(f"*** ERROR - {field} not found in ship_dict")
         ## DespatchBay API config
-        self.client = CLIENT
+        self.client = self.cnfg.dbay.client
         self.courier_id = 8
         self.collectionBooked = False
         self.dbAddressKey = 0
-        self.sender = SENDER
-        # self.ServiceId = 101 # WRONG CODE?  parcelforce 24... change for others
+        self.sender = self.sender
         self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
-        self.dates = self.client.get_available_collection_dates(SENDER, self.courier_id)  # get dates
+        self.dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
 
         ## provided shipment details
         if shipid:
             self.id = shipid
         else:
-            self.id = shipdict['referenceNumber']
-        self.customer = shipdict['customer']
-        self.deliveryEmail = shipdict['deliveryEmail']
-        self.deliveryName = shipdict['deliveryName']
-        self.deliveryTel = shipdict['deliveryTel']
-        self.deliveryContact = shipdict['deliveryContact']
-        self.deliveryAddress = shipdict['deliveryAddress']
-        self.deliveryPostcode = shipdict['deliveryPostcode']
-        self.sendOutDate = shipdict['sendOutDate']
-        self.boxes = shipdict['boxes']
+            self.id = ship_dict['referenceNumber']
+        self.customer = ship_dict['customer']
+        self.deliveryEmail = ship_dict['deliveryEmail']
+        self.deliveryName = ship_dict['deliveryName']
+        self.deliveryTel = ship_dict['deliveryTel']
+        self.deliveryContact = ship_dict['deliveryContact']
+        self.deliveryAddress = ship_dict['deliveryAddress']
+        self.deliveryPostcode = ship_dict['deliveryPostcode']
+        self.sendOutDate = ship_dict['sendOutDate']
+        self.boxes = ship_dict['boxes']
         if shipref:
             self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
         else:
@@ -238,7 +334,7 @@ class Shipment:
             parcels=self.parcels,
             client_reference=self.shipRef,
             collection_date=self.dateObject.date,
-            sender_address=SENDER,
+            sender_address=self.sender,
             recipient_address=self.recipient,
             follow_shipment='true',
             service_id=101  # debug i added this manually?
@@ -261,7 +357,6 @@ class Shipment:
               "| Price =",
               self.shippingCost, '\n', line, '\n')
 
-        choice = "n"
         while choice[0] not in ["q", "r", 'e']:
             choice = input('- [Q]ueue, [R]estart, or [E]xit\n')
             choice = str(choice[0].lower())
@@ -279,35 +374,6 @@ class Shipment:
                         print("Restarting")
                         # self.Process(self)  #debug does it run process? or soemthing else
                     continue  # not restarting
-            print("Adding Shipment to Despatchbay Queue")
-
-    def book_collection(self):
-        self.client.book_shipments(self.addedShipment)
-        shipment_return = self.client.get_shipment(self.addedShipment)
-
-        label_pdf = self.client.get_labels(shipment_return.shipment_document_id)
-        pathlib.Path(CONFIG_PATH['DIR_LABEL']).mkdir(parents=True, exist_ok=True)
-        label_string = ""
-        try:
-            label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
-        except:
-            label_string = label_string, self.customer, ".pdf"
-        label_pdf.download(CONFIG_PATH['DIR_LABEL'] / label_string)
-        self.trackingNumbers = []
-        for parcel in shipment_return.parcels:
-            self.trackingNumbers.append(parcel.tracking_number)
-
-        self.shipmentReturn = shipment_return
-        self.shipmentDocId = shipment_return.shipment_document_id
-        self.labelUrl = shipment_return.labels_url
-        self.parcels = shipment_return.parcels
-        self.labelLocation = str(CONFIG_PATH['DIR_LABEL']) + label_string
-
-        self.collectionBooked = True
-        self.labelDownloaded = True
-        print("Shipment for ", self.customer, "has been booked, Label downloaded to", self.labelLocation)
-        self.log_json()
-        exit()
 
     def log_json(self):
         pass
@@ -323,22 +389,24 @@ class Shipment:
         # with open(DIR_DATA / 'AmShip.json', 'w') as f:
         #     json.dump(export_dict, f, sort_keys=True)
         #     print("Data dumped to json:", export_keys)
-        # return
 
 
 class Hire:
-    def __init__(self, hiredict: dict, hireid=None):
-        self.hiredict = hiredict
-        for k, v in hiredict.items():
-            if k == 'hireRef':
-                k = k.replace(",", "")
-            setattr(self, k, v)
-            setattr(self, 'id', hireid)
+    def __init__(self, hire_dict: dict, config, hireid=None):
+        self.cnfg = config
+        self.oShip = None
+        self.id = None
+        self.hire_dict = hire_dict
+        for k, v in hire_dict.items():
+            if v:
+                setattr(self, k, v)
+            if hireid:
+                setattr(self, 'id', hireid)
+            else:
+                setattr(self, 'id', "noname")
 
     def make_shipment(self):
-        oShip = Shipment(self.hiredict, self.referenceNumber)
-        self.oShip = oShip
-        return oShip
+        self.oShip = Shipment(self.hire_dict, self.id)
 
     def ship_hire(self):  # Runs class methods to ship a hire object
         oShip = self.make_shipment()
@@ -348,11 +416,49 @@ class Hire:
         oShip.change_add()
         oShip.make_request()
         oShip.queue()
+        self.line = '-' * 100
+        # return
+        print("Adding Shipment to Despatchbay Queue")
+
+    def book_collection(self):
+        # self.config = config
+        self.client.book_shipments(self.addedShipment)
+        shipment_return = self.client.get_shipment(self.addedShipment)
+
+        label_pdf = self.client.get_labels(shipment_return.shipment_document_id)
+        label_string = ""
+        try:
+            label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
+        except:
+            label_string = label_string, self.customer, ".pdf"
+        # label_pdf.download(CONFIG_PATH['DIR_LABEL'] / label_string)
+        label_pdf.download(self.cnfg.paths.label_dir / label_string)
+        self.trackingNumbers = []
+        for parcel in shipment_return.parcels:
+            self.trackingNumbers.append(parcel.tracking_number)
+
+        self.shipmentReturn = shipment_return
+        self.shipmentDocId = shipment_return.shipment_document_id
+        self.labelUrl = shipment_return.labels_url
+        self.parcels = shipment_return.parcels
+        self.labelLocation = str(self.cnfg.fields.) + label_string
+
+        self.collectionBooked = True
+        self.labelDownloaded = True
+        print("Shipment for ", self.customer, "has been booked, Label downloaded to", self.labelLocation)
+        self.log_json()
+        exit()
 
 
+# a class which takes a commence record
+class CmcRecord:
+    ...
+
+
+'''
 class Product:
     def __init__(self, dict):
-        for field in CLASS_CONFIG['PRODUCT']:
+        for field in CONFIG_CLASS['PRODUCT']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -362,7 +468,7 @@ class Product:
 class Radio(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_CONFIG['RADIO']:
+        for field in CONFIG_CLASS['RADIO']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -372,7 +478,7 @@ class Radio(Product):
 class Battery(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_CONFIG['BATTERY']:
+        for field in CONFIG_CLASS['BATTERY']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -382,7 +488,7 @@ class Battery(Product):
 class Charger(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_DICT['CHARGER']:
+        for field in CONFIG_CLASS['CHARGER']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -392,7 +498,7 @@ class Charger(Product):
 class AUDIO_ACC(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_DICT['AUDIO_ACC']:
+        for field in CONFIG_CLASS['AUDIO_ACC']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
@@ -402,10 +508,127 @@ class AUDIO_ACC(Product):
 class Price_List(Product):
     def __init__(self, dict):
         Product.__init__(self, dict)
-        for field in CLASS_DICT['PRICES']:
+        for field in CONFIG_CLASS['PRICES']:
             if field in dict.keys():
                 setattr(self, field, dict[field])
             else:
                 print(f"ERROR - input missing {field}")
 
-#
+#'''
+
+'''
+    def __init__(self, xml):
+
+        self.xml = xml
+        self.category = None
+        tree = ET.parse(xml)
+        root = tree.getroot()
+        fields = root[0][2]
+
+        # def hire_from_xml(xml):
+        #     # TODO handle xmls with multiple shipments
+        #     hire_dict = {}
+        #     tree = ET.parse(xml)
+        #     root = tree.getroot()
+        #     fields = root[0][2]
+        #     customer = root[0][3].text  # debug
+        #     for field in fields:
+        #         k = field[0].text
+        #         if "Number" in k:
+        #             v = v.replace(",", "")
+        #         v = field[1].text
+        #         if v:
+        #             hire_dict.update({k: v})
+        #     hire_dict.update({'customer': customer})
+        #     hire_dict = clean_xml_hire(hire_dict)
+        #     print("Xml hire with", len(hire_dict), "fields imported")
+        #     return hire_dict
+        # def get_category(self):
+        #
+
+    def __init__(self):
+        class Config:
+            def __init__(self):
+                class DespatchConfig:
+                    def __init__(self):
+                        self.api_user = os.getenv("DESPATCH_API_USER")
+                        self.api_key = os.getenv("DESPATCH_API_KEY")
+                        self.sender_id = "5536"  # should be env var?
+                        self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
+                        self.sender = self.client.sender(address_id=self.sender_id)
+
+                class FieldsCnfg:
+                    def __init__(self):
+                        self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
+                                                    'parcels',
+                                                    'shipment_return']
+                        self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
+                                            'deliveryEmail',
+                                            'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
+                                            'referenceNumber',
+                                            'customer']
+                        self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
+                                                "deliveryAddress",
+                                                "deliveryPostcode", "sendOutDate", "referenceNumber"]
+
+                class PathsConfig:
+                    def __init__(self):
+                        self.root = pathlib.Path("/Amdesp")
+                        self.data_dir = pathlib.Path("/Amdesp/data/")
+                        self.label_dir = self.data_dir / "Parcelforce Labels"
+                        self.Json_File = self.data_dir / "AmShip.json"
+                        self.xml_file = self.data_dir.joinpath('AmShip.xml')
+                        self.log_file = self.data_dir.joinpath("AmLog.json")
+                        self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
+                        pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
+                                                                                 exist_ok=True)  # make the labels dirs (and parents)
+
+                self.fields = FieldsCnfg()
+                self.paths = PathsConfig()
+                self.dbay = DespatchConfig()
+
+        self.cnfg = Config()
+        
+        '''
+
+'''
+  # def hire_dict_from_xml(self, xml):
+    #     hire_dict = {}
+    #     tree = ET.parse(xml)
+    #     root = tree.getroot()
+    #     fields = root[0][2]
+    #     customer = root[0][3].text  # debug
+    #     for field in fields:
+    #         k = field[0].text
+    #         if "Number" in k:
+    #             v = v.replace(",", "")
+    #         v = field[1].text
+    #         if v:
+    #             hire_dict.update({k: v})
+    #     hire_dict.update({'customer': customer})
+    #     self.hire_dict = self.clean_xml_hire(hire_dict)
+    #     print("Xml hire with", len(hire_dict), "fields imported")
+    #     # return hire_dict
+
+    # def make_hire(self, config):
+    #     self.config = config
+    #     hire_dict = {}
+    #     tree = ET.parse(self.cnfg.paths.xml_file)
+    #     root = tree.getroot()
+    #     fields = root[0][2]
+    #     customer = root[0][3].text  # debug
+    #     for field in fields:
+    #         k = field[0].text
+    #         v = field[1].text
+    #         if v:
+    #             if "Number" in k:
+    #                 v = v.replace(",", "")
+    #             hire_dict.update({k: v})
+    #     hire_dict.update({'customer': customer})
+    #     hire_dict = self.clean_xml_hire(hire_dict)
+    #     print("Xml hire with", len(hire_dict), "fields imported")
+    # 
+    #     self.oHire = Hire(hire_dict)
+    #     self.oHire.ship_hire()
+    
+    '''

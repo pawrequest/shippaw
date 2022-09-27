@@ -1,38 +1,14 @@
-import os
-import pathlib
-
-from pyexcel_ods3 import get_data
-
-from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-
-line = '-' * 100
-
 ####  PATHS ########
-DIR_ROOT = pathlib.Path("/Amdesp")
-DIR_DATA = pathlib.Path("/Amdesp/data/")
-pathlib.Path(DIR_DATA / "Parcelforce Labels").mkdir(parents=True, exist_ok=True)  # make the labels dirs (and parents)
-CONFIG_PATH = {
-    'DIR_LABEL': DIR_DATA / "Parcelforce Labels",
-    'JSONFILE': DIR_DATA / "AmShip.json",
-    'XMLFILE': DIR_DATA.joinpath('AmShip.xml'),
-    'LOGFILE': DIR_DATA.joinpath("AmLog.json"),
-    'CONFIG_FILE': DIR_DATA.joinpath("AmDespConfig.Ods"),
-}
-CONFIG_FIELD = {
-    'EXPORT_EXCLUDE_KEYS': ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return'],
-    'SHIPFIELDS': ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
-                   "deliveryPostcode", "sendOutDate", "referenceNumber"],
-    'HIREFIELDS': ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
-                   'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
-                   'customer']}
+# DIR_ROOT = pathlib.Path("/Amdesp")
+# DIR_DATA = pathlib.Path("/Amdesp/data/")
+# pathlib.Path(DIR_DATA / "Parcelforce Labels").mkdir(parents=True, exist_ok=True)  # make the labels dirs (and parents)
 
 ## Despatch Bay
-API_USER = os.getenv("DESPATCH_API_USER")
-API_KEY = os.getenv("DESPATCH_API_KEY")
-SENDER_ID = "5536"  # should be env var?
-CLIENT = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
-SENDER = CLIENT.sender(address_id=SENDER_ID)
 
+
+
+
+'''
 ## get class schema
 CONFIG_CLASS = {}
 CONFIG_RADIO = {}
@@ -49,7 +25,10 @@ def get_product_attrs():
             k = field[0]
             v = field[1:]
             CONFIG_CLASS.update({k: v})
+
+
 get_product_attrs()
+
 
 def get_radios():
     global CONFIG_RADIO
@@ -67,3 +46,39 @@ def get_radios():
 
 
 get_radios()
+
+print()
+
+# CONFIG_PATH = {
+#     'DIR_LABEL': DIR_DATA / "Parcelforce Labels",
+#     'JSONFILE': DIR_DATA / "AmShip.json",
+#     'XMLFILE': DIR_DATA.joinpath('AmShip.xml'),
+#     'LOGFILE': DIR_DATA.joinpath("AmLog.json"),
+#     'CONFIG_FILE': DIR_DATA.joinpath("AmDespConfig.Ods"),
+# }
+# CONFIG_FIELD = {
+#     'EXPORT_EXCLUDE_KEYS': ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#     'SHIPFIELDS': ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
+#                    "deliveryPostcode", "sendOutDate", "referenceNumber"],
+#     'HIREFIELDS': ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
+#                    'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
+#                    'customer']}
+
+# class CnfgFields:
+#     def __init__(self):
+#         self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#         self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
+#                                 "deliveryPostcode", "sendOutDate", "referenceNumber"]
+#         self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
+#                             'deliveryEmail',
+#                             'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
+#                             'customer']
+#
+# class CnfgPaths:
+#     def __init__(self):
+#         self.DIR_LABEL = DIR_DATA / "Parcelforce Labels",
+#         self.Json_File = DIR_DATA / "AmShip.json",
+#         self.xml_file = DIR_DATA.joinpath('AmShip.xml'),
+#         self.log_file = DIR_DATA.joinpath("AmLog.json"),
+#         self.config_file = DIR_DATA.joinpath("AmDespConfig.Ods"),
+'''

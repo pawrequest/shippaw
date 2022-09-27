@@ -1,12 +1,29 @@
-from python.AmDespClasses import *
-from python.AmDespFuncs import *
+from python.AmDespApp import *
+
+app = App()
+app.make_hire_shipment()
+app.queue_shipment()
+app.book_collection()
+'''
+
+
+from python.AmDespClassesApp import *
+
+app = App()
+app.make_hire_shipment()
+app.queue_shipment()
+app.book_collection()
+
 
 if sys.argv:
     print(sys.argv[0])
     xmlfile = sys.argv[0]
 else:
     xmlfile=CONFIG_PATH['XMLFILE']
+'''
 
+'''
+# pre-app
 ##########################################
 # working
 hiredict = hire_from_xml(CONFIG_PATH['XMLFILE'])
@@ -18,6 +35,10 @@ ship_hire(hiredict)
 # # pro = Product()
 # rad=Radio(pd)
 # print (rad)
+'''
+
+
+
 
 
 
