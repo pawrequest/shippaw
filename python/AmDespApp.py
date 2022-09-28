@@ -1,5 +1,5 @@
 import win32com.client as win32
-= win32.Dispatch('outlook.application')
+# = win32.Dispatch('outlook.application')
 import os
 import pathlib
 import xml.etree.ElementTree as ET

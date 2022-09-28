@@ -1,11 +1,16 @@
 from python.AmDespApp import *
 
-app = App()
 
-app.import_xml()
-app.queue_shipment()
-app.book_collection()
+def main():
 
+    app = App()
+
+    app.import_xml()
+    app.queue_shipment()
+    app.book_collection()
+
+if __name__ == '__main__':
+    main()
 
 '''
 

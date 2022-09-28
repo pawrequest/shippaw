@@ -916,9 +916,28 @@ Sub Form_OnClick(ControlId)
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   pss                 '''''''''''''''''''''''''''''''
         Case "CommandButton19"
-        ' book in hire, all ok'
-            Dim ui
-            ui = MsgBox("unpacked by paul, all ok?",3)
+                ' pack
+            Dim ui, uii
+            ui = MsgBox("Packed now by paul?",4)
+            if ui = 6 Then
+            Form.Field("Packed By").Value = "PR"
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            Form.Save
+            Else
+            uii = MsgBox("Packed now?",4)
+            if uii = 6 Then
+            Form.Field("Packed Date").Value = "today"
+            Form.Field("Packed Time").Value = "now"
+            Form.Field("Status").Value = "Booked in and packed"
+            End if
+            End if
+
+        Case "CommandButton20"
+
+        ' Unpack'
+            ui = MsgBox("unpacked by paul, all ok?",4)
             if ui = 6 Then
 			Form.Field("Unpacked By").Value = "PR"
 			Form.Field("Unpacked Date").Value = "today"
@@ -927,10 +946,18 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 			Form.Field("Closed").Value = 1
 			Form.Save
+			Else
+			uii = MsgBox("Unpacked by Paul?",4)
+			if uii = 6 Then
+			Form.Field("Unpacked By").Value = "PR"
+			Form.Field("Unpacked Date").Value = "today"
+			Form.Field("Unpacked Time").Value = "now"
+			Form.Field("Status").Value = "Returned with problems"
+			Form.Field("Actual Return Date").Value = "today"
+			End if
 			End if
 
-'        Case "CommandButton19"
-'         ' book in hire, PR'
+			'         ' book in hire, PR'
 '             Dim ui, uii
 '             ui = MsgBox("unpacked by paul, all ok?",3)
 '             if ui = 6 Then
@@ -949,10 +976,8 @@ Sub Form_OnClick(ControlId)
 ' 			Form.Field("Status").Value = "Returned with problems"
 ' 			End if
 
-
-
-        Case "CommandButton20"
-		    Dim python_exe, python_script, commence_wrapper, xmlfile
+        Case "CommandButton21"
+            Dim python_exe, python_script, commence_wrapper, xmlfile
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
@@ -965,18 +990,6 @@ Sub Form_OnClick(ControlId)
             Msgbox "RUN PYTHON"
             oShell.run currentCommand,1,true
 
-
-        Case "CommandButton21"
-        ' packed
-            Dim uii
-            ui = MsgBox("unpacked by paul, all ok?",3)
-            if uii = 6 Then
-            Form.Field("Packed By").Value = "PR"
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            Form.Save
-            End if
 
 
 ''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
