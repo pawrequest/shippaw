@@ -344,7 +344,7 @@ class Shipment:  # taking an xmlimporter object
               self.shippingCost, '\n', line, '\n')
         choice = " "
         while True:
-            choice = input('- Add to despatchbay [Q]ueue, [R]estart, or [E]xit\n')
+            choice = input('- [Q]ueue shipment in DespatchBay, [R]estart, or [E]xit\n')
             choice = str(choice[0].lower())
             if choice[0] != "q":  # not quote
                 if choice != 'r':  # not restart
@@ -383,7 +383,7 @@ class Shipment:  # taking an xmlimporter object
                 else:  # restart
                     if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
                         print("Restarting")
-                        self.queue()  # debug does it run process? or soemthing else
+                        App.queue_shipment()  # debug does it run process? or soemthing else
                     continue  # not restarting
             elif choice == 'b':
                 self.client.book_shipments(self.addedShipment)
@@ -453,7 +453,7 @@ class XmlImporter:
         elif category == "Customer":
             print("Xml is a customer record")
             customer = fields[0][1].text
-            ship_dict['send Out Date'] = datetime.today().strftime('%Y-%m-%d')
+            ship_dict['send Out Date'] = datetime.today().strftime('%d/%m/%Y') # datedebug sets customer shipment send date to a string of today formatted like hire
             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
 
         else:
@@ -464,7 +464,10 @@ class XmlImporter:
         if 'boxes' not in ship_dict.keys():
             ship_dict['boxes'] = 0
         for k, v in ship_dict.items():
-            setattr(self, k, v)
+            if k == "sendOutDate":
+                setattr(self, k, datetime.strptime(v, '%d/%m/%Y')) #datedebug
+            else:
+                setattr(self, k, v)
         print("making shipment object")
         App.shipment = Shipment(self)  # object
 
@@ -474,6 +477,7 @@ class XmlImporter:
     def clean_xml(self, dict) -> dict:
         newdict = {}
         if "Send Out Date" not in dict.keys():
+            print("No date - added today)")
             dict['Send Out Date'] = datetime.today().strftime('%d/%m/%Y')
         for k, v in dict.items():
 
@@ -498,14 +502,15 @@ class XmlImporter:
                     v = float(v)
                 # if "Number" in k: # elsewhere?
                 #     v = v.replace(",", "")
-                if k == "sendOutDate":
-                    # v = datetime.strftime(v, '%Y-%m-%d')   #debug wtf?
-                    # # v = datetime.strptime(v, '%Y%m-%d').date()
-                    v = datetime.strptime(v, 'Xd/%m/%Y').date()
+                # if k == "sendOutDate":
+                # v = datetime.strftime(v, '%Y-%m-%d')   #debug wtf?
+                # # v = datetime.strptime(v, '%Y%m-%d').date()
+                # v = datetime.strptime(v, '%d/%m/%Y').date()
 
             newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
         return newdict
+
 
 # product classes
 '''
