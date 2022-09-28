@@ -1,3 +1,5 @@
+import win32com.client as win32
+= win32.Dispatch('outlook.application')
 import os
 import pathlib
 import xml.etree.ElementTree as ET
@@ -69,6 +71,7 @@ class App:  # put here functions to be directly called by user interface
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.val_address()  # queries DB address database
+        self.shipment.check_address() # queries DB address database
         self.shipment.ammend_address()  # check and / or change the address
         self.shipment.make_request()  # make a shipment request
         self.shipment.queue()
@@ -254,7 +257,7 @@ class Shipment:  # taking an xmlimporter object
             self.addressObject = address_object
         return self
 
-    def ammend_address(self):
+    def check_address(self):
         if self.addressObject:
             ui = input(
                 f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
@@ -262,15 +265,25 @@ class Shipment:  # taking an xmlimporter object
                 return
         else:
             print("NO ADDRESS OBJECT")
-        candidates = self.client.get_address_keys_by_postcode(self.deliveryPostcode)
+
+    def ammend_address(self, pc=None):
+        if not pc:
+            pc = self.deliveryPostcode
+        candidates = self.client.get_address_keys_by_postcode(pc)
+
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
         selection = ""
         while True:
-            selection = input('\n- Enter a candidate number, [0] to exit \n')
+            selection = input('\n- Enter a candidate number, [0] to exit, [N] to search for a new address \n')
             if selection.isnumeric():
                 selection = int(selection)
             else:
+                if selection[0].lower() == "n":
+                    if self.search_address():
+                        return
+                        # get address from postcode and number, or postcode and list
+                    ...
                 continue
             if selection == 0:
                 if str(input("[e]xit?"))[0].lower() == "e":
@@ -282,9 +295,40 @@ class Shipment:  # taking an xmlimporter object
                 continue
             break
         selected_key = candidates[int(selection) - 1].key
+        self.address_key = selected_key
         self.addressObject = self.client.get_address_by_key(selected_key)
         print(f"- New Address: {self.addressObject.company_name},{self.addressObject.street}")
-        # return
+        return
+
+    def search_address(self):
+        pc = input("Enter postcode\n")
+        ui=input("[L]ist addresses at postcode, or [E]nter a search term\n")
+        if ui[0].lower() == 'l':
+            self.ammend_address(pc)
+            return
+        elif ui[0].lower() == ['e']:
+            s_string = input("Enter search string - number, or firstline, or business\n")
+
+        else:
+            self.search_address()
+        try:
+            address = self.client.find_address(pc, s_string)
+        except:
+            print("No results - try again\n")
+            self.search_address()
+        else:
+            ui = ""
+            while ui not in ['y', 'n']:
+                ui = input(f"Is {address} correct? [Y]es or [N]o, or [E]xit\n")
+                if ui[0].lower() == 'y':
+                    self.addressObject = address
+                    return
+                elif ui[0].lower() == 'n':
+                    self.search_address()
+                elif ui[0].lower() == "e":
+                    if input("really [E]xit?") == 'e':
+                        exit()
+                    self.search_address()
 
     def make_request(self):
         print("MAKING REQUEST")
@@ -510,6 +554,24 @@ class XmlImporter:
             newdict.update({k: v})
         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
         return newdict
+
+# def emailer():
+#
+#     mail = outlook.CreateItem(0)
+#     mail.Subject = 'Currencies Exchange Prices as of ' + datetime.now().strftime('%#d %b %Y %H:%M')
+#     mail.To = "yeung.cyda@gmail.com"
+#     attachment = mail.Attachments.Add(os.getcwd() + "\\Currencies.png")
+#     attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "currency_img")
+#     mail.HTMLBody = r"""
+#     Dear Carrie,<br><br>
+#     The highlighted of currencies exchange prices is as follow:<br><br>
+#     <img src="cid:currency_img"><br><br>
+#     For more details, you can check the table in the Excel file attached.<br><br>
+#     Best regards,<br>
+#     Yeung
+#     """
+#     mail.Attachments.Add(os.getcwd() + "\\Currencies.xlsx")
+#     mail.Send()
 
 
 # product classes
