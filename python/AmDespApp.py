@@ -62,6 +62,7 @@ CNFG = Config()
 
 class App:  # put here functions to be directly called by user interface
     def __init__(self):  # make app
+        self.shipment = None
         self.client = CNFG.dbay_cnfg.client
         self.sender = CNFG.dbay_cnfg.sender
 
@@ -79,6 +80,20 @@ class App:  # put here functions to be directly called by user interface
 
     def book_collection(self):
         self.shipment.book_collection()
+
+
+    def log_json(self):
+        # export from object attrs?
+        export_dict = {}
+        for field in CNFG.fields.export_fields:
+            val = getattr(self.shipment, field)
+            export_dict.update({field : val})
+        export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
+        # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
+        with open(CNFG.paths.log_file, 'w') as f:
+            json.dump(export_dict, f, sort_keys=True)
+            print("Data dumped to json:", export_dict)
+            print(f"{export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
@@ -464,19 +479,20 @@ class Shipment:  # taking an xmlimporter object
 
                 exit()
 
-    def log_json(self):
-        # export from object attrs?
-        export_dict = {}
-        for field in CNFG.fields.export_fields:
-            val = getattr(self, field)
-            export_dict.update({field : val})
-        export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
-        # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-        with open(CNFG.paths.log_file, 'w') as f:
-            json.dump(export_dict, f, sort_keys=True)
-            print("Data dumped to json:", export_dict)
-            print(f"{export_dict =}")
-
+#  MOVED TO APP
+# def log_json(self):
+#         # export from object attrs?
+#         export_dict = {}
+#         for field in CNFG.fields.export_fields:
+#             val = getattr(self, field)
+#             export_dict.update({field : val})
+#         export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
+#         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
+#         with open(CNFG.paths.log_file, 'w') as f:
+#             json.dump(export_dict, f, sort_keys=True)
+#             print("Data dumped to json:", export_dict)
+#             print(f"{export_dict =}")
+#
 
 class XmlToShipment:
     def __init__(self):
