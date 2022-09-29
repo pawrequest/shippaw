@@ -13,8 +13,8 @@ def vbtest():
     print ("SOMETHNG")
 
 if __name__ == '__main__':
-    # main()
-    vbtest()
+    main()
+    # vbtest()
 
 
 

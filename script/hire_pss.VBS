@@ -916,8 +916,8 @@ Sub Form_OnClick(ControlId)
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' '''''''''   pss                 '''''''''''''''''''''''''''''''
 '
-       Case "CommandButton19"
-       ' generic packer'
+        Case "CommandButton19"
+        ' generic packer'
             Dim packedBy
             Form.Field("Packed Date").Value = "today"
             Form.Field("Packed Time").Value = "now"
@@ -946,9 +946,14 @@ Sub Form_OnClick(ControlId)
         Else
             Form.Field("Status").Value = "Returned with problems"
             missing = InputBox("What was missing?", "What's Missing?")
-            if MsgBox("Add missing items to return notes, save, and exit? Items to be added to return notes:" & missing,4) = 6 Then
-                Form.Field("Return Notes").Value = Form.Field("Return Notes").Value & vbCrLf & vbCrLf & "Missing items:" & vbCrLf & missing
-                Form.Save
+            if MsgBox ("Confirm list to add to return notes:" & vbNewLine & missing, 4) = 6 Then
+                Form.Field("Return Notes").Value = Form.Field("Return Notes").Value & vbNewLine & missing
+                if MsgBox("Email " & Form.Field("Delivery Email").Value & "with missing kit list?",4) = 6 Then
+                    EmailMissingKit()
+                End if
+                if MsgBox("Items added to return notes:" & vbNewLine & missing & vbNewLine & "Save, and exit?",4) = 6 Then
+                    Form.Save
+                End if
             End if
 
         End if
@@ -965,25 +970,9 @@ Sub Form_OnClick(ControlId)
 '         msgbox pyResult.ReadAll
 
 
-        Case "CommandButton21"
-        ' AmDesp'
-            Dim python_exe, python_script, commence_wrapper, xmlfile, pyResult
-            python_exe = "C:\AmDesp\python\bin\python.exe"
-            python_script = "C:\AmDesp\AmDespMain.py"
-            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-		    ExportItemDetailForm(xmlfile)
-            Dim oShell, currentCommand, my_command
-            SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-            currentCommand = "cmd /c " & python_exe & " " & python_script '  & " " & xmlfile'
-            Msgbox "RUN PYTHON"
-            oShell.run currentCommand,1,true
-            MsgBox(oShell.StdOut)
-'
 '         Case "CommandButton21"
 '         ' AmDesp'
-'             Dim python_exe, python_script, commence_wrapper, xmlfile
+'             Dim python_exe, python_script, commence_wrapper, xmlfile, pyResult
 '             python_exe = "C:\AmDesp\python\bin\python.exe"
 '             python_script = "C:\AmDesp\AmDespMain.py"
 '             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
@@ -992,23 +981,48 @@ Sub Form_OnClick(ControlId)
 '             Dim oShell, currentCommand, my_command
 '             SET oShell = CreateObject("Wscript.Shell")
 ' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-'             currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'             currentCommand = "cmd /c " & python_exe & " " & python_script '  & " " & xmlfile'
 '             Msgbox "RUN PYTHON"
 '             oShell.run currentCommand,1,true
+'             MsgBox(oShell.StdOut)
+'
+        Case "CommandButton21"
+        ' AmDesp'
+            Dim python_exe, python_script, commence_wrapper, xmlfile
+            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_script = "C:\AmDesp\AmDespMain.py"
+            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+            xmlfile = "C:\AmDesp\data\AmShip.xml"
+		    ExportItemDetailForm(xmlfile)
+            Dim oShell, currentCommand, my_command
+            SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+            Msgbox "RUN PYTHON"
+            oShell.run currentCommand,1,true
 
-' found code to send email'
-' Dim olApp
-' Dim objMailItem
+        Case "CommandButton22"
+        ' found code to send email'
+        if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
+        EmailMissingKit()
+        End if
+'             Dim olApp
+'             Dim objMailItem
 '
-' Set olApp = CreateObject("Outlook.Application")
-' Set objMailItem = olApp.CreateItem(0)
-' objMailItem.Subject = "Test"
-' objMailItem.To = "someone@microsoft.com"
-' objMailItem.Body = "Test"
-' objMailItem.Send
-'
-' Set olApp = Nothing
-' Set objMailItem = Nothing
+'             Set olApp = CreateObject("Outlook.Application")
+'             Set objMailItem = olApp.CreateItem(0)
+'             objMailItem.Subject = "Radio Hire - Missing Kit"
+'             objMailItem.To = Form.Field("Delivery Email").Value
+'             objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+'                                vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
+'                                vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
+'                                "Kind regards," & vbNewLine & "paul" & vbNewLine & _
+'                                vbNewLine & "MISSING KIT:" & vbNewLine & _
+'                                Form.Field("Return Notes").value
+'             objMailItem.Send
+'             MsgBox("EMAILED")
+'             Set olApp = Nothing
+'             Set objMailItem = Nothing
 
 
 
@@ -1021,6 +1035,28 @@ End Sub
 
 
 '''''''''''''''''''''''''''''''''''''''''''''
+'''''''''' pss email func''''''''''''''
+Sub EmailMissingKit() ' emails return notes should change to missing.
+    ' found code to send email'
+        Dim olApp
+        Dim objMailItem
+
+        Set olApp = CreateObject("Outlook.Application")
+        Set objMailItem = olApp.CreateItem(0)
+        objMailItem.Subject = "Radio Hire - Missing Kit"
+        objMailItem.To = Form.Field("Delivery Email").Value
+        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+                           vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
+                           vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
+                           "Kind regards," & vbNewLine & "paul" & vbNewLine & _
+                           vbNewLine & "MISSING KIT:" & vbNewLine & _
+                           Form.Field("Return Notes").value
+        objMailItem.Send
+        MsgBox("EMAILED")
+        Set olApp = Nothing
+        Set objMailItem = Nothing
+End Sub
+
 ''''''''' arno-pss function to export item field
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
