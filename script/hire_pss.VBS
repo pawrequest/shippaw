@@ -954,9 +954,20 @@ Sub Form_OnClick(ControlId)
         End if
 
 
+'         Case "CommandButton21"
+'         Dim pyr, gothen, pyshell, xmlfile, pyOperation, pyResult
+'         xmlfile = "C:\AmDesp\data\AmShip.xml"
+'         ExportItemDetailForm(xmlfile)
+'         Set pyShell = CreateObject("Wscript.Shell")
+'         gothen = "python ""C:\AmDesp\python\AmDespApp.py""" & " " & xmlfile
+'         Set pyOperation = pyShell.Exec(gothen)
+'         Set pyResult = pyOperation.StdOut
+'         msgbox pyResult.ReadAll
+
+
         Case "CommandButton21"
         ' AmDesp'
-            Dim python_exe, python_script, commence_wrapper, xmlfile
+            Dim python_exe, python_script, commence_wrapper, xmlfile, pyResult
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
@@ -965,9 +976,25 @@ Sub Form_OnClick(ControlId)
             Dim oShell, currentCommand, my_command
             SET oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+            currentCommand = "cmd /c " & python_exe & " " & python_script '  & " " & xmlfile'
             Msgbox "RUN PYTHON"
             oShell.run currentCommand,1,true
+            MsgBox(oShell.StdOut)
+'
+'         Case "CommandButton21"
+'         ' AmDesp'
+'             Dim python_exe, python_script, commence_wrapper, xmlfile
+'             python_exe = "C:\AmDesp\python\bin\python.exe"
+'             python_script = "C:\AmDesp\AmDespMain.py"
+'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'             xmlfile = "C:\AmDesp\data\AmShip.xml"
+' 		    ExportItemDetailForm(xmlfile)
+'             Dim oShell, currentCommand, my_command
+'             SET oShell = CreateObject("Wscript.Shell")
+' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+'             currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'             Msgbox "RUN PYTHON"
+'             oShell.run currentCommand,1,true
 
 ' found code to send email'
 ' Dim olApp

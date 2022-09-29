@@ -1,0 +1,18 @@
+{
+  "addedShipment": "100786-20241388",
+  "boxes": 2,
+  "collectionBooked": true,
+  "customer": "Police Now",
+  "deliveryAddress": "203 BLACKFRIARS ROAD\nLONDON",
+  "deliveryContact": "Harry Brown",
+  "deliveryEmail": "harry.brown@policenow.org.uk",
+  "deliveryName": "Police Now",
+  "deliveryPostcode": "SE1 8NJ",
+  "deliveryTel": "07548 836423",
+  "referenceNumber": 36812,
+  "sendOutDate": "16/10/2022",
+  "trackingNumbers": [
+    "PBKQ9620465001",
+    "PBKQ9620465002"
+  ]
+}

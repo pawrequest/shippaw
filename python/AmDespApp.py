@@ -75,6 +75,7 @@ class App:  # put here functions to be directly called by user interface
         self.shipment.check_address() # queries DB address database, prompts user to confirm match or call ammend_address()
         self.shipment.make_request()  # make a shipment request
         self.shipment.queue()
+        self.log_json()
 
     def book_collection(self):
         self.shipment.book_collection()
@@ -459,7 +460,7 @@ class Shipment:  # taking an xmlimporter object
                 self.labelDownloaded = True
                 print(
                     f"Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}")
-                self.log_json()
+
 
                 exit()
 
