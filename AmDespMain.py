@@ -1,4 +1,4 @@
-from python.AmDespApp import *
+from python.AmDespApp import App
 
 
 def main():
@@ -8,9 +8,17 @@ def main():
     app.import_xml()
     app.queue_shipment()
     app.book_collection()
+    return "SOME TOTAL SHIRMINGTION"
+
+def vbtest():
+    return "YESITINGZANAT"
 
 if __name__ == '__main__':
     main()
+    # vbtest()
+
+
+
 
 '''
 

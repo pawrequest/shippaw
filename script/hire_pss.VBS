@@ -914,69 +914,48 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   pss                 '''''''''''''''''''''''''''''''
-        Case "CommandButton19"
-                ' pack
-            Dim ui, uii
-            ui = MsgBox("Packed now by paul?",4)
-            if ui = 6 Then
-            Form.Field("Packed By").Value = "PR"
+' '''''''''   pss                 '''''''''''''''''''''''''''''''
+'
+       Case "CommandButton19"
+       ' generic packer'
+            Dim packedBy
             Form.Field("Packed Date").Value = "today"
             Form.Field("Packed Time").Value = "now"
             Form.Field("Status").Value = "Booked in and packed"
-            Form.Save
-            Else
-            uii = MsgBox("Packed now?",4)
-            if uii = 6 Then
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
+            packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
+            Form.Field("Packed By").Value = packedBy
+            if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
+                Form.Save
             End if
-            End if
+
 
         Case "CommandButton20"
+        ' generic unpacker'
+        Dim unpackedBy, missing, newReturn
+        unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
+        Form.Field("Unpacked Date").Value = "today"
+        Form.Field("Unpacked Time").Value = "now"
+        Form.Field("Actual Return Date").Value = "today"
+        Form.Field("Unpacked By").Value = unpackedBy
+        if MsgBox("all ok?",4) = 6 Then
+            Form.Field("Status").Value = "Returned all OK"
+            if MsgBox("Close Hire and exit?",4) = 6 Then
+                Form.Field("Closed").Value = 1
+                Form.Save
+            End if
+        Else
+            Form.Field("Status").Value = "Returned with problems"
+            missing = InputBox("What was missing?", "What's Missing?")
+            if MsgBox("Add missing items to return notes, save, and exit? Items to be added to return notes:" & missing,4) = 6 Then
+                Form.Field("Return Notes").Value = Form.Field("Return Notes").Value & vbCrLf & vbCrLf & "Missing items:" & vbCrLf & missing
+                Form.Save
+            End if
 
-        ' Unpack'
-            ui = MsgBox("unpacked by paul, all ok?",4)
-            if ui = 6 Then
-			Form.Field("Unpacked By").Value = "PR"
-			Form.Field("Unpacked Date").Value = "today"
-			Form.Field("Unpacked Time").Value = "now"
-			Form.Field("Status").Value = "Returned all OK"
-			Form.Field("Actual Return Date").Value = "today"
-			Form.Field("Closed").Value = 1
-			Form.Save
-			Else
-			uii = MsgBox("Unpacked by Paul?",4)
-			if uii = 6 Then
-			Form.Field("Unpacked By").Value = "PR"
-			Form.Field("Unpacked Date").Value = "today"
-			Form.Field("Unpacked Time").Value = "now"
-			Form.Field("Status").Value = "Returned with problems"
-			Form.Field("Actual Return Date").Value = "today"
-			End if
-			End if
+        End if
 
-			'         ' book in hire, PR'
-'             Dim ui, uii
-'             ui = MsgBox("unpacked by paul, all ok?",3)
-'             if ui = 6 Then
-' 			Form.Field("Unpacked By").Value = "PR"
-' 			Form.Field("Unpacked Date").Value = "today"
-' 			Form.Field("Unpacked Time").Value = "now"
-' 			Form.Field("Status").Value = "Returned all OK"
-' 			Form.Field("Actual Return Date").Value = "today"
-' 			Form.Field("Closed").Value = 1
-' 			Form.Save
-' 			ElseIf uii = MsgBox("unpacked by paul?",3)
-' 			if uii = 6 Then
-' 			Form.Field("Unpacked By").Value = "PR"
-' 			Form.Field("Unpacked Date").Value = "today"
-' 			Form.Field("Unpacked Time").Value = "now"
-' 			Form.Field("Status").Value = "Returned with problems"
-' 			End if
 
         Case "CommandButton21"
+        ' AmDesp'
             Dim python_exe, python_script, commence_wrapper, xmlfile
             python_exe = "C:\AmDesp\python\bin\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
@@ -989,6 +968,21 @@ Sub Form_OnClick(ControlId)
             currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
             Msgbox "RUN PYTHON"
             oShell.run currentCommand,1,true
+
+' found code to send email'
+' Dim olApp
+' Dim objMailItem
+'
+' Set olApp = CreateObject("Outlook.Application")
+' Set objMailItem = olApp.CreateItem(0)
+' objMailItem.Subject = "Test"
+' objMailItem.To = "someone@microsoft.com"
+' objMailItem.Body = "Test"
+' objMailItem.Send
+'
+' Set olApp = Nothing
+' Set objMailItem = Nothing
+
 
 
 

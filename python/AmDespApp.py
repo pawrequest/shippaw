@@ -1,5 +1,4 @@
-import win32com.client as win32
-# = win32.Dispatch('outlook.application')
+import json
 import os
 import pathlib
 import xml.etree.ElementTree as ET
@@ -27,6 +26,8 @@ class Config:
 
         class FieldsCnfg:
             def __init__(self):
+                self.export_fields = ["customer", "deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
+                                        "deliveryAddress", "deliveryPostcode", "sendOutDate", "referenceNumber", "trackingNumbers", "addedShipment", "boxes", "collectionBooked" ]
                 self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
                                             'parcels',
                                             'shipment_return']
@@ -65,14 +66,13 @@ class App:  # put here functions to be directly called by user interface
         self.sender = CNFG.dbay_cnfg.sender
 
     def import_xml(self):
-        XmlImporter()
+        XmlToShipment()
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.val_address()  # queries DB address database
-        self.shipment.check_address() # queries DB address database
-        self.shipment.ammend_address()  # check and / or change the address
+        self.shipment.check_address() # queries DB address database, prompts user to confirm match or call ammend_address()
         self.shipment.make_request()  # make a shipment request
         self.shipment.queue()
 
@@ -258,13 +258,16 @@ class Shipment:  # taking an xmlimporter object
         return self
 
     def check_address(self):
-        if self.addressObject:
-            ui = input(
-                f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
-            if ui[0].lower() == "c":
-                return
-        else:
-            print("NO ADDRESS OBJECT")
+        while True:
+            if self.addressObject:
+                ui = input(
+                    f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
+                if ui[0].lower() == "c":
+                    return
+                else:
+                    self.ammend_address()
+            else:
+                print("NO ADDRESS OBJECT")
 
     def ammend_address(self, pc=None):
         if not pc:
@@ -389,25 +392,27 @@ class Shipment:  # taking an xmlimporter object
         choice = " "
         while True:
             choice = input('- [Q]ueue shipment in DespatchBay, [R]estart, or [E]xit\n')
-            choice = str(choice[0].lower())
-            if choice[0] != "q":  # not quote
-                if choice != 'r':  # not restart
-                    if choice != 'e':  # not exit either
-                        continue  # try again
-                    else:  # exit
-                        if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
-                            self.log_json()
-                            exit()
-                        continue
-                else:  # restart
-                    if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
-                        print("Restarting")
-                        self.queue()  # debug does it run process? or soemthing else
-                    continue  # not restarting
-            elif choice == 'q':
-                self.addedShipment = self.client.add_shipment(self.shipmentRequest)
-                print("Adding Shipment to Despatchbay Queue")
-                return
+            if choice:
+                choice = str(choice[0].lower())
+                if choice[0] != "q":  # not quote
+                    if choice != 'r':  # not restart
+                        if choice != 'e':  # not exit either
+                            continue  # try again
+                        else:  # exit
+                            if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
+                                self.log_json()
+                                exit()
+                            continue
+                    else:  # restart
+                        if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
+                            print("Restarting")
+                        continue  # not restarting
+                elif choice == 'q':
+                    self.addedShipment = self.client.add_shipment(self.shipmentRequest)
+                    print("Adding Shipment to Despatchbay Queue")
+                    return
+            else:
+                continue
 
     def book_collection(self):
         # CNFG = config
@@ -459,22 +464,20 @@ class Shipment:  # taking an xmlimporter object
                 exit()
 
     def log_json(self):
-        pass
         # export from object attrs?
-
-        # export_dict = {}
-        # export_keys = [k for k in dir(shipment) if
-        #                not k.startswith('__') and k not in EXPORT_EXCLUDE_KEYS and getattr(shipment, k)]
-        #
+        export_dict = {}
+        for field in CNFG.fields.export_fields:
+            val = getattr(self, field)
+            export_dict.update({field : val})
+        export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-        # for key in export_keys:
-        #     export_dict.update({key: getattr(shipment, key)})
-        # with open(DIR_DATA / 'AmShip.json', 'w') as f:
-        #     json.dump(export_dict, f, sort_keys=True)
-        #     print("Data dumped to json:", export_keys)
+        with open(CNFG.paths.log_file, 'w') as f:
+            json.dump(export_dict, f, sort_keys=True)
+            print("Data dumped to json:", export_dict)
+            print(f"{export_dict =}")
 
 
-class XmlImporter:
+class XmlToShipment:
     def __init__(self):
         print("XML IMPORTER ACTIVATED")
         ship_dict = {}
