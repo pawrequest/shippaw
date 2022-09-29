@@ -917,20 +917,69 @@ Sub Form_OnClick(ControlId)
 ' '''''''''   pss                 '''''''''''''''''''''''''''''''
 '
         Case "CommandButton19"
-        ' generic packer'
-            Dim packedBy
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
-            Form.Field("Packed By").Value = packedBy
-            if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
-                Form.Save
-            End if
+            PackHire()
 
 
         Case "CommandButton20"
-        ' generic unpacker'
+            UnpackHire()
+
+        Case "CommandButton21"
+            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
+                ShipHire("C:\AmDesp\data\AmShip.xml")
+            End if
+
+        Case "CommandButton22"
+        ' Email customer about missing kit
+            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
+                EmailMissingKit()
+            End if
+
+        Case "CommandButton23"
+        ' Send upcoming hire email'
+            if MsgBox("Send email about upcoming shipment?",4) = 6 Then
+                EmailSendOut()
+           End if
+
+
+''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    End Select
+End Sub
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+'''''''''' pss email func''''''''''''''
+
+Sub PackHire()
+        Dim packedBy
+        Form.Field("Packed Date").Value = "today"
+        Form.Field("Packed Time").Value = "now"
+        Form.Field("Status").Value = "Booked in and packed"
+        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
+        Form.Field("Packed By").Value = packedBy
+        if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
+            Form.Save
+        End if
+End Sub
+
+Sub ShipHire(xmlfile)
+        ' AmDesp'
+        Dim python_exe, python_script, commence_wrapper
+        python_exe = "C:\AmDesp\python\bin\python.exe"
+        python_script = "C:\AmDesp\AmDespMain.py"
+        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         xmlfile = "C:\AmDesp\data\AmShip.xml"
+        ExportItemDetailForm(xmlfile)
+        Dim oShell, currentCommand, my_command
+        SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+        currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+        Msgbox "RUN PYTHON"
+        oShell.run currentCommand,1,true
+End Sub
+
+Sub UnpackHire()
         Dim unpackedBy, missing, newReturn
         unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
         Form.Field("Unpacked Date").Value = "today"
@@ -957,85 +1006,43 @@ Sub Form_OnClick(ControlId)
             End if
 
         End if
-
-
-'         Case "CommandButton21"
-'         Dim pyr, gothen, pyshell, xmlfile, pyOperation, pyResult
-'         xmlfile = "C:\AmDesp\data\AmShip.xml"
-'         ExportItemDetailForm(xmlfile)
-'         Set pyShell = CreateObject("Wscript.Shell")
-'         gothen = "python ""C:\AmDesp\python\AmDespApp.py""" & " " & xmlfile
-'         Set pyOperation = pyShell.Exec(gothen)
-'         Set pyResult = pyOperation.StdOut
-'         msgbox pyResult.ReadAll
-
-
-'         Case "CommandButton21"
-'         ' AmDesp'
-'             Dim python_exe, python_script, commence_wrapper, xmlfile, pyResult
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'             xmlfile = "C:\AmDesp\data\AmShip.xml"
-' 		    ExportItemDetailForm(xmlfile)
-'             Dim oShell, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-'             currentCommand = "cmd /c " & python_exe & " " & python_script '  & " " & xmlfile'
-'             Msgbox "RUN PYTHON"
-'             oShell.run currentCommand,1,true
-'             MsgBox(oShell.StdOut)
-'
-        Case "CommandButton21"
-        ' AmDesp'
-            Dim python_exe, python_script, commence_wrapper, xmlfile
-            python_exe = "C:\AmDesp\python\bin\python.exe"
-            python_script = "C:\AmDesp\AmDespMain.py"
-            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-		    ExportItemDetailForm(xmlfile)
-            Dim oShell, currentCommand, my_command
-            SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-            Msgbox "RUN PYTHON"
-            oShell.run currentCommand,1,true
-
-        Case "CommandButton22"
-        ' found code to send email'
-        if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
-        EmailMissingKit()
-        End if
-'             Dim olApp
-'             Dim objMailItem
-'
-'             Set olApp = CreateObject("Outlook.Application")
-'             Set objMailItem = olApp.CreateItem(0)
-'             objMailItem.Subject = "Radio Hire - Missing Kit"
-'             objMailItem.To = Form.Field("Delivery Email").Value
-'             objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
-'                                vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
-'                                vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
-'                                "Kind regards," & vbNewLine & "paul" & vbNewLine & _
-'                                vbNewLine & "MISSING KIT:" & vbNewLine & _
-'                                Form.Field("Return Notes").value
-'             objMailItem.Send
-'             MsgBox("EMAILED")
-'             Set olApp = Nothing
-'             Set objMailItem = Nothing
-
-
-
-
-''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    End Select
 End Sub
 
 
 
-'''''''''''''''''''''''''''''''''''''''''''''
-'''''''''' pss email func''''''''''''''
+Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
+        Dim olApp
+        Dim objMailItem
+        Dim returnStr
+        if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
+            MsgBox("CUST RETURNS")
+            returnStr = "You have not pre-paid for return shipping and are required to send the gear back at your expense. Please use a trackable service and send us the tracking details when you have dispatched the shipment."
+        Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
+            MsgBox("WE COLLECT")
+            returnStr = "You have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
+        End if
+
+
+        Set olApp = CreateObject("Outlook.Application")
+        Set objMailItem = olApp.CreateItem(0)
+        objMailItem.Subject = "Radio Hire - upcoming shipment details"
+        objMailItem.To = Form.Field("Delivery Email").Value
+        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+                           vbNewLine & "Thanks for choosing to hire from Amherst. Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & " - please check the following details and contact us urgently if there are discrepancies."& vbNewLine & _
+                           vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
+                           Form.Field("Delivery Contact").Value & vbNewLine & _
+                           Form.Field("Delivery Address").Value & vbNewLine & _
+                           vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
+                           vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
+                           vbNewLine & returnStr & vbNewLine & _
+                           vbNewLine & "Kind regards" & vbNewLine & "Amherst Enterprises" & vbNewLine & "(this email generated automatically)"
+
+        objMailItem.Send
+        MsgBox("EMAILED")
+        Set olApp = Nothing
+        Set objMailItem = Nothing
+End Sub
+
 Sub EmailMissingKit() ' emails return notes should change to missing.
     ' found code to send email'
         Dim olApp
