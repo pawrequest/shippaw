@@ -1,26 +1,3 @@
-if hire:
-    # Send Out Date == str 01/11/2022
-    = leave it alone
-
-if customer:
-no date, so get one
-
-
-
-date formatting
-clean xml
-
-
-156
-        def val_date_init(self):
-            # dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
-            for candidate in self.dates:
-                if candidate.date == datetime.strftime(self.sendOutDate,
-                                                       '%Y-%m-%d'):  # if date object matches send date
-                    self.dateObject = candidate
-                    print(line, '\n',
-                          f"Shipment date for {self.customer} validated - {datetime.strftime(self.sendOutDate, '%A %B %#d')}")
-
 
 '''
 running notes:
@@ -30,12 +7,9 @@ trying to construct classes from external config file, how to assign the name dy
 
 
 # narrative:
-make oHire from xml with method 'makeshipment'
-ship creates a shipment object with oShip
-
-Run AmdespMain
 
 app = App()
+
 app.import_xml()
     XmlImporter()
         element-tree of xml

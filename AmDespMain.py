@@ -5,7 +5,7 @@ def main():
 
     app = App()
 
-    app.import_xml()
+    app.xml_to_shipment()
     app.queue_shipment()
     app.book_collection()
 
