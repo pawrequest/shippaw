@@ -1,8 +1,5 @@
 from dateutil.parser import parse
 
-from config import *
-from python.AmDespFuncs import *
-
 
 class App:  # put here functions to be directly called by user interface
     def __init__(self):  # make app

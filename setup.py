@@ -9,7 +9,7 @@ setuptools.setup(
     author="Despatch Bay",
     author_email="scott.keenan@thesalegroup.co.uk",
     description="Python SDK for the Despatch Bay API v15",
-    install_requires=['suds-py3', 'requests', 'pyautogui'],
+    install_requires=['suds-py3', 'requests', 'pywinauto'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://test.pypi.org/project/despatchbay/",

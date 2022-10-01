@@ -12,7 +12,8 @@ def main():
 
 def programmer():
     prog = ProgrammingAssistant()
-    prog.setup_env()
+    prog.BootUp()
+    ...
 
 def vbtest():
     print ("SOMETHNG")
