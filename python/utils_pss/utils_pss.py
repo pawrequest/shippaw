@@ -2,6 +2,7 @@ import sys
 
 import psutil
 import win32gui
+from pyexcel_ods3 import get_data
 
 
 def printel(*els): # elementtree elements
@@ -12,6 +13,35 @@ def printel(*els): # elementtree elements
         print(el)
         for elem in el.iter():
             print(elem.tag, elem.text)
+
+
+def get_from_ods(wkbook, sheet, headers=True): # takes the name of a sheet in
+    headers = headers
+    wkbook = get_data(wkbook)
+    sheet = sheet
+    rows = wkbook[sheet]
+    rows = [row for row in rows if len(row)>0]
+    if headers:
+        headers = rows[0]
+        body = rows[1:]
+    else:
+        body = rows
+    row_dict = {}
+    for row in body:
+        fields = [field for field in row if len(row)>0]
+        field_dict = {}
+        field_list = []
+        for c, field in enumerate(fields):
+            if headers:
+                # make a dict with headers as keys and fields as values
+                header = headers[c]
+                field_dict.update({header:field})
+            else:
+                # make a list
+                field_list.append(field)
+        row_dict.update({row[0]: field_dict})
+        sheets_dict=row_dict
+    return sheets_dict #, rows # does it need a list of rows?
 
 
 def toPascal(x): #LikeThis

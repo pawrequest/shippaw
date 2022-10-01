@@ -1,4 +1,5 @@
 from python.AmDespApp import App
+from python.Programmer import ProgrammingAssistant
 
 
 def main():
@@ -9,15 +10,16 @@ def main():
     app.queue_shipment()
     app.book_collection()
 
+def programmer():
+    prog = ProgrammingAssistant()
+    prog.setup_env()
+
 def vbtest():
     print ("SOMETHNG")
-
 if __name__ == '__main__':
-    main()
+    # main()
     # vbtest()
-
-
-
+    programmer()
 
 '''
 

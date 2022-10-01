@@ -1,7 +1,3 @@
-from pyexcel_ods3 import get_data
-## classes ##
-
-
 
 
 radios_dict = dict()
@@ -48,7 +44,7 @@ codeplug_fields = [
 ]
 
 
-def get_from_csv():
+def get_from_ods():
     sheets = get_data(r"C:\AmDesp\data\AmDespConfig.ods")
     clarts_dict = dict()
     attrs = sheets['PRODUCT_ATTRS']

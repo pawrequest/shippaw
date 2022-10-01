@@ -60,7 +60,7 @@ class Config:
 CNFG = Config()
 
 
-class App:  # put here functions to be directly called by user interface
+class App:
     def __init__(self):  # make app
         self.shipment = None
         self.client = CNFG.dbay_cnfg.client
