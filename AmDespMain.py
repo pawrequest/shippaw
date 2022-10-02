@@ -7,8 +7,8 @@ def main():
     app = ShippingApp()
 
     app.xml_to_shipment()
-    # app.queue_shipment()
-    # app.book_collection()
+    if app.queue_shipment():
+        app.book_collection()
     app.log_json()
 
 

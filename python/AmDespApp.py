@@ -3,6 +3,7 @@ import os
 import pathlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from pprint import pprint
 
 from dateutil.parser import parse
 
@@ -49,6 +50,7 @@ class Config:
 
         class FieldsCnfg:
             def __init__(self,ods):
+                self.export_fields = None
                 field_config_dict = get_from_ods(ods, FIELD_CONFIG, 'list')
                 for k, v in field_config_dict.items():
                     setattr(self, k, v)
@@ -112,7 +114,10 @@ class ShippingApp:
         self.shipment.val_address()  # queries DB address database
         self.shipment.check_address() # queries DB address database, prompts user to confirm match or call ammend_address()
         self.shipment.make_request()  # make a shipment request
-        self.shipment.queue()
+        if self.shipment.queue():
+            return True
+        else:
+            print(f"Shipment aborted")
 
     def xml_to_ship_dict(self):
         print("XML IMPORTER ACTIVATED")
@@ -201,13 +206,12 @@ class ShippingApp:
             if isinstance(val,datetime):
                 val = datetime.strftime(val, '%d-%m-%Y')
             export_dict.update({field : val})
-        if isinstance(export_dict, datetime):
-            export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
+        # if isinstance(export_dict, datetime):
+        #     export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
         with open(CNFG.paths.log_file, 'w') as f:
             json.dump(export_dict, f, sort_keys=True)
-            print("Data dumped to json:", export_dict)
-            print(f"{export_dict =}")
+            pprint(f"{export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
@@ -531,7 +535,8 @@ class Shipment:  # taking an xmlimporter object
                             continue  # try again
                         else:  # exit
                             if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
-                                exit()
+                                break
+                                # exit()
                             continue
                     else:  # restart
                         if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
