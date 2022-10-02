@@ -12,27 +12,9 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
+
 line = '-' * 100
 
-'''
-class Config:
-    def __init__(self):  
-        self.config_ods = r"C:\AmDesp\data\AmDespConfig.ods"
-        self.rads_w_bat_sers = ['hytera_pd705']
-
-        class RadioConfig:
-            def __init__(self, ods):
-                radios_dict = get_from_ods(ods, 'RADIO_DICT')
-                for radio, properties in radios_dict.items():
-                    setattr(self, radio, properties)
-                # self.radios = get_from_ods(self.config_ods, 'RADIO_DICT')
-                print(f"DSGSDGSDG")
-
-        self.radios = RadioConfig(self.config_ods)
-
-
-PROG_CNFG = Config()
-'''
 
 
 class Config:
@@ -54,25 +36,6 @@ class Config:
                 field_config_dict = get_from_ods(ods, FIELD_CONFIG, 'list')
                 for k, v in field_config_dict.items():
                     setattr(self, k, v)
-                # for row, list in field_config_dict.items():
-                #     setattr(self, row, list[row])for row, list in field_config_dict.items():
-                #     setattr(self, row, list[row])
-                # ...
-                #
-                #
-                # self.export_fields = ["customer", "deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
-                #                         "deliveryAddress", "deliveryPostcode", "sendOutDate", "referenceNumber", "trackingNumbers", "addedShipment", "boxes", "collectionBooked" ]
-                # self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
-                #                             'parcels',
-                #                             'shipment_return']
-                # self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
-                #                     'deliveryEmail',
-                #                     'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
-                #                     'referenceNumber',
-                #                     'customer']
-                # self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
-                #                         "deliveryAddress",
-                #                         "deliveryPostcode", "sendOutDate", "referenceNumber"]
 
         class PathsConfig:
             def __init__(self):
@@ -104,7 +67,7 @@ class ShippingApp:
     #     self.shipment = XmlShipmentObj()
     def xml_to_shipment(self):
         ship_dict = self.xml_to_ship_dict()
-        parsed = ParsedXmlObject(ship_dict)
+        parsed = ShipDictObject(ship_dict)
         self.shipment = Shipment(parsed)
 
 
@@ -597,248 +560,8 @@ class Shipment:  # taking an xmlimporter object
 
                 exit()
 
-#  MOVED TO APP
-# def log_json(self):
-#         # export from object attrs?
-#         export_dict = {}
-#         for field in CNFG.fields.export_fields:
-#             val = getattr(self, field)
-#             export_dict.update({field : val})
-#         export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
-#         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-#         with open(CNFG.paths.log_file, 'w') as f:
-#             json.dump(export_dict, f, sort_keys=True)
-#             print("Data dumped to json:", export_dict)
-#             print(f"{export_dict =}")
-#
-#
-# class XmlToShipment:
-#     def __init__(self):
-#         print("XML IMPORTER ACTIVATED")
-#         ship_dict = {}
-#         tree = ET.parse(CNFG.paths.xml_file)
-#         root = tree.getroot()
-#         fields = root[0][2]
-#         category = root[0][0].text
-#         for field in fields:
-#             k = field[0].text
-#             v = field[1].text
-#             if v:
-#                 if "Number" in k:
-#                     v = v.replace(",", "")
-#                 ship_dict.update({k: v})
-#         if category == "Hire":
-#             print("Xml is a hire record")
-#             customer = root[0][3].text  # debug
-#             ship_dict['id'] = ship_dict['Reference Number']
-#
-#         elif category == "Customer":
-#             print("Xml is a customer record")
-#             customer = fields[0][1].text
-#             ship_dict['send Out Date'] = datetime.today().strftime('%d/%m/%Y') # datedebug sets customer shipment send date to a string of today formatted like hire
-#             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
-#
-#         else:
-#             print("no customer found")
-#             print("ERROR NO CUSTOMER")
-#         ship_dict.update({'customer': customer})
-#         ship_dict = self.clean_xml(ship_dict)
-#         if 'boxes' not in ship_dict.keys():
-#             ship_dict['boxes'] = 0
-#         for k, v in ship_dict.items():
-#             if k == "sendOutDate":
-#                 setattr(self, k, datetime.strptime(v, '%d/%m/%Y')) #datedebug
-#             else:
-#                 setattr(self, k, v)
-#         print("making shipment object")
-#         ShippingApp.shipment = Shipment(self)  # object
-#
-#         # setattr()
-#         print("Xml  with", len(ship_dict), "fields imported")
-#
-#     def clean_xml(self, dict) -> dict:
-#         newdict = {}
-#         if "Send Out Date" not in dict.keys():
-#             print("No date - added today)")
-#             dict['Send Out Date'] = datetime.today().strftime('%d/%m/%Y')
-#         for k, v in dict.items():
-#
-#             # k = unsanitise(k)
-#             k = toCamel(k)
-#
-#             if "deliv" in k:
-#                 if "delivery" not in k:
-#                     k = k.replace('deliv', 'delivery')
-#
-#             if v:
-#                 # v = unsanitise(v)
-#                 if isinstance(v, list):
-#                     v = v[0]
-#                 if v.isnumeric():
-#                     v = int(v)
-#                     if v == 0:
-#                         v = None
-#                 elif v.isalnum():
-#                     v = v.title()
-#                 if 'Price' in k:
-#                     v = float(v)
-#                 # if "Number" in k: # elsewhere?
-#                 #     v = v.replace(",", "")
-#                 # if k == "sendOutDate":
-#                 # v = datetime.strftime(v, '%Y-%m-%d')   #debug wtf?
-#                 # # v = datetime.strptime(v, '%Y%m-%d').date()
-#                 # v = datetime.strptime(v, '%d/%m/%Y').date()
-#
-#             newdict.update({k: v})
-#         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-#         return newdict
 
-#
-# class XmlShipmentObj:
-#     def __init__(self):
-#         print("XML IMPORTER ACTIVATED")
-#         ship_dict = {}
-#         tree = ET.parse(CNFG.paths.xml_file)
-#         root = tree.getroot()
-#         fields = root[0][2]
-#         category = root[0][0].text
-#         for field in fields:
-#             k = field[0].text
-#             v = field[1].text
-#             if v:
-#                 if "Number" in k:
-#                     v = v.replace(",", "")
-#                 ship_dict.update({k: v})
-#         if category == "Hire":
-#             print("Xml is a hire record")
-#             customer = root[0][3].text  # debug
-#             ship_dict['id'] = ship_dict['Reference Number']
-#
-#         elif category == "Customer":
-#             print("Xml is a customer record")
-#             customer = fields[0][1].text
-#             ship_dict['send Out Date'] = datetime.today().strftime('%d/%m/%Y') # datedebug sets customer shipment send date to a string of today formatted like hire
-#             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
-#
-#         else:
-#             print("no customer found")
-#             print("ERROR NO CUSTOMER")
-#         ship_dict.update({'customer': customer})
-#         ship_dict = self.clean_xml(ship_dict)
-#         if 'boxes' not in ship_dict.keys():
-#             ship_dict['boxes'] = 0
-#         for k, v in ship_dict.items():
-#             if k == "sendOutDate":
-#                 setattr(self, k, datetime.strptime(v, '%d/%m/%Y')) #datedebug
-#             else:
-#                 setattr(self, k, v)
-#         print("making shipment object")
-#         # setattr()
-#         print("Xml  with", len(ship_dict), "fields imported")
-#
-#     def clean_xml(self, dict) -> dict:
-#         newdict = {}
-#         if "Send Out Date" not in dict.keys():
-#             print("No date - added today)")
-#             dict['Send Out Date'] = datetime.today().strftime('%d/%m/%Y')
-#         for k, v in dict.items():
-#
-#             # k = unsanitise(k)
-#             k = toCamel(k)
-#
-#             if "deliv" in k:
-#                 if "delivery" not in k:
-#                     k = k.replace('deliv', 'delivery')
-#
-#             if v:
-#                 # v = unsanitise(v)
-#                 if isinstance(v, list):
-#                     v = v[0]
-#                 if v.isnumeric():
-#                     v = int(v)
-#                     if v == 0:
-#                         v = None
-#                 elif v.isalnum():
-#                     v = v.title()
-#                 if 'Price' in k:
-#                     v = float(v)
-#                 # if "Number" in k: # elsewhere?
-#                 #     v = v.replace(",", "")
-#                 # if k == "sendOutDate":
-#                 # v = datetime.strftime(v, '%Y-%m-%d')   #debug wtf?
-#                 # # v = datetime.strptime(v, '%Y%m-%d').date()
-#                 # v = datetime.strptime(v, '%d/%m/%Y').date()
-#
-#             newdict.update({k: v})
-#         newdict = {k: v for k, v in newdict.items() if v is not None and v not in ['', 0]}
-#         return newdict
-#
-
-
-
-
-# product classes
-'''
-class Product:
-    def __init__(self, dict):
-        for field in CONFIG_CLASS['PRODUCT']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-
-class Radio(Product):
-    def __init__(self, dict):
-        Product.__init__(self, dict)
-        for field in CONFIG_CLASS['RADIO']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-
-class Battery(Product):
-    def __init__(self, dict):
-        Product.__init__(self, dict)
-        for field in CONFIG_CLASS['BATTERY']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-
-class Charger(Product):
-    def __init__(self, dict):
-        Product.__init__(self, dict)
-        for field in CONFIG_CLASS['CHARGER']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-
-class AUDIO_ACC(Product):
-    def __init__(self, dict):
-        Product.__init__(self, dict)
-        for field in CONFIG_CLASS['AUDIO_ACC']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-
-class Price_List(Product):
-    def __init__(self, dict):
-        Product.__init__(self, dict)
-        for field in CONFIG_CLASS['PRICES']:
-            if field in dict.keys():
-                setattr(self, field, dict[field])
-            else:
-                print(f"ERROR - input missing {field}")
-
-#'''
-class ParsedXmlObject:
+class ShipDictObject:
     def __init__(self,ship_dict):
         for k, v in ship_dict.items():
             setattr(self, k, v)

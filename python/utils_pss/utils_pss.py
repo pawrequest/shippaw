@@ -25,19 +25,19 @@ def get_from_ods(wkbook, sheet, output='dict'): # takes the name of a sheet, hea
     # body = [row for row in rows[1:]]
     body = rows[1:]
     out_dict = {}
-    if headers_stripped[0] == 'col':
+    if headers_stripped[0] == 'col': # top left cell of sheet = 'col, so use first column as headers
         for row in body:
-            k = row[0].strip()
-            v = row[1:]
-            v_stripped = [field.strip() for field in v]
-            out_dict.update({k: v_stripped})
-    else:
+            k = row[0].strip()  # first iem in row list is header / key... remove whitespace
+            v = row[1:]         # the rest of the list is the content / value
+            v_stripped = [field.strip() for field in v] # strip whitespace from each item in content / value list
+            out_dict.update({k: v_stripped}) # ouptut dict has first cell as keys and rest of row as values
+    else:   # first cell is not 'col' so we assume first row is headers
         for row in body:
             row_dict = {}
-            fields = [field for field in row if len(row)>0]
+            fields = [field for field in row if len(row)>0] # if row has items put them in a list called fields
             for c, field in enumerate(fields):
-                k = headers_stripped[c]
-                if isinstance(field,str):
+                k = headers_stripped[c] # for each field in list get output_dict key key from headers at same index
+                if isinstance(field,str):   # if the field content is a string strip whitespace
                     field = field.strip()
                 row_dict.update({k:field})
             out_dict.update({row[0]:row_dict})

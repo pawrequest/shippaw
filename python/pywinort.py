@@ -32,8 +32,6 @@
 # w.find_window_wildcard(".*notepad.*")
 # w.set_foreground()
 #
-from pprint import pprint
-from time import sleep
 
 from pywinauto import application
 
@@ -45,15 +43,27 @@ from pywinauto import application
 # dlg_spec = app.UntitledNotepad
 # # wait till the window is really open
 # actionable_dlg = dlg_spec.wait('visible')
-app = application.Application()
-app.start(r"C:\Program Files (x86)\MediaMonkey 5\MediaMonkey.exe")
+# app = application.Application(backend='uia')
 # dlg = app.top_window()
-sleep(2)
-dialogs = app.windows()
-pprint(f"{dialogs=}")
-for dialog in dialogs:
-    ...
+# sleep(2)
+# dialogs = app.windows()
+# pprint(f"{dialogs=}")
 
+# for dialog in dialogs:
+#     print(f"{dialog}")
+#
+#     ...
+
+app = application.Application(backend='uia')
+app.start(r"C:\Program Files\LibreOffice\program\scalc.exe")
+app.connect(title='Untitled 1 - LibreOffice Calc', timeout=120)
+app.Untitled1LibreOfficeCalc.print_control_identifiers()
+
+
+# app = application.Application(backend='uia')
+# app.start(r"C:\Program Files\LibreOffice\program\scalc.exe")
+# app.connect(title='Untitled1LibreOfficeCalc', timeout=10)
+# app.Untitled1LibreOfficeCalc.print_control_identifiers()
 
 
 # app.UntitledNotepad.draw_outline()
