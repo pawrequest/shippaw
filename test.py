@@ -1,6 +1,6 @@
 from python.AmDespApp import *
 
-app = App()
+app = ShippingApp()
 app.make_hire_shipment()
 app.queue_shipment()
 app.book_collection()

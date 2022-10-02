@@ -1,14 +1,16 @@
-from python.AmDespApp import App
+from python.AmDespApp import ShippingApp
 from python.Programmer import ProgrammingAssistant
 
 
 def main():
 
-    app = App()
+    app = ShippingApp()
 
     app.xml_to_shipment()
-    app.queue_shipment()
-    app.book_collection()
+    # app.queue_shipment()
+    # app.book_collection()
+    app.log_json()
+
 
 def programmer():
     prog = ProgrammingAssistant()
@@ -18,16 +20,16 @@ def programmer():
 def vbtest():
     print ("SOMETHNG")
 if __name__ == '__main__':
-    # main()
+    main()
     # vbtest()
-    programmer()
+    # programmer()
 
 '''
 
 
 from python.AmDespClassesApp import *
 
-app = App()
+app = ShippingApp()
 app.make_hire_shipment()
 app.queue_shipment()
 app.book_collection()

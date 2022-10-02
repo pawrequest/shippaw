@@ -23,12 +23,10 @@ class Config:
 
 
 PROG_CNFG = Config()
-...
 
 class ProgrammingAssistant:
     def __init__(self):
         self.plug_loaded = False
-        ...
 
     def BootUp(self):
         self.Greeter()

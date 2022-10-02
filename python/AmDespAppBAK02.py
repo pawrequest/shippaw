@@ -7,36 +7,13 @@ from datetime import datetime
 from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-from python.utils_pss.utils_pss import toCamel, get_from_ods
+from python.utils_pss.utils_pss import toCamel
 
-CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
-FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
-
-'''
-class Config:
-    def __init__(self):  
-        self.config_ods = r"C:\AmDesp\data\AmDespConfig.ods"
-        self.rads_w_bat_sers = ['hytera_pd705']
-
-        class RadioConfig:
-            def __init__(self, ods):
-                radios_dict = get_from_ods(ods, 'RADIO_DICT')
-                for radio, properties in radios_dict.items():
-                    setattr(self, radio, properties)
-                # self.radios = get_from_ods(self.config_ods, 'RADIO_DICT')
-                print(f"DSGSDGSDG")
-
-        self.radios = RadioConfig(self.config_ods)
-
-
-PROG_CNFG = Config()
-'''
 
 
 class Config:
     def __init__(self):
-        self.config_ods = CONFIG_ODS
         class DespatchConfig:
             def __init__(self):
                 self.api_user = os.getenv("DESPATCH_API_USER")
@@ -48,43 +25,34 @@ class Config:
                 self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
 
         class FieldsCnfg:
-            def __init__(self,ods):
-                field_config_dict = get_from_ods(ods, FIELD_CONFIG, 'list')
-                for k, v in field_config_dict.items():
-                    setattr(self, k, v)
-                # for row, list in field_config_dict.items():
-                #     setattr(self, row, list[row])for row, list in field_config_dict.items():
-                #     setattr(self, row, list[row])
-                # ...
-                #
-                #
-                # self.export_fields = ["customer", "deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
-                #                         "deliveryAddress", "deliveryPostcode", "sendOutDate", "referenceNumber", "trackingNumbers", "addedShipment", "boxes", "collectionBooked" ]
-                # self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
-                #                             'parcels',
-                #                             'shipment_return']
-                # self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
-                #                     'deliveryEmail',
-                #                     'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
-                #                     'referenceNumber',
-                #                     'customer']
-                # self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
-                #                         "deliveryAddress",
-                #                         "deliveryPostcode", "sendOutDate", "referenceNumber"]
+            def __init__(self):
+                self.export_fields = ["customer", "deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
+                                        "deliveryAddress", "deliveryPostcode", "sendOutDate", "referenceNumber", "trackingNumbers", "addedShipment", "boxes", "collectionBooked" ]
+                self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services',
+                                            'parcels',
+                                            'shipment_return']
+                self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
+                                    'deliveryEmail',
+                                    'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode',
+                                    'referenceNumber',
+                                    'customer']
+                self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail",
+                                        "deliveryAddress",
+                                        "deliveryPostcode", "sendOutDate", "referenceNumber"]
 
         class PathsConfig:
             def __init__(self):
                 self.root = pathlib.Path("/Amdesp")
                 self.data_dir = pathlib.Path("/Amdesp/data/")
                 self.label_dir = self.data_dir / "Parcelforce Labels"
-                self.Json_File = self.data_dir.joinpath("AmShip.json")
+                self.Json_File = self.data_dir / "AmShip.json"
                 self.xml_file = self.data_dir.joinpath('AmShip.xml')
                 self.log_file = self.data_dir.joinpath("AmLog.json")
                 self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
                 pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
                                                                          exist_ok=True)  # make the labels dirs (and parents)
 
-        self.fields = FieldsCnfg(CONFIG_ODS)
+        self.fields = FieldsCnfg()
         self.paths = PathsConfig()
         self.dbay_cnfg = DespatchConfig()
 
@@ -113,6 +81,7 @@ class ShippingApp:
         self.shipment.check_address() # queries DB address database, prompts user to confirm match or call ammend_address()
         self.shipment.make_request()  # make a shipment request
         self.shipment.queue()
+        self.log_json()
 
     def xml_to_ship_dict(self):
         print("XML IMPORTER ACTIVATED")
@@ -198,8 +167,6 @@ class ShippingApp:
         export_dict = {}
         for field in CNFG.fields.export_fields:
             val = getattr(self.shipment, field)
-            if isinstance(val,datetime):
-                val = datetime.strftime(val, '%d-%m-%Y')
             export_dict.update({field : val})
         if isinstance(export_dict, datetime):
             export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
@@ -358,6 +325,7 @@ class Shipment:  # taking an xmlimporter object
                     continue
                 if int(choice) == 0:
                     if input('[E]xit?')[0].lower() == "e":
+                        self.log_json()
                         exit()
                     continue
                 else:
@@ -421,8 +389,8 @@ class Shipment:  # taking an xmlimporter object
                 continue
             if selection == 0:
                 if str(input("[e]xit?"))[0].lower() == "e":
-                    return False
-                    # exit()
+                    self.log_json()
+                    exit()
                 continue
             if not -1 <= selection <= len(candidates) + 1:
                 print("Wrong Number")
@@ -531,6 +499,7 @@ class Shipment:  # taking an xmlimporter object
                             continue  # try again
                         else:  # exit
                             if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
+                                self.log_json()
                                 exit()
                             continue
                     else:  # restart
@@ -556,6 +525,7 @@ class Shipment:  # taking an xmlimporter object
                         continue  # try again
                     else:  # exit
                         if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
+                            self.log_json()
                             exit()
                         continue
                 else:  # restart

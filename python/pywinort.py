@@ -32,6 +32,7 @@
 # w.find_window_wildcard(".*notepad.*")
 # w.set_foreground()
 #
+from pprint import pprint
 from time import sleep
 
 from pywinauto import application
@@ -45,17 +46,26 @@ from pywinauto import application
 # # wait till the window is really open
 # actionable_dlg = dlg_spec.wait('visible')
 app = application.Application()
-app.start("Notepad.exe")
-app.UntitledNotepad.draw_outline()
-app.UntitledNotepad.menu_select("Edit -> Replace")
+app.start(r"C:\Program Files (x86)\MediaMonkey 5\MediaMonkey.exe")
+# dlg = app.top_window()
 sleep(2)
-app.Replace.print_control_identifiers()
-sleep(2)
-app.Replace.Cancel.click()
-sleep(2)
-app.UntitledNotepad.Edit.type_keys("Hi from Python interactive prompt %s" % str(dir()), with_spaces = True)
-sleep(2)
-app.UntitledNotepad.menu_select("File -> Exit")
-sleep(2)
-app.Notepad.DontSave.click()
-sleep(2)
+dialogs = app.windows()
+pprint(f"{dialogs=}")
+for dialog in dialogs:
+    ...
+
+
+
+# app.UntitledNotepad.draw_outline()
+# app.UntitledNotepad.menu_select("Edit -> Replace")
+# sleep(2)
+# app.Replace.print_control_identifiers()
+# sleep(2)
+# app.Replace.Cancel.click()
+# sleep(2)
+# app.UntitledNotepad.Edit.type_keys("Hi from Python interactive prompt %s" % str(dir()), with_spaces = True)
+# sleep(2)
+# app.UntitledNotepad.menu_select("File -> Exit")
+# sleep(2)
+# app.Notepad.DontSave.click()
+# sleep(2)

@@ -1,18 +1,16 @@
 {
-  "addedShipment": "100786-20241388",
-  "boxes": 2,
-  "collectionBooked": true,
-  "customer": "Police Now",
-  "deliveryAddress": "203 BLACKFRIARS ROAD\nLONDON",
-  "deliveryContact": "Harry Brown",
-  "deliveryEmail": "harry.brown@policenow.org.uk",
-  "deliveryName": "Police Now",
-  "deliveryPostcode": "SE1 8NJ",
-  "deliveryTel": "07548 836423",
-  "referenceNumber": 36812,
-  "sendOutDate": "16/10/2022",
-  "trackingNumbers": [
-    "PBKQ9620465001",
-    "PBKQ9620465002"
-  ]
+  "addedShipment": null,
+  "boxes": 1,
+  "collectionBooked": false,
+  "customer": "Ilkley Literature Festival",
+  "deliveryAddress": "9 The Grove\nIlkley",
+  "deliveryContact": "Kate Lovery",
+  "deliveryEmail": "kate@ilkleylitfest.org.uk",
+  "deliveryName": "Ilkley Literature Festival",
+  "deliveryPostcode": "LS29 9LW",
+  "deliveryTel": "01943 601210",
+  "referenceNumber": 33786,
+  "sendOutDate": "04-10-2022",
+  "shipRef": "Ilkley Literature Festival",
+  "trackingNumbers": null
 }

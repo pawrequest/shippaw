@@ -15,33 +15,33 @@ def printel(*els): # elementtree elements
             print(elem.tag, elem.text)
 
 
-def get_from_ods(wkbook, sheet, headers=True): # takes the name of a sheet in
-    headers = headers
+def get_from_ods(wkbook, sheet, output='dict'): # takes the name of a sheet, headers(bool) and output(list of lists or dict)
     wkbook = get_data(wkbook)
     sheet = sheet
     rows = wkbook[sheet]
     rows = [row for row in rows if len(row)>0]
-    if headers:
-        headers = rows[0]
-        body = rows[1:]
+    headers = rows[0]
+    headers_stripped = [head.strip() for head in headers]
+    # body = [row for row in rows[1:]]
+    body = rows[1:]
+    out_dict = {}
+    if headers_stripped[0] == 'col':
+        for row in body:
+            k = row[0].strip()
+            v = row[1:]
+            v_stripped = [field.strip() for field in v]
+            out_dict.update({k: v_stripped})
     else:
-        body = rows
-    row_dict = {}
-    for row in body:
-        fields = [field for field in row if len(row)>0]
-        field_dict = {}
-        field_list = []
-        for c, field in enumerate(fields):
-            if headers:
-                # make a dict with headers as keys and fields as values
-                header = headers[c]
-                field_dict.update({header:field})
-            else:
-                # make a list
-                field_list.append(field)
-        row_dict.update({row[0]: field_dict})
-        sheets_dict=row_dict
-    return sheets_dict #, rows # does it need a list of rows?
+        for row in body:
+            row_dict = {}
+            fields = [field for field in row if len(row)>0]
+            for c, field in enumerate(fields):
+                k = headers_stripped[c]
+                if isinstance(field,str):
+                    field = field.strip()
+                row_dict.update({k:field})
+            out_dict.update({row[0]:row_dict})
+    return out_dict  # #, rows # does it need a list of rows?
 
 
 def toPascal(x): #LikeThis

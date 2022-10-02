@@ -460,7 +460,7 @@ class Hire:
 class CmcRecord:
     ...
 
-# class App:
+# class ShippingApp:
 #     def __init__(self): # make app
 #         class Config:   # make config
 #             def __init__(self):
