@@ -1,7 +1,7 @@
 import subprocess
 from time import sleep
 
-from python.AmDespProducts import Radiooo
+from python.AmDespProducts import Radio
 from python.utils_pss.utils_pss import get_from_ods, getActiveProcesses
 
 
@@ -113,7 +113,7 @@ class ProgrammingAssistant:
             if ui.isnumeric():
                 ui = int(ui)
                 for i in range(ui):
-                    batch.append(Radiooo(self.radio_dict))
+                    batch.append(Radio(self.radio_dict))
                 self.batch = batch
                 break
             else:
