@@ -359,7 +359,7 @@ class Shipment:  # taking an xmlimporter object
         while True:
             if self.addressObject:
                 ui = input(
-                    f"- Recipient address is {self.addressObject.street} - is this correct? [C]ontinue, anything else to change address\n\n")
+                    f"- Recipient address is {self.addressObject} - is this correct? [C]ontinue, anything else to change address\n\n")
                 if ui[0].lower() == "c":
                     return
                 else:

@@ -1,3 +1,8 @@
+sandbox DB api:
+apiuser: D25RM-E1305A31
+apikey: AAD2F91ED25CAE38B4D1
+apitype: Sandboxed
+
 
 '''
 running notes:
