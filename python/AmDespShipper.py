@@ -508,7 +508,7 @@ class Shipment:  # taking an xmlimporter object
                 elif choice == 'q':
                     self.addedShipment = self.client.add_shipment(self.shipmentRequest)
                     print("Adding Shipment to Despatchbay Queue")
-                    return
+                    return True
             else:
                 continue
 
