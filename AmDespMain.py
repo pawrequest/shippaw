@@ -8,7 +8,7 @@ def shipper():
     app.xml_to_shipment()
     if app.queue_shipment():
         if app.book_collection():
-            print ("All done")
+            print ("success")
     app.log_json()
 
 

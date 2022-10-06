@@ -174,7 +174,7 @@ class ShippingApp:
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
         with open(CNFG.paths.log_file, 'w') as f:
             json.dump(export_dict, f, sort_keys=True)
-            pprint(f"{export_dict =}")
+            pprint(f"\n Json exported to {CNFG.paths.log_file} {export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
@@ -555,7 +555,7 @@ class Shipment:  # taking an xmlimporter object
                 self.collectionBooked = True
                 self.labelDownloaded = True
                 print(
-                    f"Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}")
+                    f"\n Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}\n")
                 return True
 
 

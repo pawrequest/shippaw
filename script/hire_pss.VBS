@@ -974,8 +974,7 @@ Sub ShipHire(xmlfile)
         Dim oShell, currentCommand, my_command
         SET oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-        currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-        Msgbox "RUN PYTHON"
+        currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         oShell.run currentCommand,1,true
 End Sub
 
