@@ -556,9 +556,7 @@ class Shipment:  # taking an xmlimporter object
                 self.labelDownloaded = True
                 print(
                     f"Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}")
-
-
-                exit()
+                return True
 
 
 class ShipDictObject:
