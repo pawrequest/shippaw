@@ -366,6 +366,7 @@ class Shipment:  # taking an xmlimporter object
                     self.ammend_address()
             else:
                 print("NO ADDRESS OBJECT")
+                break
 
     def ammend_address(self, pc=None):
         if not pc:
