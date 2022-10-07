@@ -958,7 +958,12 @@ Sub PackHire()
         Form.Field("Status").Value = "Booked in and packed"
         packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed By").Value = packedBy
+        if MsgBox("Send pre-shipping email?",4) = 6 Then
         EmailSendOut()
+        End if
+        if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+        ShipHire("C:\AmDesp\data\AmShip.xml")
+        End if
         if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
             Form.Save
         End if
@@ -973,10 +978,13 @@ Sub ShipHire(xmlfile)
 '         xmlfile = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
-        SET oShell = CreateObject("Wscript.Shell")
+        Set oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         oShell.run currentCommand,1,true
+        set oShell = nothing
+
+
 End Sub
 
 Sub UnpackHire()
