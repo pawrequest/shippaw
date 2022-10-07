@@ -994,8 +994,8 @@ Sub UnpackHire()
         Else
             Form.Field("Status").Value = "Returned with problems"
             missing = InputBox("What was missing?", "What's Missing?")
-            if MsgBox ("Confirm list to add to return notes:" & vbNewLine & missing, 4) = 6 Then
-                Form.Field("Return Notes").Value = Form.Field("Return Notes").Value & vbNewLine & missing
+            if MsgBox ("Confirm list to add to missing kit:" & vbNewLine & missing, 4) = 6 Then
+                Form.Field("Missing Kit").Value = Form.Field("Return Notes").Value & vbNewLine & missing
                 if MsgBox("Email " & Form.Field("Delivery Email").Value & "with missing kit list?",4) = 6 Then
                     EmailMissingKit()
                 End if
@@ -1057,8 +1057,9 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
                            "Kind regards," & vbNewLine & "paul" & vbNewLine & _
                            vbNewLine & "MISSING KIT:" & vbNewLine & _
                            Form.Field("Return Notes").value
-        objMailItem.Send
-        MsgBox("EMAILED")
+        if MsgBox ("Confirm Email:" & vbNewLine & objMailItem, 4) = 6 Then
+            objMailItem.Send
+            MsgBox("EMAILED")
         Set olApp = Nothing
         Set objMailItem = Nothing
 End Sub
