@@ -174,7 +174,7 @@ class ShippingApp:
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
         with open(CNFG.paths.log_file, 'a+') as f:
             json.dump(export_dict, f, sort_keys=True)
-            pprint(f"\n Json exported to {logfile} {export_dict =}")
+            pprint(f"\n Json exported to {CNFG.paths.log_file} {export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
