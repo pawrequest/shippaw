@@ -12,7 +12,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
-
+shipper_mode = "sand"
 line = '-' * 100
 
 
@@ -22,8 +22,12 @@ class Config:
         self.config_ods = CONFIG_ODS
         class DespatchConfig:
             def __init__(self):
-                self.api_user = os.getenv("DESPATCH_API_USER")
-                self.api_key = os.getenv("DESPATCH_API_KEY")
+                if shipper_mode == "sand":
+                    self.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
+                    self.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
+                else:
+                    self.api_user = os.getenv("DESPATCH_API_USER")
+                    self.api_key = os.getenv("DESPATCH_API_KEY")
                 self.sender_id = "5536"  # should be env var?
                 self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
                 self.sender = self.client.sender(address_id=self.sender_id)
