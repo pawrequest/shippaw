@@ -176,9 +176,9 @@ class ShippingApp:
         # if isinstance(export_dict, datetime):
         #     export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-        with open(CNFG.paths.log_file, 'w') as f:
+        with open(CNFG.paths.log_file, 'a+') as f:
             json.dump(export_dict, f, sort_keys=True)
-            pprint(f"{export_dict =}")
+            pprint(f"\n Json exported to {CNFG.paths.log_file} {export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
@@ -275,7 +275,7 @@ class Shipment:  # taking an xmlimporter object
         while True:
             if self.boxes:
                 print(line, "\n",
-                      f"Shipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
+                      f"\nShipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
                 ui = input(f"[C]onfirm or Enter a number of boxes\n")
                 if ui.isnumeric():
                     self.boxes = int(ui)
@@ -363,13 +363,14 @@ class Shipment:  # taking an xmlimporter object
         while True:
             if self.addressObject:
                 ui = input(
-                    f"- Recipient address is {self.addressObject} - is this correct? [C]ontinue, anything else to change address\n\n")
+                    f"\n- Recipient address is: \n{self.addressObject} \n- is this correct? \n[C]ontinue, anything else to change address\n\n")
                 if ui[0].lower() == "c":
                     return
                 else:
                     self.ammend_address()
             else:
                 print("NO ADDRESS OBJECT")
+                break
 
     def ammend_address(self, pc=None):
         if not pc:
@@ -490,7 +491,7 @@ class Shipment:  # taking an xmlimporter object
               self.addressObject.street, "|", self.dateObject.date, "|",
               self.shippingServiceName,
               "| Price =",
-              self.shippingCost, '\n', line, '\n')
+              self.shippingCost*self.boxes, '\n', line, '\n')
         choice = " "
         while True:
             choice = input('- [Q]ueue shipment in DespatchBay, [R]estart, or [E]xit\n')
@@ -512,7 +513,7 @@ class Shipment:  # taking an xmlimporter object
                 elif choice == 'q':
                     self.addedShipment = self.client.add_shipment(self.shipmentRequest)
                     print("Adding Shipment to Despatchbay Queue")
-                    return
+                    return True
             else:
                 continue
 
@@ -559,10 +560,8 @@ class Shipment:  # taking an xmlimporter object
                 self.collectionBooked = True
                 self.labelDownloaded = True
                 print(
-                    f"Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}")
-
-
-                exit()
+                    f"\n Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}\n")
+                return True
 
 
 class ShipDictObject:

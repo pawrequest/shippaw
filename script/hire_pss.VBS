@@ -958,6 +958,12 @@ Sub PackHire()
         Form.Field("Status").Value = "Booked in and packed"
         packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed By").Value = packedBy
+        if MsgBox("Send pre-shipping email?",4) = 6 Then
+        EmailSendOut()
+        End if
+        if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+        ShipHire("C:\AmDesp\data\AmShip.xml")
+        End if
         if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
             Form.Save
         End if
@@ -972,11 +978,13 @@ Sub ShipHire(xmlfile)
 '         xmlfile = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
-        SET oShell = CreateObject("Wscript.Shell")
+        Set oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-        currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-        Msgbox "RUN PYTHON"
+        currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         oShell.run currentCommand,1,true
+        set oShell = nothing
+
+
 End Sub
 
 Sub UnpackHire()
@@ -995,12 +1003,10 @@ Sub UnpackHire()
         Else
             Form.Field("Status").Value = "Returned with problems"
             missing = InputBox("What was missing?", "What's Missing?")
-            if MsgBox ("Confirm list to add to return notes:" & vbNewLine & missing, 4) = 6 Then
-                Form.Field("Return Notes").Value = Form.Field("Return Notes").Value & vbNewLine & missing
-                if MsgBox("Email " & Form.Field("Delivery Email").Value & "with missing kit list?",4) = 6 Then
-                    EmailMissingKit()
-                End if
-                if MsgBox("Items added to return notes:" & vbNewLine & missing & vbNewLine & "Save, and exit?",4) = 6 Then
+            if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
+                Form.Field("Missing Kit").Value = missing
+                EmailMissingKit()
+                if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
                     Form.Save
                 End if
             End if
@@ -1014,31 +1020,36 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         Dim olApp
         Dim objMailItem
         Dim returnStr
+        Dim emailaddy
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
-            MsgBox("CUST RETURNS")
-            returnStr = "You have not pre-paid for return shipping and are required to send the gear back at your expense. Please use a trackable service and send us the tracking details when you have dispatched the shipment."
+            returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
-            MsgBox("WE COLLECT")
-            returnStr = "You have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
+            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
         End if
 
 
         Set olApp = CreateObject("Outlook.Application")
         Set objMailItem = olApp.CreateItem(0)
         objMailItem.Subject = "Radio Hire - upcoming shipment details"
-        objMailItem.To = Form.Field("Delivery Email").Value
+        emailaddy = Form.Field("Delivery Email").Value
+        if MsgBox("Delivery email address is " & emailaddy & "- send pre-ship email to this address?",4) = 7 Then
+        emailaddy = InputBox("Enter new email address")
+        End if
+        objMailItem.To = emailaddy
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
-                           vbNewLine & "Thanks for choosing to hire from Amherst. Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & " - please check the following details and contact us urgently if there are discrepancies."& vbNewLine & _
+                           vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
+                           "Please check the following details and contact us urgently if there are discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
                            Form.Field("Delivery Address").Value & vbNewLine & _
                            vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
                            vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
                            vbNewLine & returnStr & vbNewLine & _
-                           vbNewLine & "Kind regards" & vbNewLine & "Amherst Enterprises" & vbNewLine & "(this email generated automatically)"
-
+                           vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & "(this email generated automatically)"
+        if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & emailaddy & "?",4) = 6 Then
         objMailItem.Send
         MsgBox("EMAILED")
+        End if
         Set olApp = Nothing
         Set objMailItem = Nothing
 End Sub
@@ -1047,19 +1058,27 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
     ' found code to send email'
         Dim olApp
         Dim objMailItem
-
+        Dim emailadd
         Set olApp = CreateObject("Outlook.Application")
         Set objMailItem = olApp.CreateItem(0)
         objMailItem.Subject = "Radio Hire - Missing Kit"
-        objMailItem.To = Form.Field("Delivery Email").Value
+
+        emailadd = Form.Field("Delivery Email").Value
+        if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address?",4) = 7 Then
+        emailadd = InputBox("Enter new email address")
+        End if
+
+        objMailItem.To = emailadd
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
                            vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
                            vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
-                           "Kind regards," & vbNewLine & "paul" & vbNewLine & _
+                           "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
                            vbNewLine & "MISSING KIT:" & vbNewLine & _
-                           Form.Field("Return Notes").value
-        objMailItem.Send
-        MsgBox("EMAILED")
+                           Form.Field("Missing Kit").value & vbNewLine & vbNewLine & "(If you have already discussed missing items with us please disregard this automatically generated email)"
+        if MsgBox ("Confirm Email:" & vbNewLine & vbNewLine & objMailItem & vbNewLine & objMailItem.Body, 4) = 6 Then
+            objMailItem.Send
+            MsgBox("EMAILED")
+        End if
         Set olApp = Nothing
         Set objMailItem = Nothing
 End Sub

@@ -17,7 +17,6 @@ class Product:
         product_attrs = PRODUCT_CNFG.product
         for attr in product_attrs:
             setattr(self,attr,None)
-        print(product_attrs)
 
 class Radio(Product):
     def __init__(self, radio_dict):

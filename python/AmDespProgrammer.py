@@ -18,7 +18,6 @@ class Config:
                 for radio, properties in radios_dict.items():
                     setattr(self, radio, properties)
                 # self.radios = get_from_ods(self.config_ods, 'RADIO_DICT')
-                print(f"DSGSDGSDG")
 
         self.radios = RadioConfig(self.config_ods)
 
