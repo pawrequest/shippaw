@@ -27,8 +27,8 @@ process_shipment(manifest)          ##
 # # print(clean_objects(manifest[1]))
 # print (manifest)
 
-# if os.path.isfile(JSONFILE):
-#     with open(JSONFILE) as f:
+# if os.path.isfile(CONFIG_PATH['JSONFILE']):
+#     with open(CONFIG_PATH['JSONFILE']) as f:
 #         manifest = []
 #         manifest_data = json.load(f)
 #         pprint(manifest_data)

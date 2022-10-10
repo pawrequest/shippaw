@@ -1,0 +1,34 @@
+{
+  "addedShipment": "100786-20273093",
+  "boxes": 2,
+  "collectionBooked": true,
+  "customer": "Max Adventure Ltd",
+  "deliveryAddress": "The Carpenters\nDalwood\nAxminster\nDevon",
+  "deliveryContact": "Mac Mackenney",
+  "deliveryEmail": "mac@maxadventure.co.uk",
+  "deliveryName": "Max Adventure Ltd",
+  "deliveryPostcode": "EX13 7EB",
+  "deliveryTel": "01404 830096",
+  "referenceNumber": 29273,
+  "sendOutDate": "06-10-2022",
+  "shipRef": "Max Adventure Ltd",
+  "trackingNumbers": [
+    "PBKQ9687215001",
+    "PBKQ9687215002"
+  ]
+}{
+  "addedShipment": null,
+  "boxes": 2,
+  "collectionBooked": false,
+  "customer": "Max Adventure Ltd",
+  "deliveryAddress": "The Carpenters\nDalwood\nAxminster\nDevon",
+  "deliveryContact": "Mac Mackenney",
+  "deliveryEmail": "mac@maxadventure.co.uk",
+  "deliveryName": "Max Adventure Ltd",
+  "deliveryPostcode": "EX13 7EB",
+  "deliveryTel": "01404 830096",
+  "referenceNumber": 29273,
+  "sendOutDate": "06-10-2022",
+  "shipRef": "Max Adventure Ltd",
+  "trackingNumbers": null
+}{"addedShipment": "100786-20276814", "boxes": 1, "collectionBooked": true, "customer": "James Knight", "deliveryAddress": "Shyre Cottage\n10-11 The Green\nIckwell", "deliveryContact": "James Knight", "deliveryEmail": "jamesdknight@yahoo.co.uk", "deliveryName": "James Knight", "deliveryPostcode": "SG18 9EF", "deliveryTel": "07824 565147", "referenceNumber": 29385, "sendOutDate": "10-10-2022", "shipRef": "James Knight", "trackingNumbers": ["PBKQ9695000001"]}{"addedShipment": "100786-20276839", "boxes": 1, "collectionBooked": true, "customer": "Carey England Ltd", "deliveryAddress": "6-9 The Square\nStockley Park\nUxbridge", "deliveryContact": "Chris Tantardine", "deliveryEmail": "Chris.Tantardine@carey.com", "deliveryName": "Carey England Ltd", "deliveryPostcode": "UB11 1FW", "deliveryTel": "020 8326 7672", "referenceNumber": 29329, "sendOutDate": "10-10-2022", "shipRef": "Carey England Ltd", "trackingNumbers": ["PBKQ9695089001"]}

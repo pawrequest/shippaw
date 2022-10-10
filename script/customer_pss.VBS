@@ -169,7 +169,7 @@ Form.Field("Number of Hires").Value = Form.Connection("Has Hired","Hire").Connec
  Form.Field("Number of contacts").Value = Form.Connection("Has","Log").ConnectedItemCount
  
 'combine the contact name, company name, address and postcode into the "All Address" field
-addstring = Form.Field("Contact Name").Value + vbCrLf + Form.Field("Name").Value + vbCrLf + Form.Field("Address").Value + vbCrLf + Form.Field("Postcode").Value
+addstring = Form.Field("Contact Name").Value + vbCrLf + Form.Field("Name For Printing").Value + vbCrLf + Form.Field("Address").Value + vbCrLf + Form.Field("Postcode").Value
 Form.Field("All Address").Value = addstring
 
 ' added May 2019: prevent saving of incomplete customer records
@@ -211,17 +211,23 @@ End Sub
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
-        Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-        Dim objShell, myconnection
-        Set objShell = CreateObject("WScript.Shell")
-        objShell.Run "C:\AmDesp\vbs\button.vbs"
-        Set objShell = Nothing
-
-
-
-
+                        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''   Runs Amdesp via cmd     ''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+		    Dim python_exe, python_script, commence_wrapper, xmlfile
+            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_script = "C:\AmDesp\AmDespMain.py"
+            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+            xmlfile = "C:\AmDesp\data\AmShip.xml"
+		    ExportItemDetailForm(xmlfile)
+            Dim oShell, currentCommand, my_command
+            SET oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+            Msgbox "RUN PYTHON"
+            oShell.run currentCommand,1,true
         Case "CommandButton2"
-	    ' change the contents of the "Name" field to initial capitals, rest lower-case 
+	    ' change the contents of the "Name" field to initial capitals, rest lower-case
             Form.Field("Name").Value = PCase(Form.Field("Name").Value, "")
         Case "CommandButton3"
 	    ' change the contents of the "Contact Name" field to initial capitals, rest lower-case
@@ -234,7 +240,7 @@ Sub Form_OnClick(ControlId)
 			temp_address = Form.Field("Address").Value
 			temp_address = PCase(temp_address, "A")
 			Form.Field("Address").Value = temp_address
-			
+
         Case "CommandButton6"
 		' Copy the main address, postcode, contact details into the "delivery" ones
 		  Form.Field("Deliv Name").Value = Form.Field("Name").Value
@@ -243,7 +249,7 @@ Sub Form_OnClick(ControlId)
 		  Form.Field("Deliv Postcode").Value = Form.Field("Postcode").Value
 		  Form.Field("Deliv Telephone").Value = Form.Field("Telephone").Value
 		  Form.Field("Deliv Email").Value = Form.Field("Email").Value
-		  
+
 		Case "CommandButton7"
 		' if there is an email address in the "contact name" field enclosed in angle brackets, strip it out and put
 		' it into the email field leaving just the actual name in the contact name field
@@ -254,14 +260,14 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Email").Value = Right(Form.Field("Contact Name").Value, (length-atpos))
 			Form.Field("Contact Name").Value = Left(Form.Field("Contact Name").Value, atpos)
 		End If
-		
+
 		Case "CommandButton8"
 		' Change the contents of the "Name" field to all UPPER CASE
 		Form.Field("Name").Value = Ucase(Form.Field("Name").Value)
-		
+
 		Case "CommandButton5"
         ' process the text copied in from an "AutoQuote" email
-		
+
          Dim tempweb, length, temp, atpos, m, dumpstring, addstring
 
 
@@ -271,7 +277,7 @@ Sub Form_OnClick(ControlId)
         ' copy the "dump" field into a memory variable
         dumpstring = Form.Field("Dump").Value
         'Msgbox(dumpstring)
-		
+
         ' split the fields found in the AutoQuote text into the appropriate database fields
         Form.Field("AQ Ref Number").Value = FindFieldInString(dumpstring, "Quotation Reference:")
         Form.Field("Contact Name").Value = PCase(FindFieldInString(dumpstring, "Name:"), "")
@@ -281,32 +287,32 @@ Sub Form_OnClick(ControlId)
         Form.Field("Email").Value = FindFieldInString(dumpstring, "Email:")
         Form.Field("Charity Number").Value = FindFieldInString(dumpstring, "Registered Charity:")
 		Form.Field("First Hire Date").Value = FindFieldInString(dumpstring, "Start Date:")
-		
+
 		' if a charity number is entered, set the charity flag to True
 		If Form.Field("Charity Number").Value <> "" Then
 		  Form.Field("Charity?").Value = 1
 		End If
-		
 
-        ' if the "Name" (organisation) field is blank, then substitute the "Contact Name" field - this works for 
+
+        ' if the "Name" (organisation) field is blank, then substitute the "Contact Name" field - this works for
         ' customers who are private individuals and do not specify any "organisation"
         If Form.Field("Name").Value = "" Then
           Form.Field("Name").Value = Form.Field("Contact Name").Value
         End If
-		
+
 		' if we have a value in the "Name" field by this point, then we are dealing with an autoquote, so
 		' set the "Hire Prospect" check box field to "True"
 		If Form.Field("Name").Value <> "" Then
 			Form.Field("Hire Prospect").Value = 1
 		End If
-		
+
         ' read in the address and postcode fields
         Form.Field("Address").Value = Pcase(FindFieldInString(dumpstring, "Address:"),"A")
         Form.Field("Postcode").Value = FindFieldInString(dumpstring, "Postcode:")
-		
+
 		' split the address into lines based on commas at the end of each line - added by Giles April 2016
 		Form.Field("Address").Value = Replace(Form.Field("Address").Value, ", ", vbCrLf)
-      
+
 		' read in notes fields
         Form.Field("Notes").Value = FindFieldInString(dumpstring, "Purpose of hire:") + vbLf + FindFieldInString(dumpstring, "Additional notes:")
 
@@ -314,16 +320,16 @@ Sub Form_OnClick(ControlId)
 		Form.Field("Deliv Name").Value = PCase(FindFieldInString(dumpstring, "Delivery Organisation:"),"A")
 		Form.Field("Deliv Contact").Value = PCase(FindFieldInString(dumpstring, "Delivery Name:"), "")
 		Form.Field("Deliv Address").Value = Pcase(FindFieldInString(dumpstring, "Delivery Address:"),"A")
-		
+
 		' split the delivery address into lines based on commas at the end of each line - added by Giles April 2016
 		Form.Field("Deliv Address").Value = Replace(Form.Field("Deliv Address").Value, ", ", vbCrLf)
-		
+
 		Form.Field("Deliv Telephone").Value = FindFieldInString(dumpstring, "Delivery Phone")
         Form.Field("Deliv Postcode").Value = FindFieldInString(dumpstring, "Delivery Postcode:")
-        		
+
        	' code to copy quantities of items hired into new fields in customer record
 		' added by Giles 19th October 2013
-		
+
 		' first, zero all the fields so we don't have leftover values from previous quotes
 		Form.Field("Number UHF").Value = 0
 		Form.Field("Number Batteries").Value = 0
@@ -335,12 +341,12 @@ Sub Form_OnClick(ControlId)
 		Form.Field("Number Icom").Value = 0
 		Form.Field("Number Megaphone").Value = 0
 		Form.Field("Number Parrot").Value = 0
-		
+
 		' for each item that can be hired, first locate the line of text containing the quantity and price etc for each item of equipment
 
 		' the quantity is the first "word" in the string, so we use string functions to take it off and insert
 		' into the appropriate field
-		
+
 		temp = FindFieldInString(dumpstring, "Standard UHF walkie-talkie")
 		Form.Field("Number UHF").Value = Left(temp, Instr(temp, " "))
 
@@ -370,19 +376,19 @@ Sub Form_OnClick(ControlId)
 
 		temp = FindFieldInString(dumpstring, "Lapel speaker / microphone")
 		Form.Field("Number Parrot").Value = Left(temp, Instr(temp, " "))
-		
-		
+
+
 		' summarise the order - date and basic quantities of kit hired
         Form.Field("First Hire Date").Value = FindFieldInString(dumpstring, "Start Date:")
-		
+
 		temp = Cstr(Form.Field("Number UHF").Value) + " radios "
 		Form.Field("First Hire Details").Value = temp + "for " + FindFieldInString(dumpstring, "Hire Length:")
-  
+
 		' this last bit is to deal with the "try before you buy" form emails or Sellerdeck orders
 		If Form.Field("Contact Name").Value = "" Then
 			Form.Field("Contact Name").Value = PCase(FindFieldInString(dumpstring, "Name"), "")
 		End If
-		
+
 		' this is for Try Before You Buy
 		If Form.Field("Name").Value = "" Then
 			Form.Field("Name").Value = PCase(FindFieldInString(dumpstring, "Company/Organisation"),"A")
@@ -392,7 +398,7 @@ Sub Form_OnClick(ControlId)
 		If Form.Field("Name").Value = "" Then
 			Form.Field("Name").Value = PCase(FindFieldInString(dumpstring, "Organisation"),"A")
 		End If
-		
+
 		' this is for Try Before You Buy
 		If Form.Field("Address").Value = "" Then
 			Form.Field("Address").Value = Pcase(FindFieldInString(dumpstring, "Address1"),"A")
@@ -401,14 +407,14 @@ Sub Form_OnClick(ControlId)
 			' set the "Sales Prospect" check box field to "True"
 			Form.Field("Sales Prospect").Value = 1
 		End If
-		
+
 		' this for Sellerdeck
 		If Form.Field("Address").Value = "" Then
 		  Form.Field("Address").Value = Pcase(FindFieldInString(dumpstring, "Address"),"A")
 		  ' set the "Sales Customer" check box field to "True"
 			Form.Field("Sales Customer").Value = 1
 		End If
-		
+
 		' this is for Try Before You Buy
 		If Form.Field("Postcode").Value = "" Then
 			Form.Field("Postcode").Value = FindFieldInString(dumpstring, "Postcode")
@@ -448,28 +454,28 @@ Sub Form_OnClick(ControlId)
 		If Form.Field("Deliv Name").Value = "" Then
 		  Form.Field("Deliv Name").Value = PCase(FindFieldInString(dumpstring, "Delivery Organisation"),"A")
 		End If
-		
+
 		' this for Sellerdeck - delivery address
 		If Form.Field("Deliv Address").Value = "" Then
 		  Form.Field("Deliv Address").Value = PCase(FindFieldInString(dumpstring, "Delivery Address"),"A")
 		End If
-		
+
 		' this for Sellerdeck - delivery phone number
 		If Form.Field("Deliv Telephone").Value = "" Then
 		  Form.Field("Deliv Telephone").Value = PCase(FindFieldInString(dumpstring, "Delivery Phone"),"A")
 		End If
-		
+
 		' this for Sellerdeck - delivery postcode
 		If Form.Field("Deliv Postcode").Value = "" Then
 		  Form.Field("Deliv Postcode").Value = PCase(FindFieldInString(dumpstring, "Delivery Post Code"),"A")
 		End If
 
-		
+
 		If Form.Field("Notes").Value = "" Then
 			Form.Field("Notes").Value = FindFieldInString(dumpstring, "Radio Type") + vbLf + FindFieldInString(dumpstring, "Comments") + vbLf + FindFieldInString(dumpstring, "Hear About")
 			Form.Field("First Hire Details").Value = ""
 		End If
-		
+
         ' finally blank the "dump" field so that user changes don't get overwritten next time the record is saved
         Form.Field("Dump").Value = ""
 
@@ -478,9 +484,9 @@ Sub Form_OnClick(ControlId)
 End Sub
 
 
+
 '''''''''''''''''''''''''''''''''''''''''''''
 ''''''''' arno-pss function to export item field
-'''''''''''''''''''''''''''''''''''''''''''''''''''
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
@@ -496,18 +502,22 @@ Sub ExportItemDetailForm(ByVal strPath)
     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
     xmlDoc.async = false
-    xmlDoc.loadXML("<root><ItemDetailForm/></root>")
+    xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
 
     Dim el
     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-    Set el = xmlDoc.createElement("CategoryName")
+
+    Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
     el.text = sanitizeXMLString(Form.CategoryName)
     objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("FormName")
+    Set el = xmlDoc.createElement("FormName")       ' create Root/itemdetailform/FormName'
     el.text = sanitizeXMLString(Form.Name)
     objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("Fields")
+    Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
+
+
+
     Dim i
     For i = 0 To UBound(arrFields) - 1
         ' the idea is that if we cannot instatiate a field,
@@ -525,53 +535,24 @@ Sub ExportItemDetailForm(ByVal strPath)
         el.text = sanitizeXMLString(f.Value)
     n.appendChild(el)
     Next
-
-
-    ' process customer connections
-    strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-    arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-
-    Dim c, j, tmp
-    Set el = xmlDoc.createElement("Connections")
-    Dim cnode : Set cnode = objRoot.childNodes.item(0).appendChild(el)
-
-    For i = 0 To UBound(arrCons)
-        tmp = Split(arrCons(i), CMC_DELIM2) 'split Connection name and ToCategory
-        On Error Resume Next
-        Set c = Form.Connection(tmp(0), tmp(1)) 'To, Customer
-        On Error GoTo 0
-        If c.ConnectedItemCount > 0 Then 'only export if there are values. Do we want this?
-            Set el = xmlDoc.createElement("Connection")
-            el.text = sanitizeXMLString(c.Name)
-            Dim elConName : Set elConName = cnode.appendChild(el) 'get reference to node
-            Set el = xmlDoc.createElement("ToCategory")
-            el.text = sanitizeXMLString(c.ToCategory)
-            Dim elCatName : Set elCatName = elConName.appendChild(el) 'get reference to node
-            For j = 1 To c.ConnectedItemCount 'a populated connection is initialized to 1
-                c.CurrentSelection(j)
-                Set el = xmlDoc.createElement("ItemName")
-                el.text = sanitizeXMLString(c.ItemName)
-                elCatName.appendChild(el)
-            Next 'j
-        End If
-    Next 'i
-
-
-
+'     ' process customer connections
+'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
+'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
+'     Dim connect, CustomerName
 '     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-'     Set el = xmlDoc.createElement("Customer")
+'
+'
+'     Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
 '     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
 '     el.text = sanitizeXMLString(connect.ItemName)
 '     Set el = xmlDoc.createElement("ToCategory")
-
     xmlDoc.Save strPath
-
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
 
-End Sub
 
+End Sub
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i
@@ -596,8 +577,9 @@ Function dq(s)
   dq = Chr(34) & s & Chr(34)
 
 End Function
-'*********************************************
-'********** end of pss************
+
+
+'********** end of pss      ************
 ''******************************************
 
 
@@ -834,3 +816,4 @@ For f = 0 To UBound(v)
   Next
 End Function 
  
+

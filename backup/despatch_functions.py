@@ -243,13 +243,13 @@ def submit_manifest(manifest):
                 pprint(shipment_return)
 
                 label_pdf = CLIENT.get_labels(shipment_return.shipment_document_id)
-                pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+                pathlib.Path(DIR_LABEL).mkdir(parents=True, exist_ok=True)
                 label_string = 'shipment[hire_customer] + "-" + shipment[date_object].date + ".pdf"'
-                label_pdf.download(LABEL_DIR / label_string)
+                label_pdf.download(DIR_LABEL / label_string)
                 print()
                 shipment['label_downloaded'] = True
                 shipment['shipment_return'] = shipment_return
-                print("Shipment for ", shipment[hire_customer], "has been booked, Label downloaded to", LABEL_DIR,
+                print("Shipment for ", shipment[hire_customer], "has been booked, Label downloaded to", DIR_LABEL,
                       label_string)
             shipment[is_shipped] = "Shipped"
 
@@ -263,7 +263,7 @@ def submit_manifest(manifest):
             shipment[is_shipped] = "Failed"
             continue
 
-    with open(DATA_DIR / 'AmShip.json', 'w') as f:
+    with open(DIR_DATA / 'AmShip.json', 'w') as f:
         print("LOGGING")
         new_out = {}
         exclude_keys = [address_object, date_object, service_object]

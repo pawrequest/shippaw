@@ -1,8 +1,8 @@
-import random
 import sys
 
 import psutil
 import win32gui
+from pyexcel_ods3 import get_data
 
 
 def printel(*els): # elementtree elements
@@ -13,6 +13,35 @@ def printel(*els): # elementtree elements
         print(el)
         for elem in el.iter():
             print(elem.tag, elem.text)
+
+
+def get_from_ods(ods_file, sheet, output='dict'): # takes the name of a sheet, headers(bool) and output(list of lists or dict)
+    wkbook = get_data(ods_file)
+    sheet = sheet
+    rows = wkbook[sheet]
+    rows = [row for row in rows if len(row)>0]
+    headers = rows[0]
+    headers_stripped = [head.strip() for head in headers]
+    # body = [row for row in rows[1:]]
+    body = rows[1:]
+    out_dict = {}
+    if headers_stripped[0] == 'col': # top left cell of sheet = 'col, so use first column as headers
+        for row in body:
+            k = row[0].strip()  # first iem in row list is header / key... remove whitespace
+            v = row[1:]         # the rest of the list is the content / value
+            v_stripped = [field.strip() for field in v] # strip whitespace from each item in content / value list
+            out_dict.update({k: v_stripped}) # ouptut dict has first cell as keys and rest of row as values
+    else:   # first cell is not 'col' so we assume first row is headers
+        for row in body:
+            row_dict = {}
+            fields = [field for field in row if len(row)>0] # if row has items put them in a list called fields
+            for c, field in enumerate(fields):
+                k = headers_stripped[c] # for each field in list get output_dict key key from headers at same index
+                if isinstance(field,str):   # if the field content is a string strip whitespace
+                    field = field.strip()
+                row_dict.update({k:field})
+            out_dict.update({row[0]:row_dict})
+    return out_dict  # #, rows # does it need a list of rows?
 
 
 def toPascal(x): #LikeThis
@@ -88,25 +117,25 @@ def unsanitise(string):
     # string = string.replace(";", "")
     # return string
 
+#
+# # elephant class has a memory - note the underscores
+# class Elephant:
+#     def __init__(self, fnc):
+#         self._fnc = fnc
+#         self._memory = []
+#
+#     def __call__(self):
+#         retval = self._fnc()
+#         self._memory.append(retval)
+#         return retval
+#
+#     def memory(self):
+#         return self._memory
 
-# elephant class has a memory - note the underscores
-class Elephant:
-    def __init__(self, fnc):
-        self._fnc = fnc
-        self._memory = []
 
-    def __call__(self):
-        retval = self._fnc()
-        self._memory.append(retval)
-        return retval
-
-    def memory(self):
-        return self._memory
-
-
-@Elephant
-def random_odd():
-    return random.choice([1, 3, 5, 7, 9])
+# @Elephant
+# def random_odd():
+#     return random.choice([1, 3, 5, 7, 9])
 # print(random_odd())
 # print(random_odd.memory())
 # print(random_odd())

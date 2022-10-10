@@ -10,11 +10,11 @@ from python.config import *
 #         shipment = Shipment([i])
 #         yield shipment
 
-# def getmanifest(data, datatype):
+# def getmanifest(sheets, datatype):
 #     # is json or xml?
 #     datatype = datatype
 #     if datatype == "json":
-#         with open(data) as f:
+#         with open(sheets) as f:
 #             manifest = []
 #             xml_data = json.load(f)
 #             cat = xml_data['CommenceCategory']
@@ -437,12 +437,12 @@ def book_shipment(shipment):
     shipment_return = client.get_shipment(shipment.added_shipment)
 
     label_pdf = client.get_labels(shipment_return.shipment_document_id)
-    pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(DIR_LABEL).mkdir(parents=True, exist_ok=True)
     label_string = ""
     label_string = label_string + shipment.customer + "-" + str(shipment.date_object.date) + ".pdf"
     print(label_string)
     print(type(label_string))
-    label_pdf.download(LABEL_DIR / label_string)
+    label_pdf.download(DIR_LABEL / label_string)
     tracking_numbers = []
     for parcel in shipment_return.parcels:
         tracking_numbers.append(parcel.tracking_number)
@@ -452,7 +452,7 @@ def book_shipment(shipment):
     shipment.label_url = shipment_return.labels_url
     shipment.parcels = shipment_return.parcels
     shipment.tracking = tracking_numbers
-    shipment.label_location = str(LABEL_DIR) + label_string
+    shipment.label_location = str(DIR_LABEL) + label_string
 
     shipment.collection_booked = True
     shipment.label_downloaded = True

@@ -2,7 +2,7 @@ import subprocess
 
 from config import *
 
-ps = pathlib.Path(ROOT_DIR / 'python' / 'test.ps1')
+ps = pathlib.Path(DIR_ROOT / 'python' / 'test.ps1')
 
 def runtingz(script_path, *args, **kwargs):
     commandline_options = ['powershell.exe', '-ExecutionPolicy', 'Unrestricted',

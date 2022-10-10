@@ -1,54 +1,84 @@
-# PYTHON_EXE = ROOT_DIR / "python" / "bin" / "python.exe"
-# PYTHON_MAIN_SCRIPT = ROOT_DIR / "main.py"
-# COMMENCE_WRAPPER = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-
-
-import os
-import pathlib
-
-from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-
 ####  PATHS ########
-ROOT_DIR = pathlib.Path("/Amdesp/")
-DATA_DIR = ROOT_DIR / "data"
-LABEL_DIR = DATA_DIR / "Parcelforce Labels"
-JSONFILE = DATA_DIR / "AmShip.json"
-XMLFILE = DATA_DIR.joinpath('AmShip.xml')
-XMLCUSTOMERSTR = "root[0][1].text"
-LOGFILE = DATA_DIR.joinpath("AmLog.json")
-pathlib.Path(LABEL_DIR).mkdir(parents=True, exist_ok=True)  # make the shipmentJson dirs
+# DIR_ROOT = pathlib.Path("/Amdesp")
+# DIR_DATA = pathlib.Path("/Amdesp/data/")
+# pathlib.Path(DIR_DATA / "Parcelforce Labels").mkdir(parents=True, exist_ok=True)  # make the labels dirs (and parents)
 
 ## Despatch Bay
-API_USER = os.getenv("DESPATCH_API_USER")
-API_KEY = os.getenv("DESPATCH_API_KEY")
-SENDER_ID = "5536"  # should be env var?
-CLIENT = DespatchBaySDK(api_user=API_USER, api_key=API_KEY)
-SENDER = CLIENT.sender(address_id=SENDER_ID)
-
-line = '-' * 100
-
-## Field Control
-EXPORT_EXCLUDE_KEYS = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
-SHIPFIELDS = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
-                  "deliveryPostcode", "sendOutDate", "referenceNumber"]
-
-HIREFIELDS = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
-              'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
-              'customer']
-
-RADIOBINS = {'A66' : "somepath"}
 
 
 
-# config = {
-#     'API_USER': os.getenv("DESPATCH_API_USER"),
-#     'API_KEY': os.getenv("DESPATCH_API_KEY"),
-#     'DATA_DIR': ROOT_DIR / 'AmDesp' / "data",
-#     'LABEL_DIR': ROOT_DIR / 'data' / "Parcelforce Labels",
-#     'AMDESP_DIR': ROOT_DIR / "AmDesp",
-#     'SENDER_ID': 5536,  # should be env var?
-#     'JSONFILE': ROOT_DIR / 'data' / "AmShip.json",
-#     'XMLFILE': ROOT_DIR / 'data' / "AmShip.xml",
-#     'xmlfile' : .joinpath()
-#     'LOGFILE': ROOT_DIR / 'data' / "AmLog.json",
+
+'''
+## get class schema
+CONFIG_CLASS = {}
+CONFIG_RADIO = {}
+
+
+def get_product_attrs():
+    global CONFIG_CLASS
+    # sheets = get_data(config)
+    sheets = get_data(str(CONFIG_PATH['CONFIG_FILE']))
+    # config_dict = dict()
+    attrs = sheets['PRODUCT_ATTRS']
+    for field in attrs:
+        if field:
+            k = field[0]
+            v = field[1:]
+            CONFIG_CLASS.update({k: v})
+
+
+get_product_attrs()
+
+
+def get_radios():
+    global CONFIG_RADIO
+    sheets = get_data(str(CONFIG_PATH['CONFIG_FILE']))
+    # RADIO_DICT = dict()
+    radios = sheets['RADIO_DICT']
+    headers = radios[0]
+    for radio in radios[1:]:
+        if radio:
+            k = radio[0] + radio[1]
+            v = dict()
+            for d, header in enumerate(headers):
+                v.update({headers[d]: radio[d]})
+            CONFIG_RADIO.update({k: v})
+
+
+get_radios()
+
+print()
+
+# CONFIG_PATH = {
+#     'DIR_LABEL': DIR_DATA / "Parcelforce Labels",
+#     'JSONFILE': DIR_DATA / "AmShip.json",
+#     'XMLFILE': DIR_DATA.joinpath('AmShip.xml'),
+#     'LOGFILE': DIR_DATA.joinpath("AmLog.json"),
+#     'CONFIG_FILE': DIR_DATA.joinpath("AmDespConfig.Ods"),
 # }
+# CONFIG_FIELD = {
+#     'EXPORT_EXCLUDE_KEYS': ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#     'SHIPFIELDS': ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
+#                    "deliveryPostcode", "sendOutDate", "referenceNumber"],
+#     'HIREFIELDS': ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
+#                    'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
+#                    'customer']}
+
+# class CnfgFields:
+#     def __init__(self):
+#         self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#         self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
+#                                 "deliveryPostcode", "sendOutDate", "referenceNumber"]
+#         self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',
+#                             'deliveryEmail',
+#                             'deliveryAddress', 'sendOutDate', 'sendOutDate', 'deliveryPostcode', 'referenceNumber',
+#                             'customer']
+#
+# class CnfgPaths:
+#     def __init__(self):
+#         self.DIR_LABEL = DIR_DATA / "Parcelforce Labels",
+#         self.Json_File = DIR_DATA / "AmShip.json",
+#         self.xml_file = DIR_DATA.joinpath('AmShip.xml'),
+#         self.log_file = DIR_DATA.joinpath("AmLog.json"),
+#         self.config_file = DIR_DATA.joinpath("AmDespConfig.Ods"),
+'''

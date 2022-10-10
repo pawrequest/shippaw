@@ -850,142 +850,96 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Unpacked Time").Value = "now"
 		
 		Case "CommandButton11"
-			' All Parcelforce
-            MsgBox ("All Parcelforce") ' debug
-			Form.Field("Send Method").Value = "Parcelforce"
-			Form.Field("Collection Method").Value = "Parcelforce"
+			' this button inserts the description "Parcelforce" into the Send Method field
+			Form.Field("Send Method").Value = "Parcelforce / DB"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Parcelforce/DB and we collect"
+			End If
 
 		Case "CommandButton12"
-			' All Courier
-            MsgBox ("All Courier")    ' debug
-			Form.Field("Send Method").Value = "Other Courier"
-			Form.Field("Collection Method").Value = "Other Courier"
+			' this button inserts the description "RUSH bike" into the Send Method field
+			Form.Field("Send Method").Value = "RUSH motorbike"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "RUSH motorbike and we collect"
+			End If
 
 		Case "CommandButton13"
-			' All Customer
-            MsgBox ("All Customer")    ' debug
-			Form.Field("Send Method").Value = "Customer Collects"
-			Form.Field("Collection Method").Value = "Customer Returns"
+			' this button inserts the description "RUSH car/van" into the Send Method field
+			Form.Field("Send Method").Value = "RUSH car/van"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "RUSH car/van and we collect"
+			End If
 
+		Case "CommandButton14"
+			' this button inserts the description "Absolutely motorbike" into the Send Method field
+			Form.Field("Send Method").Value = "Absolutely motorbike"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
+			End If
+'
+' 		Case "CommandButton15"
+' 			' this button writes the delivery details to a CSV text file on the PC's local disk, which can
+' 			' then be uploaded into the Despatchbay web site
+' 			'dim fs,fname
+' 			'set fs=Server.CreateObject("Scripting.FileSystemObject")
+' 			'set fname=fs.CreateTextFile("c:\test.txt",true)
+' 			'fname.WriteLine("Hello World!")
+' 			'fname.Close
+' 			'set fname=nothing
+' 			'set fs=nothing
+'
+' 			Dim fso, DBtextfilename, DBstring
+' 			Set fso = CreateObject("Scripting.FileSystemObject")
+' 			Set DBtextfilename = fso.CreateTextFile("c:\Windows\temp\DBaddressfile.txt",True)
+' 			DBstring = Form.Field("Delivery Contact").Value + ", " + Form.Field("Delivery Address").Value + ", " + Form.Field("Delivery Postcode").Value + ", " + Form.Field("Delivery Telephone").Value + ", " + Form.Field("Delivery Telephone").Value
+' 			DBtextfilename.WriteLine(DBstring)
+' 			DBtextfilename.Close
 
+		Case "CommandButton16"
+			' this button inserts the description "Absolutely car/van" into the Send Method field
+			Form.Field("Send Method").Value = "Absolutely car/van"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Absolutely car/van and we collect"
+			End If
 
+		Case "CommandButton17"
+			' this button inserts the description "Amherst Staff" into the Send Method field
+			Form.Field("Send Method").Value = "Amherst staff"
+			If Form.Field("Send / Collect").Value = "We send and pick up" Then
+				Form.Field("Send Method").Value = "Amherst staff and we collect"
+			End If
 
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   pss                 '''''''''''''''''''''''''''''''
-        Case "CommandButton19"
-        ' book in hire, all ok'
-			Form.Field("Unpacked By").Value = "PR"
-			Form.Field("Unpacked Date").Value = "today"
-			Form.Field("Unpacked Time").Value = "now"
-			Form.Field("Status").Value = "Returned all OK"
-			Form.Field("Actual Return Date").Value = "today"
-			Form.Field("Closed").Value = 1
-			Form.Save
+' '''''''''   pss                 '''''''''''''''''''''''''''''''
 '
-'         Case "CommandButton20"
-'         ' book in hire, problems'
-' 			Form.Field("Unpacked By").Value = "PR"
-' 			Form.Field("Unpacked Date").Value = "today"
-' 			Form.Field("Unpacked Time").Value = "now"
-' 			Form.Field("Status").Value = "Returned with problems"
-' 			Form.Field("Actual Return Date").Value = "today"
-
-        Case "CommandButton21"
-        ' packed
-            Form.Field("Packed By").Value = "PR"
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            Form.Save
-
-        Case "CommandButton22"
+        Case "CommandButton19"
+            PackHire()
 
 
         Case "CommandButton20"
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with cmd     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-		    Dim python_exe, python_script, commence_wrapper, xmlfile
-            python_exe = "C:\AmDesp\python\bin\python.exe"
-            python_script = "C:\AmDesp\AmDespMain.py"
-            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-            Dim oShell, currentCommand, my_command
-            SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-            Msgbox "RUN PYTHON"
-            oShell.run currentCommand,1,true
+            UnpackHire()
 
+        Case "CommandButton21"
+            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
+                ShipHire("C:\AmDesp\data\AmShip.xml")
+            End if
 
-'             Dim objShell, args, runscript, powershell, XmlPath, RunCmd, python_script
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file"
-' '             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             powershell = "C:\AmDesp\script\AmDespSingle.ps1"
-' 		    ExportItemDetailForm(XmlPath)
-'             args = "XmlPath"
-'             Set objShell = CreateObject("WScript.Shell")
-'             objShell.Run (RunCmd & " " & powershell & " ") ' & " " & args
-' '             objShell.Run (RunCmd & " " & python_script),1,true
-'             Set objShell = Nothing
-            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp direct with Powershell     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' 		    Dim python_exe, python_script, XmlPath
-' '             ' '  runs AmDesp direct with CMD
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-' 		    ExportItemDetailForm(XmlPath)
-'             Dim oShell, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             oShell.run RunCmd,1,true
+        Case "CommandButton22"
+        ' Email customer about missing kit
+            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
+                EmailMissingKit()
+            End if
 
+        Case "CommandButton23"
+        ' Send upcoming hire email'
+            if MsgBox("Send email about upcoming shipment?",4) = 6 Then
+                EmailSendOut()
+           End if
 
-'             currentCommand = "cmd /c " & Chr(34) & python_script & " " & JsonPath & Chr(34)
-'             Msgbox "RUN PYTHON"
-
-' C:\AmDesp\script\AmDespSingle.ps1
-
-'''''''''''''''''''''''''''''''''''''''''
-
-
-' 		    Dim python_exe, python_script, commence_wrapper, JsonPath
-'             python_exe = "C:\AmDesp\python\bin\python.exe"
-'             python_script = "C:\AmDesp\AmDespMain.py"
-'             XmlPath = "C:\AmDesp\data\AmShip.xml"
-'             Dim oShell, source_code_path, variable1, currentCommand, my_command
-'             SET oShell = CreateObject("Wscript.Shell")
-'             pyPs = "powershell -executionpolicy bypass -noexit -file" & python_exe & python_script & XmlPath
-'             RunCmd = "powershell -executionpolicy bypass -noexit -file" & Chr(34) & python_script & " " & XmlPath & Chr(34)
-'             my_command = python_exe &  python_script & " " & JsonPath
-' '             Msgbox "RUN PYTHON"
-'             oShell.run pyPs,1,true
-' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
-' objShell.run("powershell -executionpolicy bypass -noexit -file ""C:\AmDesp\AmDesp.ps1"""),1,true
-
-'
-' 		 ' exports the hire to xml and calls python to ship xml
-'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-'         Dim objShell, myconnection
-'         Set objShell = CreateObject("WScript.Shell")
-'         objShell.Run "C:\AmDesp\vbs\button.vbs"
-'         Set objShell = Nothing
-
-
-' 		 ' exports the hire to xml and calls python to ship xml
-'         Call ExportItemDetailForm("C:\AmDesp\data\AmShip.xml")
-'         Dim objShell, myconnection
-'         Set objShell = CreateObject("WScript.Shell")
-'         objShell.Run "C:\AmDesp\vbs\button.vbs"
-'         Set objShell = Nothing
 
 ''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -995,6 +949,140 @@ End Sub
 
 
 '''''''''''''''''''''''''''''''''''''''''''''
+'''''''''' pss email func''''''''''''''
+
+Sub PackHire()
+        Dim packedBy
+        Form.Field("Packed Date").Value = "today"
+        Form.Field("Packed Time").Value = "now"
+        Form.Field("Status").Value = "Booked in and packed"
+        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
+        Form.Field("Packed By").Value = packedBy
+        if MsgBox("Send pre-shipping email?",4) = 6 Then
+        EmailSendOut()
+        End if
+        if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+        ShipHire("C:\AmDesp\data\AmShip.xml")
+        End if
+        if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
+            Form.Save
+        End if
+End Sub
+
+Sub ShipHire(xmlfile)
+        ' AmDesp'
+        Dim python_exe, python_script, commence_wrapper
+        python_exe = "C:\AmDesp\python\bin\python.exe"
+        python_script = "C:\AmDesp\AmDespMain.py"
+        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         xmlfile = "C:\AmDesp\data\AmShip.xml"
+        ExportItemDetailForm(xmlfile)
+        Dim oShell, currentCommand, my_command
+        Set oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
+        currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+        oShell.run currentCommand,1,true
+        set oShell = nothing
+
+
+End Sub
+
+Sub UnpackHire()
+        Dim unpackedBy, missing, newReturn
+        unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
+        Form.Field("Unpacked Date").Value = "today"
+        Form.Field("Unpacked Time").Value = "now"
+        Form.Field("Actual Return Date").Value = "today"
+        Form.Field("Unpacked By").Value = unpackedBy
+        if MsgBox("all ok?",4) = 6 Then
+            Form.Field("Status").Value = "Returned all OK"
+            if MsgBox("Close Hire and exit?",4) = 6 Then
+                Form.Field("Closed").Value = 1
+                Form.Save
+            End if
+        Else
+            Form.Field("Status").Value = "Returned with problems"
+            missing = InputBox("What was missing?", "What's Missing?")
+            if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
+                Form.Field("Missing Kit").Value = missing
+                EmailMissingKit()
+                if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
+                    Form.Save
+                End if
+            End if
+
+        End if
+End Sub
+
+
+
+Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
+        Dim olApp
+        Dim objMailItem
+        Dim returnStr
+        Dim emailaddy
+        if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
+            returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
+        Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
+            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
+        End if
+
+
+        Set olApp = CreateObject("Outlook.Application")
+        Set objMailItem = olApp.CreateItem(0)
+        objMailItem.Subject = "Radio Hire - upcoming shipment details"
+        emailaddy = Form.Field("Delivery Email").Value
+        if MsgBox("Delivery email address is " & emailaddy & "- send pre-ship email to this address?",4) = 7 Then
+        emailaddy = InputBox("Enter new email address")
+        End if
+        objMailItem.To = emailaddy
+        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+                           vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
+                           "Please check the following details and contact us urgently if there are discrepancies."& vbNewLine & _
+                           vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
+                           Form.Field("Delivery Contact").Value & vbNewLine & _
+                           Form.Field("Delivery Address").Value & vbNewLine & _
+                           vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
+                           vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
+                           vbNewLine & returnStr & vbNewLine & _
+                           vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & "(this email generated automatically)"
+        if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & emailaddy & "?",4) = 6 Then
+        objMailItem.Send
+        MsgBox("EMAILED")
+        End if
+        Set olApp = Nothing
+        Set objMailItem = Nothing
+End Sub
+
+Sub EmailMissingKit() ' emails return notes should change to missing.
+    ' found code to send email'
+        Dim olApp
+        Dim objMailItem
+        Dim emailadd
+        Set olApp = CreateObject("Outlook.Application")
+        Set objMailItem = olApp.CreateItem(0)
+        objMailItem.Subject = "Radio Hire - Missing Kit"
+
+        emailadd = Form.Field("Delivery Email").Value
+        if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address?",4) = 7 Then
+        emailadd = InputBox("Enter new email address")
+        End if
+
+        objMailItem.To = emailadd
+        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+                           vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
+                           vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
+                           "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
+                           vbNewLine & "MISSING KIT:" & vbNewLine & _
+                           Form.Field("Missing Kit").value & vbNewLine & vbNewLine & "(If you have already discussed missing items with us please disregard this automatically generated email)"
+        if MsgBox ("Confirm Email:" & vbNewLine & vbNewLine & objMailItem & vbNewLine & objMailItem.Body, 4) = 6 Then
+            objMailItem.Send
+            MsgBox("EMAILED")
+        End if
+        Set olApp = Nothing
+        Set objMailItem = Nothing
+End Sub
+
 ''''''''' arno-pss function to export item field
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
@@ -1062,68 +1150,6 @@ Sub ExportItemDetailForm(ByVal strPath)
 
 
 End Sub
-
-
-' '''''''''''''''''''''''''''''''''''''''''''''
-' ''''''''' arno-pss function to export item field
-' Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
-' Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-'
-' Sub ExportItemDetailForm(ByVal strPath)
-'
-'     'will export all values showing on the form,
-'     'including ones that are not visible(!)
-'     'any user, if permissioned, can always show these anwyay.
-'     Dim db, conv, f, arrFields, arrCons, strDDE
-'     Set db = Application.Database
-'     Set conv = db.GetConversation("Commence", "GetData")
-'     strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
-'     arrFields = Split(conv.Request(strDDE), CMC_DELIM)
-'     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
-'     xmlDoc.async = false
-'     xmlDoc.loadXML("<root><ItemDetailForm/></root>")
-'
-'     Dim el
-'     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-'     Set el = xmlDoc.createElement("CategoryName")
-'     el.text = sanitizeXMLString(Form.CategoryName)
-'     objRoot.childNodes.item(0).appendChild(el)
-'     Set el = xmlDoc.createElement("FormName")
-'     el.text = sanitizeXMLString(Form.Name)
-'     objRoot.childNodes.item(0).appendChild(el)
-'     Set el = xmlDoc.createElement("Fields")
-'     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
-'     Dim i
-'     For i = 0 To UBound(arrFields) - 1
-'         ' the idea is that if we cannot instatiate a field,
-'         ' it isn't on the form, so we need to catch the errors
-'         On Error Resume Next
-'         Set f = Form.Field(arrFields(i))
-'         On Error Goto 0
-'         ' add to xml doc
-'         Set el = xmlDoc.createElement("Field")
-'         Dim n : Set n = fnode.appendChild(el) 'get reference to node
-'         Set el = xmlDoc.createElement("FieldName")
-'         el.text = sanitizeXMLString(f.Name)
-'         n.appendChild(el)
-'         Set el = xmlDoc.createElement("FieldValue")
-'         el.text = sanitizeXMLString(f.Value)
-'     n.appendChild(el)
-'     Next
-'     ' process customer connections
-'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-'     Dim connect, CustomerName
-'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-'     Set el = xmlDoc.createElement("Customer")
-'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-'     el.text = sanitizeXMLString(connect.ItemName)
-'     Set el = xmlDoc.createElement("ToCategory")
-'     xmlDoc.Save strPath
-'     Set xmlDoc = Nothing
-'     Set conv= Nothing
-'     Set db = Nothing
-' End Sub
 
 public Function sanitizeXMLString(invalidString)
 	Dim tmp, i

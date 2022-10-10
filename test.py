@@ -1,25 +1,10 @@
-import json
-
-from config import *
-
-with open(DATA_DIR / 'AmShip.json') as x:
-    print(type(x))
-    obj = json.load(x)
-    ship_list = []
-    ship_list.append(obj)
-
-    print(ship_list)
-
-# python object to be appended
-
-# parsing JSON string:
-
-# appending the shipmentJson
-# z.update(y)
-#
-# # the result is a JSON string:
-# print(json.dumps(z))
-
+api_user :
+api_key :
+sender_id :
+client :
+sender :
+courier_id :
+shipping_service_id :
 
 
 
