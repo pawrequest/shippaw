@@ -961,8 +961,11 @@ Sub PackHire()
         if MsgBox("Send pre-shipping email?",4) = 6 Then
         EmailSendOut()
         End if
-        if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-        ShipHire("C:\AmDesp\data\AmShip.xml")
+        If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
+            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+                ShipHire("C:\AmDesp\data\AmShip.xml")
+            End if
+        Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
         if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
             Form.Save
