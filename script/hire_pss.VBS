@@ -967,7 +967,7 @@ Sub PackHire()
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
-        if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
+        if MsgBox("Hire packed now by " & packedBy & " - save and close?", 4) = 6 Then
             Form.Save
         End if
 End Sub
