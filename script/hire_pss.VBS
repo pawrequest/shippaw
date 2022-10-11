@@ -961,10 +961,13 @@ Sub PackHire()
         if MsgBox("Send pre-shipping email?",4) = 6 Then
         EmailSendOut()
         End if
-        if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-        ShipHire("C:\AmDesp\data\AmShip.xml")
+        If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
+            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+                ShipHire("C:\AmDesp\data\AmShip.xml")
+            End if
+        Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
-        if MsgBox("Hire packed by " & packedBy & " save and close?", 4) = 6 Then
+        if MsgBox("Hire packed now by " & packedBy & " - save and close?", 4) = 6 Then
             Form.Save
         End if
 End Sub
@@ -1038,7 +1041,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         objMailItem.To = emailaddy
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
                            vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
-                           "Please check the following details and contact us urgently if there are discrepancies."& vbNewLine & _
+                           "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
                            Form.Field("Delivery Address").Value & vbNewLine & _

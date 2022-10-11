@@ -1,6 +1,7 @@
 import json
 import os
 import pathlib
+import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pprint import pprint
@@ -12,7 +13,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
-shipper_mode = "sand"
+shipper_mode = "prod"
 line = '-' * 100
 
 
@@ -50,6 +51,8 @@ class Config:
                 self.xml_file = self.data_dir.joinpath('AmShip.xml')
                 self.log_file = self.data_dir.joinpath("AmLog.json")
                 self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
+                self.bin_dir = pathlib.Path("/Amdesp/bin/")
+                self.pdf_to_print = self.bin_dir.joinpath("PDFtoPrinter.exe")
                 pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
                                                                          exist_ok=True)  # make the labels dirs (and parents)
 
@@ -372,10 +375,10 @@ class Shipment:  # taking an xmlimporter object
                 print("NO ADDRESS OBJECT")
                 break
 
-    def ammend_address(self, pc=None):
-        if not pc:
-            pc = self.deliveryPostcode
-        candidates = self.client.get_address_keys_by_postcode(pc)
+    def ammend_address(self, postcode=None):
+        if not postcode:
+            postcode = self.deliveryPostcode
+        candidates = self.client.get_address_keys_by_postcode(postcode)
 
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
@@ -539,7 +542,7 @@ class Shipment:  # taking an xmlimporter object
             elif choice == 'b':
                 self.client.book_shipments(self.addedShipment)
                 shipment_return = self.client.get_shipment(self.addedShipment)
-                label_pdf = self.client.get_labels(shipment_return.shipment_document_id)
+                label_pdf = self.client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
                 label_string = ""
                 try:
                     label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
@@ -556,7 +559,14 @@ class Shipment:  # taking an xmlimporter object
                 self.labelUrl = shipment_return.labels_url
                 self.parcels = shipment_return.parcels
                 self.labelLocation = str(CNFG.paths.label_dir / label_string)
-
+                while True:
+                    ui = input("[P]rint label or [E]xit?")
+                    uii = ui[0].lower()
+                    if uii == 'p':
+                        command = (CNFG.paths.pdf_to_print, self.labelLocation)
+                        subprocess.call(command, shell=True)
+                    elif uii == 'e':
+                        break
                 self.collectionBooked = True
                 self.labelDownloaded = True
                 print(
