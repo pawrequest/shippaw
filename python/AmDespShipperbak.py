@@ -16,17 +16,17 @@ FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
 
 class Config:
-    def __init__(self, ship_mode):
+    def __init__(self, ):
         self.config_ods = CONFIG_ODS
 
         class DespatchConfig:
             def __init__(self):
-                if ship_mode == "sand":
-                    self.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
-                    self.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
-                else:
-                    self.api_user = os.getenv("DESPATCH_API_USER")
-                    self.api_key = os.getenv("DESPATCH_API_KEY")
+                # if ship_mode == "sand":
+                #     self.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
+                #     self.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
+                # else:
+                self.api_user = os.getenv("DESPATCH_API_USER")
+                self.api_key = os.getenv("DESPATCH_API_KEY")
                 self.sender_id = "5536"  # should be env var?
                 self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
                 self.sender = self.client.sender(address_id=self.sender_id)
@@ -59,23 +59,24 @@ class Config:
         self.dbay_cnfg = DespatchConfig()
 
 
-# CNFG = Config()
+CNFG = Config()
 
 
 class ShippingApp:
     def __init__(self, ship_mode):  # make app
-        CNFG = Config(ship_mode)
+        if ship_mode == 'sand':
+            CNFG.dbay_cnfg.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
+            CNFG.dbay_cnfg.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
         self.shipment = None
         self.client = CNFG.dbay_cnfg.client
         self.sender = CNFG.dbay_cnfg.sender
-        self.CNFG = CNFG
 
     # def xml_to_shipment(self):
     #     self.shipment = XmlShipmentObj()
     def xml_to_shipment(self):
         ship_dict = self.xml_to_ship_dict()
         parsed = ShipDictObject(ship_dict)
-        self.shipment = Shipment(parsed, self.CNFG)
+        self.shipment = Shipment(parsed)
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
@@ -91,7 +92,7 @@ class ShippingApp:
     def xml_to_ship_dict(self):
         print("XML IMPORTER ACTIVATED")
         ship_dict = {}
-        tree = ET.parse(self.CNFG.paths.xml_file)
+        tree = ET.parse(CNFG.paths.xml_file)
         root = tree.getroot()
         fields = root[0][2]
         category = root[0][0].text
@@ -169,7 +170,7 @@ class ShippingApp:
     def log_json(self):
         # export from object attrs?
         export_dict = {}
-        for field in self.CNFG.fields.export_fields:
+        for field in CNFG.fields.export_fields:
             val = getattr(self.shipment, field)
             if isinstance(val, datetime):
                 val = datetime.strftime(val, '%d-%m-%Y')
@@ -177,15 +178,14 @@ class ShippingApp:
         # if isinstance(export_dict, datetime):
         #     export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-        with open(self.CNFG.paths.log_file, 'a+') as f:
+        with open(CNFG.paths.log_file, 'a+') as f:
             json.dump(export_dict, f, sort_keys=True)
-            pprint(f"\n Json exported to {self.CNFG.paths.log_file} {export_dict =}")
+            pprint(f"\n Json exported to {CNFG.paths.log_file} {export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
-    def __init__(self, parsed_xml_object, CNFG, shipid=None,
+    def __init__(self, parsed_xml_object, shipid=None,
                  shipref=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
-        self.CNFG = CNFG
         self.sender = CNFG.dbay_cnfg.sender
         self.client = CNFG.dbay_cnfg.client
         self.collectionBooked = False
@@ -297,8 +297,8 @@ class Shipment:  # taking an xmlimporter object
                 # return self
 
     def val_dates(self):
-        dates = self.client.get_available_collection_dates(self.CNFG.dbay_cnfg.sender,
-                                                           self.CNFG.dbay_cnfg.courier_id)  # get dates
+        dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender,
+                                                           CNFG.dbay_cnfg.courier_id)  # get dates
         print("--- Checking available collection dates...")
         send_date = datetime.strftime(self.sendOutDate, '%Y-%m-%d')
 
@@ -487,7 +487,7 @@ class Shipment:  # taking an xmlimporter object
         )
         self.shipmentRequest.collection_date = self.dateObject.date  #
         self.services = self.client.get_available_services(self.shipmentRequest)
-        if self.services[0].service_id != self.CNFG.dbay_cnfg.shipping_service_id:
+        if self.services[0].service_id != CNFG.dbay_cnfg.shipping_service_id:
             print("Something is wrong with the shipping service name")
         self.shippingServiceName = self.services[0].name
         self.shippingCost = self.services[0].cost
@@ -555,7 +555,7 @@ class Shipment:  # taking an xmlimporter object
                 except:
                     label_string = label_string, self.customer, ".pdf"
                 # label_pdf.download(CONFIG_PATH['DIR_LABEL'] / label_string)
-                label_pdf.download(self.CNFG.paths.label_dir / label_string)
+                label_pdf.download(CNFG.paths.label_dir / label_string)
                 self.trackingNumbers = []
                 for parcel in shipment_return.parcels:
                     self.trackingNumbers.append(parcel.tracking_number)
@@ -564,12 +564,12 @@ class Shipment:  # taking an xmlimporter object
                 self.shipmentDocId = shipment_return.shipment_document_id
                 self.labelUrl = shipment_return.labels_url
                 self.parcels = shipment_return.parcels
-                self.labelLocation = str(self.CNFG.paths.label_dir / label_string)
+                self.labelLocation = str(CNFG.paths.label_dir / label_string)
                 while True:
                     ui = input("[P]rint label or [E]xit?")
                     uii = ui[0].lower()
                     if uii == 'p':
-                        command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
+                        command = (CNFG.paths.pdf_to_print, self.labelLocation)
                         subprocess.call(command, shell=True)
                     elif uii == 'e':
                         break

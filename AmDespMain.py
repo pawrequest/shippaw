@@ -2,8 +2,8 @@
 from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
 
-def shipper():
-    app = ShippingApp()
+def shipper(ship_mode):
+    app = ShippingApp(ship_mode)
 
     app.xml_to_shipment()
     if app.queue_shipment():
@@ -24,6 +24,6 @@ def test():
 
 
 if __name__ == '__main__':
-    shipper()
+    shipper('prod')
     # programmer()
     # test()
