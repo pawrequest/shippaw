@@ -375,10 +375,10 @@ class Shipment:  # taking an xmlimporter object
                 print("NO ADDRESS OBJECT")
                 break
 
-    def ammend_address(self, pc=None):
-        if not pc:
-            pc = self.deliveryPostcode
-        candidates = self.client.get_address_keys_by_postcode(pc)
+    def ammend_address(self, postcode=None):
+        if not postcode:
+            postcode = self.deliveryPostcode
+        candidates = self.client.get_address_keys_by_postcode(postcode)
 
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
