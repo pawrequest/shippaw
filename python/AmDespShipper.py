@@ -15,6 +15,7 @@ CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
 
+
 class Config:
     def __init__(self, ship_mode):
         self.config_ods = CONFIG_ODS
@@ -32,6 +33,7 @@ class Config:
                 self.sender = self.client.sender(address_id=self.sender_id)
                 self.courier_id = 8
                 self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
+                self.address_vars = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
 
         class FieldsCnfg:
             def __init__(self, ods):
@@ -185,6 +187,7 @@ class ShippingApp:
 class Shipment:  # taking an xmlimporter object
     def __init__(self, parsed_xml_object, CNFG, shipid=None,
                  shipref=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
+        self.printed = False
         self.CNFG = CNFG
         self.sender = CNFG.dbay_cnfg.sender
         self.client = CNFG.dbay_cnfg.client
@@ -310,8 +313,8 @@ class Shipment:  # taking an xmlimporter object
                 print(f"Collection date match - shipment for {self.customer} will be collected on {da}\n", line)
                 return
         else:  # loop exhausted, no date match
-            print("\n*** ERROR: No collections available on", self.sendOutDate, "for",
-                  self.customer, "***\n\n\n- Collections for", self.customer, "are available on:\n")
+            print(
+                f"\n*** ERROR: No collections available on {self.sendOutDate:%A - %B %#d} ***\n\n\n- Collections for {self.customer} are available on:\n")
             for count, date in enumerate(dates):
                 dt = parse(date.date)
                 out = datetime.strftime(dt, '%A - %B %#d')
@@ -344,11 +347,11 @@ class Shipment:  # taking an xmlimporter object
             if self.deliveryBuildingNum != 0:
                 search_string = self.deliveryBuildingNum
             else:
-                print("No building number, searching deliveryFirstline")
+                print("No building number, searching by first line of address \n")
                 self.deliveryBuildingNum = False
                 search_string = self.deliveryFirstline
         else:
-            print("No building number, searching deliveryFirstline")
+            print("No building number - searching by first line of address \n")
             search_string = self.deliveryFirstline
         # get object
         try:
@@ -364,12 +367,22 @@ class Shipment:  # taking an xmlimporter object
     def check_address(self):
         while True:
             if self.addressObject:
+                addy1 = [getattr(self.addressObject, var) for var in vars(self.addressObject) if
+                         var in self.CNFG.dbay_cnfg.address_vars]
+                addy2 = [addy + "\n" for addy in addy1]
+                for line in addy1:
+                    print(line)
+                    # print (f"Recipient address is {addy2} - is this correct?")
+
                 ui = input(
-                    f"\n- Recipient address is: \n{self.addressObject} \n- is this correct? \n[C]ontinue, anything else to change address\n\n")
-                if ui[0].lower() == "c":
+                    f"\n[C]ontinue, [G]et new address or [A]mmend address \n\n")
+                uii = ui[0].lower()
+                if uii == "c":
                     return
-                else:
+                elif uii == 'g':
                     self.change_address()
+                elif uii == 'a':
+                    self.ammend_address()
             else:
                 print("NO ADDRESS OBJECT")
                 break
@@ -407,10 +420,11 @@ class Shipment:  # taking an xmlimporter object
         self.addressObject = self.client.get_address_by_key(selected_key)
         print(f"- New Address: {self.addressObject.company_name},{self.addressObject.street}")
         while True:
-            ui = input("[A]mmend address, or [C]ontinue?")
+            ui = input("[A]mmend address, or [C]ontinue?\n")
             uii = ui[0].lower()
             if uii == "a":
-                ...
+                self.addressObject = self.ammend_address()
+                break
             if uii == 'c':
                 break
         return
@@ -444,6 +458,50 @@ class Shipment:  # taking an xmlimporter object
                     if input("really [E]xit?") == 'e':
                         exit()
                     self.search_address()
+
+    def ammend_address(self):
+        address = self.addressObject
+        print(address.street, '\n')
+        address_vars = self.CNFG.dbay_cnfg.address_vars
+        # myvars = [var for var in vars(address) if var in address_vars]
+        while True:
+            # print("\n")
+            for c, var in enumerate(address_vars, start=1):
+                print(f"{c} - {var} = {getattr(address, var)}")
+            ui = input("\n Enter a number to edit the field, [0] to go back\n")
+            if not ui.isnumeric():
+                print("That isn't a number")
+                continue
+            uii = int(ui) - 1
+            if int(ui) == 0:
+                return address
+
+            if not uii <= len(address_vars):
+                print("wrong number")
+                continue
+            var_to_edit = address_vars[uii]
+            new_var = input(f"{var_to_edit} is currently {getattr(address, var_to_edit)} - enter new value \n")
+            while True:
+                cont = input(f"[C]hange {var_to_edit} to {new_var} or [G]o back?")
+                if not cont.isalpha():
+                    print("That's not a letter")
+                    continue
+                conti = cont[0].lower()
+                if conti == 'g':
+                    break
+                if conti == 'c':
+                    setattr(address, var_to_edit, new_var)
+                    while True:
+                        ui = input("[C]hange another, anything else to move on?")
+                        uii = ui[0].lower()
+                        if uii == 'c':
+                            self.ammend_address(address)
+                        else:
+                            return address
+            ...
+        # for var in vars(address):
+        #     print (var)
+        ...
 
     def make_request(self):
         print("MAKING REQUEST")
@@ -526,6 +584,24 @@ class Shipment:  # taking an xmlimporter object
             else:
                 continue
 
+    def print_label(self):
+        while True:
+            ui = input("[P]rint label or [E]xit?\n")
+            uii = ui[0].lower()
+            if uii == 'p':
+                command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
+                subprocess.call(command, shell=True)
+                self.printed = True
+                while True:
+                    ui = input("[P]rint again, or [E]xit")
+                    uii = ui[0].lower()
+                    if uii == 'p':
+                        self.print_label()
+                    elif uii == 'e':
+                        return self.printed
+            elif uii == 'e':
+                return self.printed
+
     def book_collection(self):
         # CNFG = config
         print("[B]ook collection for", self.customer + "'s shipment?")
@@ -565,18 +641,12 @@ class Shipment:  # taking an xmlimporter object
                 self.labelUrl = shipment_return.labels_url
                 self.parcels = shipment_return.parcels
                 self.labelLocation = str(self.CNFG.paths.label_dir / label_string)
-                while True:
-                    ui = input("[P]rint label or [E]xit?")
-                    uii = ui[0].lower()
-                    if uii == 'p':
-                        command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
-                        subprocess.call(command, shell=True)
-                    elif uii == 'e':
-                        break
+                self.print_label()
                 self.collectionBooked = True
                 self.labelDownloaded = True
+                nl = "\n"
                 print(
-                    f"\n Collection has been booked for {self.customer} on {self.dateObject.date} Label downloaded to {self.labelLocation}\n")
+                    f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
                 return True
 
 

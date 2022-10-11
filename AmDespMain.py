@@ -1,6 +1,6 @@
-
 from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
+
 
 def shipper(ship_mode):
     app = ShippingApp(ship_mode)
@@ -8,7 +8,7 @@ def shipper(ship_mode):
     app.xml_to_shipment()
     if app.queue_shipment():
         if app.book_collection():
-            print ("success")
+            print("success")
     app.log_json()
 
 
