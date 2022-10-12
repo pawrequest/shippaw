@@ -17,7 +17,7 @@ line = '-' * 100
 
 
 class Config:
-    def __init__(self, ship_mode):
+    def __init__(self, ship_mode, xmlfile):
         self.config_ods = CONFIG_ODS
 
         class DespatchConfig:
@@ -48,7 +48,8 @@ class Config:
                 self.data_dir = pathlib.Path("/Amdesp/data/")
                 self.label_dir = self.data_dir / "Parcelforce Labels"
                 self.Json_File = self.data_dir.joinpath("AmShip.json")
-                self.xml_file = self.data_dir.joinpath('AmShip.xml')
+                # self.xml_file = self.data_dir.joinpath('AmShip.xml')
+                self.xml_file = xmlfile
                 self.log_file = self.data_dir.joinpath("AmLog.json")
                 self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
                 self.bin_dir = pathlib.Path("/Amdesp/bin/")
@@ -65,8 +66,8 @@ class Config:
 
 
 class ShippingApp:
-    def __init__(self, ship_mode):  # make app
-        CNFG = Config(ship_mode)
+    def __init__(self, ship_mode, xmlfile):  # make app
+        CNFG = Config(ship_mode, xmlfile)
         self.shipment = None
         self.client = CNFG.dbay_cnfg.client
         self.sender = CNFG.dbay_cnfg.sender
@@ -91,7 +92,6 @@ class ShippingApp:
             print(f"Shipment aborted")
 
     def xml_to_ship_dict(self):
-        print("XML IMPORTER ACTIVATED")
         ship_dict = {}
         tree = ET.parse(self.CNFG.paths.xml_file)
         root = tree.getroot()
@@ -247,7 +247,6 @@ class Shipment:  # taking an xmlimporter object
         self.shipmentReturn = None
         self.recipient = None
 
-        print("Shipment with id=", self.id, "created")
 
         def parse_address():
             print("--- Parsing Address...")

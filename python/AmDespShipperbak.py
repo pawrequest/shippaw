@@ -90,7 +90,6 @@ class ShippingApp:
             print(f"Shipment aborted")
 
     def xml_to_ship_dict(self):
-        print("XML IMPORTER ACTIVATED")
         ship_dict = {}
         tree = ET.parse(CNFG.paths.xml_file)
         root = tree.getroot()
