@@ -930,7 +930,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton22"
         ' Email customer about missing kit
-            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
+            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Missing Kit' field?", 4) = 6 Then
                 EmailMissingKit()
             End if
 
@@ -952,18 +952,19 @@ End Sub
 '''''''''' pss email func''''''''''''''
 
 Sub PackHire()
-        Dim packedBy
+        Dim packedBy, xmlfile
+        xmlfile = "C:\AmDesp\data\AmShip.xml"
         Form.Field("Packed Date").Value = "today"
         Form.Field("Packed Time").Value = "now"
         Form.Field("Status").Value = "Booked in and packed"
         packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed By").Value = packedBy
-        if MsgBox("Send pre-shipping email?",4) = 6 Then
+        if MsgBox("Send pre-shipping email?", 4,"Email client?") = 6 Then
         EmailSendOut()
         End if
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                ShipHire("C:\AmDesp\data\AmShip.xml")
+            if MsgBox("Launch AmDesp to ship hire by parcelforce?", 4,"Launch Amdesp?") = 6 Then
+                ShipHire(xmlfile)
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
@@ -978,12 +979,12 @@ Sub ShipHire(xmlfile)
         python_exe = "C:\AmDesp\python\bin\python.exe"
         python_script = "C:\AmDesp\AmDespMain.py"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'         xmlfile = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-        currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+        currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
         oShell.run currentCommand,1,true
         set oShell = nothing
 
@@ -1086,7 +1087,10 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         Set objMailItem = Nothing
 End Sub
 
-''''''''' arno-pss function to export item field
+''''''''' arno-pss function to export item detail-form to xml.
+'''''''''''uses cmclibnet .net wrapper for cmc api - https://github.com/arnovb-github/CmcLibNet
+
+
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
