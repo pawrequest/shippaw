@@ -386,14 +386,12 @@ class Shipment:  # taking an xmlimporter object
                 print("NO ADDRESS OBJECT")
                 break
 
-    def change_address(self, postcode=None):
+    def get_candidate(self, postcode):
         if postcode == None:
             postcode = self.deliveryPostcode
         candidates = self.client.get_address_keys_by_postcode(postcode)
-
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
-        selection = ""
         while True:
             selection = input('\n- Enter a candidate number, [0] to exit, [N] to search for a new address \n')
             if selection.isnumeric():
@@ -402,8 +400,6 @@ class Shipment:  # taking an xmlimporter object
                 if selection[0].lower() == "n":
                     if self.search_address():
                         return
-                        # get address from postcode and number, or postcode and list
-                    ...
                 continue
             if selection == 0:
                 if str(input("[e]xit?"))[0].lower() == "e":
@@ -414,6 +410,12 @@ class Shipment:  # taking an xmlimporter object
                 print("Wrong Number")
                 continue
             break
+
+
+    def change_address(self, postcode=None):
+        if postcode == None:
+            postcode = self.deliveryPostcode
+
         selected_key = candidates[int(selection) - 1].key
         self.address_key = selected_key
         self.addressObject = self.client.get_address_by_key(selected_key)
@@ -427,6 +429,48 @@ class Shipment:  # taking an xmlimporter object
             if uii == 'c':
                 break
         return
+    #
+    # def change_address(self, postcode=None):
+    #     if postcode == None:
+    #         postcode = self.deliveryPostcode
+    #     candidates = self.client.get_address_keys_by_postcode(postcode)
+    #
+    #     for count, candidate in enumerate(candidates, start=1):
+    #         print(" - Candidate", str(count) + ":", candidate.address)
+    #     selection = ""
+    #     while True:
+    #         selection = input('\n- Enter a candidate number, [0] to exit, [N] to search for a new address \n')
+    #         if selection.isnumeric():
+    #             selection = int(selection)
+    #         else:
+    #             if selection[0].lower() == "n":
+    #                 if self.search_address():
+    #                     return
+    #                     # get address from postcode and number, or postcode and list
+    #                 ...
+    #             continue
+    #         if selection == 0:
+    #             if str(input("[e]xit?"))[0].lower() == "e":
+    #                 return False
+    #                 # exit()
+    #             continue
+    #         if not -1 <= selection <= len(candidates) + 1:
+    #             print("Wrong Number")
+    #             continue
+    #         break
+    #     selected_key = candidates[int(selection) - 1].key
+    #     self.address_key = selected_key
+    #     self.addressObject = self.client.get_address_by_key(selected_key)
+    #     print(f"- New Address: {self.addressObject.company_name},{self.addressObject.street}")
+    #     while True:
+    #         ui = input("[A]mmend address, or [C]ontinue?\n")
+    #         uii = ui[0].lower()
+    #         if uii == "a":
+    #             self.addressObject = self.ammend_address()
+    #             break
+    #         if uii == 'c':
+    #             break
+    #     return
 
     def search_address(self):
         pc = input("Enter postcode\n")
@@ -449,8 +493,7 @@ class Shipment:  # taking an xmlimporter object
             while ui not in ['y', 'n']:
                 ui = input(f"Is {address} correct? [Y]es or [N]o, or [E]xit\n")
                 if ui[0].lower() == 'y':
-                    self.addressObject = address
-                    return
+                    return address
                 elif ui[0].lower() == 'n':
                     self.search_address()
                 elif ui[0].lower() == "e":
