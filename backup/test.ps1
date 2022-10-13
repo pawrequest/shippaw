@@ -12,7 +12,7 @@
 #CheckInFormScript ($categoryName,$formName,$fileName)
 
 #
-#python C:\AmDesp\main.py # foo bar hello=world
+#python C:\AmDesp\somefuncs.py # foo bar hello=world
 
 
 ###################################################################

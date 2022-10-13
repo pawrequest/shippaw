@@ -3,7 +3,7 @@ import os
 import pathlib
 import subprocess
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, date
 from pprint import pprint
 
 from dateutil.parser import parse
@@ -23,16 +23,26 @@ class Config:
         class DespatchConfig:
             def __init__(self):
                 if ship_mode == "sand":
+                    print("*** !!! SANDBOX MODE !!! *** ")
                     self.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
                     self.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
-                else:
+                    self.courier_id = 99
+                    # self.service_id = 9992
+                    self.shipping_service_id = 9992
+                elif ship_mode == 'prod':
                     self.api_user = os.getenv("DESPATCH_API_USER")
                     self.api_key = os.getenv("DESPATCH_API_KEY")
+                    self.courier_id = 8
+                    self.shipping_service_id = 101
+                else:
+                    print("SHIPMODE FAULT - EXIT")
+                    exit()
+
                 self.sender_id = "5536"  # should be env var?
                 self.client = DespatchBaySDK(api_user=self.api_user, api_key=self.api_key)
                 self.sender = self.client.sender(address_id=self.sender_id)
-                self.courier_id = 8
-                self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
+                # self.courier_id = 8
+                # self.shipping_service_id = 101  ## parcelforce 24 - maybe make dynamic?
                 self.address_vars = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
 
         class FieldsCnfg:
@@ -169,7 +179,7 @@ class ShippingApp:
     def log_json(self):
         # export from object attrs?
         export_dict = {}
-        if not self.shipment.referenceNumber:
+        if "referenceNumber" not in vars(self.shipment):
             self.shipment.referenceNumber = self.shipment.id
         for field in self.CNFG.fields.export_fields:
             val = getattr(self.shipment, field)
@@ -186,15 +196,47 @@ class ShippingApp:
 
 class Shipment:  # taking an xmlimporter object
     def __init__(self, parsed_xml_object, CNFG, shipid=None,
-                 shipref=None, parent=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
+                 shipref=None,
+                 parent=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
+
         if parent:
-            self.parent=parent
+            self.parent = parent
         self.printed = False
         self.CNFG = CNFG
         self.sender = CNFG.dbay_cnfg.sender
         self.client = CNFG.dbay_cnfg.client
         self.collectionBooked = False
         self.dbAddressKey = 0
+
+        recip_add = self.client.address(
+            company_name='noname',
+            country_code="GB",
+            county="London",
+            locality='London',
+            postal_code='nw64te',
+            town_city="london",
+            street="72 kingsgate road"
+        )
+        recip = self.client.recipient(
+            name="fakename",
+            recipient_address=recip_add)
+
+        # sandy
+        shippy = self.client.shipment_request(
+            parcels=[self.client.parcel(
+                contents="Radios",
+                value=500,
+                weight=6,
+                length=60,
+                width=40,
+                height=40,
+            )],
+            collection_date=f"{date.today():%Y-%m-%d}",
+            sender_address=CNFG.dbay_cnfg.sender,
+            recipient_address=recip)
+
+        services = self.client.get_available_services(shippy)
+
         self.dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender,
                                                                 CNFG.dbay_cnfg.courier_id)  # get dates
 
@@ -388,7 +430,6 @@ class Shipment:  # taking an xmlimporter object
                 print("NO ADDRESS OBJECT")
                 self.change_address()
 
-
     def change_address(self, postcode=None):
         if postcode == None:
             postcode = self.deliveryPostcode
@@ -431,13 +472,13 @@ class Shipment:  # taking an xmlimporter object
     def search_address(self):
         while True:
             pc = input("Enter postcode or go [B]ack\n")
-            if pc.isalpha() and len(pc)==1 and pc[0].lower()=='b':
+            if pc.isalpha() and len(pc) == 1 and pc[0].lower() == 'b':
                 return None
             address = self.change_address(pc)
             if address:
                 return address
             else:
-                print ("Bad Postcode")
+                print("Bad Postcode")
                 continue
         # try:
         #     address = self.client.find_address(pc, s_string)
@@ -539,7 +580,7 @@ class Shipment:  # taking an xmlimporter object
             sender_address=self.sender,
             recipient_address=self.recipient,
             follow_shipment='true',
-            service_id=101  # debug i added this manually?
+            service_id=self.CNFG.dbay_cnfg.shipping_service_id  # debug i added this manually?
         )
         self.shipmentRequest.collection_date = self.dateObject.date  #
         self.services = self.client.get_available_services(self.shipmentRequest)
@@ -575,7 +616,6 @@ class Shipment:  # taking an xmlimporter object
                         if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
                             print("Restarting")
                             self.parent.queue_shipment()
-
 
                         continue  # not restarting
                 elif choice == 'q':
