@@ -23,7 +23,7 @@ class Config:
         class DespatchConfig:
             def __init__(self):
                 if ship_mode == "sand":
-                    print("*** !!! SANDBOX MODE !!! *** ")
+                    print("\n \n \n *** !!! SANDBOX MODE !!! *** \n \n \n")
                     self.api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
                     self.api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
                     self.courier_id = 99

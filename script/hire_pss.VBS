@@ -925,7 +925,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton21"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                ShipHire("C:\AmDesp\data\AmShip.xml")
+                anothertry("C:\AmDesp\data\AmShip.xml")
             End if
 
         Case "CommandButton22"
@@ -963,7 +963,8 @@ Sub PackHire()
         End if
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                ShipHire("C:\AmDesp\data\AmShip.xml")
+                anothertry("C:\AmDesp\data\AmShip.xml")
+'                 ShipHire("C:\AmDesp\data\AmShip.xml")
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
@@ -971,24 +972,71 @@ Sub PackHire()
             Form.Save
         End if
 End Sub
+'
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, oShellExec, currentCommand, WshShell, WshShellExec, WshFinished, WshFailed, strOutput
+'         python_exe = "C:\AmDesp\python\bin\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         ExportItemDetailForm(xmlfile)
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         Set WshShell = CreateObject("WScript.Shell")
+'         Set WshShellExec = WshShell.Exec(currentCommand)
+'         Select Case WshShellExec.Status
+'            Case WshFinished
+'            MsgBox ("FINISHED")
+'                strOutput = WshShellExec.StdOut.ReadAll
+'            Case WshFailed
+'                strOutput = WshShellExec.StdErr.ReadAll
+'         End Select
+'         MsgBox strOutput                'write results in a message box
+' End Sub
 
-Sub ShipHire(xmlfile)
-        ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper
-        python_exe = "C:\AmDesp\python\bin\python.exe"
-        python_script = "C:\AmDesp\AmDespMain.py"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'         xmlfile = "C:\AmDesp\data\AmShip.xml"
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
-        Set oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-        currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-        oShell.run currentCommand,1,true
-        set oShell = nothing
+sub anothertry(xmlfile)
+    dim python_exe, python_script, currentCommand
+    python_exe = "C:\AmDesp\python\bin\python.exe"
+    python_script = "C:\AmDesp\AmDespMain.py"
+    ExportItemDetailForm(xmlfile)
+    currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
 
+    Const WshRunning = 0
+    Const WshFinished = 1
+    Const WshFailed = 2
 
+    Dim shell : Set shell = CreateObject("WScript.Shell")
+    Dim exec : Set exec = shell.Exec(currentCommand)
+
+    While exec.Status = WshRunning
+        WScript.Sleep 50
+    Wend
+
+    Dim output
+
+    If exec.Status = WshFailed Then
+        output = exec.StdErr.ReadAll
+    Else
+        output = exec.StdOut.ReadAll
+    End If
+
+    MsgBox output
 End Sub
+
+
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper
+'         python_exe = "C:\AmDesp\python\bin\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+' '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
 
 Sub UnpackHire()
         Dim unpackedBy, missing, newReturn

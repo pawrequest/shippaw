@@ -10,6 +10,7 @@ def shipper(ship_mode):
         if app.book_collection():
             print("success")
     app.log_json()
+    return app.shipment.trackingNumbers
 
 
 def programmer():
