@@ -52,7 +52,7 @@ class Config:
                 self.log_file = self.data_dir.joinpath("AmLog.json")
                 self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
                 self.bin_dir = pathlib.Path("/Amdesp/bin/")
-                self.pdf_to_print = self.bin_dir.joinpath("PDFtoPrinter.exe")
+                self.pdf_to_print = self.root.joinpath("PDFtoPrinter.exe")
                 pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
                                                                          exist_ok=True)  # make the labels dirs (and parents)
 
@@ -82,7 +82,7 @@ class ShippingApp:
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
-        self.shipment.val_address()  # queries DB address database
+        self.shipment.addressObject = self.shipment.val_address()  # queries DB address database
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call ammend_address()
         self.shipment.make_request()  # make a shipment request
         if self.shipment.queue():
@@ -171,6 +171,8 @@ class ShippingApp:
     def log_json(self):
         # export from object attrs?
         export_dict = {}
+        if not self.shipment.referenceNumber:
+            self.shipment.referenceNumber = self.shipment.id
         for field in self.CNFG.fields.export_fields:
             val = getattr(self.shipment, field)
             if isinstance(val, datetime):
@@ -358,18 +360,17 @@ class Shipment:  # taking an xmlimporter object
             address_object = self.client.find_address(self.deliveryPostcode, search_string)
         except:
             print("No address match found")
-            self.change_address()
-            return self
+            address_object = self.change_address()
+            return address_object
         else:
-            self.addressObject = address_object
-        return self
+            return address_object
 
     def check_address(self):
         while True:
             if self.addressObject:
                 addy1 = [getattr(self.addressObject, var) for var in vars(self.addressObject) if
                          var in self.CNFG.dbay_cnfg.address_vars]
-                addy2 = [addy + "\n" for addy in addy1]
+                # addy2 = [addy + "\n" for addy in addy1]
                 for line in addy1:
                     print(line)
                     # print (f"Recipient address is {addy2} - is this correct?")
@@ -380,12 +381,13 @@ class Shipment:  # taking an xmlimporter object
                 if uii == "c":
                     return
                 elif uii == 'g':
-                    self.change_address()
+                    self.addressObject = self.change_address()
                 elif uii == 'a':
-                    self.ammend_address()
+                    self.addressObject = self.ammend_address()
             else:
                 print("NO ADDRESS OBJECT")
-                break
+                self.change_address()
+
 
     def change_address(self, postcode=None):
         if postcode == None:
@@ -394,76 +396,72 @@ class Shipment:  # taking an xmlimporter object
 
         for count, candidate in enumerate(candidates, start=1):
             print(" - Candidate", str(count) + ":", candidate.address)
-        selection = ""
         while True:
-            selection = input('\n- Enter a candidate number, [0] to exit, [N] to search for a new address \n')
+            selection = input('\n- Enter a candidate number, [0] to exit, [N] to search a new postcode \n')
             if selection.isnumeric():
                 selection = int(selection)
             else:
                 if selection[0].lower() == "n":
-                    if self.search_address():
-                        return
-                        # get address from postcode and number, or postcode and list
-                    ...
+                    address = self.search_address()
+                    return address
                 continue
             if selection == 0:
                 if str(input("[e]xit?"))[0].lower() == "e":
                     return False
                     # exit()
                 continue
-            if not -1 <= selection <= len(candidates) + 1:
+            if not 0 <= selection <= len(candidates):
                 print("Wrong Number")
                 continue
             break
         selected_key = candidates[int(selection) - 1].key
-        self.address_key = selected_key
-        self.addressObject = self.client.get_address_by_key(selected_key)
-        print(f"- New Address: {self.addressObject.company_name},{self.addressObject.street}")
+        addressObject = self.client.get_address_by_key(selected_key)
+        print(f"- New Address: Company:{addressObject.company_name}, Street address:{addressObject.street}")
         while True:
             ui = input("[A]mmend address, or [C]ontinue?\n")
             uii = ui[0].lower()
             if uii == "a":
-                self.addressObject = self.ammend_address()
-                break
+                addressObject = self.ammend_address()
+                return addressObject
             if uii == 'c':
-                break
-        return
+                return addressObject
+            else:
+                continue
 
     def search_address(self):
-        pc = input("Enter postcode\n")
-        ui = input("[L]ist addresses at postcode, or [E]nter a search term\n")
-        if ui[0].lower() == 'l':
-            self.change_address(pc)
-            return
-        elif ui[0].lower() == ['e']:
-            s_string = input("Enter search string - number, or firstline, or business\n")
-
-        else:
-            self.search_address()
-        try:
-            address = self.client.find_address(pc, s_string)
-        except:
-            print("No results - try again\n")
-            self.search_address()
-        else:
-            ui = ""
-            while ui not in ['y', 'n']:
-                ui = input(f"Is {address} correct? [Y]es or [N]o, or [E]xit\n")
-                if ui[0].lower() == 'y':
-                    self.addressObject = address
-                    return
-                elif ui[0].lower() == 'n':
-                    self.search_address()
-                elif ui[0].lower() == "e":
-                    if input("really [E]xit?") == 'e':
-                        exit()
-                    self.search_address()
+        while True:
+            pc = input("Enter postcode or go [B]ack\n")
+            if pc.isalpha() and len(pc)==1 and pc[0].lower()=='b':
+                return None
+            address = self.change_address(pc)
+            if address:
+                return address
+            else:
+                print ("Bad Postcode")
+                continue
+        # try:
+        #     address = self.client.find_address(pc, s_string)
+        # except:
+        #     print("No results - try again\n")
+        #     self.search_address()
+        # else:
+        #     ui = ""
+        #     while ui not in ['y', 'n']:
+        #         ui = input(f"Is {address} correct? [Y]es or [N]o, or [E]xit\n")
+        #         if ui[0].lower() == 'y':
+        #             self.addressObject = address
+        #             return
+        #         elif ui[0].lower() == 'n':
+        #             self.search_address()
+        #         elif ui[0].lower() == "e":
+        #             if input("really [E]xit?") == 'e':
+        #                 exit()
+        #             self.search_address()
 
     def ammend_address(self):
         address = self.addressObject
         print(address.street, '\n')
         address_vars = self.CNFG.dbay_cnfg.address_vars
-        # myvars = [var for var in vars(address) if var in address_vars]
         while True:
             # print("\n")
             for c, var in enumerate(address_vars, start=1):

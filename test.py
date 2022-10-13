@@ -1,15 +1,6 @@
 import subprocess
 
-doc_ref = r'C:\AmDesp\data\Parcelforce Labels\Rakesh Chandraker-2022-10-11.pdf'
-
-
-def command_print(pdf_to_print: str, doc_ref: str, event=None) -> None:
-    command = "{} {}".format(pdf_to_print, doc_ref)
-    subprocess.call(command, shell=True)
-
-
-# command_print(r'C:\AmDesp\bin\PDFtoPrinter.exe', doc_ref)
-
+doc_ref = r'C:\AmDesp\data\Parcelforce Labels\The Echelford Primary School-2022-10-14.pdf'
 
 command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
 subprocess.call(command, shell=True)
