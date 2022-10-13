@@ -72,12 +72,10 @@ class ShippingApp:
         self.sender = CNFG.dbay_cnfg.sender
         self.CNFG = CNFG
 
-    # def xml_to_shipment(self):
-    #     self.shipment = XmlShipmentObj()
     def xml_to_shipment(self):
         ship_dict = self.xml_to_ship_dict()
         parsed = ShipDictObject(ship_dict)
-        self.shipment = Shipment(parsed, self.CNFG)
+        self.shipment = Shipment(parsed, self.CNFG, parent=self)
 
     def queue_shipment(self):
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
@@ -188,7 +186,9 @@ class ShippingApp:
 
 class Shipment:  # taking an xmlimporter object
     def __init__(self, parsed_xml_object, CNFG, shipid=None,
-                 shipref=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
+                 shipref=None, parent=None):  # shipdict is a hire object, could be a customer object, or repair i guess...
+        if parent:
+            self.parent=parent
         self.printed = False
         self.CNFG = CNFG
         self.sender = CNFG.dbay_cnfg.sender
@@ -574,6 +574,9 @@ class Shipment:  # taking an xmlimporter object
                     else:  # restart
                         if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
                             print("Restarting")
+                            self.parent.queue_shipment()
+
+
                         continue  # not restarting
                 elif choice == 'q':
                     self.addedShipment = self.client.add_shipment(self.shipmentRequest)
