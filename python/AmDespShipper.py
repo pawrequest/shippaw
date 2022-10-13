@@ -91,7 +91,7 @@ class ShippingApp:
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.addressObject = self.shipment.val_address()  # queries DB address database
-        self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call ammend_address()
+        self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
         self.shipment.make_request()  # make a shipment request
         if self.shipment.queue():
             return True
@@ -387,6 +387,7 @@ class Shipment:  # taking an xmlimporter object
                     return
 
     def val_address(self):
+        print("func = val_address\n")
         if self.deliveryBuildingNum:
             if self.deliveryBuildingNum != 0:
                 search_string = self.deliveryBuildingNum
@@ -408,14 +409,13 @@ class Shipment:  # taking an xmlimporter object
             return address_object
 
     def check_address(self):
+        print("func = check_address \n")
         while True:
             if self.addressObject:
-                addy1 = [getattr(self.addressObject, var) for var in vars(self.addressObject) if
-                         var in self.CNFG.dbay_cnfg.address_vars]
-                # addy2 = [addy + "\n" for addy in addy1]
-                for line in addy1:
-                    print(line)
-                    # print (f"Recipient address is {addy2} - is this correct?")
+                postcode = self.addressObject.postal_code
+                addy2 = {k:v for k,v in vars(self.addressObject).items() if k in self.CNFG.dbay_cnfg.address_vars}
+                print("Current address details:")
+                pprint(addy2)
 
                 ui = input(
                     f"\n[C]ontinue, [G]et new address or [A]mmend address \n\n")
@@ -423,14 +423,15 @@ class Shipment:  # taking an xmlimporter object
                 if uii == "c":
                     return
                 elif uii == 'g':
-                    self.addressObject = self.change_address()
+                    self.addressObject = self.change_address(postcode)
                 elif uii == 'a':
-                    self.addressObject = self.ammend_address()
+                    self.addressObject = self.amend_address()
             else:
                 print("NO ADDRESS OBJECT")
                 self.change_address()
 
     def change_address(self, postcode=None):
+        print("func = change_address \n")
         if postcode == None:
             postcode = self.deliveryPostcode
         candidates = self.client.get_address_keys_by_postcode(postcode)
@@ -462,7 +463,7 @@ class Shipment:  # taking an xmlimporter object
             ui = input("[A]mmend address, or [C]ontinue?\n")
             uii = ui[0].lower()
             if uii == "a":
-                addressObject = self.ammend_address()
+                addressObject = self.amend_address(addressObject)
                 return addressObject
             if uii == 'c':
                 return addressObject
@@ -470,16 +471,22 @@ class Shipment:  # taking an xmlimporter object
                 continue
 
     def search_address(self):
+        print("func = search_address \n")
         while True:
             pc = input("Enter postcode or go [B]ack\n")
-            if pc.isalpha() and len(pc) == 1 and pc[0].lower() == 'b':
+            if pc.isalpha() and len(pc) == 1 and pc[0].lower() == 'b': # go back
                 return None
-            address = self.change_address(pc)
+            try:
+                address = self.change_address(pc)
+            except:
+                print("Bad Postcode")
+                continue
             if address:
                 return address
             else:
-                print("Bad Postcode")
+                print("bad postcode 2")
                 continue
+
         # try:
         #     address = self.client.find_address(pc, s_string)
         # except:
@@ -499,9 +506,11 @@ class Shipment:  # taking an xmlimporter object
         #                 exit()
         #             self.search_address()
 
-    def ammend_address(self):
-        address = self.addressObject
-        print(address.street, '\n')
+    def amend_address(self, address=None):
+        print("func = amend_address\n")
+        if address == None:
+            address = self.addressObject
+        print(f"current address = {address.street} \n")
         address_vars = self.CNFG.dbay_cnfg.address_vars
         while True:
             # print("\n")
@@ -534,7 +543,7 @@ class Shipment:  # taking an xmlimporter object
                         ui = input("[C]hange another, anything else to move on?")
                         uii = ui[0].lower()
                         if uii == 'c':
-                            self.ammend_address(address)
+                            self.amend_address(address)
                         else:
                             return address
             ...

@@ -82,7 +82,7 @@ class ShippingApp:
         self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.val_address()  # queries DB address database
-        self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call ammend_address()
+        self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
         self.shipment.make_request()  # make a shipment request
         if self.shipment.queue():
             return True

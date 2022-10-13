@@ -3,6 +3,7 @@ from python.AmDespShipper import ShippingApp
 
 
 def shipper(ship_mode):
+    # return 1001
     app = ShippingApp(ship_mode)
 
     app.xml_to_shipment()
@@ -10,7 +11,7 @@ def shipper(ship_mode):
         if app.book_collection():
             print("success")
     app.log_json()
-    return app.shipment.trackingNumbers
+    return "this is annoying"
 
 
 def programmer():
@@ -25,6 +26,6 @@ def test():
 
 
 if __name__ == '__main__':
-    shipper('sand')
+    shipper('prod')
     # programmer()
     # test()
