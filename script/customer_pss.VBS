@@ -226,6 +226,8 @@ Sub Form_OnClick(ControlId)
             currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
             Msgbox "RUN PYTHON"
             oShell.run currentCommand,1,true
+            Set oShell = Nothing
+
         Case "CommandButton2"
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
             Form.Field("Name").Value = PCase(Form.Field("Name").Value, "")
@@ -491,10 +493,6 @@ Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any stri
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
 Sub ExportItemDetailForm(ByVal strPath)
-
-    'will export all values showing on the form,
-    'including ones that are not visible(!)
-    'any user, if permissioned, can always show these anwyay.
     Dim db, conv, f, arrFields, arrCons, strDDE
     Set db = Application.Database
     Set conv = db.GetConversation("Commence", "GetData")
@@ -503,10 +501,8 @@ Sub ExportItemDetailForm(ByVal strPath)
     Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
     xmlDoc.async = false
     xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
-
     Dim el
     Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-
     Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
     el.text = sanitizeXMLString(Form.CategoryName)
     objRoot.childNodes.item(0).appendChild(el)
@@ -515,8 +511,6 @@ Sub ExportItemDetailForm(ByVal strPath)
     objRoot.childNodes.item(0).appendChild(el)
     Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
     Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
-
-
 
     Dim i
     For i = 0 To UBound(arrFields) - 1
@@ -535,21 +529,14 @@ Sub ExportItemDetailForm(ByVal strPath)
         el.text = sanitizeXMLString(f.Value)
     n.appendChild(el)
     Next
-'     ' process customer connections
-'     strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-'     arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-'     Dim connect, CustomerName
-'     Set connect = Form.Connection("To", "Customer") ' customer connection please'
-'
-'
-'     Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
-'     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-'     el.text = sanitizeXMLString(connect.ItemName)
-'     Set el = xmlDoc.createElement("ToCategory")
     xmlDoc.Save strPath
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
+    Set el = Nothing
+    Set f = Nothing
+    Set objRoot = Nothing
+    Set fnode = Nothing
 
 
 End Sub

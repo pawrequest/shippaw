@@ -769,10 +769,6 @@ Sub Form_OnSave
    If Form.Field("Discount Description").Value = "" Then
       Form.Field("Discount Description").Value = cCust.FieldValue("Discount Description")
     End If    
-	
-  
-
-
 End Sub
 
 ' this is the end of the On Save section above
@@ -973,16 +969,6 @@ Sub PackHire()
         End if
 End Sub
 
-
-Sub Delay( seconds )
-	Dim wshShell, strCmd
-	Set wshShell = CreateObject( "WScript.Shell" )
-	strCmd = wshShell.ExpandEnvironmentStrings( "%COMSPEC% /C (PING.EXE -n " & ( seconds + 1 ) & " localhost >NUL 2>&1)" )
-	wshShell.Run strCmd, 0, 1
-	Set wshShell = Nothing
-End Sub
-
-
 ' trying to get output
 ' Sub ShipHire(xmlfile)
 '         Dim python_exe, python_script, commence_wrapper, str_error
@@ -1023,6 +1009,24 @@ Sub ShipHire(xmlfile)
         set oShell = nothing
 End Sub
 ' master
+
+
+' Sub wait (sec)
+'     dim temp
+'     temp=timer
+'     do while timer-temp<sec
+'     loop
+' end Sub
+
+
+
+' Sub Delay( seconds )
+' 	Dim wshShell, strCmd
+' 	Set wshShell = CreateObject( "WScript.Shell" )
+' 	strCmd = wshShell.ExpandEnvironmentStrings( "%COMSPEC% /C (PING.EXE -n " & ( seconds + 1 ) & " localhost >NUL 2>&1)" )
+' 	wshShell.Run strCmd, 0, 1
+' 	Set wshShell = Nothing
+' End Sub
 
 
 Sub UnpackHire()
@@ -1182,9 +1186,19 @@ Sub ExportItemDetailForm(ByVal strPath)
     el.text = sanitizeXMLString(connect.ItemName)
     Set el = xmlDoc.createElement("ToCategory")
     xmlDoc.Save strPath
+
+
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
+    Set el = Nothing
+    Set connect = Nothing
+    Set nodeCustomer = Nothing
+    Set objRoot = Nothing
+    Set fnode = Nothing
+    Set f = Nothing
+    Set n = Nothing
+    Set connect = Nothing
 
 
 End Sub
@@ -1442,3 +1456,4 @@ Function MakeInvoiceDate(datefield)
   MakeInvoiceDate = WeekdayName(WeekDay(datefield), True) + " " + Cstr(Day(datefield)) +  " " + MonthName(Month(datefield)) + " " + Cstr(Year(datefield))
   
 End Function
+
