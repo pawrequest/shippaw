@@ -42,7 +42,7 @@ $cursor.ExportToFile($JsonPath, $settings)
 #goodbye
 $db.Close()
 
-# call python script supplying json
+# call python vbs supplying json
 powershell $python_exe $python_script @JsonPath
 
 "COMPLETE"

@@ -13,7 +13,7 @@ mail.Send()
 
 
 import win32com.client
-#other libraries to be used in this script
+#other libraries to be used in this vbs
 
 '''
 Like communicating with other system or app, you will need to initiate a session in the first place. By calling the GetNamespace function, you can get the outlook session for the subsequent operations.

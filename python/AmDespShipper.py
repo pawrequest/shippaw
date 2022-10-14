@@ -89,7 +89,7 @@ class ShippingApp:
         self.shipment = Shipment(parsed, self.CNFG, parent=self)
 
     def queue_shipment(self):
-        self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
+        self.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.addressObject = self.shipment.val_address()  # queries DB address database
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
@@ -180,20 +180,29 @@ class ShippingApp:
 
     def log_json(self):
         # export from object attrs?
-        export_dict = {}
         if "referenceNumber" not in vars(self.shipment):
             self.shipment.referenceNumber = self.shipment.id
+
+        export_dict = {}
         for field in self.CNFG.fields.export_fields:
             val = getattr(self.shipment, field)
-            if isinstance(val, datetime):
-                val = datetime.strftime(val, '%d-%m-%Y')
+            val = f"{val:%d-%m-%Y}" if isinstance(val, datetime) else val
             export_dict.update({field: val})
+
+        with open(self.CNFG.paths.log_file, 'a') as f:
+            json.dump(export_dict, f, sort_keys=True)
+            f.write(",")
+            pprint(f"\n Json exported to {self.CNFG.paths.log_file} {export_dict =}")
+
+            # val = f"{val:%d-%m-%Y} if isinstance(val, datetime) else val}"
+            # if isinstance(val, datetime):
+            #     val = f"{val:%d-%m-%Y}"
+
+        # export_dict = {field : f"{val:%d-%m-%Y}" if isinstance(val, datetime) else val for val = getattr(self.shipment, field) for field in self.CNFG.fields.export_fields}
+
         # if isinstance(export_dict, datetime):
         #     export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
         # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
-        with open(self.CNFG.paths.log_file, 'a+') as f:
-            json.dump(export_dict, f, sort_keys=True)
-            pprint(f"\n Json exported to {self.CNFG.paths.log_file} {export_dict =}")
 
 
 class Shipment:  # taking an xmlimporter object
@@ -325,26 +334,28 @@ class Shipment:  # taking an xmlimporter object
 
     def val_boxes(self):
         if debug: print("func = VAL_BOXES")
-        while True:
-            if self.boxes:
+        if self.boxes:
+            while True:
                 print(line, "\n",
                       f"\nShipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
-                ui = input(f"[C]onfirm or Enter a number of boxes\n")
+                ui = input(f"[C]onfirm {self.boxes} boxes in shipment or Enter a number of boxes\n")
                 if ui.isnumeric():
-                    self.boxes = int(ui)
                     print(f"Shipment updated  |  {self.boxes}  boxes\n")
-                if ui == 'c':
+                    return int(ui)
+                    # return self
+                if ui.lower == 'c':
                     print("Confirmed\n", line)
-                    return self
+                    return self.boxes
                 continue
-            else:
+        else:
+            while True:
                 print("\n\t\t*** ERROR: No boxes added ***\n")
                 ui = input(f"- How many boxes for shipment to {self.customer}?\n")
                 if not ui.isnumeric():
                     print("- Enter a number")
                     continue
-                self.boxes = int(ui)
                 print(f"{self.customer} updated  |  ", self.boxes, "  boxes")
+                return int(ui)
                 # return self
 
     def val_dates(self):
@@ -371,8 +382,7 @@ class Shipment:  # taking an xmlimporter object
 
             while True:
                 choice = input('\n- Enter a number to choose a date, [0] to exit\n')
-                if choice == "":
-                    continue
+                if not choice: continue
                 if not choice.isnumeric():
                     print("- Enter a number")
                     continue
@@ -420,12 +430,13 @@ class Shipment:  # taking an xmlimporter object
                 postcode = self.addressObject.postal_code
                 addy2 = {k: v for k, v in vars(self.addressObject).items() if k in self.CNFG.dbay_cnfg.address_vars}
                 print("Current address details:\n")
-                print(f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}') # chr(10) is newline (no \ allowed in fstrings)
-
-
+                print(
+                    f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}')  # chr(10) is newline (no \ allowed in fstrings)
 
                 ui = input(
                     f"\n[C]ontinue, [G]et new address or [A]mmend address \n\n")
+                if not ui:
+                    continue
                 uii = ui[0].lower()
                 if uii == "c":
                     return
@@ -447,6 +458,7 @@ class Shipment:  # taking an xmlimporter object
             print(" - Candidate", str(count) + ":", candidate.address)
         while True:
             selection = input('\n- Enter a candidate number, [0] to exit, [N] to search a new postcode \n')
+            if not selection: continue
             if selection.isnumeric():
                 selection = int(selection)
             else:
@@ -455,7 +467,9 @@ class Shipment:  # taking an xmlimporter object
                     return address
                 continue
             if selection == 0:
-                if str(input("[e]xit?"))[0].lower() == "e":
+                ui = input("[e]xit?")
+                if not ui: continue
+                if input("[e]xit?")[0].lower() == "e":
                     return False
                     # exit()
                 continue
@@ -468,6 +482,7 @@ class Shipment:  # taking an xmlimporter object
         print(f"- New Address: Company:{addressObject.company_name}, Street address:{addressObject.street}")
         while True:
             ui = input("[A]mmend address, or [C]ontinue?\n")
+            if not ui: continue
             uii = ui[0].lower()
             if uii == "a":
                 addressObject = self.amend_address(addressObject)
@@ -629,7 +644,9 @@ class Shipment:  # taking an xmlimporter object
                                 # exit()
                             continue
                     else:  # restart
-                        if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
+                        ui = input("[R]estart?")
+                        if not ui: continue
+                        if ui[0].lower() == 'r':  # confirm restart
                             print("Restarting")
                             self.parent.queue_shipment()
 
@@ -645,6 +662,8 @@ class Shipment:  # taking an xmlimporter object
         if debug: print("func = PRINT_LABEL\n")
         while True:
             ui = input("[P]rint label or [E]xit?\n")
+            if not ui:
+                continue
             uii = ui[0].lower()
             if uii == 'p':
                 command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
@@ -666,6 +685,8 @@ class Shipment:  # taking an xmlimporter object
         print("[B]ook collection for", self.customer + "'s shipment?")
         while True:
             choice = input('- [B]ook, [R]estart, or [E]xit\n')
+            if not choice:
+                continue
             choice = str(choice[0].lower())
             if choice[0] != "b":  # not book
                 if choice != 'r':  # not restart

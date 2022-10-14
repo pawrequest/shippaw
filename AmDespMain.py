@@ -26,6 +26,6 @@ def test():
 
 
 if __name__ == '__main__':
-    shipper('prod')
+    shipper('sand')
     # programmer()
     # test()

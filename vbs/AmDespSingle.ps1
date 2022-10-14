@@ -6,7 +6,7 @@ $python_exe = "C:\AmDesp\python\bin\python.exe"
 $python_script = "C:\AmDesp\AmDespMain.py"
 $XmlPath = "C:\AmDesp\data\AmShip.xml"
 
-# call python script supplying jsonpath
+# call python vbs supplying jsonpath
 powershell $python_exe $python_script @XmlPath
 
 "COMPLETE"
