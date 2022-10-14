@@ -14,6 +14,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
+debug = True
 
 
 class Config:
@@ -99,7 +100,7 @@ class ShippingApp:
             print(f"Shipment aborted")
 
     def xml_to_ship_dict(self):
-        print("XML IMPORTER ACTIVATED")
+        if debug: print("XML IMPORTER ACTIVATED")
         ship_dict = {}
         tree = ET.parse(self.CNFG.paths.xml_file)
         root = tree.getroot()
@@ -139,6 +140,7 @@ class ShippingApp:
         return ship_dict
 
     def clean_xml(self, dict) -> dict:
+        if debug: print('\n CLEAN XML\n')
         newdict = {}
         if "Send Out Date" not in dict.keys():
             print("No date - added today")
@@ -307,6 +309,7 @@ class Shipment:  # taking an xmlimporter object
                 self.deliveryBuildingNum = first_block
 
         def val_date_init(self):
+            if debug: print("func = VAL DATES")
             # dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
             if isinstance(self.sendOutDate, str):
                 setattr(self, "sendOutDate", datetime.strptime(self.sendOutDate, '%d/%m/%Y'))
@@ -321,6 +324,7 @@ class Shipment:  # taking an xmlimporter object
         val_date_init(self)
 
     def val_boxes(self):
+        if debug: print("func = VAL_BOXES")
         while True:
             if self.boxes:
                 print(line, "\n",
@@ -344,6 +348,7 @@ class Shipment:  # taking an xmlimporter object
                 # return self
 
     def val_dates(self):
+        if debug: print("func = VAL_DATES")
         dates = self.client.get_available_collection_dates(self.CNFG.dbay_cnfg.sender,
                                                            self.CNFG.dbay_cnfg.courier_id)  # get dates
         print("--- Checking available collection dates...")
@@ -387,7 +392,7 @@ class Shipment:  # taking an xmlimporter object
                     return
 
     def val_address(self):
-        print("func = val_address\n")
+        if debug: print("func = val_address\n")
         if self.deliveryBuildingNum:
             if self.deliveryBuildingNum != 0:
                 search_string = self.deliveryBuildingNum
@@ -409,13 +414,15 @@ class Shipment:  # taking an xmlimporter object
             return address_object
 
     def check_address(self):
-        print("func = check_address \n")
+        if debug: print("func = check_address \n")
         while True:
             if self.addressObject:
                 postcode = self.addressObject.postal_code
-                addy2 = {k:v for k,v in vars(self.addressObject).items() if k in self.CNFG.dbay_cnfg.address_vars}
-                print("Current address details:")
-                pprint(addy2)
+                addy2 = {k: v for k, v in vars(self.addressObject).items() if k in self.CNFG.dbay_cnfg.address_vars}
+                print("Current address details:\n")
+                print(f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}') # chr(10) is newline (no \ allowed in fstrings)
+
+
 
                 ui = input(
                     f"\n[C]ontinue, [G]et new address or [A]mmend address \n\n")
@@ -431,7 +438,7 @@ class Shipment:  # taking an xmlimporter object
                 self.change_address()
 
     def change_address(self, postcode=None):
-        print("func = change_address \n")
+        if debug: print("func = change_address \n")
         if postcode == None:
             postcode = self.deliveryPostcode
         candidates = self.client.get_address_keys_by_postcode(postcode)
@@ -471,10 +478,10 @@ class Shipment:  # taking an xmlimporter object
                 continue
 
     def search_address(self):
-        print("func = search_address \n")
+        if debug: print("func = search_address \n")
         while True:
             pc = input("Enter postcode or go [B]ack\n")
-            if pc.isalpha() and len(pc) == 1 and pc[0].lower() == 'b': # go back
+            if pc.isalpha() and len(pc) == 1 and pc[0].lower() == 'b':  # go back
                 return None
             try:
                 address = self.change_address(pc)
@@ -507,7 +514,7 @@ class Shipment:  # taking an xmlimporter object
         #             self.search_address()
 
     def amend_address(self, address=None):
-        print("func = amend_address\n")
+        if debug: print("func = amend_address\n")
         if address == None:
             address = self.addressObject
         print(f"current address = {address.street} \n")
@@ -601,7 +608,7 @@ class Shipment:  # taking an xmlimporter object
         self.services = self.services
 
     def queue(self):
-
+        if debug: print("func = Queue\n")
         print("\n", line, '\n-', self.customer, "|", self.boxes, "|",
               self.addressObject.street, "|", self.dateObject.date, "|",
               self.shippingServiceName,
@@ -635,6 +642,7 @@ class Shipment:  # taking an xmlimporter object
                 continue
 
     def print_label(self):
+        if debug: print("func = PRINT_LABEL\n")
         while True:
             ui = input("[P]rint label or [E]xit?\n")
             uii = ui[0].lower()
@@ -653,6 +661,7 @@ class Shipment:  # taking an xmlimporter object
                 return self.printed
 
     def book_collection(self):
+        if debug: print("func = BOOK_COLLECTION \n")
         # CNFG = config
         print("[B]ook collection for", self.customer + "'s shipment?")
         while True:
