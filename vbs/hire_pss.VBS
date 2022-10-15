@@ -990,25 +990,97 @@ End Sub
 ' End Sub
 
 
+'
+' ' master
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+' '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+' '         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+' ' master
 
-' master
 Sub ShipHire(xmlfile)
         ' AmDesp'
         Dim python_exe, python_script, commence_wrapper, str_error
-        python_exe = "C:\AmDesp\python\bin\python.exe"
+        python_exe = "C:\AmDesp\dist\python.exe"
         python_script = "C:\AmDesp\AmDespMain.py"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
-        Set oShell = CreateObject("Cscript.Shell")
+        Set oShell = CreateObject("Wscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
 '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
 '         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
-        oShell.run currentCommand,1,true
+        Dim outputty
+        outputty = oShell.run(currentCommand,1,true)
+        MsgBox outputty
         set oShell = nothing
 End Sub
-' master
+
+
+
+' Function vFn_Sys_Run_CommandOutput (Command, Wait, Show, OutToFile, DeleteOutput, NoQuotes)
+' 'Run Command similar to the command prompt, for Wait use 1 or 0. Output returned and
+' 'stored in a file.
+' 'Command = The command line instruction you wish to run.
+' 'Wait = 1/0; 1 will wait for the command to finish before continuing.
+' 'Show = 1/0; 1 will show for the command window.
+' 'OutToFile = The file you wish to have the output recorded to.
+' 'DeleteOutput = 1/0; 1 deletes the output file. Output is still returned to variable.
+' 'NoQuotes = 1/0; 1 will skip wrapping the command with quotes, some commands wont work
+' '                if you wrap them in quotes.
+' '----------------------------------------------------------------------------------------
+'   On Error Resume Next
+'   'On Error Goto 0
+'   MsgBox "functioon open"
+'     Dim f_objShell : Set f_objShell = CreateObject("Wscript.Shell")
+'     Dim f_objFso : Set f_objFso = CreateObject("Scripting.FileSystemObject")
+'     Const ForReading = 1, ForWriting = 2, ForAppending = 8
+'       'VARIABLES
+'         If OutToFile = "" Then OutToFile = "TEMP.TXT"
+'         tCommand = Command
+'         If Left(Command,1)<>"""" And NoQuotes <> 1 Then tCommand = """" & Command & """"
+'         tOutToFile = OutToFile
+'         If Left(OutToFile,1)<>"""" Then tOutToFile = """" & OutToFile & """"
+'         If Wait = 1 Then tWait = True
+'         If Wait <> 1 Then tWait = False
+'         If Show = 1 Then tShow = 1
+'         If Show <> 1 Then tShow = 0
+'       'RUN PROGRAM
+'         f_objShell.Run tCommand & ">" & tOutToFile, tShow, tWait
+'       'READ OUTPUT FOR RETURN
+'         Dim f_objFile : Set f_objFile = f_objFso.OpenTextFile(OutToFile, 1)
+'           tMyOutput = f_objFile.ReadAll
+'           f_objFile.Close
+'           Set f_objFile = Nothing
+'       'DELETE FILE AND FINISH FUNCTION
+'         If DeleteOutput = 1 Then
+'           Set f_objFile = f_objFso.GetFile(OutToFile)
+'             f_objFile.Delete
+'             Set f_objFile = Nothing
+'           End If
+'         vFn_Sys_Run_CommandOutput = tMyOutput
+'         If Err.Number <> 0 Then vFn_Sys_Run_CommandOutput = "<0>"
+'         Err.Clear
+'         On Error Goto 0
+'       Set f_objFile = Nothing
+'       Set f_objShell = Nothing
+'   End Function
+'
+
+
 
 
 ' Sub wait (sec)

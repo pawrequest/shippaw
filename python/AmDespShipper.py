@@ -315,7 +315,7 @@ class Shipment:  # taking an xmlimporter object
                     print(f"Shipment updated  |  {self.boxes}  boxes\n")
                     return int(ui)
                     # return self
-                if ui.lower == 'c':
+                if ui.lower() == 'c':
                     print("Confirmed\n", line)
                     return self.boxes
                 continue
