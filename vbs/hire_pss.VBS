@@ -1000,7 +1000,7 @@ Sub ShipHire(xmlfile)
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
-        Set oShell = CreateObject("Wscript.Shell")
+        Set oShell = CreateObject("Cscript.Shell")
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
 '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
