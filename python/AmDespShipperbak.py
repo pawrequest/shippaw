@@ -165,7 +165,7 @@ class ShippingApp:
         return newdict
 
     def book_collection(self):
-        self.shipment.book_collection()
+        self.shipment.book_collection_()
 
     def log_json(self):
         # export from object attrs?

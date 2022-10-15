@@ -57,7 +57,7 @@ print()
 #     'CONFIG_FILE': DIR_DATA.joinpath("AmDespConfig.Ods"),
 # }
 # CONFIG_FIELD = {
-#     'EXPORT_EXCLUDE_KEYS': ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#     'EXPORT_EXCLUDE_KEYS': ["address", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
 #     'SHIPFIELDS': ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
 #                    "deliveryPostcode", "sendOutDate", "referenceNumber"],
 #     'HIREFIELDS': ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName', 'deliveryEmail',
@@ -66,7 +66,7 @@ print()
 
 # class CnfgFields:
 #     def __init__(self):
-#         self.export_exclude_keys = ["addressObject", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
+#         self.export_exclude_keys = ["address", "dateObject", 'service_object', 'services', 'parcels', 'shipment_return']
 #         self.shipment_fields = ["deliveryName", "deliveryContact", "deliveryTel", "deliveryEmail", "deliveryAddress",
 #                                 "deliveryPostcode", "sendOutDate", "referenceNumber"]
 #         self.hire_fields = ['deliveryTel', 'boxes', 'deliveryCharge', 'deliveryContact', 'deliveryName',

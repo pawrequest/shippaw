@@ -6,9 +6,9 @@ def shipper(ship_mode):
     # return 1001
     app = ShippingApp(ship_mode)
 
-    app.xml_to_shipment()
-    if app.queue_shipment():
-        if app.book_collection():
+    app.xml_to_shipment_()
+    if app.queue_shipment_():
+        if app.book_collection_():
             print("success")
     app.log_json()
     return "this is annoying"
@@ -26,6 +26,6 @@ def test():
 
 
 if __name__ == '__main__':
-    shipper('sand')
+    shipper('prod')
     # programmer()
     # test()

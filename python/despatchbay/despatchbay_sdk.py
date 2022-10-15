@@ -3,11 +3,12 @@ Client for the Despatchbay v15 api
 https://github.com/despatchbay/despatchbay-api-v15/wiki
 """
 
+
 import suds
 from suds.client import Client
 from suds.transport.http import HttpAuthenticated
 
-from python.despatchbay import documents_client, exceptions, despatchbay_entities
+from . import despatchbay_entities, documents_client, exceptions
 
 MIN_SOAP_API_VERSION = 15
 MIN_DOCUMENTS_API_VERSION = 1
@@ -117,7 +118,7 @@ class DespatchBaySDK:
 
     def sender(self, **kwargs):
         """
-        Creates a dbp SENDER address entity
+        Creates a dbp sender address entity
         """
         return despatchbay_entities.Sender(self, **kwargs)
 
