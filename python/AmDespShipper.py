@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from pprint import pprint
 
-from dateutil.parser import parse
+# from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, get_from_ods
@@ -350,8 +350,9 @@ class Shipment:  # taking an xmlimporter object
             print(
                 f"\n*** ERROR: No collections available on {self.sendOutDate:%A - %B %#d} ***\n\n\n- Collections for {self.customer} are available on:\n")
             for count, date in enumerate(dates):
-                dt = parse(date.date)
-                out = datetime.strftime(dt, '%A - %B %#d')
+                # dt = parse(date.date)
+                out = f"{date.date:%A - %B %#d}"
+                # out = datetime.strftime(dt, '%A - %B %#d')
                 print("\t\t", count + 1, "|", out)
 
             while True:
