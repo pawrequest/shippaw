@@ -1066,7 +1066,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
-            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
+            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the equipment will be ready to collect so that we can arrange the courier."
         End if
 
 
