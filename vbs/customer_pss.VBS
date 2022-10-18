@@ -207,26 +207,38 @@ Form.Field("All Address").Value = addstring
 
 End Sub
 
+' ' master
+Sub ShipHire(xmlfile)
+        ' AmDesp'
+        Dim python_exe, python_script, commence_wrapper, str_error
+        python_exe = "C:\AmDesp\dist\python.exe"
+        python_script = "C:\AmDesp\AmDespMain.py"
+        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+        ExportItemDetailForm(xmlfile)
+        Dim oShell, currentCommand, my_command
+        Set oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+        currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+        oShell.run currentCommand,1,true
+        set oShell = nothing
+End Sub
+' ' master
+
 ' code to respond to user clicking on the various command buttons on the screen
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
-                        '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''   Runs Amdesp via cmd     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-		    Dim python_exe, python_script, commence_wrapper, xmlfile
-            python_exe = "C:\AmDesp\dist\python.exe"
-            python_script = "C:\AmDesp\AmDespMain.py"
-            commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-            xmlfile = "C:\AmDesp\data\AmShip.xml"
-		    ExportItemDetailForm(xmlfile)
-            Dim oShell, currentCommand, my_command
-            SET oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath
-            currentCommand = "cmd /c " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-            Msgbox "RUN PYTHON"
-            oShell.run currentCommand,1,true
-            Set oShell = Nothing
+            if MsgBox ("Ship to this customer via Amdesp?", 4) = 6 Then
+                Dim xmlfile : xmlfile = "C:\AmDesp\data\AmShip.xml"
+                ShipHire(xmlfile)
+            End if
+            MsgBox "Show me some serials"
 
         Case "CommandButton2"
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
