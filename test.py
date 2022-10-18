@@ -1,12 +1,12 @@
-# fires "HelloWorld" to commence agent triggers
-import win32com.client  # requires pywin32 package
-
-cmc = win32com.client.Dispatch("Commence.DB")  # talk to Commence
-conv = cmc.GetConversation("Commence", "GetData")  # fire up 'DDE'
-# first create an Commence Agent triggering on receive DDE string HelloWorld
-# that (for instance) displays a MessageBox
-dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
-conv.Execute(dde)  # execute DDE command, hopefully Commence listens
+# # fires "HelloWorld" to commence agent triggers
+# import win32com.client  # requires pywin32 package
+#
+# cmc = win32com.client.Dispatch("Commence.DB")  # talk to Commence
+# conv = cmc.GetConversation("Commence", "GetData")  # fire up 'DDE'
+# # first create an Commence Agent triggering on receive DDE string HelloWorld
+# # that (for instance) displays a MessageBox
+# dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
+# conv.Execute(dde)  # execute DDE command, hopefully Commence listens
 
 
 """ fires "HelloWorld" too commence agent triggers
@@ -22,12 +22,12 @@ conv.Execute(dde)  # execute DDE command, hopefully Commence listens
 
 
 
-# import subprocess
-#
-# doc_ref = r'C:\AmDesp\data\Parcelforce Labels\The Echelford Primary School-2022-10-14.pdf'
-#
-# command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
-# subprocess.call(command, shell=True)
+import subprocess
+
+doc_ref = r'file:///C:/Users/giles/Downloads/Order-2292544-Docs-021021.pdf'
+
+command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
+subprocess.call(command, shell=True)
 
 # import inspect
 # from pprint import pprint

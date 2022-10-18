@@ -215,7 +215,7 @@ Sub Form_OnClick(ControlId)
 '''''''''   Runs Amdesp via cmd     ''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 		    Dim python_exe, python_script, commence_wrapper, xmlfile
-            python_exe = "C:\AmDesp\python\bin\python.exe"
+            python_exe = "C:\AmDesp\dist\python.exe"
             python_script = "C:\AmDesp\AmDespMain.py"
             commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
             xmlfile = "C:\AmDesp\data\AmShip.xml"

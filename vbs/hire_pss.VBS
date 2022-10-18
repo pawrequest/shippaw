@@ -768,7 +768,10 @@ Sub Form_OnSave
 
    If Form.Field("Discount Description").Value = "" Then
       Form.Field("Discount Description").Value = cCust.FieldValue("Discount Description")
-    End If    
+    End If
+
+   Set cCust = Nothing
+
 End Sub
 
 ' this is the end of the On Save section above
@@ -992,36 +995,36 @@ End Sub
 
 '
 ' ' master
-' Sub ShipHire(xmlfile)
-'         ' AmDesp'
-'         Dim python_exe, python_script, commence_wrapper, str_error
-'         python_exe = "C:\AmDesp\dist\python.exe"
-'         python_script = "C:\AmDesp\AmDespMain.py"
-'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'         ExportItemDetailForm(xmlfile)
-'         Dim oShell, currentCommand, my_command
-'         Set oShell = CreateObject("Wscript.Shell")
-' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
-' '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
-' '         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
-'         oShell.run currentCommand,1,true
-'         set oShell = nothing
-' End Sub
+Sub ShipHire(xmlfile)
+        ' AmDesp'
+        Dim python_exe, python_script, commence_wrapper, str_error
+        python_exe = "C:\AmDesp\dist\python.exe"
+        python_script = "C:\AmDesp\AmDespMain.py"
+        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+        ExportItemDetailForm(xmlfile)
+        Dim oShell, currentCommand, my_command
+        Set oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+        currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+        oShell.run currentCommand,1,true
+        set oShell = nothing
+End Sub
 ' ' master
 
-Sub ShipHire(xmlfile)
-       Dim WshShell, oExec
-       Set WshShell = CreateObject("WScript.Shell")
-
-       Set oExec = WshShell.Exec("calc")
-
-       Do While oExec.Status = 0
-            Application.wait 100
-       Loop
-
-       WScript.Echo oExec.Status
-End Sub
+' Sub ShipHire(xmlfile)
+'        Dim WshShell, oExec
+'        Set WshShell = CreateObject("WScript.Shell")
+'
+'        Set oExec = WshShell.Exec("calc")
+'
+'        Do While oExec.Status = 0
+'             Application.wait 100
+'        Loop
+'
+'        WScript.Echo oExec.Status
+' End Sub
 
 '
 ' Sub ShipHire(xmlfile)
@@ -1136,10 +1139,12 @@ Sub UnpackHire()
             missing = InputBox("What was missing?", "What's Missing?")
             if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
                 Form.Field("Missing Kit").Value = missing
+            End if
+            if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
                 EmailMissingKit()
-                if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
+            End if
+            if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
                     Form.Save
-                End if
             End if
 
         End if
@@ -1152,6 +1157,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         Dim objMailItem
         Dim returnStr
         Dim emailaddy
+        Dim cCust : Set cCust = Form.Connection("To","Customer")
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
@@ -1166,7 +1172,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         if MsgBox("Delivery email address is " & emailaddy & "- send pre-ship email to this address?",4) = 7 Then
         emailaddy = InputBox("Enter new email address")
         End if
-        objMailItem.To = emailaddy
+        objMailItem.To = emailaddy & ";" & cCust.FieldValue("Email")
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
                            vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
@@ -1187,6 +1193,7 @@ End Sub
 
 Sub EmailMissingKit() ' emails return notes should change to missing.
     ' found code to send email'
+    Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim olApp
         Dim objMailItem
         Dim emailadd
@@ -1194,14 +1201,14 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         Set objMailItem = olApp.CreateItem(0)
         objMailItem.Subject = "Radio Hire - Missing Kit"
 
-        emailadd = Form.Field("Delivery Email").Value
+        emailadd = Form.Field("Delivery Email").Value & ";" &  cCust.FieldValue("Email")
         if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address?",4) = 7 Then
         emailadd = InputBox("Enter new email address")
         End if
 
         objMailItem.To = emailadd
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
-                           vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
+                           vbNewLine & "Thanks for returning the hired equipment - I hope it worked well for your event." & vbNewLine & _
                            vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
                            "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
                            vbNewLine & "MISSING KIT:" & vbNewLine & _
@@ -1212,6 +1219,7 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         End if
         Set olApp = Nothing
         Set objMailItem = Nothing
+        Set cCust = Nothing
 End Sub
 
 ''''''''' arno-pss function to export item field
