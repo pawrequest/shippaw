@@ -13,7 +13,7 @@ class Entity:
 
     def to_soap_object(self):
         """
-        Creates a SOAP CLIENT object representation of this entity.
+        Creates a SOAP client object representation of this entity.
         """
         suds_object = self.soap_client.factory.create(self.soap_type)
         for soap_property in self.soap_map:
@@ -79,7 +79,7 @@ class Account(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -119,7 +119,7 @@ class AccountBalance(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -181,7 +181,7 @@ class Address(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative initialiser, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -222,7 +222,7 @@ class AddressKey(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -263,7 +263,7 @@ class AutomaticTopupSettings(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -332,7 +332,7 @@ class Collection(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -357,13 +357,13 @@ class Collection(Entity):
 
     def get_labels(self, **kwargs):
         """
-        Fetches label pdf through the Despatch Bay API CLIENT.
+        Fetches label pdf through the Despatch Bay API client.
         """
         return self.despatchbay_client.get_labels(self.document_id, **kwargs)
 
     def get_manifest(self, **kwargs):
         """
-        Fetches menifest pdf through the Despatch Bay API CLIENT.
+        Fetches menifest pdf through the Despatch Bay API client.
         """
         return self.despatchbay_client.get_manifest(self.document_id, **kwargs)
 
@@ -390,7 +390,7 @@ class CollectionDate(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -425,7 +425,7 @@ class Courier(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -487,7 +487,7 @@ class Parcel(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -533,7 +533,7 @@ class PaymentMethod(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -581,7 +581,7 @@ class Recipient(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -642,7 +642,7 @@ class Sender(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -658,9 +658,9 @@ class Sender(Entity):
 
     def to_soap_object(self):
         """
-        Creates a SOAP CLIENT object representation of this entity.
+        Creates a SOAP client object representation of this entity.
 
-        Removes SENDER address property if a SENDER address id is provided.
+        Removes sender address property if a sender address id is provided.
         """
         soap_object = super().to_soap_object()
         if soap_object.SenderAddressID:
@@ -712,7 +712,7 @@ class Service(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         return cls(
             client=client,
@@ -898,7 +898,7 @@ class ShipmentReturn(Entity):
     def from_dict(cls, client, soap_dict):
         """
         Alternative constructor, builds entity object from a dictionary representation of
-        a SOAP response created by the SOAP CLIENT.
+        a SOAP response created by the SOAP client.
         """
         parcel_array = []
         for parcel_item in soap_dict.get('Parcels'):
@@ -931,9 +931,9 @@ class ShipmentReturn(Entity):
 
     def book(self):
         """
-        Makes a BookShipment request through the Despatch Bay API CLIENT.
+        Makes a BookShipment request through the Despatch Bay API client.
         """
-        book_return = self.despatchbay_client.process_shipment([self.shipment_id])
+        book_return = self.despatchbay_client.book_shipments([self.shipment_id])
         if book_return:
             self.shipment_document_id = book_return[0].shipment_document_id
             self.collection_id = book_return[0].collection_id
@@ -943,7 +943,7 @@ class ShipmentReturn(Entity):
 
     def cancel(self):
         """
-        Makes a CancelShipment request through the Despatch Bay API CLIENT.
+        Makes a CancelShipment request through the Despatch Bay API client.
         """
         cancel_return = self.despatchbay_client.cancel_shipment(self.shipment_id)
         if cancel_return:
@@ -952,6 +952,6 @@ class ShipmentReturn(Entity):
 
     def get_labels(self, **kwargs):
         """
-        Fetches label pdf through the Despatch Bay API CLIENT.
+        Fetches label pdf through the Despatch Bay API client.
         """
         return self.despatchbay_client.get_labels(self.shipment_document_id, **kwargs)
