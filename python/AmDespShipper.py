@@ -617,8 +617,12 @@ class Shipment:  # taking an xmlimporter object
                 continue
             uii = ui[0].lower()
             if uii == 'p':
-                command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
-                subprocess.call(command, shell=True)
+
+                # command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
+                # subprocess.call(command, shell=True)
+
+                os.startfile(self.labelLocation, "print")
+
                 self.printed = True
                 while True:
                     ui = input("[P]rint again, or [E]xit")

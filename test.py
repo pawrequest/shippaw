@@ -20,14 +20,16 @@ dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
 conv.Execute(dde)  # execute DDE command, hopefully Commence listens
 """
 
+import os
 
+os.startfile(r"C:\AmDesp\data\Parcelforce Labels\CALM All Porsche Trophy-2022-10-21.pdf", "print")
 
-import subprocess
-
-doc_ref = r'file:///C:/Users/giles/Downloads/Order-2292544-Docs-021021.pdf'
-
-command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
-subprocess.call(command, shell=True)
+# import subprocess
+#
+# doc_ref = r'file:///C:/Users/giles/Downloads/Order-2292544-Docs-021021.pdf'
+#
+# command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
+# subprocess.call(command, shell=True)
 
 # import inspect
 # from pprint import pprint
