@@ -2,7 +2,8 @@ import subprocess
 from time import sleep
 
 from python.AmDespProducts import Radio
-from python.utils_pss.utils_pss import get_from_ods, getActiveProcesses
+from python.utils_pss.utils_pss import get_from_ods\
+#  getActiveProcesses
 
 
 class Config:
