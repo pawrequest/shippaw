@@ -768,10 +768,9 @@ Sub Form_OnSave
 
    If Form.Field("Discount Description").Value = "" Then
       Form.Field("Discount Description").Value = cCust.FieldValue("Discount Description")
-    End If    
-	
-  
+    End If
 
+   Set cCust = Nothing
 
 End Sub
 
@@ -930,7 +929,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton22"
         ' Email customer about missing kit
-            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Missing Kit' field?", 4) = 6 Then
+            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
                 EmailMissingKit()
             End if
 
@@ -952,19 +951,19 @@ End Sub
 '''''''''' pss email func''''''''''''''
 
 Sub PackHire()
-        Dim packedBy, xmlfile
-        xmlfile = "C:\AmDesp\data\AmShip.xml"
+        Dim packedBy
         Form.Field("Packed Date").Value = "today"
         Form.Field("Packed Time").Value = "now"
         Form.Field("Status").Value = "Booked in and packed"
         packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed By").Value = packedBy
-        if MsgBox("Send pre-shipping email?", 4,"Email client?") = 6 Then
+        if MsgBox("Send pre-shipping email?",4) = 6 Then
         EmailSendOut()
         End if
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-            if MsgBox("Launch AmDesp to ship hire by parcelforce?", 4,"Launch Amdesp?") = 6 Then
-                ShipHire(xmlfile)
+            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+'                 anothertry("C:\AmDesp\data\AmShip.xml")
+                ShipHire("C:\AmDesp\data\AmShip.xml")
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
@@ -973,11 +972,34 @@ Sub PackHire()
         End if
 End Sub
 
+' trying to get output
+' Sub ShipHire(xmlfile)
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\python\bin\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command, objExec
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'
+'         Set oShell = CreateObject("Wscript.Shell")
+'         Set objExec = oShell.Exec(currentCommand)
+'             Do
+'                 objExec.WriteLine(objExec.StdOut.ReadLine())
+'             Loop While Not objExec.StdOut.atEndOfStream
+'         Wscript.StdOut.WriteLine(objExec.StdOut.ReadAll)
+' '         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+
+
+'
+' ' master
 Sub ShipHire(xmlfile)
         ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper
-        python_exe = "C:\AmDesp\python\bin\python.exe"
-        python_script = "C:\AmDesp\Main.py"
+        Dim python_exe, python_script, commence_wrapper, str_error
+        python_exe = "C:\AmDesp\dist\python.exe"
+        python_script = "C:\AmDesp\AmDespMain.py"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
@@ -985,11 +1007,119 @@ Sub ShipHire(xmlfile)
 '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
 '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
         oShell.run currentCommand,1,true
         set oShell = nothing
-
-
 End Sub
+' ' master
+
+' Sub ShipHire(xmlfile)
+'        Dim WshShell, oExec
+'        Set WshShell = CreateObject("WScript.Shell")
+'
+'        Set oExec = WshShell.Exec("calc")
+'
+'        Do While oExec.Status = 0
+'             Application.wait 100
+'        Loop
+'
+'        WScript.Echo oExec.Status
+' End Sub
+
+'
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+' '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+' '         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+'         Dim outputty
+'         oShell.Exec currentCommand & ">" & "C:\temp\outputtyfile.txt"
+' '         oShell.run currentCommand & ">" & "C:\temp\outputtyfile.txt",1,true
+'         set oShell = nothing
+' End Sub
+'
+
+
+Function vFn_Sys_Run_CommandOutput (Command, Wait, Show, OutToFile, DeleteOutput, NoQuotes)
+'Run Command similar to the command prompt, for Wait use 1 or 0. Output returned and
+'stored in a file.
+'Command = The command line instruction you wish to run.
+'Wait = 1/0; 1 will wait for the command to finish before continuing.
+'Show = 1/0; 1 will show for the command window.
+'OutToFile = The file you wish to have the output recorded to.
+'DeleteOutput = 1/0; 1 deletes the output file. Output is still returned to variable.
+'NoQuotes = 1/0; 1 will skip wrapping the command with quotes, some commands wont work
+'                if you wrap them in quotes.
+'----------------------------------------------------------------------------------------
+  On Error Resume Next
+  'On Error Goto 0
+  MsgBox "functioon open"
+    Dim f_objShell : Set f_objShell = CreateObject("Wscript.Shell")
+    Dim f_objFso : Set f_objFso = CreateObject("Scripting.FileSystemObject")
+    Const ForReading = 1, ForWriting = 2, ForAppending = 8
+      'VARIABLES
+        If OutToFile = "" Then OutToFile = "TEMP.TXT"
+        tCommand = Command
+        If Left(Command,1)<>"""" And NoQuotes <> 1 Then tCommand = """" & Command & """"
+        tOutToFile = OutToFile
+        If Left(OutToFile,1)<>"""" Then tOutToFile = """" & OutToFile & """"
+        If Wait = 1 Then tWait = True
+        If Wait <> 1 Then tWait = False
+        If Show = 1 Then tShow = 1
+        If Show <> 1 Then tShow = 0
+
+      'RUN PROGRAM
+        f_objShell.Run tCommand & ">" & tOutToFile, tShow, tWait
+
+      'READ OUTPUT FOR RETURN
+        Dim f_objFile : Set f_objFile = f_objFso.OpenTextFile(OutToFile, 1)
+          tMyOutput = f_objFile.ReadAll
+          f_objFile.Close
+          Set f_objFile = Nothing
+
+      'DELETE FILE AND FINISH FUNCTION
+        If DeleteOutput = 1 Then
+          Set f_objFile = f_objFso.GetFile(OutToFile)
+            f_objFile.Delete
+            Set f_objFile = Nothing
+          End If
+        vFn_Sys_Run_CommandOutput = tMyOutput
+        If Err.Number <> 0 Then vFn_Sys_Run_CommandOutput = "<0>"
+        Err.Clear
+        On Error Goto 0
+      Set f_objFile = Nothing
+      Set f_objShell = Nothing
+  End Function
+
+
+
+
+
+' Sub wait (sec)
+'     dim temp
+'     temp=timer
+'     do while timer-temp<sec
+'     loop
+' end Sub
+
+
+
+' Sub Delay( seconds )
+' 	Dim wshShell, strCmd
+' 	Set wshShell = CreateObject( "WScript.Shell" )
+' 	strCmd = wshShell.ExpandEnvironmentStrings( "%COMSPEC% /C (PING.EXE -n " & ( seconds + 1 ) & " localhost >NUL 2>&1)" )
+' 	wshShell.Run strCmd, 0, 1
+' 	Set wshShell = Nothing
+' End Sub
+
 
 Sub UnpackHire()
         Dim unpackedBy, missing, newReturn
@@ -1009,10 +1139,12 @@ Sub UnpackHire()
             missing = InputBox("What was missing?", "What's Missing?")
             if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
                 Form.Field("Missing Kit").Value = missing
+            End if
+            if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
                 EmailMissingKit()
-                if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
+            End if
+            if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
                     Form.Save
-                End if
             End if
 
         End if
@@ -1025,10 +1157,11 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         Dim objMailItem
         Dim returnStr
         Dim emailaddy
+        Dim cCust : Set cCust = Form.Connection("To","Customer")
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
-            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the radios will be ready to collect so that we can arrange the courier."
+            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the equipment will be ready to collect so that we can arrange the courier."
         End if
 
 
@@ -1039,13 +1172,14 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         if MsgBox("Delivery email address is " & emailaddy & "- send pre-ship email to this address?",4) = 7 Then
         emailaddy = InputBox("Enter new email address")
         End if
-        objMailItem.To = emailaddy
+        objMailItem.To = emailaddy & ";" & cCust.FieldValue("Email")
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
                            vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
                            Form.Field("Delivery Address").Value & vbNewLine & _
+                           Form.Field("Delivery Postcode").Value & vbNewLine & _
                            vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
                            vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
                            vbNewLine & returnStr & vbNewLine & _
@@ -1060,6 +1194,7 @@ End Sub
 
 Sub EmailMissingKit() ' emails return notes should change to missing.
     ' found code to send email'
+    Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim olApp
         Dim objMailItem
         Dim emailadd
@@ -1067,14 +1202,14 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         Set objMailItem = olApp.CreateItem(0)
         objMailItem.Subject = "Radio Hire - Missing Kit"
 
-        emailadd = Form.Field("Delivery Email").Value
+        emailadd = Form.Field("Delivery Email").Value & ";" &  cCust.FieldValue("Email")
         if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address?",4) = 7 Then
         emailadd = InputBox("Enter new email address")
         End if
 
         objMailItem.To = emailadd
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
-                           vbNewLine & "Thanks for returning the radios - I hope they worked well for your event." & vbNewLine & _
+                           vbNewLine & "Thanks for returning the hired equipment - I hope it worked well for your event." & vbNewLine & _
                            vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
                            "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
                            vbNewLine & "MISSING KIT:" & vbNewLine & _
@@ -1085,12 +1220,10 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         End if
         Set olApp = Nothing
         Set objMailItem = Nothing
+        Set cCust = Nothing
 End Sub
 
-''''''''' arno-pss function to export item detail-form to xml.
-'''''''''''uses cmclibnet .net wrapper for cmc api - https://github.com/arnovb-github/CmcLibNet
-
-
+''''''''' arno-pss function to export item field
 Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
 Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
@@ -1151,9 +1284,19 @@ Sub ExportItemDetailForm(ByVal strPath)
     el.text = sanitizeXMLString(connect.ItemName)
     Set el = xmlDoc.createElement("ToCategory")
     xmlDoc.Save strPath
+
+
     Set xmlDoc = Nothing
     Set conv= Nothing
     Set db = Nothing
+    Set el = Nothing
+    Set connect = Nothing
+    Set nodeCustomer = Nothing
+    Set objRoot = Nothing
+    Set fnode = Nothing
+    Set f = Nothing
+    Set n = Nothing
+    Set connect = Nothing
 
 
 End Sub
@@ -1411,3 +1554,4 @@ Function MakeInvoiceDate(datefield)
   MakeInvoiceDate = WeekdayName(WeekDay(datefield), True) + " " + Cstr(Day(datefield)) +  " " + MonthName(Month(datefield)) + " " + Cstr(Year(datefield))
   
 End Function
+

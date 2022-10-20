@@ -1,17 +1,15 @@
-import sys
-
 from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
 
+def shipper(ship_mode):
+    app = ShippingApp(ship_mode)
 
-def shipper(ship_mode, xmlfile):
-    app = ShippingApp(ship_mode, xmlfile)
-
-    app.xml_to_shipment()
-    if app.queue_shipment():
-        if app.book_collection():
+    app.xml_to_shipment_()
+    if app.queue_shipment_():
+        if app.book_collection_():
             print("success")
     app.log_json()
+    return "returned from python"
 
 
 def programmer():
@@ -26,12 +24,6 @@ def test():
 
 
 if __name__ == '__main__':
-    if any(".xml" in arg for arg in sys.argv):
-        xmlfile = sys.argv[1]
-        print(f"{xmlfile=} passed in args")
-    else:
-        print(f"No xml file passed, using C:\AmDesp\data\AmShip.xml")
-        xmlfile = r"C:\AmDesp\data\AmShip.xml"
-    shipper('prod', xmlfile)
+    shipper('prod')
     # programmer()
     # test()
