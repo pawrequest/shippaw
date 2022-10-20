@@ -351,9 +351,11 @@ class Shipment:  # taking an xmlimporter object
                 f"\n*** ERROR: No collections available on {self.sendOutDate:%A - %B %#d} ***\n\n\n- Collections for {self.customer} are available on:\n")
             for count, date in enumerate(dates):
                 # dt = parse(date.date)
-                out = f"{date.date:%A - %B %#d}"
+                datey = date.date
+                outy = f"{datey:%A}"
+                print(f"{outy=}")
                 # out = datetime.strftime(dt, '%A - %B %#d')
-                print("\t\t", count + 1, "|", out)
+                # print("\t\t", count + 1, "|", out)
 
             while True:
                 choice = input('\n- Enter a number to choose a date, [0] to exit\n')
