@@ -1179,6 +1179,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
                            Form.Field("Delivery Address").Value & vbNewLine & _
+                           Form.Field("Delivery Postcode").Value & vbNewLine & _
                            vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
                            vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
                            vbNewLine & returnStr & vbNewLine & _
