@@ -220,13 +220,13 @@ class Shipment:  # taking an xmlimporter object
                                                                 CNFG.dbay_cnfg.courier_id)  # get dates
         # if not "referenceNumber" in vars(parsed_xml_object):
         #     parsed_xml_object.referenceNumber =
-        for field in CNFG.fields.shipment_fields:
+        for attr_name in CNFG.fields.shipment_fields:
 
-            if field in vars(parsed_xml_object):
-                v = getattr(parsed_xml_object, field)
-                setattr(self, field, v)
+            if attr_name in vars(parsed_xml_object):
+                attr = getattr(parsed_xml_object, attr_name)
+                setattr(self, attr_name, attr)
             else:
-                print(f"*** ERROR - {field} not found in ship_dict - ERROR ***")
+                print(f"*** ERROR - {attr_name} not found in ship_dict - ERROR ***")
 
         ## provided shipment details
         if shipid:
@@ -691,6 +691,7 @@ class ShipDictObject:
     def __init__(self, ship_dict):
         for k, v in ship_dict.items():
             setattr(self, k, v)
+
 
 
 """ fake shipment to get service codes
