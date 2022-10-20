@@ -1,5 +1,6 @@
 suds-py3
 requests
 pywinauto
+pywinauto
 pyexcel_ods3
 psutil
