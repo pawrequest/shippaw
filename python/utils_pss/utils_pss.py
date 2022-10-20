@@ -1,7 +1,6 @@
-import sys
+# import sys
 
-import psutil
-import win32gui
+# import win32gui
 from pyexcel_ods3 import get_data
 
 
@@ -63,18 +62,18 @@ def toCamel(x): #likeThis
     return s[0] + ''.join(i.capitalize() for i in s[1:])
 
 
-def getActiveProcesses():
-    return {p.name() for p in psutil.process_iter(["name"])}
+# def getActiveProcesses():
+#     return {p.name() for p in psutil.process_iter(["name"])}
 
 
-def getActiveWindow():
-    active_window_name = None
-    try:
-        window = win32gui.GetForegroundWindow()
-        active_window_name = win32gui.GetWindowText(window)
-    except:
-        print("Could not get active window: ", sys.exc_info()[0])
-    return active_window_name
+# def getActiveWindow():
+#     active_window_name = None
+#     try:
+#         window = win32gui.GetForegroundWindow()
+#         active_window_name = win32gui.GetWindowText(window)
+#     except:
+#         print("Could not get active window: ", sys.exc_info()[0])
+#     return active_window_name
 
 
 def withoutKeys(d, keys):

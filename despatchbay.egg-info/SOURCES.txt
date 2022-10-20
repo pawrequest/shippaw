@@ -1,7 +1,0 @@
-README.md
-setup.py
-despatchbay.egg-info/PKG-INFO
-despatchbay.egg-info/SOURCES.txt
-despatchbay.egg-info/dependency_links.txt
-despatchbay.egg-info/requires.txt
-despatchbay.egg-info/top_level.txt

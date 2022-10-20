@@ -4,16 +4,17 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="despatchbay",
-    version="0.5.3",
-    author="Despatch Bay",
-    author_email="scott.keenan@thesalegroup.co.uk",
-    description="Python SDK for the Despatch Bay API v15",
-    install_requires=['suds-py3', 'requests', 'pywinauto'],
+    name="AmDesp",
+    version="0.1",
+    author="Paul Sees",
+    author_email="paul.sees.27@gmail.com",
+    description="Commence Rm -> Desptachbay shipping middleware",
+    install_requires=['suds-py3', 'requests', 'pywinauto', 'pyexcel_ods3', 'psutil'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://test.pypi.org/project/despatchbay/",
-    packages=setuptools.find_namespace_packages(include=['despatchbay']),
+    packages=setuptools.find_namespace_packages(
+        include=['despatchbay', 'suds-py3', 'requests', 'pywinauto', 'pyexcel_ods3', 'psutil']),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

@@ -1,18 +1,45 @@
-import subprocess
-
-doc_ref = r'C:\AmDesp\data\Parcelforce Labels\Rakesh Chandraker-2022-10-11.pdf'
-
-
-def command_print(pdf_to_print: str, doc_ref: str, event=None) -> None:
-    command = "{} {}".format(pdf_to_print, doc_ref)
-    subprocess.call(command, shell=True)
-
-
-# command_print(r'C:\AmDesp\bin\PDFtoPrinter.exe', doc_ref)
+# # fires "HelloWorld" to commence agent triggers
+# import win32com.client  # requires pywin32 package
+#
+# cmc = win32com.client.Dispatch("Commence.DB")  # talk to Commence
+# conv = cmc.GetConversation("Commence", "GetData")  # fire up 'DDE'
+# # first create an Commence Agent triggering on receive DDE string HelloWorld
+# # that (for instance) displays a MessageBox
+# dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
+# conv.Execute(dde)  # execute DDE command, hopefully Commence listens
 
 
-command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
-subprocess.call(command, shell=True)
+""" fires "HelloWorld" too commence agent triggers
+import win32com.client  # requires pywin32 package
+
+cmc = win32com.client.Dispatch("Commence.DB")  # talk to Commence
+conv = cmc.GetConversation("Commence", "GetData")  # fire up 'DDE'
+# first create an Commence Agent triggering on receive DDE string HelloWorld
+# that (for instance) displays a MessageBox
+dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
+conv.Execute(dde)  # execute DDE command, hopefully Commence listens
+"""
+
+
+import win32com.client #requires pywin32 package
+cmc = win32com.client.Dispatch("Commence.DB") #talk to Commence
+conv =  cmc.GetConversation("Commence", "GetData") #fire up 'DDE'
+# first create an Commence Agent triggering on receive DDE string HelloWorld
+# that (for instance) displays a MessageBox
+dde = "[FireTrigger(HelloWorld)]" #see help files for much more useful stuff
+conv.Execute(dde) #execute DDE command, hopefully Commence listens
+
+
+# import os
+#
+# os.startfile(r"C:\AmDesp\data\Parcelforce Labels\CALM All Porsche Trophy-2022-10-21.pdf", "print")
+
+# import subprocess
+#
+# doc_ref = r'file:///C:/Users/giles/Downloads/Order-2292544-Docs-021021.pdf'
+#
+# command = (r'C:\AmDesp\PDFtoPrinter.exe', doc_ref)
+# subprocess.call(command, shell=True)
 
 # import inspect
 # from pprint import pprint
