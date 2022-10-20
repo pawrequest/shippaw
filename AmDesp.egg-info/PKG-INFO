@@ -1,10 +1,10 @@
 Metadata-Version: 2.1
-Name: despatchbay
-Version: 0.5.3
-Summary: Python SDK for the Despatch Bay API v15
+Name: AmDesp
+Version: 0.1
+Summary: Commence Rm -> Desptachbay shipping middleware
 Home-page: https://test.pypi.org/project/despatchbay/
-Author: Despatch Bay
-Author-email: scott.keenan@thesalegroup.co.uk
+Author: Paul Sees
+Author-email: paul.sees.27@gmail.com
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
