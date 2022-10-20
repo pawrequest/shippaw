@@ -1,6 +1,5 @@
 # import sys
 
-import psutil
 # import win32gui
 from pyexcel_ods3 import get_data
 
@@ -63,8 +62,8 @@ def toCamel(x): #likeThis
     return s[0] + ''.join(i.capitalize() for i in s[1:])
 
 
-def getActiveProcesses():
-    return {p.name() for p in psutil.process_iter(["name"])}
+# def getActiveProcesses():
+#     return {p.name() for p in psutil.process_iter(["name"])}
 
 
 # def getActiveWindow():
