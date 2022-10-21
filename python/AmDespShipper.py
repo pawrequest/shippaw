@@ -14,7 +14,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
-debug = False
+debug = True
 
 
 class Config:
@@ -291,7 +291,7 @@ class Shipment:  # taking an xmlimporter object
                 self.deliveryBuildingNum = first_block
 
         def val_date_init(self):
-            if debug: print("func = VAL DATES")
+            if debug: print("func = VAL DATES INIT")
             # dates = self.client.get_available_collection_dates(self.sender, self.courier_id)  # get dates
             if isinstance(self.sendOutDate, str):
                 setattr(self, "sendOutDate", datetime.strptime(self.sendOutDate, '%d/%m/%Y'))
@@ -301,6 +301,8 @@ class Shipment:  # taking an xmlimporter object
                     self.dateObject = candidate
                     print(line, '\n',
                           f"Shipment date for {self.customer} validated - {datetime.strftime(self.sendOutDate, '%A %B %#d')}")
+            # if debug:
+            #     print("")
 
         parse_address()
         val_date_init(self)
@@ -356,8 +358,9 @@ class Shipment:  # taking an xmlimporter object
             for count, date in enumerate(dates):
                 # dt = parse(date.date)
                 datey = date.date
-                outy = f"{datey:%A}"
-                print(f"{outy=}")
+                print (f"{datey=}")
+                # outy = f"{datey:%A}"
+                # print(f"{outy=}")
                 # out = datetime.strftime(dt, '%A - %B %#d')
                 # print("\t\t", count + 1, "|", out)
 

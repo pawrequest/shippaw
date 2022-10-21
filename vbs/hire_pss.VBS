@@ -1200,6 +1200,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
         if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & emailaddy & "?",4) = 6 Then
         objMailItem.Send
+        Form.Field("PreShip Emailed").Value = True
         MsgBox("EMAILED")
         End if
         Set olApp = Nothing
