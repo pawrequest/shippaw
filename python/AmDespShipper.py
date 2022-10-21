@@ -121,7 +121,8 @@ class ShippingApp:
             ship_dict['id'] = ship_dict['Reference Number']
 
         elif category == "Customer":
-            print("Xml is a customer record")
+            if debug:
+                print("Xml is a customer record")
             customer = fields[0][1].text
             ship_dict['send Out Date'] = datetime.today().strftime(
                 '%d/%m/%Y')  # datedebug sets customer shipment send date to a string of today formatted like hire
@@ -137,7 +138,8 @@ class ShippingApp:
         for k, v in ship_dict.items():
             if k == "sendOutDate":
                 v = datetime.strptime(v, '%d/%m/%Y')  # datedebug
-        print(f"Making shipment object from xml with {len(ship_dict)} fields")
+        if debug:
+            print(f"Making shipment object from xml with {len(ship_dict)} fields")
         return ship_dict
 
     def clean_xml(self, dict) -> dict:
@@ -226,7 +228,7 @@ class Shipment:  # taking an xmlimporter object
                 attr = getattr(parsed_xml_object, attr_name)
                 setattr(self, attr_name, attr)
             else:
-                print(f"*** ERROR - {attr_name} not found in ship_dict - ERROR ***")
+                print(f"*** Warning - {attr_name} not found in ship_dict - Warning ***")
 
         ## provided shipment details
         if shipid:
@@ -271,10 +273,12 @@ class Shipment:  # taking an xmlimporter object
         self.shipmentReturn = None
         self.recipient = None
 
-        print("Shipment with id=", self.id, "created")
+        if debug:
+            print("Shipment with id=", self.id, "created")
 
         def parse_address():
-            print("--- Parsing Address...")
+            if debug:
+                print("--- Parsing Address...")
             crapstring = self.deliveryAddress
             firstline = crapstring.split("\n")[0]
             first_block = (crapstring.split(" ")[0]).split(",")[0]
