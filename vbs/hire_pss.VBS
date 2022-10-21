@@ -1158,6 +1158,17 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         Dim returnStr
         Dim emailaddy
         Dim cCust : Set cCust = Form.Connection("To","Customer")
+        Dim sendMeth
+
+        ' get send method from horrible strings
+        If InStr(Form.Field("Send / Collect").Value, "Cust. collect") > 0 OR InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
+            sendMeth = "collected by yourself or at your expense "
+'         If InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
+'             sendMeth = "collected "
+        Else sendMeth = "sent out "
+        End If
+
+        ' get return method from horrible strings'
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine &" Please use a trackable service and send us the tracking details when you have dispatched the shipment."
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
@@ -1174,7 +1185,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         End if
         objMailItem.To = emailaddy & ";" & cCust.FieldValue("Email")
         objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
-                           vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be sent out on  " & Form.Field("Send Out Date").Value & vbNewLine & _
+                           vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be " & sendMeth & "on " & Form.Field("Send Out Date").Value & vbNewLine & _
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
