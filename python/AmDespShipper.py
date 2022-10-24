@@ -14,7 +14,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
-debug = True
+debug = False
 
 
 class Config:
