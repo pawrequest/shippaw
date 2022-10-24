@@ -2,8 +2,6 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-#$python_exe = "C:\AmDesp\python\bin\python.exe"
-#$python_script = "C:\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 $JsonPath = "C:\AmDesp\data\AmShip.json"
 
@@ -20,6 +18,25 @@ $filter.FieldValue = "TRUE"
 $filter.Qualifier = "True"
 $cursor.Filters.Apply()
 
+## filter properties
+#$filter.FieldName = "Delivery Name"
+#$filter.FieldValue = "Test Customer"
+#$filter.Qualifier = "Contains"
+#$cursor.Filters.Apply()
+
+
+# edit and write to db
+$ed = $cursor.GetEditRowSet()
+#echo $row
+
+$ed_index = $ed.GetColumnIndex("Tracking Numbers")
+$ed.ModifyRow(0, $ed_index, "SOME TRACKING",0)
+$row = $ed.GetRow(0)
+echo $row
+$ed.Commit()
+
+
+
 # export settings
 $settings = $export.Settings
 $settings.ExportFormat = [ExportFormat]::Json # export to JSON
@@ -35,13 +52,3 @@ $cursor.ExportToFile($JsonPath, $settings)
 #goodbye
 $db.Close()
 
-# call python vbs supplying jsonpath
-#powershell $python_exe $python_script @JsonPath
-
-"COMPLETE"
-
-# TODO sets ShipMe to False
-# TODO wrties despatchbay references to commence
-
-# $powershell -executionpolicy ByPass -File .\Get-Printers.ps1
- #>
