@@ -1187,7 +1187,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
 
 
         objMailItem.To = emailaddy & ";" & cCust.FieldValue("Email")
-        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+        objMailItem.Body = "Hi," & vbNewLine & _
                            vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be " & sendMeth & "on " & Form.Field("Send Out Date").Value & vbNewLine & vbNewLine & _
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
