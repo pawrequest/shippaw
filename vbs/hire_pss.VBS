@@ -1153,22 +1153,26 @@ End Sub
 
 
 Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
-        Dim olApp
-        Dim objMailItem
-        Dim returnStr
-        Dim emailaddy
+        Dim olApp : Set olApp = CreateObject("Outlook.Application")
+        Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
         Dim cCust : Set cCust = Form.Connection("To","Customer")
-        Dim sendMeth
+        Dim returnStr, del_email, sendMeth, invoice_email
 
-        ' get send method from horrible strings
+' make email address string'
+        invoice_email = cCust.FieldValue("Email")
+        del_email = Form.Field("Delivery Email").Value
+
+        if invoice_email <> del_email Then
+            del_email = del_email & ";" & invoice_email
+        End if
+
+' get send method from horrible strings
         If InStr(Form.Field("Send / Collect").Value, "Cust. collect") > 0 OR InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
             sendMeth = "collected by yourself or at your expense "
-'         If InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
-'             sendMeth = "collected "
         Else sendMeth = "sent out "
         End If
 
-        ' get return method from horrible strings'
+' get return method from horrible strings'
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine & _
             vbNewLine & "Please use a trackable service and send us the tracking details when you have dispatched the shipment."
@@ -1176,17 +1180,13 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
             returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the equipment will be ready to collect so that we can arrange the courier."
         End if
 
-        emailaddy = Form.Field("Delivery Email").Value
-        if MsgBox("Delivery email address is " & emailaddy & "- send pre-ship email to this address?",4) = 7 Then
-        emailaddy = InputBox("Enter new email address")
+        if MsgBox("Delivery email address is " & del_email & "- send pre-ship email to this address?",4) = 7 Then
+        del_email = InputBox("Enter new email address")
         End if
 
-        Set olApp = CreateObject("Outlook.Application")
-        Set objMailItem = olApp.CreateItem(0)
+        
         objMailItem.Subject = "Radio Hire - upcoming shipment details"
-
-
-        objMailItem.To = emailaddy & ";" & cCust.FieldValue("Email")
+        objMailItem.To = del_email
         objMailItem.Body = "Hi," & vbNewLine & _
                            vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be " & sendMeth & "on " & Form.Field("Send Out Date").Value & vbNewLine & vbNewLine & _
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
@@ -1198,27 +1198,30 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
                            vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
                            vbNewLine & returnStr & vbNewLine & _
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
-        if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & emailaddy & "?",4) = 6 Then
+        if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & del_email & "?",4) = 6 Then
         objMailItem.Send
         Form.Field("PreShip Emailed").Value = True
         MsgBox("EMAILED")
         End if
+        
         Set olApp = Nothing
         Set objMailItem = Nothing
+        
 End Sub
 
-Sub EmailMissingKit() ' emails return notes should change to missing.
-    ' found code to send email'
-    Dim cCust : Set cCust = Form.Connection("To","Customer")
-        Dim olApp
-        Dim objMailItem
+Sub EmailMissingKit() 
+    ' emails 'Missing Kit' field to invoice and delivery email addresse
+        Dim cCust : Set cCust = Form.Connection("To","Customer")
+        Dim olApp : Set olApp = CreateObject("Outlook.Application")
+        Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
         Dim emailadd
-        Set olApp = CreateObject("Outlook.Application")
-        Set objMailItem = olApp.CreateItem(0)
+        
+        
         objMailItem.Subject = "Radio Hire - Missing Kit"
 
         emailadd = Form.Field("Delivery Email").Value & ";" &  cCust.FieldValue("Email")
-        if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address?",4) = 7 Then
+        
+        if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address? (no to enter new email address) ",4) = 7 Then
         emailadd = InputBox("Enter new email address")
         End if
 
