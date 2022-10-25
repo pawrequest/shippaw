@@ -875,7 +875,24 @@ Sub Form_OnClick(ControlId)
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
 			End If
-
+'
+' 		Case "CommandButton15"
+' 			' this button writes the delivery details to a CSV text file on the PC's local disk, which can
+' 			' then be uploaded into the Despatchbay web site
+' 			'dim fs,fname
+' 			'set fs=Server.CreateObject("Scripting.FileSystemObject")
+' 			'set fname=fs.CreateTextFile("c:\test.txt",true)
+' 			'fname.WriteLine("Hello World!")
+' 			'fname.Close
+' 			'set fname=nothing
+' 			'set fs=nothing
+'
+' 			Dim fso, DBtextfilename, DBstring
+' 			Set fso = CreateObject("Scripting.FileSystemObject")
+' 			Set DBtextfilename = fso.CreateTextFile("c:\Windows\temp\DBaddressfile.txt",True)
+' 			DBstring = Form.Field("Delivery Contact").Value + ", " + Form.Field("Delivery Address").Value + ", " + Form.Field("Delivery Postcode").Value + ", " + Form.Field("Delivery Telephone").Value + ", " + Form.Field("Delivery Telephone").Value
+' 			DBtextfilename.WriteLine(DBstring)
+' 			DBtextfilename.Close
 
 		Case "CommandButton16"
 			' this button inserts the description "Absolutely car/van" into the Send Method field
@@ -896,7 +913,7 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Actual Return Date").Value = "today"
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' '''''''''   pss_buttons                 '''''''''''''''''''''''''''''''
+' '''''''''   pss                 '''''''''''''''''''''''''''''''
 '
         Case "CommandButton19"
             PackHire()
@@ -923,7 +940,7 @@ Sub Form_OnClick(ControlId)
            End if
 
 
-''''''''''''''''''    /pss             ''''''''''''''''''''''''''''''
+''''''''''''''''''    pss             ''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     End Select
 End Sub
@@ -931,7 +948,7 @@ End Sub
 
 
 '''''''''''''''''''''''''''''''''''''''''''''
-'''''''''' pss funcs''''''''''''''
+'''''''''' pss email func''''''''''''''
 
 Sub PackHire()
         Dim packedBy
@@ -955,6 +972,29 @@ Sub PackHire()
         End if
 End Sub
 
+' trying to get output
+' Sub ShipHire(xmlfile)
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\python\bin\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command, objExec
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'
+'         Set oShell = CreateObject("Wscript.Shell")
+'         Set objExec = oShell.Exec(currentCommand)
+'             Do
+'                 objExec.WriteLine(objExec.StdOut.ReadLine())
+'             Loop While Not objExec.StdOut.atEndOfStream
+'         Wscript.StdOut.WriteLine(objExec.StdOut.ReadAll)
+' '         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+
+
+'
+' ' master
 Sub ShipHire(xmlfile)
         ' AmDesp'
         Dim python_exe, python_script, commence_wrapper, str_error
@@ -964,11 +1004,121 @@ Sub ShipHire(xmlfile)
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
+'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
 ' ' master
+
+' Sub ShipHire(xmlfile)
+'        Dim WshShell, oExec
+'        Set WshShell = CreateObject("WScript.Shell")
+'
+'        Set oExec = WshShell.Exec("calc")
+'
+'        Do While oExec.Status = 0
+'             Application.wait 100
+'        Loop
+'
+'        WScript.Echo oExec.Status
+' End Sub
+
+'
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDespMain.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+' '             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
+' '         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+' '         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+'         Dim outputty
+'         oShell.Exec currentCommand & ">" & "C:\temp\outputtyfile.txt"
+' '         oShell.run currentCommand & ">" & "C:\temp\outputtyfile.txt",1,true
+'         set oShell = nothing
+' End Sub
+'
+
+
+Function vFn_Sys_Run_CommandOutput (Command, Wait, Show, OutToFile, DeleteOutput, NoQuotes)
+'Run Command similar to the command prompt, for Wait use 1 or 0. Output returned and
+'stored in a file.
+'Command = The command line instruction you wish to run.
+'Wait = 1/0; 1 will wait for the command to finish before continuing.
+'Show = 1/0; 1 will show for the command window.
+'OutToFile = The file you wish to have the output recorded to.
+'DeleteOutput = 1/0; 1 deletes the output file. Output is still returned to variable.
+'NoQuotes = 1/0; 1 will skip wrapping the command with quotes, some commands wont work
+'                if you wrap them in quotes.
+'----------------------------------------------------------------------------------------
+  On Error Resume Next
+  'On Error Goto 0
+  MsgBox "functioon open"
+    Dim f_objShell : Set f_objShell = CreateObject("Wscript.Shell")
+    Dim f_objFso : Set f_objFso = CreateObject("Scripting.FileSystemObject")
+    Const ForReading = 1, ForWriting = 2, ForAppending = 8
+      'VARIABLES
+        If OutToFile = "" Then OutToFile = "TEMP.TXT"
+        tCommand = Command
+        If Left(Command,1)<>"""" And NoQuotes <> 1 Then tCommand = """" & Command & """"
+        tOutToFile = OutToFile
+        If Left(OutToFile,1)<>"""" Then tOutToFile = """" & OutToFile & """"
+        If Wait = 1 Then tWait = True
+        If Wait <> 1 Then tWait = False
+        If Show = 1 Then tShow = 1
+        If Show <> 1 Then tShow = 0
+
+      'RUN PROGRAM
+        f_objShell.Run tCommand & ">" & tOutToFile, tShow, tWait
+
+      'READ OUTPUT FOR RETURN
+        Dim f_objFile : Set f_objFile = f_objFso.OpenTextFile(OutToFile, 1)
+          tMyOutput = f_objFile.ReadAll
+          f_objFile.Close
+          Set f_objFile = Nothing
+
+      'DELETE FILE AND FINISH FUNCTION
+        If DeleteOutput = 1 Then
+          Set f_objFile = f_objFso.GetFile(OutToFile)
+            f_objFile.Delete
+            Set f_objFile = Nothing
+          End If
+        vFn_Sys_Run_CommandOutput = tMyOutput
+        If Err.Number <> 0 Then vFn_Sys_Run_CommandOutput = "<0>"
+        Err.Clear
+        On Error Goto 0
+      Set f_objFile = Nothing
+      Set f_objShell = Nothing
+  End Function
+
+
+
+
+
+' Sub wait (sec)
+'     dim temp
+'     temp=timer
+'     do while timer-temp<sec
+'     loop
+' end Sub
+
+
+
+' Sub Delay( seconds )
+' 	Dim wshShell, strCmd
+' 	Set wshShell = CreateObject( "WScript.Shell" )
+' 	strCmd = wshShell.ExpandEnvironmentStrings( "%COMSPEC% /C (PING.EXE -n " & ( seconds + 1 ) & " localhost >NUL 2>&1)" )
+' 	wshShell.Run strCmd, 0, 1
+' 	Set wshShell = Nothing
+' End Sub
 
 
 Sub UnpackHire()
@@ -978,29 +1128,22 @@ Sub UnpackHire()
         Form.Field("Unpacked Time").Value = "now"
         Form.Field("Actual Return Date").Value = "today"
         Form.Field("Unpacked By").Value = unpackedBy
-' all ok? if so set returned ok and offer to save/close'
         if MsgBox("all ok?",4) = 6 Then
             Form.Field("Status").Value = "Returned all OK"
             if MsgBox("Close Hire and exit?",4) = 6 Then
                 Form.Field("Closed").Value = 1
                 Form.Save
             End if
-
-' if not then offer to manually enter missing kit, else use missing-kit field on form'
         Else
             Form.Field("Status").Value = "Returned with problems"
-            missing = InputBox("What was missing?", "What's Missing? (cancel to use existing 'Missing Kit' field)")
+            missing = InputBox("What was missing?", "What's Missing?")
             if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
                 Form.Field("Missing Kit").Value = missing
             End if
-
-' offer to email customer, if so call function'
             if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
                 EmailMissingKit()
             End if
-
-' offer to save and exit'
-            if MsgBox("Set status to returned with problems, save, and exit?",4) = 6 Then
+            if MsgBox("New missing-kit field:" & vbNewLine & missing & vbNewLine & "Set returned with problems, save, and exit?",4) = 6 Then
                     Form.Save
             End if
 
@@ -1099,9 +1242,11 @@ Sub EmailMissingKit()
                            "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
                            vbNewLine & "MISSING KIT:" & vbNewLine & _
                            Form.Field("Missing Kit").value & vbNewLine & vbNewLine & "(If you have already discussed missing items with us please disregard this automatically generated email)"
-
-' show user the email and if confirmed send email'
+' show user the email and get confirmation'
         if MsgBox ("Confirm Email:" & vbNewLine & vbNewLine & objMailItem & vbNewLine & objMailItem.Body, 4) = 6 Then
+
+' send email'
+
             objMailItem.Send
             MsgBox("EMAILED")
         End if
@@ -1113,14 +1258,15 @@ Sub EmailMissingKit()
 
 End Sub
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-''''''''' arno+ pss function to export item fields to xml  ''''''''''''
+''''''''' arno-pss function to export item field
+Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
+Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
 
 Sub ExportItemDetailForm(ByVal strPath)
 
-    Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
-    Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-
+    'will export all values showing on the form,
+    'including ones that are not visible(!)
+    'any user, if permissioned, can always show these anwyay.
     Dim db, conv, f, arrFields, arrCons, strDDE
     Set db = Application.Database
     Set conv = db.GetConversation("Commence", "GetData")
@@ -1191,7 +1337,6 @@ Sub ExportItemDetailForm(ByVal strPath)
 End Sub
 
 public Function sanitizeXMLString(invalidString)
-' used to cleanup strings which interfere with xml format - AmDesp python reverses this'
 	Dim tmp, i
 	tmp = invalidString
 	'first replace ampersand
