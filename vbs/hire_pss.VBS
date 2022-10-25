@@ -1151,7 +1151,6 @@ Sub UnpackHire()
 End Sub
 
 
-
 Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         Dim olApp : Set olApp = CreateObject("Outlook.Application")
         Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
@@ -1165,6 +1164,7 @@ Sub EmailSendOut() 'sent 2 days before send-out conforming address and schedule'
         if invoice_email <> del_email Then
             del_email = del_email & ";" & invoice_email
         End if
+
 
 ' get send method from horrible strings
         If InStr(Form.Field("Send / Collect").Value, "Cust. collect") > 0 OR InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
@@ -1214,18 +1214,25 @@ Sub EmailMissingKit()
         Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim olApp : Set olApp = CreateObject("Outlook.Application")
         Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
-        Dim emailadd
-        
-        
-        objMailItem.Subject = "Radio Hire - Missing Kit"
+        Dim del_email, invoice_email
 
-        emailadd = Form.Field("Delivery Email").Value & ";" &  cCust.FieldValue("Email")
+' make email address string'
+        invoice_email = cCust.FieldValue("Email")
+        del_email = Form.Field("Delivery Email").Value
+        MsgBox "del_email before if: " & del_email & "invoice_email before if: " & invoice_email
+
+        if invoice_email <> del_email Then
+            MsgBox "ADDING EMAILS"
+            del_email = del_email & ";" & invoice_email
+        End if
         
-        if MsgBox("Delivery email address was " & emailadd & vbNewLine & "Send missing-kit email to this address? (no to enter new email address) ",4) = 7 Then
-        emailadd = InputBox("Enter new email address")
+
+        if MsgBox("Delivery email address was " & del_email & vbNewLine & "Send missing-kit email to this address? (no to enter new email address) ",4) = 7 Then
+        del_email = InputBox("Enter new email address")
         End if
 
-        objMailItem.To = emailadd
+        objMailItem.Subject = "Radio Hire - Missing Kit"
+        objMailItem.To = del_email
         objMailItem.Body = "Hi," & vbNewLine & _
                            vbNewLine & "Thanks for returning the hired equipment - I hope it worked well for your event." & vbNewLine & _
                            vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
