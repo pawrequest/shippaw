@@ -130,14 +130,14 @@ class ShippingApp:
             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
 
         else:
-            print("no customer found")
-            print("ERROR NO CUSTOMER")
+            print("ERROR NO CATEGORY")
         ship_dict.update({'customer': customer})
+        ship_dict.update({'category': category})
         ship_dict = self.clean_xml(ship_dict)
         if 'boxes' not in ship_dict.keys():
             ship_dict['boxes'] = 0
         for k, v in ship_dict.items():
-            if k == "sendOutDate":
+            if type(k) == datetime:
                 v = datetime.strptime(v, '%d/%m/%Y')  # datedebug
         if debug:
             print(f"Making shipment object from xml with {len(ship_dict)} fields")
@@ -186,16 +186,19 @@ class ShippingApp:
 
         export_dict = {}
         for field in self.CNFG.fields.export_fields:
-            val = getattr(self.shipment, field)
-            val = f"{val:%d-%m-%Y}" if isinstance(val, datetime) else val
-            export_dict.update({field: val})
+            if field in vars(self.shipment):
+                val = getattr(self.shipment, field)
+                val = f"{val:%d-%m-%Y}" if isinstance(val, datetime) else val
+                export_dict.update({field: val})
+            else:
+                print(f"{field} not found in shipment")
 
         with open(self.CNFG.paths.log_file, 'a') as f:
             json.dump(export_dict, f, sort_keys=True)
             f.write(",\n")
             pprint(f"\n Json exported to {self.CNFG.paths.log_file} {export_dict =}")
 
-        if input("log tracking?") == 'y':
+        if self.shipment.category == "Hire" and input("log tracking?") == 'y':
             self.log_tracking()
 
     def log_tracking(self):
@@ -257,9 +260,9 @@ class Shipment:  # taking an xmlimporter object
         self.sendOutDate = parsed_xml_object.sendOutDate
         self.boxes = parsed_xml_object.boxes
         if shipref:
-            self.shipRef = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
+            self.reference_on_label = shipref  ## if there is a shipref passed use it as despatchbay reference on label etc
         else:
-            self.shipRef = self.customer
+            self.reference_on_label = self.customer
 
         ## obtained shipment details
         self.deliveryBuildingNum = None
@@ -276,7 +279,7 @@ class Shipment:  # taking an xmlimporter object
 
         # DespatchBay Objects
 
-        self.addedShipment = None
+        self.desp_shipment_id = None
         self.address = None
         self.dateObject = None
         self.shipmentRequest = None
@@ -325,6 +328,7 @@ class Shipment:  # taking an xmlimporter object
                       f"\nShipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
                 ui = input(f"[C]onfirm {self.boxes} boxes in shipment or Enter a number of boxes\n")
                 if not ui:
+                    print("No Input")
                     continue
                 if ui.isnumeric():
                     self.boxes = int(ui)
@@ -334,6 +338,7 @@ class Shipment:  # taking an xmlimporter object
                 if ui.lower() == 'c':
                     print("Confirmed\n", line)
                     return self.boxes
+                print("Something odd")
                 continue
         else:
             while True:
@@ -573,7 +578,7 @@ class Shipment:  # taking an xmlimporter object
 
         self.shipmentRequest = self.client.shipment_request(
             parcels=self.parcels,
-            client_reference=self.shipRef,
+            client_reference=self.reference_on_label,
             collection_date=self.dateObject.date,
             sender_address=self.sender,
             recipient_address=self.recipient,
@@ -618,7 +623,7 @@ class Shipment:  # taking an xmlimporter object
 
                         continue  # not restarting
                 elif choice == 'q':
-                    self.addedShipment = self.client.add_shipment(self.shipmentRequest)
+                    self.desp_shipment_id = self.client.add_shipment(self.shipmentRequest)
                     print("Adding Shipment to Despatchbay Queue")
                     return True
             else:
@@ -663,17 +668,17 @@ class Shipment:  # taking an xmlimporter object
                     if choice != 'e':  # not exit either
                         continue  # try again
                     else:  # exit
-                        if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
-                            exit()
+                        if str(input("[E]xit?"))[0].lower() == 'e':  # confirm exit
+                            return False
                         continue
                 else:  # restart
                     if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
                         print("Restarting")
-                        ShippingApp.queue_shipment_()  # debug does it run process? or soemthing else
+                        ShippingApp.queue_shipment_()  # debug
                     continue  # not restarting
             elif choice == 'b':
-                self.client.book_shipments(self.addedShipment)
-                shipment_return = self.client.get_shipment(self.addedShipment)
+                self.client.book_shipments(self.desp_shipment_id)
+                shipment_return = self.client.get_shipment(self.desp_shipment_id)
                 label_pdf = self.client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
                 label_string = ""
                 try:
@@ -705,6 +710,7 @@ class ShipDictObject:
     def __init__(self, ship_dict):
         for k, v in ship_dict.items():
             setattr(self, k, v)
+        ...
 
 
 
