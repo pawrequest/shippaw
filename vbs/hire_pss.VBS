@@ -1223,7 +1223,7 @@ Sub EmailMissingKit() ' emails return notes should change to missing.
         End if
 
         objMailItem.To = emailadd
-        objMailItem.Body = "Hi " & Form.Field("Delivery Contact").Value &"," & vbNewLine & _
+        objMailItem.Body = "Hi," & vbNewLine & _
                            vbNewLine & "Thanks for returning the hired equipment - I hope it worked well for your event." & vbNewLine & _
                            vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
                            "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
