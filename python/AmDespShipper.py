@@ -2,11 +2,12 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pprint import pprint
 
-# from dateutil.parser import parse
+from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, get_from_ods
@@ -180,8 +181,8 @@ class ShippingApp:
 
     def log_json(self):
         # export from object attrs?
-        if "referenceNumber" not in vars(self.shipment):
-            self.shipment.referenceNumber = self.shipment.id
+        # if "referenceNumber" not in vars(self.shipment):
+        #     self.shipment.referenceNumber = self.shipment.id
 
         export_dict = {}
         for field in self.CNFG.fields.export_fields:
@@ -191,18 +192,28 @@ class ShippingApp:
 
         with open(self.CNFG.paths.log_file, 'a') as f:
             json.dump(export_dict, f, sort_keys=True)
-            f.write(",")
+            f.write(",\n")
             pprint(f"\n Json exported to {self.CNFG.paths.log_file} {export_dict =}")
 
-            # val = f"{val:%d-%m-%Y} if isinstance(val, datetime) else val}"
-            # if isinstance(val, datetime):
-            #     val = f"{val:%d-%m-%Y}"
+        if input("log tracking?") == 'y':
+            self.log_tracking()
 
-        # export_dict = {field : f"{val:%d-%m-%Y}" if isinstance(val, datetime) else val for val = getattr(self.shipment, field) for field in self.CNFG.fields.export_fields}
+    def log_tracking(self):
+        powershell_script = r"C:\AmDesp\vbs\Edit_Commence.ps1"
+        hire_ref_num = f"{self.shipment.referenceNumber:,}"
+        # tracking_nums = [*self.shipment.trackingNumbers]
+        tracking_nums = ', '.join(self.shipment.trackingNumbers)
 
-        # if isinstance(export_dict, datetime):
-        #     export_dict["sendOutDate"]=export_dict["sendOutDate"].strftime('%d/%m/%Y')
-        # self.sendOutDate = self.sendOutDate.strftime('%d/%m/%Y')
+
+
+        subprocess.run([
+            "powershell.exe",
+            "-File",
+            powershell_script,
+            hire_ref_num,
+            tracking_nums
+        ],
+            stdout=sys.stdout)
 
 
 class Shipment:  # taking an xmlimporter object
@@ -220,10 +231,8 @@ class Shipment:  # taking an xmlimporter object
 
         self.dates = self.client.get_available_collection_dates(CNFG.dbay_cnfg.sender,
                                                                 CNFG.dbay_cnfg.courier_id)  # get dates
-        # if not "referenceNumber" in vars(parsed_xml_object):
-        #     parsed_xml_object.referenceNumber =
-        for attr_name in CNFG.fields.shipment_fields:
 
+        for attr_name in CNFG.fields.shipment_fields:
             if attr_name in vars(parsed_xml_object):
                 attr = getattr(parsed_xml_object, attr_name)
                 setattr(self, attr_name, attr)
@@ -235,6 +244,7 @@ class Shipment:  # taking an xmlimporter object
             self.id = shipid
         elif 'referenceNumber' in vars(parsed_xml_object):
             self.id = parsed_xml_object.referenceNumber
+            self.referenceNumber = parsed_xml_object.referenceNumber
         else:
             self.id = "101"
         self.customer = parsed_xml_object.customer
@@ -356,13 +366,9 @@ class Shipment:  # taking an xmlimporter object
             print(
                 f"\n*** ERROR: No collections available on {self.sendOutDate:%A - %B %#d} ***\n\n\n- Collections for {self.customer} are available on:\n")
             for count, date in enumerate(dates):
-                # dt = parse(date.date)
-                datey = date.date
-                print (f"{datey=}")
-                # outy = f"{datey:%A}"
-                # print(f"{outy=}")
-                # out = datetime.strftime(dt, '%A - %B %#d')
-                # print("\t\t", count + 1, "|", out)
+                dt = parse(date.date)
+                out = datetime.strftime(dt, '%A - %B %#d')
+                print("\t\t", count + 1, "|", out)
 
             while True:
                 choice = input('\n- Enter a number to choose a date, [0] to exit\n')
@@ -692,6 +698,7 @@ class Shipment:  # taking an xmlimporter object
                 print(
                     f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
                 return True
+
 
 
 class ShipDictObject:

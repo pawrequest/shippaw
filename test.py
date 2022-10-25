@@ -1,3 +1,20 @@
+import subprocess, sys
+
+powershell_script = r"C:\AmDesp\vbs\Edit_Commence.ps1"
+
+hire_ref_num = "29,372"
+tracking_nums = "HERe ARE FAKE TRACKING NUMS"
+
+p = subprocess.run([
+    "powershell.exe",
+    "-File",
+    powershell_script,
+    hire_ref_num,
+    tracking_nums
+],
+    stdout=sys.stdout)
+
+
 # # fires "HelloWorld" to commence agent triggers
 # import win32com.client  # requires pywin32 package
 #
@@ -20,15 +37,15 @@ dde = "[FireTrigger(HelloWorld)]"  # see help files for much more useful stuff
 conv.Execute(dde)  # execute DDE command, hopefully Commence listens
 """
 
-
-import win32com.client #requires pywin32 package
-cmc = win32com.client.Dispatch("Commence.DB") #talk to Commence
-conv =  cmc.GetConversation("Commence", "GetData") #fire up 'DDE'
-# first create an Commence Agent triggering on receive DDE string HelloWorld
-# that (for instance) displays a MessageBox
-dde = "[FireTrigger(HelloWorld)]" #see help files for much more useful stuff
-conv.Execute(dde) #execute DDE command, hopefully Commence listens
-
+#
+# import win32com.client #requires pywin32 package
+# cmc = win32com.client.Dispatch("Commence.DB") #talk to Commence
+# conv =  cmc.GetConversation("Commence", "GetData") #fire up 'DDE'
+# # first create an Commence Agent triggering on receive DDE string HelloWorld
+# # that (for instance) displays a MessageBox
+# dde = "[FireTrigger(HelloWorld)]" #see help files for much more useful stuff
+# conv.Execute(dde) #execute DDE command, hopefully Commence listens
+#
 
 # import os
 #
