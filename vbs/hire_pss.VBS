@@ -978,6 +978,7 @@ Sub UnpackHire()
         Form.Field("Unpacked Time").Value = "now"
         Form.Field("Actual Return Date").Value = "today"
         Form.Field("Unpacked By").Value = unpackedBy
+
 ' all ok? if so set returned ok and offer to save/close'
         if MsgBox("all ok?",4) = 6 Then
             Form.Field("Status").Value = "Returned all OK"
@@ -986,18 +987,23 @@ Sub UnpackHire()
                 Form.Save
             End if
 
-' if not then offer to manually enter missing kit, else use missing-kit field on form'
+' if not ok then offer to manually enter missing kit, else use missing-kit field on form'
         Else
             Form.Field("Status").Value = "Returned with problems"
-            missing = InputBox("What was missing?", "What's Missing? (cancel to use existing 'Missing Kit' field)")
-            if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
-                Form.Field("Missing Kit").Value = missing
+            missing = InputBox("What was missing?" & vbNewLine & "(cancel to use existing 'Missing Kit' field)", "What's Missing?")
+            if missing <> "" Then
+                if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
+                    Form.Field("Missing Kit").Value = missing
+                End if
             End if
 
-' offer to email customer, if so call function'
-            if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
-                EmailMissingKit()
-            End if
+' ' offer to email customer, if so call function'
+'             if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
+'                 EmailMissingKit()
+'             End if
+
+' just do it'
+        EmailMissingKit()
 
 ' offer to save and exit'
             if MsgBox("Set status to returned with problems, save, and exit?",4) = 6 Then
@@ -1058,7 +1064,7 @@ Sub EmailSendOut()
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
 
 ' show user the email and get confirmation'
-        if MsgBox("Send Email: "& vbNewLine & objMailItem.Body & "to " & del_email & "?",4) = 6 Then
+        if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
 ' send email'
         objMailItem.Send
         Form.Field("PreShip Emailed").Value = True
@@ -1085,10 +1091,10 @@ Sub EmailMissingKit()
             del_email = del_email & ";" & invoice_email
         End if
         
-' give user chance to change email address'
-        if MsgBox("Delivery / invoice email addresses were " & del_email & vbNewLine & "Send missing-kit email to this address? (no to enter new email address) ",4) = 7 Then
-        del_email = InputBox("Enter new email address")
-        End if
+' ' give user chance to change email address'
+'         if MsgBox("Delivery / invoice email addresses were " & del_email & vbNewLine & "Send missing-kit email to this address?" & vbNewLine & "(no to enter new email address)",4) = 7 Then
+'         del_email = InputBox("Enter new email address")
+'         End if
 
 'compose email'
         objMailItem.Subject = "Radio Hire - Missing Kit"
