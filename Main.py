@@ -1,4 +1,3 @@
-from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
 
 def shipper(ship_mode):
@@ -10,13 +9,6 @@ def shipper(ship_mode):
             print("success")
     app.log_json()
     return "returned from python"
-
-
-def programmer():
-    prog = ProgrammingAssistant()
-    prog.BootUp()
-    prog.ProgramBatch()
-    ...
 
 
 def test():
