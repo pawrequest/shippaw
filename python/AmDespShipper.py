@@ -204,10 +204,7 @@ class ShippingApp:
     def log_tracking(self):
         powershell_script = r"C:\AmDesp\vbs\Edit_Commence.ps1"
         hire_ref_num = f"{self.shipment.referenceNumber:,}"
-        # tracking_nums = [*self.shipment.trackingNumbers]
         tracking_nums = ', '.join(self.shipment.trackingNumbers)
-
-
 
         subprocess.run([
             "powershell.exe",

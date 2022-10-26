@@ -16,14 +16,14 @@ $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field
 $filter.FieldName = "Reference Number"
 $filter.FieldValue = $ref_num
 $filter.Qualifier = "EqualTo"
-$cursor.Filters.Apply()
-
-# edit and write to db
-$ed = $cursor.GetEditRowSet()
-$ed_index = $ed.GetColumnIndex("Tracking Numbers")
-$ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
-$ed.Commit()
-
+if ($cursor.Filters.Apply() = 0)
+{
+    # edit and write to db
+    $ed = $cursor.GetEditRowSet()
+    $ed_index = $ed.GetColumnIndex("Tracking Numbers")
+    $ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
+    $ed.Commit()
+}
 #goodbye
 $db.Close()
 
