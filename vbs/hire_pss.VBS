@@ -955,22 +955,6 @@ Sub PackHire()
         End if
 End Sub
 
-Sub ShipHire(xmlfile)
-        ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper, str_error
-        python_exe = "C:\AmDesp\dist\python.exe"
-        python_script = "C:\AmDesp\Main.py"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
-        Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
-        oShell.run currentCommand,1,true
-        set oShell = nothing
-End Sub
-' ' master
-
-
 Sub UnpackHire()
         Dim unpackedBy, missing, newReturn
         unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
@@ -997,12 +981,7 @@ Sub UnpackHire()
                 End if
             End if
 
-' ' offer to email customer, if so call function'
-'             if MsgBox ("Email Customer about missing kit?", 4) = 6 Then
-'                 EmailMissingKit()
-'             End if
-
-' just do it'
+' email customer about missing kit'
         EmailMissingKit()
 
 ' offer to save and exit'
@@ -1118,6 +1097,35 @@ Sub EmailMissingKit()
         Set cCust = Nothing
 
 End Sub
+
+Sub ShipHire(xmlfile)
+        ' AmDesp'
+        Dim python_exe, python_script, commence_wrapper, str_error
+        python_exe = "C:\AmDesp\dist\python.exe"
+        python_script = "C:\AmDesp\Main.py"
+        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+        ExportItemDetailForm(xmlfile)
+        Dim oShell, currentCommand, my_command
+        Set oShell = CreateObject("Wscript.Shell")
+        currentCommand = "cmd /C " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+        oShell.run currentCommand,1
+        set oShell = nothing
+End Sub
+'
+' Sub ShipHire(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\Main.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+'         currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ''''''''' arno+ pss function to export item fields to xml  ''''''''''''

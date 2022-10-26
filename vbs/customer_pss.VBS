@@ -209,7 +209,7 @@ End Sub
 
 ' ' master
 Sub ShipHire(xmlfile)
-        ' AmDesp'
+        ' launch AmDesp python app'
         Dim python_exe, python_script, commence_wrapper, str_error
         python_exe = "C:\AmDesp\dist\python.exe"
         python_script = "C:\AmDesp\Main.py"
@@ -217,10 +217,7 @@ Sub ShipHire(xmlfile)
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
-'             my_command = python_exe & " -noexit " & python_script & " " & JsonPath ''## (for multi-shiment via json)
-'         currentCommand = "cmd /k " & python_exe & " " & python_script & Chr(34) '  & " " & xmlfile'
-        currentCommand = "cmd /k " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
-'         str_error = oShell.run(currentCommand,1,true).StdOut.ReadAll
+        currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
