@@ -876,6 +876,9 @@ Sub Form_OnClick(ControlId)
 				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
 			End If
 
+        Case "CommandButton15"
+        ' get track'
+            GetTrack()
 
 		Case "CommandButton16"
 			' this button inserts the description "Absolutely car/van" into the Send Method field
@@ -935,28 +938,38 @@ End Sub
 
 Sub PackHire()
         Dim packedBy
+
+' set who packed and when packed'
+        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed Date").Value = "today"
         Form.Field("Packed Time").Value = "now"
         Form.Field("Status").Value = "Booked in and packed"
-        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
         Form.Field("Packed By").Value = packedBy
-        if MsgBox("Send pre-shipping email?",4) = 6 Then
-        EmailSendOut()
-        End if
+
+' if parcelforce in send method offer to launch amdesp to arrange shipping'
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-'                 anothertry("C:\AmDesp\data\AmShip.xml")
                 ShipHire("C:\AmDesp\data\AmShip.xml")
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if
+
+' offer to email client about upcoming shipment'
+        if MsgBox("Send pre-shipping email?",4) = 6 Then
+        EmailSendOut()
+        End if
+
+' offer to save and close'
         if MsgBox("Hire packed now by " & packedBy & " - save and close?", 4) = 6 Then
             Form.Save
         End if
 End Sub
 
+
 Sub UnpackHire()
         Dim unpackedBy, missing, newReturn
+
+' set who unpacked and when unpacked'
         unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
         Form.Field("Unpacked Date").Value = "today"
         Form.Field("Unpacked Time").Value = "now"
@@ -1000,6 +1013,8 @@ Sub EmailSendOut()
         Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim returnStr, del_email, sendMeth, invoice_email
 
+        MsgBox Form.Field("Tracking Numbers").value
+
 ' make email address string if delivery and invoice emails are different send to both
         invoice_email = cCust.FieldValue("Email")
         del_email = Form.Field("Delivery Email").Value
@@ -1042,9 +1057,8 @@ Sub EmailSendOut()
                            vbNewLine & returnStr & vbNewLine & _
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
 
-' show user the email and get confirmation'
+' show user the email and get confirmation to send email'
         if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
-' send email'
         objMailItem.Send
         Form.Field("PreShip Emailed").Value = True
         MsgBox("EMAILED")
@@ -1107,10 +1121,23 @@ Sub ShipHire(xmlfile)
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /c " & python & " " & python_script & " " & xmlfile & Chr(34)
-        oShell.run currentCommand,1
+        currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
+        oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
+
+
+Sub GetTrack()
+        Dim oShell, currentCommand, ref_num, ret, psScript
+        psScript = "C:\AmDesp\vbs\get_track.ps1"
+        ref_num = Form.Field("Reference Number").value
+        Set oShell = CreateObject("Wscript.Shell")
+        currentCommand = "powershell -executionpolicy bypass -noexit -file " & psScript & " " & ref_num & Chr(34)
+        oShell.run currentCommand,1,true
+        MsgBox ret
+        set oShell = nothing
+End Sub
+
 
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

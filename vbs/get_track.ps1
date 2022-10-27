@@ -4,7 +4,6 @@ using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 $ref_num = $args[0]
-$tracking_nums = $args[1]
 
 #cursor properties
 Add-Type -Path $commence_wrapper
@@ -16,16 +15,18 @@ $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field
 $filter.FieldName = "Reference Number"
 $filter.FieldValue = $ref_num
 $filter.Qualifier = "EqualTo"
-If ($cursor.Filters.Apply() = 0){
-    # edit and write to db
-    $ed = $cursor.GetEditRowSet()
-    $ed_index = $ed.GetColumnIndex("Tracking Numbers")
-    $ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
-    $ed.Commit()
-}
-Else{
-    "MULTIPLE RECORDS RETURNED"
-}
+$cursor.Filters.Apply()
+
+# columns
+$cursor.Columns.AddDirectColumns("Tracking Numbers")
+$cursor.Columns.Apply()
+
+$outy = $cursor.ReadRow(0)
+
+return $outy
+
+#return $cursor
+
 #goodbye
 $db.Close()
 
