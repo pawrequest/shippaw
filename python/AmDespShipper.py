@@ -10,7 +10,7 @@ from pprint import pprint
 from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-from python.utils_pss.utils_pss import toCamel, get_from_ods
+from python.utils_pss.utils_pss import toCamel, get_from_ods, unsanitise
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
@@ -150,14 +150,14 @@ class ShippingApp:
             print("No date - added today")
             dict['Send Out Date'] = datetime.today().strftime('%d/%m/%Y')
         for k, v in dict.items():
-            # k = unsanitise(k)
+            k = unsanitise(k)
             k = toCamel(k)
             if "deliv" in k:
                 if "delivery" not in k:
                     k = k.replace('deliv', 'delivery')
 
             if v:
-                # v = unsanitise(v)
+                v = unsanitise(v)
                 if isinstance(v, list):
                     v = v[0]
                 if v.isnumeric():
