@@ -1205,7 +1205,7 @@ public Function sanitizeXMLString(invalidString)
 	tmp = Replace(tmp, chr(39), "&apos;")
 	tmp = Replace(tmp, chr(60), "&lt;")
 	tmp = Replace(tmp, chr(62), "&gt;")
-	'tmp = Replace(tmp, chr(32), "&nbsp;")
+	'tmp = Replace(tmp, chr(32), "&nbsp;") ' (space)'
 	sanitizeXMLString = tmp
 end function
 
