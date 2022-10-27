@@ -1127,17 +1127,38 @@ Sub ShipHire(xmlfile)
 End Sub
 
 
+
+
 Sub GetTrack()
-        Dim oShell, currentCommand, ref_num, ret, psScript
-        psScript = "C:\AmDesp\vbs\get_track.ps1"
-        ref_num = Form.Field("Reference Number").value
-        Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "powershell -executionpolicy bypass -noexit -file " & psScript & " " & ref_num & Chr(34)
-        oShell.run currentCommand,1,true
-        MsgBox ret
-        set oShell = nothing
+Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
+
+ref_num = Form.Field("Reference Number").value
+psScript = "C:\AmDesp\vbs\get_track.ps1"
+strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
+
+Set WshShell = CreateObject("WScript.Shell")
+
+Set WshShellExec = WshShell.Exec(strCommand)
+strOutput = WshShellExec.StdOut.ReadAll()
+' WScript.Echo "Python returned: " & strOutput
+' WScript.Echo "Exec status: " & WshShellExec.Status
+MsgBox strOutput
 End Sub
 
+
+
+' ' master'
+' Sub GetTrack()
+'         Dim oShell, currentCommand, ref_num, ret, psScript
+'         psScript = "C:\AmDesp\vbs\get_track.ps1"
+'         ref_num = Form.Field("Reference Number").value
+'         Set oShell = CreateObject("Wscript.Shell")
+'         currentCommand = "powershell -executionpolicy bypass -noexit -file " & psScript & " " & ref_num & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+' ' master'
+'
 
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
