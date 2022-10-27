@@ -345,7 +345,7 @@ class Shipment:  # taking an xmlimporter object
                     print("- Enter a number")
                     continue
                 else:
-                    self.boxes=int(ui)
+                    self.boxes = int(ui)
                     print(f"{self.customer} updated  |  ", self.boxes, "  boxes")
                     return int(ui)
                 # return self
@@ -392,7 +392,6 @@ class Shipment:  # taking an xmlimporter object
                     print("\t\tCollection date for", self.customer, "is now ", self.dateObject.date, "\n\n",
                           line)
                     return
-
 
     def address_script(self):
         if debug: print("func = address script\n")
@@ -458,7 +457,7 @@ class Shipment:  # taking an xmlimporter object
 
                     selected_key = candidates[int(selection) - 1].key
                     address = self.client.get_address_by_key(selected_key)
-                    loop=False
+                    loop = False
                     # break
             print(f"- New Address: Company:{address.company_name}, Street address:{address.street}")
             return address
@@ -497,14 +496,15 @@ class Shipment:  # taking an xmlimporter object
             if not uii <= len(address_vars):
                 print("wrong number")
                 continue
+
             var_to_edit = address_vars[uii]
             new_var = input(f"{var_to_edit} is currently {getattr(address, var_to_edit)} - enter new value \n")
             while True:
                 cont = input(f"[C]hange {var_to_edit} to {new_var} or [G]o back?")
-                if not cont.isalpha():
-                    print("That's not a letter")
-                    continue
                 conti = cont[0].lower()
+                if not conti in ['c', 'g']:
+                    print("Wrong Input")
+                    continue
                 if conti == 'g':
                     break
                 if conti == 'c':
@@ -702,13 +702,11 @@ class Shipment:  # taking an xmlimporter object
                 return True
 
 
-
 class ShipDictObject:
     def __init__(self, ship_dict):
         for k, v in ship_dict.items():
             setattr(self, k, v)
         ...
-
 
 
 """ fake shipment to get service codes
