@@ -511,13 +511,11 @@ class Shipment:  # taking an xmlimporter object
                     setattr(address, var_to_edit, new_var)
                     while True:
                         ui = input("[C]hange another, anything else to move on?")
-                        if not ui:
-                            continue
-                        uii = ui[0].lower()
-                        if uii == 'c':
-                            self.amend_address(address)
-                        else:
-                            return address
+                        if ui:
+                            uii = ui[0].lower()
+                            if uii == 'c':
+                                self.amend_address(address)
+                        return address
 
     def check_address(self):
         if debug: print("func = check_address \n")
