@@ -511,6 +511,8 @@ class Shipment:  # taking an xmlimporter object
                     setattr(address, var_to_edit, new_var)
                     while True:
                         ui = input("[C]hange another, anything else to move on?")
+                        if not ui:
+                            continue
                         uii = ui[0].lower()
                         if uii == 'c':
                             self.amend_address(address)
