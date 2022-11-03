@@ -433,7 +433,7 @@ class Shipment:  # taking an xmlimporter object
             address = self.ammend_or_cont(address)
         return address
 
-    def val_address(self, postcode=None, search_string=None):
+    def val_address(self, postcode:str=None, search_string:str=None):
         """
         validates a postcode and search_string against despatchbay address database
 
@@ -442,7 +442,7 @@ class Shipment:  # taking an xmlimporter object
 
         :param postcode or None:
         :param search_string or Shipment.building_num or firstline:
-        :return an address or None:
+        :return: address or None:
         """
         if debug: print("func = val_address\n")
 
