@@ -1,3 +1,8 @@
+"""
+notes
+crippled moving
+"""
+
 import json
 import os
 import pathlib
@@ -15,7 +20,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods, unsanitise
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
-debug = False
+debug = True
 
 
 class Config:
@@ -82,26 +87,49 @@ class ShippingApp:
         self.sender = CNFG.dbay_cnfg.sender
         self.CNFG = CNFG
 
-    def xml_to_shipment_(self):
+    #
+    # def xml_to_shipment_(self):
+    #     ship_dict = self.xml_to_ship_dict()
+    #     parsed = ShipDictObject(ship_dict)
+    #     self.shipment = Shipment(parsed, self.CNFG, parent=self)
+    #
+
+    def prepare_shipment(self):
         ship_dict = self.xml_to_ship_dict()
         parsed = ShipDictObject(ship_dict)
         self.shipment = Shipment(parsed, self.CNFG, parent=self)
-
-    def queue_shipment_(self):
         self.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.address = self.shipment.address_script()  #
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
-        self.shipment.make_request()  # make a shipment request
-        if self.shipment.queue():
-            return True
-        else:
-            print(f"Shipment aborted")
 
-    def book_collection_(self):
-        self.shipment.book_collection()
+    def process_shipment_(self):
+        self.shipment.make_request()  # make a shipment request
+        decision = self.shipment.queue_or_book()
+
+        if decision == "QUEUE":
+            self.desp_shipment_id = self.client.add_shipment(self.shipment.shipmentRequest)
+
+        if decision == "BOOKANDPRINT":
+            self.desp_shipment_id = self.client.add_shipment(self.shipment.shipmentRequest)
+            self.shipment.book_collection()
+            self.shipment.print_label()
+
+        if decision == "RESTART":
+            self.process_shipment_()
+
+        if decision != "EXIT":
+            print(f"ERROR: \n {decision=}")
+
+        self.log_json()
+        exit()
 
     def xml_to_ship_dict(self):
+        """
+        gets xml from CNFG
+
+        :return: ship_dict
+        """
         if debug: print("XML IMPORTER ACTIVATED")
         ship_dict = {}
         tree = ET.parse(self.CNFG.paths.xml_file)
@@ -131,6 +159,7 @@ class ShippingApp:
 
         else:
             print("ERROR NO CATEGORY")
+            return "ERROR NO CATEGORY"
         ship_dict.update({'customer': customer})
         ship_dict.update({'category': category})
         ship_dict = self.clean_xml(ship_dict)
@@ -395,24 +424,38 @@ class Shipment:  # taking an xmlimporter object
 
     def address_script(self):
         if debug: print("func = address script\n")
+
         address = self.val_address()
+
         if address is None:
             # list by postcode
             address = self.address_from_postcode(postcode=self.deliveryPostcode)
             address = self.ammend_or_cont(address)
         return address
 
-    def val_address(self, postcode=None):
+    def val_address(self, postcode=None, search_string=None):
+        """
+        validates a postcode and search_string against despatchbay address database
+
+        if postcode is none get it from Shipment
+        if search_string is none use Shipment.building num or else Shipment.firstline
+
+        :param postcode or None:
+        :param search_string or Shipment.building_num or firstline:
+        :return an address or None:
+        """
         if debug: print("func = val_address\n")
 
         if postcode is None:
             postcode = self.deliveryPostcode
-        if self.deliveryBuildingNum:
-            # if self.deliveryBuildingNum != 0:
-            search_string = self.deliveryBuildingNum
-        else:
-            print("No building number, searching by first line of address \n")
-            search_string = self.deliveryFirstline
+
+        if search_string is None:
+            if self.deliveryBuildingNum:
+                # if self.deliveryBuildingNum != 0:
+                search_string = self.deliveryBuildingNum
+            else:
+                print("No building number, searching by first line of address \n")
+                search_string = self.deliveryFirstline
 
         try:
             address = self.client.find_address(postcode, search_string)
@@ -423,124 +466,185 @@ class Shipment:  # taking an xmlimporter object
             return address
 
     def address_from_postcode(self, postcode=None):
-        if debug: print("func = change_address \n")
-        if postcode is None:
-            ui = input("Enter Postcode")
-            postcode = ui
-        try:
-            candidates = self.client.get_address_keys_by_postcode(postcode)
-        except:
-            print("bad postcode")
-            self.address_from_postcode()
-        else:
-            loop = True
-            while loop:
-                for count, candidate in enumerate(candidates, start=1):
-                    print(" - Candidate", str(count) + ":", candidate.address)
-                selection = input('\n- Enter a candidate number, [0] to exit, [N] to search a new postcode \n')
-                if not selection: continue
-                if selection.isalpha() and selection[0].lower() == "n":
-                    address = self.address_from_postcode()
-                    return address
-                elif selection.isnumeric():
-                    selection = int(selection)
-                    if selection == 0:
-                        ui = input("[E]xit?")
-                        if not ui: continue
-                        if input("[e]xit?")[0].lower() == "e":
-                            exit()
-                        else:
-                            continue
-                    if not 0 <= selection <= len(candidates):
-                        print("Wrong Number")
+        """
+        takes a postcode or gets from user input
+        queries despatchbay and lists addresses at postcode
+        returns user-selected address
+
+        :param postcode:
+        :return address:
+        """
+        if debug:
+            print("func = change_address \n")
+
+        got_address = True
+        while not got_address:
+            if postcode is None:
+                postcode = input("Enter Postcode")
+
+            try:
+                candidates = self.client.get_address_keys_by_postcode(postcode)
+            except:
+                print("bad postcode")
+                continue
+                # self.address_from_postcode()
+
+            else:
+                while candidates:
+                    for count, candidate in enumerate(candidates, start=1):
+                        print(" - Candidate", str(count) + ":", candidate.address)
+
+                    chosen_candidate = input('\n- Enter a candidate number, [0] to exit, [A]ny letter to search a new postcode \n')
+
+                    if not chosen_candidate:
                         continue
 
-                    selected_key = candidates[int(selection) - 1].key
-                    address = self.client.get_address_by_key(selected_key)
-                    loop = False
-                    # break
-            print(f"- New Address: Company:{address.company_name}, Street address:{address.street}")
-            return address
+                    if chosen_candidate.isalpha():
+                        break
+
+                    elif chosen_candidate.isnumeric():
+                        chosen_candidate = int(chosen_candidate)
+
+                        if chosen_candidate == 0:
+                            if input("[E]xit?")[0].lower() == "e":
+                                exit()
+                            else:
+                                continue
+
+                        if not 0 <= chosen_candidate <= len(candidates): # include 0 as exit
+                            print("Wrong Number")
+                            continue
+
+                        selected_key = candidates[int(chosen_candidate) - 1].key
+                        address = self.client.get_address_by_key(selected_key)
+                        print(f"\n - Company: {address.company_name}, Street address:{address.street}")
+                        return address
 
     def ammend_or_cont(self, address):
+        """
+        takes address and user input
+
+        :param address:
+        :return amended address:
+        """
         while True:
-            ui = input("[A]mmend address, or [C]ontinue?\n")
-            if not ui: continue
-            uii = ui[0].lower()
-            if uii == "a":
-                address = self.amend_address(address=address)
-                return address
-            if uii == 'c':
-                return address
-            else:
+            ui = input(f"\n [A]mend address? or [A]ny other key to continue\n")
+
+            if not ui or not ui.isalpha():
                 continue
 
+            uii = ui[0].lower()
+
+            if uii == "a":
+                self.amend_address(address=address)
+
+            else:
+                return address
+
     def amend_address(self, address=None):
-        if debug: print("func = amend_address\n")
-        if address == None:
+        """
+        takes an address or gets from Shipment
+        lists variables in address and edits as per user input
+        updates Shipment.address
+        :param address:
+        :return: address and update Shipment.address
+        """
+        if debug:
+            print("func = amend_address\n")
+
+        if address is None:
             address = self.address
+
+        address_vars = self.CNFG.dbay_cnfg.address_vars # get a list of vars considered 'address' from cnfg
+
         print(f"current address: \n")
-        address_vars = self.CNFG.dbay_cnfg.address_vars
         while True:
-            # print("\n")
+            # print each attribute of the address object with a 1-indexed identifier
             for c, var in enumerate(address_vars, start=1):
                 print(f"{c} - {var} = {getattr(address, var)}")
+
+            # get user selection
             ui = input("\n Enter a number to edit the field, [0] to go back\n")
+
             if not ui.isnumeric():
                 print("That isn't a number")
                 continue
-            uii = int(ui) - 1
-            if int(ui) == 0:
-                return address
+
+            ui=int(ui)
+            uii = ui - 1
 
             if not uii <= len(address_vars):
                 print("wrong number")
                 continue
 
+            if ui == 0:
+                return address
+
             var_to_edit = address_vars[uii]
             new_var = input(f"{var_to_edit} is currently {getattr(address, var_to_edit)} - enter new value \n")
+
             while True:
                 cont = input(f"[C]hange {var_to_edit} to {new_var} or [G]o back?")
-                conti = cont[0].lower()
-                if not conti in ['c', 'g']:
+                cont1 = cont[0].lower()
+
+                if not cont1 in ['c', 'g']:
                     print("Wrong Input")
                     continue
-                if conti == 'g':
-                    break
-                if conti == 'c':
+
+                if cont1 == 'g':
+                    self.amend_address()
+
+                if cont1 == 'c':
                     setattr(address, var_to_edit, new_var)
+                    self.address = address
+
                     while True:
                         ui = input("[C]hange another, anything else to move on?")
-                        if ui:
-                            uii = ui[0].lower()
-                            if uii == 'c':
-                                self.amend_address(address)
+                        if ui and ui.isalpha():
+                            if ui[0].lower() == 'c':
+                                self.amend_address()
                         return address
 
     def check_address(self):
-        if debug: print("func = check_address \n")
-        while True:
-            if self.address:
-                postcode = self.address.postal_code
-                addy2 = {k: v for k, v in vars(self.address).items() if k in self.CNFG.dbay_cnfg.address_vars}
-                print("Current address details:\n")
-                print(
-                    f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}')  # chr(10) is newline (no \ allowed in fstrings)
+        """
+        displays Shipment.address
+        takes user input to confirm, change, or amend
+        :return: True and updates Shipment.address
+        """
+        if debug:
+            print("func = check_address \n")
 
-                ui = input(
-                    f"\n[C]ontinue, [G]et new address or [A]mmend address \n\n")
-                if not ui:
-                    continue
-                uii = ui[0].lower()
-                if uii == "c":
-                    return
-                elif uii == 'g':
-                    self.address = self.address_from_postcode(postcode)
-                elif uii == 'a':
-                    self.address = self.amend_address()
+        while self.address:
+            postcode = self.address.postal_code
+            addy2 = {k: v for k, v in vars(self.address).items() if k in self.CNFG.dbay_cnfg.address_vars}
+            print("Current address details:\n")
+            print(
+                f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}')  # chr(10) is newline (no \ allowed in fstrings)
+
+            ui = input(
+                f"\n[C]ontinue, [G]et new address or [A]mend current address\n\n")
+
+            if not ui or not ui.isalpha():
+                continue
+
+            uii = ui[0].lower()
+
+            if uii == "c":
+                return True
+
+            elif uii == 'g':
+                self.address = self.address_from_postcode(postcode)
+                return True
+
+            elif uii == 'a':
+                self.address = self.amend_address()
+                return True
+
             else:
-                print("NO ADDRESS OBJECT")
-                self.address_from_postcode()
+                continue
+
+        print("NO ADDRESS OBJECT - go get one")
+        self.address_from_postcode()
 
     def make_request(self):
         print("MAKING REQUEST")
@@ -588,118 +692,85 @@ class Shipment:  # taking an xmlimporter object
             print("Something is wrong with the shipping service name")
         self.shippingServiceName = self.services[0].name
         self.shippingCost = self.services[0].cost
-        # self.service_id = self.shipmentRequest.service_id # remove? - it's alrteady in trhe rewquest object
 
-    def queue(self):
-        if debug: print("func = Queue\n")
-        print("\n", line, '\n-', self.customer, "|", self.boxes, "|",
-              self.address.street, "|", self.dateObject.date, "|",
-              self.shippingServiceName,
-              "| Price =",
-              self.shippingCost * self.boxes, '\n', line, '\n')
-        choice = " "
+    def queue_or_book(self):
+        """
+        gets user input and returns a response code to caller
+
+        :return: Response code for process_shipment
+        """
+        if debug:
+            print("func = Queue or book\n")
+
         while True:
-            choice = input('- [Q]ueue shipment in DespatchBay, [R]estart, or [E]xit\n')
+            self.print_shipment_to_screen()
+            choice = input('- [Q]ueue shipment in DespatchBay, [B]ook + print [R]estart, or [E]xit\n')
+
             if choice:
-                choice = str(choice[0].lower())
-                if choice[0] != "q":  # not quote
-                    if choice != 'r':  # not restart
-                        if choice != 'e':  # not exit either
-                            continue  # try again
-                        else:  # exit
-                            if str(input("[E]xit?"))[0].lower() == 'e':  # comfirn exit
-                                # break
-                                exit()
-                            continue
-                    else:  # restart
-                        ui = input("[R]estart?")
-                        if not ui: continue
-                        if ui[0].lower() == 'r':  # confirm restart
-                            print("Restarting")
-                            self.parent.queue_shipment_()
+                choice1 = str(choice[0].lower())
 
-                        continue  # not restarting
-                elif choice == 'q':
-                    self.desp_shipment_id = self.client.add_shipment(self.shipmentRequest)
+                if choice1 == "b":
+                    print("Booking Collection and printing label")
+                    return "BOOKANDPRINT"
+
+                elif choice1 == "q":
                     print("Adding Shipment to Despatchbay Queue")
-                    return True
+                    return "QUEUE"
+
+                elif choice1 == 'r':
+                    if str(input("[C]ancel restart?"))[0].lower() == 'c':  # cancel restart ?
+                        continue
+                    else:
+                        return "RESTART"
+
+                elif choice1 == "e":
+                    if str(input("[C]ancel exit?"))[0].lower() == 'c':  # cancel exit ?
+                        continue
+                    else:
+                        return "EXIT"
+
+                else:
+                    print(f"{choice} is not a valid input")
             else:
-                continue
-
-    def print_label(self):
-        if debug: print("func = PRINT_LABEL\n")
-        while True:
-            ui = input("[P]rint label or [E]xit?\n")
-            if not ui:
-                continue
-            uii = ui[0].lower()
-            if uii == 'p':
-
-                # command = (self.CNFG.paths.pdf_to_print, self.labelLocation)
-                # subprocess.call(command, shell=True)
-
-                os.startfile(self.labelLocation, "print")
-
-                self.printed = True
-                while True:
-                    ui = input("[P]rint again, or [E]xit")
-                    uii = ui[0].lower()
-                    if uii == 'p':
-                        self.print_label()
-                    elif uii == 'e':
-                        return self.printed
-            elif uii == 'e':
-                return self.printed
+                print("No input")
+            continue
 
     def book_collection(self):
         if debug: print("func = BOOK_COLLECTION \n")
-        # CNFG = config
-        print("[B]ook collection for", self.customer + "'s shipment?")
-        while True:
-            choice = input('- [B]ook, [R]estart, or [E]xit\n')
-            if not choice:
-                continue
-            choice = str(choice[0].lower())
-            if choice[0] != "b":  # not book
-                if choice != 'r':  # not restart
-                    if choice != 'e':  # not exit either
-                        continue  # try again
-                    else:  # exit
-                        if str(input("[E]xit?"))[0].lower() == 'e':  # confirm exit
-                            return False
-                        continue
-                else:  # restart
-                    if str(input("[R]estart?"))[0].lower() == 'r':  # confirm restart
-                        print("Restarting")
-                        ShippingApp.queue_shipment_()  # debug
-                    continue  # not restarting
-            elif choice == 'b':
-                self.client.book_shipments(self.desp_shipment_id)
-                shipment_return = self.client.get_shipment(self.desp_shipment_id)
-                label_pdf = self.client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
-                label_string = ""
-                try:
-                    label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
-                except:
-                    label_string = label_string, self.customer, ".pdf"
-                # label_pdf.download(CONFIG_PATH['DIR_LABEL'] / label_string)
-                label_pdf.download(self.CNFG.paths.label_dir / label_string)
-                self.trackingNumbers = []
-                for parcel in shipment_return.parcels:
-                    self.trackingNumbers.append(parcel.tracking_number)
+        self.client.book_shipments(self.desp_shipment_id)
 
-                self.shipmentReturn = shipment_return
-                self.shipmentDocId = shipment_return.shipment_document_id
-                self.labelUrl = shipment_return.labels_url
-                self.parcels = shipment_return.parcels
-                self.labelLocation = str(self.CNFG.paths.label_dir / label_string)
-                self.print_label()
-                self.collectionBooked = True
-                self.labelDownloaded = True
-                nl = "\n"
-                print(
-                    f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
-                return True
+        shipment_return = self.client.get_shipment(self.desp_shipment_id)
+        label_pdf = self.client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
+        label_string = ""
+        try:
+            label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
+        except:
+            label_string = label_string, self.customer, ".pdf"
+        label_pdf.download(self.CNFG.paths.label_dir / label_string)
+        self.trackingNumbers = []
+        for parcel in shipment_return.parcels:
+            self.trackingNumbers.append(parcel.tracking_number)
+
+        self.shipmentReturn = shipment_return
+        self.shipmentDocId = shipment_return.shipment_document_id
+        self.labelUrl = shipment_return.labels_url
+        self.parcels = shipment_return.parcels
+        self.labelLocation = str(self.CNFG.paths.label_dir / label_string)
+        self.print_label()
+        self.collectionBooked = True
+        self.labelDownloaded = True
+        nl = "\n"
+        print(
+            f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
+        return True
+
+    def print_label(self):
+        os.startfile(self.labelLocation, "print")
+        self.printed = True
+
+    def print_shipment_to_screen(self):
+        print(
+            f"\n {line} \n {self.customer} | {self.boxes} | {self.address.street} | {self.dateObject.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes} \n {line} \n")
 
 
 class ShipDictObject:
