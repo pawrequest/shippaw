@@ -503,7 +503,10 @@ class Shipment:  # taking an xmlimporter object
             var_to_edit = address_vars[uii]
             new_var = input(f"{var_to_edit} is currently {getattr(address, var_to_edit)} - enter new value \n")
             while True:
-                cont = input(f"[C]hange {var_to_edit} to {new_var} or [G]o back?")
+                cont = input(f"[C]hange {var_to_edit} to {new_var} or cancel and [G]o back?")
+                if not cont:
+                    print("No Input")
+                    continue
                 if not cont.isalpha():
                     print("That's not a letter")
                     continue
