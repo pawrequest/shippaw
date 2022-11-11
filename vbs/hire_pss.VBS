@@ -943,13 +943,16 @@ Sub PackHire()
         if MsgBox("Send pre-shipping email?",4) = 6 Then
         EmailSendOut()
         End if
-        If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-'                 anothertry("C:\AmDesp\data\AmShip.xml")
-                ShipHire("C:\AmDesp\data\AmShip.xml")
-            End if
-        Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
-        End if
+        If Form.Field("DB label printed").value = "False" Then
+            If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
+                if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+    '                 anothertry("C:\AmDesp\data\AmShip.xml")
+                    ShipHire("C:\AmDesp\data\AmShip.xml")
+                End if 'user input says ship'
+            Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
+            End if 'parcelforce in method'
+        Else MsgBox("Parcelforce label already printed so i wont launch Amdesp")
+        End If ' db already printed'
         if MsgBox("Hire packed now by " & packedBy & " - save and close?", 4) = 6 Then
             Form.Save
         End if
@@ -1043,12 +1046,12 @@ Sub EmailSendOut()
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
 
 ' show user the email and get confirmation'
-        if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
+'         if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
 ' send email'
         objMailItem.Send
         Form.Field("PreShip Emailed").Value = True
-        MsgBox("EMAILED")
-        End if
+'         MsgBox("EMAILED")
+'         End if
 
 ' close objects'
         Set olApp = Nothing
