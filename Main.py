@@ -3,12 +3,8 @@ from python.AmDespShipper import ShippingApp
 
 def shipper(ship_mode):
     app = ShippingApp(ship_mode)
-
-    app.xml_to_shipment_()
-    if app.queue_shipment_():
-        if app.book_collection_():
-            print("success")
-    app.log_json()
+    app.prepare_shipment()
+    app.process_shipment()
     return "returned from python"
 
 

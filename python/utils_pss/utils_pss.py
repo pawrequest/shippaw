@@ -14,7 +14,7 @@ def printel(*els): # elementtree elements
             print(elem.tag, elem.text)
 
 
-def get_from_ods(ods_file, sheet, output='dict'): # takes the name of a sheet, headers(bool) and output(list of lists or dict)
+def get_from_ods(ods_file, sheet): # takes the name of a sheet, headers(bool) and output(list of lists or dict)
     wkbook = get_data(ods_file)
     sheet = sheet
     rows = wkbook[sheet]
