@@ -898,9 +898,9 @@ Sub Form_OnClick(ControlId)
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' '''''''''   pss_buttons                 '''''''''''''''''''''''''''''''
-'
+'*************************************************************************'
+'******************  pss_buttons *****************************************'
+
         Case "CommandButton19"
             PackHire()
 
@@ -926,15 +926,12 @@ Sub Form_OnClick(ControlId)
            End if
 
 
-''''''''''''''''''    /pss             ''''''''''''''''''''''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
     End Select
 End Sub
 
 
-
-'''''''''''''''''''''''''''''''''''''''''''''
-'''''''''' pss funcs''''''''''''''
+'***************** pss funcs *******************'
 
 Sub PackHire()
         Dim packedBy
@@ -1128,7 +1125,6 @@ End Sub
 
 
 
-
 Sub GetTrack()
 Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
 
@@ -1146,23 +1142,7 @@ MsgBox strOutput
 End Sub
 
 
-
-' ' master'
-' Sub GetTrack()
-'         Dim oShell, currentCommand, ref_num, ret, psScript
-'         psScript = "C:\AmDesp\vbs\get_track.ps1"
-'         ref_num = Form.Field("Reference Number").value
-'         Set oShell = CreateObject("Wscript.Shell")
-'         currentCommand = "powershell -executionpolicy bypass -noexit -file " & psScript & " " & ref_num & Chr(34)
-'         oShell.run currentCommand,1,true
-'         set oShell = nothing
-' End Sub
-' ' master'
-'
-
-
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-''''''''' arno+ pss function to export item fields to xml  ''''''''''''
+'**************** arno+ pss function to export item fields to xml  ***********'
 
 Sub ExportItemDetailForm(ByVal strPath)
 
@@ -1265,7 +1245,7 @@ End Function
 
 
 '********** end of pss      ************
-''******************************************
+'******************************************
 
 '****** start of functions
 
