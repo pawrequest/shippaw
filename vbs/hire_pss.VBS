@@ -1010,15 +1010,16 @@ Sub EmailSendOut()
         Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim returnStr, del_email, sendMeth, invoice_email
 
-        MsgBox Form.Field("Tracking Numbers").value
+'tbc include parcelforce tracking numbers in email'
+'         MsgBox Form.Field("Tracking Numbers").value
 
-' make email address string if delivery and invoice emails are different send to both
+'*** create email ***'
+'* if invoice and delivery emails are differnt then combine into a string
         invoice_email = cCust.FieldValue("Email")
         del_email = Form.Field("Delivery Email").Value
         if invoice_email <> del_email Then
             del_email = del_email & ";" & invoice_email
         End if
-
 
 ' get send method from horrible strings
         If InStr(Form.Field("Send / Collect").Value, "Cust. collect") > 0 OR InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
@@ -1030,13 +1031,9 @@ Sub EmailSendOut()
         if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
             returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine & _
             vbNewLine & "Please use a trackable service and send us the tracking details when you have dispatched the shipment."
+
         Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
             returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the equipment will be ready to collect so that we can arrange the courier."
-        End if
-
-'confirm email address, give chance to change'
-        if MsgBox("Delivery email address is " & del_email & "- send pre-ship email to this address?",4) = 7 Then
-        del_email = InputBox("Enter new email address")
         End if
 
 ' compose email'
@@ -1054,12 +1051,22 @@ Sub EmailSendOut()
                            vbNewLine & returnStr & vbNewLine & _
                            vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
 
+'* Get user inputs*'
+'confirm email address, give chance to change'
+        Dim email_or_change
+        email_or_change = MsgBox("Send email to: " & del_email & "? 'No' to enter an alternative, 'Cancel' to abort emailing",4)
+        Elseif email_or_change = 7 Then
+            del_email = InputBox("Enter new email address")
+        Elseif email_or_change = 2 Then
+            End Sub
+        End if
+
 ' show user the email and get confirmation to send email'
-        if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
+'         if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
         objMailItem.Send
         Form.Field("PreShip Emailed").Value = True
-        MsgBox("EMAILED")
-        End if
+'         MsgBox("EMAILED")
+'         End if
 
 ' close objects'
         Set olApp = Nothing
