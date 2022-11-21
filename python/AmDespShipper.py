@@ -9,7 +9,7 @@ import pathlib
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, date
 from pprint import pprint
 
 from dateutil.parser import parse
@@ -72,6 +72,41 @@ class Config:
         self.sender_id = "5536"  # should be env var?
         self.client = DespatchBaySDK(api_user=api_user, api_key=api_key) # now in shipment
         self.sender = self.client.sender(address_id=self.sender_id) # in shipment
+
+        def list_services():
+            recip_add = self.client.address(
+                company_name='noname',
+                country_code="GB",
+                county="London",
+                locality='London',
+                postal_code='nw64te',
+                town_city="london",
+                street="72 kingsgate road"
+            )
+            recip = self.client.recipient(
+                name="fakename",
+                recipient_address=recip_add)
+
+            # sandy
+            shippy = self.client.shipment_request(
+                parcels=[self.client.parcel(
+                    contents="Radios",
+                    value=500,
+                    weight=6,
+                    length=60,
+                    width=40,
+                    height=40,
+                )],
+                collection_date=f"{date.today():%Y-%m-%d}",
+                sender_address=self.sender,
+                recipient_address=recip)
+
+            services = self.client.get_available_services(shippy)
+            for service in services:
+                print (service.name)
+        # list_services()
+
+
 
 class ShippingApp:
     def __init__(self, ship_mode):  # make app
