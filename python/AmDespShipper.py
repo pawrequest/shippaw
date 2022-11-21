@@ -24,7 +24,7 @@ debug = True
 
 
 class Config:
-    def __init__(self, ship_mode):
+    def __init__(self, ship_mode, xmlfileloc = None):
         self.config_ods = CONFIG_ODS
 
         # fieldnames
@@ -43,7 +43,10 @@ class Config:
         self.data_dir = pathlib.Path("/Amdesp/data/")
         self.label_dir = self.data_dir / "Parcelforce Labels"
         self.Json_File = self.data_dir.joinpath("AmShip.json")
-        self.xml_file = self.data_dir.joinpath('AmShip.xml')
+        if xmlfileloc:
+            self.xml_file = self.data_dir.joinpath(xmlfileloc)
+        else:
+            self.xml_file = self.data_dir.joinpath('AmShip.xml')
         self.log_file = self.data_dir.joinpath("AmLog.json")
         self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
         self.bin_dir = pathlib.Path("/Amdesp/bin/")
@@ -73,44 +76,44 @@ class Config:
         self.client = DespatchBaySDK(api_user=api_user, api_key=api_key) # now in shipment
         self.sender = self.client.sender(address_id=self.sender_id) # in shipment
 
-        def list_services():
-            recip_add = self.client.address(
-                company_name='noname',
-                country_code="GB",
-                county="London",
-                locality='London',
-                postal_code='nw64te',
-                town_city="london",
-                street="72 kingsgate road"
-            )
-            recip = self.client.recipient(
-                name="fakename",
-                recipient_address=recip_add)
-
-            # sandy
-            shippy = self.client.shipment_request(
-                parcels=[self.client.parcel(
-                    contents="Radios",
-                    value=500,
-                    weight=6,
-                    length=60,
-                    width=40,
-                    height=40,
-                )],
-                collection_date=f"{date.today():%Y-%m-%d}",
-                sender_address=self.sender,
-                recipient_address=recip)
-
-            services = self.client.get_available_services(shippy)
-            for service in services:
-                print (service.name)
-        # list_services()
+        # def list_services():
+        #     recip_add = self.client.address(
+        #         company_name='noname',
+        #         country_code="GB",
+        #         county="London",
+        #         locality='London',
+        #         postal_code='nw64te',
+        #         town_city="london",
+        #         street="72 kingsgate road"
+        #     )
+        #     recip = self.client.recipient(
+        #         name="fakename",
+        #         recipient_address=recip_add)
+        #
+        #     # sandy
+        #     shippy = self.client.shipment_request(
+        #         parcels=[self.client.parcel(
+        #             contents="Radios",
+        #             value=500,
+        #             weight=6,
+        #             length=60,
+        #             width=40,
+        #             height=40,
+        #         )],
+        #         collection_date=f"{date.today():%Y-%m-%d}",
+        #         sender_address=self.sender,
+        #         recipient_address=recip)
+        #
+        #     services = self.client.get_available_services(shippy)
+        #     for service in services:
+        #         print (service.name)
+        # # list_services()
 
 
 
 class ShippingApp:
-    def __init__(self, ship_mode):  # make app
-        self.CNFG = Config(ship_mode)
+    def __init__(self, ship_mode, xmlfileloc = None):  # make app
+        self.CNFG = Config(ship_mode, xmlfileloc= xmlfileloc)
         self.shipment = None
 
     def prepare_shipment(self):
@@ -118,7 +121,7 @@ class ShippingApp:
         parsed = ShipDictObject(ship_dict)
         self.shipment = Shipment(ship_dict, self.CNFG)
         # self.shipment = Shipment(parsed, self.CNFG, parent=self)
-        self.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation
+        self.shipment.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation #debug
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.address = self.shipment.address_script()  #
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
@@ -132,7 +135,9 @@ class ShippingApp:
             self.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
 
         if decision == "BOOKANDPRINT":
-            self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
+            self.shipment.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
+            # self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
+            #debug issues here
             self.shipment.book_collection()
             self.shipment.print_label()
 
@@ -183,11 +188,21 @@ class ShippingApp:
                 '%d/%m/%Y')  # datedebug sets customer shipment send date to a string of today formatted like hire
             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
 
+        elif category == "Sale":
+            if debug:
+                print("Xml is a Sale")
+            customer = root[0][3].text  #debug
+            ship_dict['delivery tel'] = ship_dict['Delivery Telephone']
+            ship_dict['delivery tel'] = ship_dict['Delivery Postcode']
+
+        if debug:
+            print(f"{customer=}")
+
         else:
             print("ERROR NO CATEGORY")
             return "ERROR NO CATEGORY"
-        ship_dict.update({'customer': customer})
-        ship_dict.update({'category': category})
+        ship_dict.update({'Customer': customer})
+        ship_dict.update({'Category': category})
         ship_dict = self.clean_ship_dict(ship_dict)
 
         if 'boxes' not in ship_dict.keys():
@@ -263,9 +278,19 @@ class ShippingApp:
             pprint(f"\n Json exported to {self.CNFG.log_file} {export_dict =}")
 
         if self.shipment.category == "Hire" and input("log tracking?") == 'y':
-            self.log_tracking()
+            self.log_tracking() # writes to commence db
 
     def log_tracking(self):
+        """
+        runs cmclibnet via powershell script to add tracking numbes to commence db
+
+        :return:
+        """
+
+        """
+        notes:
+        
+        """
         powershell_script = r"C:\AmDesp\vbs\Edit_Commence.ps1"
         hire_ref_num = f"{self.shipment.referenceNumber:,}"
         tracking_nums = ', '.join(self.shipment.trackingNumbers)
@@ -470,7 +495,7 @@ class Shipment:
         if address is None:
             # list by postcode
             address = self.address_from_postcode(postcode=self.deliveryPostcode)
-            address = self.ammend_or_cont(address)
+            # address = self.ammend_or_cont(address)
         return address
 
     def val_address(self, postcode: str = None, search_string: str = None):
@@ -571,13 +596,9 @@ class Shipment:
         while True:
             ui = input(f"\n [A]mend address? or [A]ny other key to continue\n")
 
-            if not ui or not ui.isalpha():
-                continue
-
-            uii = ui[0].lower()
-
-            if uii == "a":
-                self.amend_address(address=address)
+            if ui.isalpha():
+                if ui[0].lower() == "a":
+                    self.amend_address(address=address)
 
             else:
                 return address
@@ -653,26 +674,20 @@ class Shipment:
                 f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}')  # chr(10) is newline (no \ allowed in fstrings)
 
             ui = input(
-                f"\n[C]ontinue, [G]et new address or [A]mend current address\n\n")
+                f"\n[G]et new address or [A]mend current address, anything else to continue\n\n")
 
-            if not ui or not ui.isalpha():
-                continue
+            if ui.isalpha():
+                uii = ui[0].lower()
+                if uii == 'g':
+                    self.address = self.address_from_postcode(postcode)
+                    return True
 
-            uii = ui[0].lower()
-
-            if uii == "c":
-                return True
-
-            elif uii == 'g':
-                self.address = self.address_from_postcode(postcode)
-                return True
-
-            elif uii == 'a':
-                self.address = self.amend_address()
-                return True
+                elif uii == 'a':
+                    self.address = self.amend_address()
+                    return True
 
             else:
-                continue
+                return True
 
         print("NO ADDRESS OBJECT - go get one")
         self.address_from_postcode()
@@ -766,29 +781,28 @@ class Shipment:
     def book_collection(self):
         if debug: print("func = BOOK_COLLECTION \n")
         client = self.CNFG.client
-        client.book_shipments(self.desp_shipment_id)
 
-        shipment_return = client.get_shipment(self.desp_shipment_id)
+        shipment_return = client.book_shipments(self.desp_shipment_id)[0] #debug there could be more than one here!
+
         label_pdf = client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
-        label_string = ""
         try:
-            label_string = label_string + self.customer + "-" + str(self.dateObject.date) + ".pdf"
+            label_string = f"{self.customer} - {str(self.dateObject.date)}.pdf"
         except:
-            label_string = label_string, self.customer, ".pdf"
+            label_string = f"{self.customer}.pdf"
         label_pdf.download(self.CNFG.label_dir / label_string)
         self.trackingNumbers = []
         for parcel in shipment_return.parcels:
             self.trackingNumbers.append(parcel.tracking_number)
 
-        self.shipmentReturn = shipment_return
+        # self.shipmentReturn = shipment_return #debug why save this?
         self.shipmentDocId = shipment_return.shipment_document_id
         self.labelUrl = shipment_return.labels_url
-        self.parcels = shipment_return.parcels
+        # self.parcels = shipment_return.parcels #debug why save?
         self.labelLocation = str(self.CNFG.label_dir / label_string)
         self.print_label()
         self.collectionBooked = True
         self.labelDownloaded = True
-        nl = "\n"
+        nl = "\n" # python voodoo to newline in fstring
         print(
             f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
         return True

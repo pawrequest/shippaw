@@ -1,8 +1,11 @@
+import sys
+
 from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
 
-def shipper(ship_mode):
-    app = ShippingApp(ship_mode)
+
+def shipper(ship_mode, xmlfileloc=None):
+    app = ShippingApp(ship_mode, xmlfileloc)
     app.prepare_shipment()
     app.process_shipment()
     return "returned from python"
@@ -20,6 +23,10 @@ def test():
 
 
 if __name__ == '__main__':
-    shipper('prod')
+    if len(sys.argv) >1:
+        xmlfileloc = sys.argv[1]
+    else:
+        xmlfileloc = None
+    shipper('prod', xmlfileloc="C:\AmDesp\data\AmShipSale.xml")
     # programmer()
     # test()

@@ -910,7 +910,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton21"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                ShipHire("C:\AmDesp\data\AmShip.xml")
+                ShipHire("C:\AmDesp\data\AmShipHire.xml")
             End if
 
         Case "CommandButton22"
@@ -943,13 +943,13 @@ Sub PackHire()
         Form.Field("Status").Value = "Booked in and packed"
         Form.Field("Packed By").Value = packedBy
 
-' ' if parcelforce in send method offer to launch amdesp to arrange shipping'
-'         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-'             if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-'                 ShipHire("C:\AmDesp\data\AmShip.xml")
-'             End if
-'         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
-'         End if
+' if parcelforce in send method offer to launch amdesp to arrange shipping'
+        If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
+            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+                ShipHire("C:\AmDesp\data\AmShipHire.xml")
+            End if
+        Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
+        End if
 
 ' offer to email client about upcoming shipment'
         if MsgBox("Send pre-shipping email?",4) = 6 Then
@@ -1126,29 +1126,29 @@ Sub ShipHire(xmlfile)
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
+        currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
 
 
-
-Sub GetTrack()
-Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
-
-ref_num = Form.Field("Reference Number").value
-psScript = "C:\AmDesp\vbs\get_track.ps1"
-strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
-
-Set WshShell = CreateObject("WScript.Shell")
-
-Set WshShellExec = WshShell.Exec(strCommand)
-strOutput = WshShellExec.StdOut.ReadAll()
-' WScript.Echo "Python returned: " & strOutput
-' WScript.Echo "Exec status: " & WshShellExec.Status
-MsgBox strOutput
-End Sub
-
+'
+' Sub GetTrack()
+' Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
+'
+' ref_num = Form.Field("Reference Number").value
+' psScript = "C:\AmDesp\vbs\get_track.ps1"
+' strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
+'
+' Set WshShell = CreateObject("WScript.Shell")
+'
+' Set WshShellExec = WshShell.Exec(strCommand)
+' strOutput = WshShellExec.StdOut.ReadAll()
+' ' WScript.Echo "Python returned: " & strOutput
+' ' WScript.Echo "Exec status: " & WshShellExec.Status
+' MsgBox strOutput
+' End Sub
+'
 
 '**************** arno+ pss function to export item fields to xml  ***********'
 
