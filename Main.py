@@ -27,6 +27,6 @@ if __name__ == '__main__':
         xmlfileloc = sys.argv[1]
     else:
         xmlfileloc = None
-    shipper('prod', xmlfileloc="C:\AmDesp\data\AmShipSale.xml")
+    shipper('sand', xmlfileloc=xmlfileloc)
     # programmer()
     # test()

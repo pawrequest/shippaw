@@ -24,19 +24,19 @@ debug = True
 
 
 class Config:
-    def __init__(self, ship_mode, xmlfileloc = None):
+    def __init__(self, ship_mode, xmlfileloc=None):
         self.config_ods = CONFIG_ODS
 
         # fieldnames
-        self.export_fields = ['customer', 'deliveryName', 'deliveryContact', 'deliveryTel', 'deliveryEmail',
+        # hirename
+        self.export_fields = ['customer', 'shipmentName', 'deliveryName', 'deliveryContact', 'deliveryTel', 'deliveryEmail',
                               'deliveryAddress', 'deliveryPostcode', 'sendOutDate', 'referenceNumber',
                               'trackingNumbers', 'desp_shipment_id', 'boxes', 'collectionBooked', 'shipRef',
                               'category']
         self.shipment_fields = ['deliveryName', 'deliveryContact', 'deliveryTel', 'deliveryEmail',
                                 'deliveryAddress', 'deliveryPostcode', 'sendOutDate', 'referenceNumber',
-                                'category']
+                                'category', 'shipmentName']
         self.db_address_fields = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
-
 
         # paths
         self.root = pathlib.Path("/Amdesp")
@@ -56,7 +56,6 @@ class Config:
         pathlib.Path(self.data_dir / "Parcelforce Labels").mkdir(parents=True,
                                                                  exist_ok=True)
 
-
         if ship_mode == "sand":
             print("\n \n \n *** !!! SANDBOX MODE !!! *** \n \n \n")
             api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
@@ -73,8 +72,8 @@ class Config:
             exit()
 
         self.sender_id = "5536"  # should be env var?
-        self.client = DespatchBaySDK(api_user=api_user, api_key=api_key) # now in shipment
-        self.sender = self.client.sender(address_id=self.sender_id) # in shipment
+        self.client = DespatchBaySDK(api_user=api_user, api_key=api_key)  # now in shipment
+        self.sender = self.client.sender(address_id=self.sender_id)  # in shipment
 
         # def list_services():
         #     recip_add = self.client.address(
@@ -110,15 +109,13 @@ class Config:
         # # list_services()
 
 
-
 class ShippingApp:
-    def __init__(self, ship_mode, xmlfileloc = None):  # make app
-        self.CNFG = Config(ship_mode, xmlfileloc= xmlfileloc)
+    def __init__(self, ship_mode, xmlfileloc=None):  # make app
+        self.CNFG = Config(ship_mode, xmlfileloc=xmlfileloc)
         self.shipment = None
 
     def prepare_shipment(self):
         ship_dict = self.xml_to_ship_dict()
-        parsed = ShipDictObject(ship_dict)
         self.shipment = Shipment(ship_dict, self.CNFG)
         # self.shipment = Shipment(parsed, self.CNFG, parent=self)
         self.shipment.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation #debug
@@ -137,7 +134,7 @@ class ShippingApp:
         if decision == "BOOKANDPRINT":
             self.shipment.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
             # self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
-            #debug issues here
+            # debug issues here
             self.shipment.book_collection()
             self.shipment.print_label()
 
@@ -156,7 +153,7 @@ class ShippingApp:
 
         :return: ship_dict
         """
-        if debug: print("XML IMPORTER ACTIVATED")
+        # if debug: print("XML IMPORTER ACTIVATED")
 
         ship_dict = dict()
 
@@ -176,33 +173,26 @@ class ShippingApp:
 
         # get customer
         if category == "Hire":
-            if debug:
-                print("Xml is a hire record")
             customer = root[0][3].text  # debug
 
         elif category == "Customer":
-            if debug:
-                print("Xml is a customer record")
             customer = fields[0][1].text
             ship_dict['send Out Date'] = datetime.today().strftime(
                 '%d/%m/%Y')  # datedebug sets customer shipment send date to a string of today formatted like hire
             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
 
         elif category == "Sale":
-            if debug:
-                print("Xml is a Sale")
-            customer = root[0][3].text  #debug
-            ship_dict['delivery tel'] = ship_dict['Delivery Telephone']
-            ship_dict['delivery tel'] = ship_dict['Delivery Postcode']
+            customer = root[0][3].text  # debug
+            ship_dict['Delivery Tel'] = ship_dict['Delivery Telephone']
+            # ship_dict['delivery tel'] = ship_dict['Delivery Postcode']
 
-        if debug:
-            print(f"{customer=}")
 
         else:
             print("ERROR NO CATEGORY")
             return "ERROR NO CATEGORY"
         ship_dict.update({'Customer': customer})
         ship_dict.update({'Category': category})
+        ship_dict.update({'Shipment Name': ship_dict['Name']})
         ship_dict = self.clean_ship_dict(ship_dict)
 
         if 'boxes' not in ship_dict.keys():
@@ -214,7 +204,7 @@ class ShippingApp:
         #         v = datetime.strptime(v, '%d/%m/%Y')  # datedebug
 
         if debug:
-            print(f"Making shipment object from xml with {len(ship_dict)} fields")
+            print(f"Making {category} shipment for {customer} with {len(ship_dict)} populated fields")
 
         for attr_name in self.CNFG.shipment_fields:
             if attr_name not in ship_dict.keys():
@@ -229,7 +219,7 @@ class ShippingApp:
         :param dict:
         :return:
         """
-        if debug: print('\n CLEAN XML\n')
+        if debug: print('Cleaning Xml')
         newdict = {}
         if "Send Out Date" not in dict.keys():
             print("No date - added today")
@@ -277,8 +267,9 @@ class ShippingApp:
             f.write(",\n")
             pprint(f"\n Json exported to {self.CNFG.log_file} {export_dict =}")
 
-        if self.shipment.category == "Hire" and input("log tracking?") == 'y':
-            self.log_tracking() # writes to commence db
+        if self.shipment.category in ['Hire', 'Sale']:
+                if input("log tracking?") == 'y':
+                    self.log_tracking()  # writes to commence db
 
     def log_tracking(self):
         """
@@ -292,26 +283,27 @@ class ShippingApp:
         
         """
         powershell_script = r"C:\AmDesp\vbs\Edit_Commence.ps1"
-        hire_ref_num = f"{self.shipment.referenceNumber:,}"
+        # debug is shipment.name here?
         tracking_nums = ', '.join(self.shipment.trackingNumbers)
 
         subprocess.run([
             "powershell.exe",
             "-File",
             powershell_script,
-            hire_ref_num,
-            tracking_nums
+            self.shipment.shipmentName,
+            tracking_nums,
+            self.shipment.category
         ],
             stdout=sys.stdout)
 
 
 class Shipment:
-    def __init__(self, ship_dict, CNFG, reference_number=None,
+    def __init__(self, ship_dict, CNFG, reference=None,
                  label_text=None):
         """
         :param ship_dict: a dictionary of shipment details
         :param CNFG: a config() object
-        :param reference_number:
+        :param reference:
         :param label_text:
         """
 
@@ -331,17 +323,24 @@ class Shipment:
             self.sendOutDate = ship_dict['sendOutDate']
             self.category = ship_dict['category']
             self.customer = ship_dict['customer']
+            self.shipmentName = ship_dict['name']
+            self.boxes = ship_dict['boxes']
+            print(f"{self.shipmentName=}")
+            # hirename
 
         except KeyError:
             print("Key error - something missing from shipdict")
 
         ## optional shipment details
-        if reference_number:
-            self.referenceNumber = reference_number
-        elif 'referenceNumber' in ship_dict.keys():
-            self.referenceNumber = ship_dict['referenceNumber']
-        else:
-            self.referenceNumber = "101"
+        self.referenceNumber = self.shipmentName
+        print(f"{self.referenceNumber=}")
+        #
+        # if reference_number:
+        #     self.referenceNumber = reference_number
+        # elif 'referenceNumber' in ship_dict.keys():
+        #     self.referenceNumber = ship_dict['referenceNumber']
+        # else:
+        #     self.referenceNumber = "101"
 
         if label_text:
             self.reference_on_label = label_text  ## if there is a shipref passed use it as despatchbay reference on label etc
@@ -374,8 +373,7 @@ class Shipment:
         self.recipient = None
 
         if debug:
-            print(f"Shipment with {self.referenceNumber=}")
-
+            print(f"Shipment with {self.shipmentName=}")
 
         def parse_address():
             if debug:
@@ -410,23 +408,12 @@ class Shipment:
     def val_boxes(self):
         if debug: print("func = VAL_BOXES")
         if 'boxes' in vars(self):
-            while True:
-                print(line, "\n",
-                      f"\nShipment for {self.customer} has {self.boxes} box(es) assigned - is this correct?\n")
-                ui = input(f"[C]onfirm {self.boxes} boxes in shipment or Enter a number of boxes\n")
-                if not ui:
-                    print("No Input")
-                    continue
-                if ui.isnumeric():
-                    self.boxes = int(ui)
-                    print(f"Shipment updated  |  {self.boxes}  boxes\n")
-                    return int(ui)
-                    # return self
-                if ui.lower() == 'c':
-                    print("Confirmed\n", line)
-                    return self.boxes
-                print("Something odd")
-                continue
+            ui = input(f"Shipment for {self.customer} has {self.boxes} box(es) assigned - Enter a number to adjust, anything else to continue\n")
+            if ui.isnumeric():
+                print (f"Shipment updated to {ui} boxes")
+                self.boxes=int(ui)
+            return self.boxes
+
         else:
             while True:
                 print("\n\t\t*** ERROR: No boxes added ***\n")
@@ -436,14 +423,13 @@ class Shipment:
                     continue
                 else:
                     self.boxes = int(ui)
-                    print(f"{self.customer} updated  |  ", self.boxes, "  boxes")
-                    return int(ui)
-                # return self
+                    print(f"Shipment updated to {ui} boxes")
+            return self.boxes
 
     def val_dates(self):
         if debug: print("func = VAL_DATES")
         dates = self.CNFG.client.get_available_collection_dates(self.sender,
-                                                           self.CNFG.courier_id)  # get dates
+                                                                self.CNFG.courier_id)  # get dates
         print("--- Checking available collection dates...")
         send_date = datetime.strftime(self.sendOutDate, '%Y-%m-%d')
 
@@ -570,12 +556,11 @@ class Shipment:
                         continue
 
                     if chosen_candidate.isalpha():
-                        postcode=None
+                        postcode = None
                         break
 
                     elif chosen_candidate.isnumeric():
                         chosen_candidate = int(chosen_candidate)
-
 
                         if not 0 <= chosen_candidate <= len(candidates):  # include 0 as exit
                             print("Wrong Number")
@@ -782,7 +767,7 @@ class Shipment:
         if debug: print("func = BOOK_COLLECTION \n")
         client = self.CNFG.client
 
-        shipment_return = client.book_shipments(self.desp_shipment_id)[0] #debug there could be more than one here!
+        shipment_return = client.book_shipments(self.desp_shipment_id)[0]  # debug there could be more than one here!
 
         label_pdf = client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
         try:
@@ -802,7 +787,7 @@ class Shipment:
         self.print_label()
         self.collectionBooked = True
         self.labelDownloaded = True
-        nl = "\n" # python voodoo to newline in fstring
+        nl = "\n"  # python voodoo to newline in fstring
         print(
             f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}. {f'{nl}label printed' if self.printed else None}\n")
         return True
