@@ -946,7 +946,7 @@ Sub PackHire()
 
 ' if parcelforce in send method offer to launch amdesp to arrange shipping'
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-            If Form.Field("DB label printed").Value <> True Then
+            If Form.Field("DB label printed").Value = 0 Then
                 if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
                     ShipHire("C:\AmDesp\data\AmShipHire.xml")
                 End if
