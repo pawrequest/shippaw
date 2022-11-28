@@ -1,3 +1,33 @@
+what happened here?
+'''
+company_name is currently None - enter new value
+WCB Events
+[C]hange company_name to WCB Events? (anything else to go back)c
+1 - company_name = WCB Events
+2 - street = 1 Yew Tree Close
+3 - locality = None
+4 - town_city = Chatham
+5 - county = Kent
+6 - postal_code = ME5 8XN
+
+ Enter a number to edit the field, a letter to go back
+b
+MAKING REQUEST
+func = Queue or book
+
+
+ ----------------------------------------------------------------------------------------------------
+ WCB Events Ltd | 1 | 1 Yew Tree Close | 2022-11-29 | Express 24 | Price = 8.31
+ ----------------------------------------------------------------------------------------------------
+
+- [Q]ueue shipment in DespatchBay, [B]ook + print [R]estart, or [E]xit
+b
+Booking Collection and printing label
+func = BOOK_COLLECTION
+'''
+
+
+
 sandbox DB api:
 apiuser: D25RM-E1305A31
 apikey: AAD2F91ED25CAE38B4D1

@@ -27,6 +27,6 @@ if __name__ == '__main__':
         xmlfileloc = sys.argv[1]
     else:
         xmlfileloc = None
-    shipper('sand', xmlfileloc=xmlfileloc)
+    shipper('prod', xmlfileloc=xmlfileloc)
     # programmer()
     # test()

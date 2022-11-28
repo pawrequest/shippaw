@@ -943,10 +943,14 @@ Sub PackHire()
         Form.Field("Status").Value = "Booked in and packed"
         Form.Field("Packed By").Value = packedBy
 
+
 ' if parcelforce in send method offer to launch amdesp to arrange shipping'
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-            if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                ShipHire("C:\AmDesp\data\AmShipHire.xml")
+            If Form.Field("DB label printed").Value <> True Then
+                if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
+                    ShipHire("C:\AmDesp\data\AmShipHire.xml")
+                End if
+            Else MsgBox ("DB already printed so i wont launch AmDesp")
             End if
         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
         End if

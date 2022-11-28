@@ -784,7 +784,7 @@ class Shipment:
         self.labelUrl = shipment_return.labels_url
         # self.parcels = shipment_return.parcels #debug why save?
         self.labelLocation = str(self.CNFG.label_dir / label_string)
-        self.print_label()
+        # self.print_label() #debug printing as a seperate method call in process shipment script
         self.collectionBooked = True
         self.labelDownloaded = True
         nl = "\n"  # python voodoo to newline in fstring
