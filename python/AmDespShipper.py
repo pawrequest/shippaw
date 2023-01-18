@@ -20,7 +20,7 @@ from python.utils_pss.utils_pss import toCamel, get_from_ods, unsanitise
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
-debug = True
+debug = False
 
 
 class Config:
@@ -46,7 +46,7 @@ class Config:
         if xmlfileloc:
             self.xml_file = self.data_dir.joinpath(xmlfileloc)
         else:
-            self.xml_file = self.data_dir.joinpath('AmShip.xml')
+            self.xml_file = self.data_dir.joinpath('AmShipHire.xml')
         self.log_file = self.data_dir.joinpath("AmLog.json")
         self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
         self.bin_dir = pathlib.Path("/Amdesp/bin/")
@@ -268,8 +268,7 @@ class ShippingApp:
             pprint(f"\n Json exported to {self.CNFG.log_file} {export_dict =}")
 
         if self.shipment.category in ['Hire', 'Sale']:
-                if input("log tracking?") == 'y':
-                    self.log_tracking()  # writes to commence db
+                self.log_tracking()  # writes to commence db
 
     def log_tracking(self):
         """
@@ -333,7 +332,7 @@ class Shipment:
 
         ## optional shipment details
         self.referenceNumber = self.shipmentName
-        print(f"{self.referenceNumber=}")
+        # print(f"{self.referenceNumber=}")
         #
         # if reference_number:
         #     self.referenceNumber = reference_number
@@ -398,7 +397,7 @@ class Shipment:
                                                        '%Y-%m-%d'):  # if date object matches send date
                     self.dateObject = candidate
                     print(line, '\n',
-                          f"Shipment date for {self.customer} validated - {datetime.strftime(self.sendOutDate, '%A %B %#d')}")
+                          f"Shipment date = {datetime.strftime(self.sendOutDate, '%A %B %#d')}")
             # if debug:
             #     print("")
 
@@ -408,7 +407,7 @@ class Shipment:
     def val_boxes(self):
         if debug: print("func = VAL_BOXES")
         if 'boxes' in vars(self):
-            ui = input(f"Shipment for {self.customer} has {self.boxes} box(es) assigned - Enter a number to adjust, anything else to continue\n")
+            ui = input(f"{self.boxes}  box(es) assigned for {self.customer} \n Enter a number to adjust, anything else to continue\n")
             if ui.isnumeric():
                 print (f"Shipment updated to {ui} boxes")
                 self.boxes=int(ui)
@@ -505,11 +504,13 @@ class Shipment:
                 # if self.deliveryBuildingNum != 0:
                 search_string = self.deliveryBuildingNum
             else:
-                print("No building number, searching by first line of address \n")
                 search_string = self.deliveryFirstline
+                print(f"No building number, searching by first line of address: {self.deliveryFirstline} \n")
 
         try:
             address = self.CNFG.find_address(postcode, search_string)
+            # address = DespatchBaySDK.find_address(postcode, search_string)
+            print(f"{postcode=}, {search_string=}")
         except:
             print("No address match found")
             return None
