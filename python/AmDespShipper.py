@@ -29,7 +29,8 @@ class Config:
 
         # fieldnames
         # hirename
-        self.export_fields = ['customer', 'shipmentName', 'deliveryName', 'deliveryContact', 'deliveryTel', 'deliveryEmail',
+        self.export_fields = ['customer', 'shipmentName', 'deliveryName', 'deliveryContact', 'deliveryTel',
+                              'deliveryEmail',
                               'deliveryAddress', 'deliveryPostcode', 'sendOutDate', 'referenceNumber',
                               'trackingNumbers', 'desp_shipment_id', 'boxes', 'collectionBooked', 'shipRef',
                               'category']
@@ -46,7 +47,7 @@ class Config:
         if xmlfileloc:
             self.xml_file = self.data_dir.joinpath(xmlfileloc)
         else:
-            self.xml_file = self.data_dir.joinpath('AmShipHire.xml')
+            self.xml_file = self.data_dir.joinpath('AmShipSale.xml')
         self.log_file = self.data_dir.joinpath("AmLog.json")
         self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
         self.bin_dir = pathlib.Path("/Amdesp/bin/")
@@ -75,38 +76,38 @@ class Config:
         self.client = DespatchBaySDK(api_user=api_user, api_key=api_key)  # now in shipment
         self.sender = self.client.sender(address_id=self.sender_id)  # in shipment
 
-        # def list_services():
-        #     recip_add = self.client.address(
-        #         company_name='noname',
-        #         country_code="GB",
-        #         county="London",
-        #         locality='London',
-        #         postal_code='nw64te',
-        #         town_city="london",
-        #         street="72 kingsgate road"
-        #     )
-        #     recip = self.client.recipient(
-        #         name="fakename",
-        #         recipient_address=recip_add)
-        #
-        #     # sandy
-        #     shippy = self.client.shipment_request(
-        #         parcels=[self.client.parcel(
-        #             contents="Radios",
-        #             value=500,
-        #             weight=6,
-        #             length=60,
-        #             width=40,
-        #             height=40,
-        #         )],
-        #         collection_date=f"{date.today():%Y-%m-%d}",
-        #         sender_address=self.sender,
-        #         recipient_address=recip)
-        #
-        #     services = self.client.get_available_services(shippy)
-        #     for service in services:
-        #         print (service.name)
-        # # list_services()
+        def list_services():
+            recip_add = self.client.address(
+                company_name='noname',
+                country_code="GB",
+                county="London",
+                locality='London',
+                postal_code='nw64te',
+                town_city="london",
+                street="72 kingsgate road"
+            )
+            recip = self.client.recipient(
+                name="fakename",
+                recipient_address=recip_add)
+
+            # sandy
+            shippy = self.client.shipment_request(
+                parcels=[self.client.parcel(
+                    contents="Radios",
+                    value=500,
+                    weight=6,
+                    length=60,
+                    width=40,
+                    height=40,
+                )],
+                collection_date=f"{date.today():%Y-%m-%d}",
+                sender_address=self.sender,
+                recipient_address=recip)
+
+            services = self.client.get_available_services(shippy)
+            for service in services:
+                print(service.name)
+        # list_services()
 
 
 class ShippingApp:
@@ -122,6 +123,7 @@ class ShippingApp:
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.address = self.shipment.address_script()  #
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
+        # self.CNFG.list_services_prod()
 
     def process_shipment(self):
         # no self.address here?
@@ -139,6 +141,7 @@ class ShippingApp:
             self.shipment.print_label()
 
         if decision == "RESTART":
+            self.prepare_shipment()
             self.process_shipment()
 
         if decision != "EXIT":
@@ -268,7 +271,7 @@ class ShippingApp:
             pprint(f"\n Json exported to {self.CNFG.log_file} {export_dict =}")
 
         if self.shipment.category in ['Hire', 'Sale']:
-                self.log_tracking()  # writes to commence db
+            self.log_tracking()  # writes to commence db
 
     def log_tracking(self):
         """
@@ -324,7 +327,8 @@ class Shipment:
             self.customer = ship_dict['customer']
             self.shipmentName = ship_dict['name']
             self.boxes = ship_dict['boxes']
-            print(f"{self.shipmentName=}")
+            if debug:
+                print(f"{self.shipmentName=}")
             # hirename
 
         except KeyError:
@@ -407,10 +411,13 @@ class Shipment:
     def val_boxes(self):
         if debug: print("func = VAL_BOXES")
         if 'boxes' in vars(self):
-            ui = input(f"{self.boxes}  box(es) assigned for {self.customer} \n Enter a number to adjust, anything else to continue\n")
+            if self.boxes == 0:
+                self.boxes = 1
+            ui = input(
+                f"\n {self.boxes}  box(es) assigned for {self.customer} \n \n Enter a number to adjust, anything else to continue\n")
             if ui.isnumeric():
-                print (f"Shipment updated to {ui} boxes")
-                self.boxes=int(ui)
+                print(f"Shipment updated to {ui} boxes")
+                self.boxes = int(ui)
             return self.boxes
 
         else:
@@ -507,15 +514,15 @@ class Shipment:
                 search_string = self.deliveryFirstline
                 print(f"No building number, searching by first line of address: {self.deliveryFirstline} \n")
 
-        try:
-            address = self.CNFG.find_address(postcode, search_string)
-            # address = DespatchBaySDK.find_address(postcode, search_string)
-            print(f"{postcode=}, {search_string=}")
-        except:
-            print("No address match found")
-            return None
-        else:
-            return address
+        # try:
+        #     address = self.CNFG.find_address(postcode, search_string)
+        address = self.CNFG.client.find_address(postcode, search_string)
+        print(f"{postcode=}, {search_string=}")
+        # except:
+        #     print("No address match found")
+        #     return None
+        # else:
+        return address
 
     def address_from_postcode(self, postcode=None):
         """
@@ -658,7 +665,17 @@ class Shipment:
             print("Current address details:\n")
             print(
                 f'{chr(10).join(f"{k}: {v}" for k, v in addy2.items())}')  # chr(10) is newline (no \ allowed in fstrings)
-
+            if self.address.company_name is None:
+                ui= input(f"\n \n Replace 'None' Company Name with {self.customer}? [Y / N]\n")
+                if ui:
+                    if ui[0].lower() == 'y':
+                        self.address.company_name = self.customer
+                        print("Company Name updated")
+                    else:
+                        print ("Keep company 'None' ")
+                else:
+                    self.address.company_name = self.customer
+                    print("Company Name updated")
             ui = input(
                 f"\n[G]et new address or [A]mend current address, anything else to continue\n\n")
 
