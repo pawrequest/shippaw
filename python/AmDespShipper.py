@@ -133,19 +133,20 @@ class ShippingApp:
         if decision == "QUEUE":
             self.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
 
-        if decision == "BOOKANDPRINT":
+        elif decision == "BOOKANDPRINT":
             self.shipment.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
             # self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
             # debug issues here
             self.shipment.book_collection()
             self.shipment.print_label()
 
-        if decision == "RESTART":
+        elif decision == "RESTART":
             self.prepare_shipment()
             self.process_shipment()
 
-        if decision != "EXIT":
-            print(f"ERROR: \n {decision=}")
+        else:
+            if decision != "EXIT":
+                print(f"ERROR: \n {decision=}")
 
         self.log_json()
         exit()
@@ -335,7 +336,10 @@ class Shipment:
             print("Key error - something missing from shipdict")
 
         ## optional shipment details
-        self.referenceNumber = self.shipmentName
+        try:
+            self.referenceNumber = self.shipmentName
+        except:
+            self.referenceNumber = "NOREF"
         # print(f"{self.referenceNumber=}")
         #
         # if reference_number:
