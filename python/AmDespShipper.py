@@ -18,7 +18,7 @@ from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, unsanitise
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
-FIELD_CONFIG = 'FIELD_CONFIG'
+# FIELD_CONFIG = 'FIELD_CONFIG'
 line = '-' * 100
 debug = False
 
@@ -48,6 +48,7 @@ class Config:
             self.xml_file = self.data_dir.joinpath(xmlfileloc)
         else:
             self.xml_file = self.data_dir.joinpath('AmShipSale.xml')
+            # self.xml_file = self.data_dir.joinpath('AmShip.xml') #debug
         self.log_file = self.data_dir.joinpath("AmLog.json")
         self.config_file = self.data_dir.joinpath("AmDespConfig.Ods")
         self.bin_dir = pathlib.Path("/Amdesp/bin/")
@@ -106,7 +107,7 @@ class Config:
 
             services = self.client.get_available_services(shippy)
             for service in services:
-                print(service.name)
+                print(f"{service.service_id} - {service.name}")
         # list_services()
 
 
@@ -131,7 +132,7 @@ class ShippingApp:
         decision = self.shipment.queue_or_book()
 
         if decision == "QUEUE":
-            self.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
+            self.shipment.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
 
         elif decision == "BOOKANDPRINT":
             self.shipment.desp_shipment_id = self.CNFG.client.add_shipment(self.shipment.shipmentRequest)
@@ -739,7 +740,7 @@ class Shipment:
             sender_address=self.sender,
             recipient_address=self.recipient,
             follow_shipment='true',
-            service_id=self.CNFG.service_id  # debug i added this manually?
+            # service_id=self.CNFG.service_id  # debug i added this manually?
         )
         self.shipmentRequest.collection_date = self.dateObject.date  #
         self.services = client.get_available_services(self.shipmentRequest)
