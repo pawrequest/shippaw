@@ -77,38 +77,41 @@ class Config:
         self.client = DespatchBaySDK(api_user=api_user, api_key=api_key)  # now in shipment
         self.sender = self.client.sender(address_id=self.sender_id)  # in shipment
 
-        def list_services():
-            recip_add = self.client.address(
-                company_name='noname',
-                country_code="GB",
-                county="London",
-                locality='London',
-                postal_code='nw64te',
-                town_city="london",
-                street="72 kingsgate road"
-            )
-            recip = self.client.recipient(
-                name="fakename",
-                recipient_address=recip_add)
+    def fake_ship_request(self):
+        """ for getting available serivces etc"""
 
-            # sandy
-            shippy = self.client.shipment_request(
-                parcels=[self.client.parcel(
-                    contents="Radios",
-                    value=500,
-                    weight=6,
-                    length=60,
-                    width=40,
-                    height=40,
-                )],
-                collection_date=f"{date.today():%Y-%m-%d}",
-                sender_address=self.sender,
-                recipient_address=recip)
+        recip_add = self.client.address(
+            company_name='noname',
+            country_code="GB",
+            county="London",
+            locality='London',
+            postal_code='nw64te',
+            town_city="london",
+            street="72 kingsgate road"
+        )
+        recip = self.client.recipient(
+            name="fakename",
+            recipient_address=recip_add)
 
-            services = self.client.get_available_services(shippy)
-            for service in services:
-                print(f"{service.service_id} - {service.name}")
-        # list_services()
+        # sandy
+        shippy = self.client.shipment_request(
+            parcels=[self.client.parcel(
+                contents="Radios",
+                value=500,
+                weight=6,
+                length=60,
+                width=40,
+                height=40,
+            )],
+            collection_date=f"{date.today():%Y-%m-%d}",
+            sender_address=self.sender,
+            recipient_address=recip)
+        return shippy
+
+    def list_services(self, shipment_request):
+        services = self.client.get_available_services(shipment_request)
+        for service in services:
+            print(f"{service.service_id} - {service.name}")
 
 
 class ShippingApp:
@@ -119,16 +122,13 @@ class ShippingApp:
     def prepare_shipment(self):
         ship_dict = self.xml_to_ship_dict()
         self.shipment = Shipment(ship_dict, self.CNFG)
-        # self.shipment = Shipment(parsed, self.CNFG, parent=self)
         self.shipment.boxes = self.shipment.val_boxes()  # checks if there are boxes on the shipment, prompts input and confirmation #debug
         self.shipment.val_dates()  # checks collection is available on the sending date
         self.shipment.address = self.shipment.address_script()  #
         self.shipment.check_address()  # queries DB address database, prompts user to confirm match or call amend_address()
-        # self.CNFG.list_services_prod()
 
-    def process_shipment(self):
-        # no self.address here?
-        self.shipment.make_request()  # make a shipment request
+    def process_shipment(self, service=None):
+        self.shipment.make_request(service)  # make a shipment request
         decision = self.shipment.queue_or_book()
 
         if decision == "QUEUE":
@@ -145,11 +145,35 @@ class ShippingApp:
             self.prepare_shipment()
             self.process_shipment()
 
-        else:
-            if decision != "EXIT":
-                print(f"ERROR: \n {decision=}")
+        elif decision == "EXIT":
+            exit()
 
-        self.log_json()
+        elif decision == "SERVICE_CHANGE":
+            services = self.shipment.services
+            print (f"Available services:\n")
+            for n, service in enumerate(self.shipment.services,1):
+                print (f"Service ID {n} : {service.name}")
+
+            while True:
+                choice = input("Enter a Service ID")
+                if choice.isnumeric() and 0< int(choice) <= len(services):
+                    new_service = services[int(choice)-1]
+                    print(f"{new_service.service_id=}, {new_service.name=}")
+                    # self.shipment.CNFG.service_id = new_service.service_id
+                    # self.shipment.shippingServiceName = new_service.name
+                    self.process_shipment(new_service)
+                else:
+                    print("Bad input")
+                continue
+
+
+
+
+        else:
+            print(f"ERROR: \n {decision=}")
+
+        if self.shipment.trackingNumbers:
+            self.log_json()
         exit()
 
     def xml_to_ship_dict(self):
@@ -701,7 +725,7 @@ class Shipment:
         print("NO ADDRESS OBJECT - go get one")
         self.address_from_postcode()
 
-    def make_request(self):
+    def make_request(self, service=None):
         print("MAKING REQUEST")
         client = self.CNFG.client
         self.recipient_address = client.address(
@@ -733,6 +757,7 @@ class Shipment:
             )
             self.parcels.append(parcel)
 
+        # self.shipmentRequest = client.shipment_request(
         self.shipmentRequest = client.shipment_request(
             parcels=self.parcels,
             client_reference=self.reference_on_label,
@@ -740,14 +765,18 @@ class Shipment:
             sender_address=self.sender,
             recipient_address=self.recipient,
             follow_shipment='true',
-            # service_id=self.CNFG.service_id  # debug i added this manually?
+            service_id=self.CNFG.service_id
         )
         self.shipmentRequest.collection_date = self.dateObject.date  #
         self.services = client.get_available_services(self.shipmentRequest)
         if self.services[0].service_id != self.CNFG.service_id:
-            print("Something is wrong with the shipping service name")
-        self.shippingServiceName = self.services[0].name
-        self.shippingCost = self.services[0].cost
+            print("Shipping service is not default")
+        if service:
+            self.shippingCost = service.cost
+            self.shippingServiceName = service.name
+        else:
+            self.shippingServiceName = self.services[0].name
+            self.shippingCost = self.services[0].cost
 
     def queue_or_book(self):
         """
@@ -760,7 +789,7 @@ class Shipment:
 
         while True:
             self.print_shipment_to_screen()
-            choice = input('- [Q]ueue shipment in DespatchBay, [B]ook + print [R]estart, or [E]xit\n')
+            choice = input('- [Q]ueue shipment in DespatchBay, [B]ook + print [S]elect new service, [R]estart, or [E]xit\n')
 
             if choice:
                 choice1 = str(choice[0].lower())
@@ -780,6 +809,9 @@ class Shipment:
                 elif choice1 == "e":
                     print("Exiting")
                     return "EXIT"
+
+                elif choice1 == "s":
+                    return "SERVICE_CHANGE"
 
                 else:
                     print(f"{choice} is not a valid input")
