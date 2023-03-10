@@ -1,7 +1,7 @@
 # import sys
 
 # import win32gui
-from pyexcel_ods3 import get_data
+# from pyexcel_ods3 import get_data
 
 
 def printel(*els): # elementtree elements

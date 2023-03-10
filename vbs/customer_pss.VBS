@@ -217,7 +217,8 @@ Sub ShipHire(xmlfile)
         ExportItemDetailForm(xmlfile)
         Dim oShell, currentCommand, my_command
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+        currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
+'         currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub

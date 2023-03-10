@@ -15,7 +15,7 @@ from pprint import pprint
 from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
-from python.utils_pss.utils_pss import toCamel, get_from_ods, unsanitise
+from python.utils_pss.utils_pss import toCamel, unsanitise
 
 CONFIG_ODS = r"C:\AmDesp\data\AmDespConfig.ods"
 FIELD_CONFIG = 'FIELD_CONFIG'
@@ -459,8 +459,9 @@ class Shipment:
                 print("\t\t", count + 1, "|", out)
 
             while True:
-                choice = input('\n- Enter a number to choose a date, [0] to exit\n')
-                if not choice: continue
+                choice = input(f'\n- [Enter] to select {datetime.strftime(parse(dates[0].date), "%A - %B %#d")}, [A Number] to choose a date, [0] to exit\n')
+                if not choice:
+                    choice=str(1)
                 if not choice.isnumeric():
                     print("- Enter a number")
                     continue

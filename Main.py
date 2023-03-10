@@ -1,6 +1,6 @@
 import sys
 
-from python.AmDespProgrammer import ProgrammingAssistant
+# from python.AmDespProgrammer import ProgrammingAssistant
 from python.AmDespShipper import ShippingApp
 
 
@@ -11,11 +11,11 @@ def shipper(ship_mode, xmlfileloc=None):
     return "returned from python"
 
 
-def programmer():
-    prog = ProgrammingAssistant()
-    prog.BootUp()
-    prog.ProgramBatch()
-    ...
+# def programmer():
+#     prog = ProgrammingAssistant()
+#     prog.BootUp()
+#     prog.ProgramBatch()
+#     ...
 
 
 def test():
