@@ -24,7 +24,7 @@ Write-Host "Customer Form Form checked in" is $CustomerChecked
 $SaleForm = "sale_pss"
 $SaleFormVbs = "C:\AmDesp\vbs\sale_pss.VBS"
 $SaleChecked = $db.CheckInFormScript("Sale", $SaleForm, $SaleFormVbs )
-Write-Host "Sale Form Form checked in" is $CustomerChecked
+Write-Host "Sale Form Form checked in" is $SaleChecked
 
 ### Goodbye
 $db.Close()
