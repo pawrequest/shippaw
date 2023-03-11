@@ -57,13 +57,14 @@ class Config:
         self.cmc_lib_net_dll = pathlib.Path("Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll")
         self.cmcLibNet_installer = self.root / "dist" / "CmcLibNet_Setup.exe"
         if not self.cmc_lib_net_dll.exists():
-            print("ERROR: CmCLibNet is not installed in expected location 'Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'")
+            print("ERROR: Vovin CmCLibNet is not installed in expected location 'Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'")
             if self.cmcLibNet_installer.exists():
                 print("Launching CmcLibNet installer")
                 if os.startfile(self.cmcLibNet_installer):
                     print("CmcLib Installed")
                 else:
-                    print ("Installer Failed")
+                    print ("CRITICAL ERROR: Installer Failed")
+                    exit()
             else:
                 print("\n CmcLinNet installer missing from '/dist' \nPlease download Installer from https://github.com/arnovb-github/CmcLibNet/releases")
         if ship_mode == "sand":
