@@ -4,9 +4,10 @@ from python.AmDespShipper import ShippingApp
 
 def shipper(ship_mode, xmlfileloc=None):
     app = ShippingApp(ship_mode, xmlfileloc)
-    app.prepare_shipment()
-    app.process_shipment()
-    return "returned from python"
+    if app.prepare_shipment():
+        if app.process_shipment():
+            app.log_json()
+            app.log_tracking()
 
 def test():
     print("SOMETHNG")

@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://test.pypi.org/project/despatchbay/",
     packages=setuptools.find_namespace_packages(
-        include=['despatchbay', 'suds-py3', 'requests', 'pywinauto', 'pyexcel_ods3', 'psutil', 'python-dateutils']),
+        include=['despatchbay', 'suds-py3', 'requests', 'pywinauto', 'pyexcel_ods3', 'psutil', 'python-dateutil']),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
