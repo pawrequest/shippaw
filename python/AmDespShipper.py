@@ -1,4 +1,3 @@
-
 import json
 import os
 import pathlib
@@ -15,12 +14,11 @@ from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, unsanitise
 import dotenv
 
-
 dotenv.load_dotenv()
 
 # FIELD_CONFIG = 'FIELD_CONFIG'
 LINE = '-' * 100
-DEBUG = False
+DEBUG = True
 
 
 class Config:
@@ -41,7 +39,7 @@ class Config:
         # paths
         self.root = pathlib.Path.cwd()
         if DEBUG:
-            print (f"{self.root=}")
+            print(f"{self.root=}")
         self.data_dir = self.root / "data"
         self.label_dir = self.data_dir / "Parcelforce Labels"
         self.Json_File = self.data_dir / "AmShip.json"
@@ -55,7 +53,7 @@ class Config:
         self.log_file = self.data_dir / "AmLog.json"
         self.label_dir.mkdir(parents=True, exist_ok=True)
         self.log_to_commence_powershell_script = self.root.joinpath("scripts", "log_tracking_to_Commence.ps1")
-        self.cmc_lib_net_dll = pathlib.Path("Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll")
+        self.cmc_lib_net_dll = pathlib.Path("c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll")
         self.cmcLibNet_installer = self.root / "CmcLibNet_Setup.exe"
 
         if DEBUG:
@@ -70,7 +68,7 @@ class Config:
                     print("CmcLib Installed")
                 else:
                     print("ERROR: CmcLibNet Installer Failed - logging to commence is impossible")
-            else: # no installer
+            else:  # no installer
                 print(
                     "\n ERROR: CmcLinNet installer missing from '/dist' \nPlease download Installer from https://github.com/arnovb-github/CmcLibNet/releases and install to default program files location"
                     "\n Logging to Commence is impossible")
@@ -316,6 +314,30 @@ class ShippingApp:
         # # if self.shipment.category in ['Hire', 'Sale']:
         #     self.log_tracking()  # writes to commence db
 
+
+    def powershell_runner(self, script_path,
+                          *params):  # SCRIPT PATH = POWERSHELL SCRIPT PATH,  PARAM = POWERSHELL SCRIPT PARAMETERS ( IF ANY )
+        POWERSHELL_PATH = "powershell.exe"  # POWERSHELL EXE PATH
+
+        commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted',
+                               script_path]  # ADD POWERSHELL EXE AND EXECUTION POLICY TO COMMAND VARIABLE
+        for param in params:  # LOOP FOR EACH PARAMETER FROM ARRAY
+            commandline_options.append("'" + param + "'")  # APPEND YOUR FOR POWERSHELL SCRIPT
+        if DEBUG:
+            print(f"{commandline_options=}")
+        process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        universal_newlines=True)  # CALL PROCESS
+        print(process_result.returncode)  # PRINT RETURN CODE OF PROCESS  0 = SUCCESS, NON-ZERO = FAIL
+        print(process_result.stdout)  # PRINT STANDARD OUTPUT FROM POWERSHELL
+        print(process_result.stderr)  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
+
+        if process_result.returncode == 0:  # COMPARING RESULT
+            Message = "Success !"
+        else:
+            Message = "Error Occurred !"
+
+        return Message  # RETURN MESSAGE
+
     def log_tracking(self):
         """
         runs cmclibnet via powershell script to add tracking numbes to commence db
@@ -325,19 +347,22 @@ class ShippingApp:
         log_tracking_powershell_script = self.CNFG.log_to_commence_powershell_script
         cmcLibpath = self.CNFG.cmc_lib_net_dll
         tracking_nums = ', '.join(self.shipment.trackingNumbers)
-
+        ps_script = str(self.CNFG.log_to_commence_powershell_script)
         try:
-            subprocess.run([
-                "powershell.exe",
-                # "-executionpolicy bypass",
-                "-File",
-                log_tracking_powershell_script,
-                self.shipment.shipmentName,
-                tracking_nums,
-                self.shipment.category
-            ],
-                stdout=sys.stdout)
-        except:
+            self.powershell_runner(ps_script, self.shipment.shipmentName, tracking_nums, self.shipment.category)
+        # try:
+        #     subprocess.run([
+        #         "powershell.exe",
+        #         # "-executionpolicy bypass",
+        #         "-File",
+        #         log_tracking_powershell_script,
+        #         self.shipment.shipmentName,
+        #         tracking_nums,
+        #         self.shipment.category
+        #     ],
+        #         stdout=sys.stdout)
+        except Exception as e:
+            print(f"{e=}")
             print("\nERROR: Unable to log tracking to Commence")
             if not os.path.exists(log_tracking_powershell_script):
                 print("  -   Powershell script missing")
@@ -859,18 +884,4 @@ class Shipment:
     def print_shipment_to_screen(self):
         print(
             f"\n {LINE} \n {self.customer} | {self.boxes} | {self.address.street} | {self.dateObject.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes} \n {LINE} \n")
-
-
-#
-# class ShipDictObject:
-#     def __init__(self, ship_dict):
-#         for k, v in ship_dict.items():
-#             setattr(self, k, v)
-#
-
-""" 
-            
-            
-            """
-
 

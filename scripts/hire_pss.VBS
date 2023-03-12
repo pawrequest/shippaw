@@ -910,7 +910,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton21"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                ShipHire("C:\AmDesp\data\AmShipHire.xml")
+                AmDespShip("C:\AmDesp\data\AmShip.xml")
             End if
 
         Case "CommandButton22"
@@ -948,7 +948,7 @@ Sub PackHire()
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             If Form.Field("DB label printed").Value = 0 Then
                 if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                    ShipHire("C:\AmDesp\data\AmShipHire.xml")
+                    AmDespShip("C:\AmDesp\data\AmShip.xml")
                 End if
             Else MsgBox ("DB already printed so i wont launch AmDesp")
             End if
@@ -1121,19 +1121,33 @@ Sub EmailMissingKit()
 
 End Sub
 
-Sub ShipHire(xmlfile)
+Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper, str_error
-'         python_exe = "C:\AmDesp\dist\python.exe"
-        python_script = "C:\AmDesp\AmDesp.py"
+        Dim amdesp_exe, commence_wrapper
+        amdesp_exe = "C:\AmDesp\AmDesp.exe"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
+        Dim oShell, currentCommand
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
+        currentCommand = amdesp_exe & "prod" & xmlfile
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
+'
+' backup, moving to exe'
+' Sub AmDespShip(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+' '         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDesp.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+'         currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
 
 
 '

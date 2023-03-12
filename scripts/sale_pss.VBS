@@ -389,7 +389,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton3"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                ShipSale("C:\AmDesp\data\AmShipSale.xml")
+                AmDespShip("C:\AmDesp\data\AmShip.xml")
             End if
     End Select
 
@@ -397,7 +397,7 @@ End Sub
  
 '****************  pss-sub ***********************'
 
-Sub ShipSale(xmlfile)
+Sub AmDespShip(xmlfile)
         ' AmDesp'
         Dim python_exe, python_script, commence_wrapper, str_error
 '         python_exe = "C:\AmDesp\dist\python.exe"
@@ -410,6 +410,22 @@ Sub ShipSale(xmlfile)
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
+
+' backup going exe'
+' Sub AmDespShip(xmlfile)
+'         ' AmDesp'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+' '         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDesp.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+'         currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+
 
 
 Sub ExportItemDetailForm(ByVal XmlFilePath)

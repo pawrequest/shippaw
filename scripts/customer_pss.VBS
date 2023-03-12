@@ -207,34 +207,44 @@ Form.Field("All Address").Value = addstring
 
 End Sub
 
-' ' master
-Sub ShipHire(xmlfile)
-        ' launch AmDesp python app'
-        Dim python_exe, python_script, commence_wrapper, str_error
-        python_exe = "C:\AmDesp\dist\python.exe"
-        python_script = "C:\AmDesp\AmDesp.py"
+Sub AmDespShip(xmlfile)
+        ' AmDesp'
+        Dim amdesp_exe, commence_wrapper
+        amdesp_exe = "C:\AmDesp\AmDesp.exe"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
+        Dim oShell, currentCommand
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
-'         currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+        currentCommand = amdesp_exe & "prod" & xmlfile
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
-' ' master
+
+
+' ' ' master
+' Sub AmDespShip(xmlfile)
+'         ' launch AmDesp python app'
+'         Dim python_exe, python_script, commence_wrapper, str_error
+'         python_exe = "C:\AmDesp\dist\python.exe"
+'         python_script = "C:\AmDesp\AmDesp.py"
+'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+'         ExportItemDetailForm(xmlfile)
+'         Dim oShell, currentCommand, my_command
+'         Set oShell = CreateObject("Wscript.Shell")
+'         currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
+' '         currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
+'         oShell.run currentCommand,1,true
+'         set oShell = nothing
+' End Sub
+' ' ' master
 
 ' code to respond to user clicking on the various command buttons on the screen
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''''''''   Runs Amdesp via cmd     ''''''''''
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
             if MsgBox ("Ship to this customer via Amdesp?", 4) = 6 Then
                 Dim xmlfile : xmlfile = "C:\AmDesp\data\AmShip.xml"
-                ShipHire(xmlfile)
+                AmDespShip(xmlfile)
             End if
             MsgBox "Show me some serials"
 
