@@ -3,12 +3,17 @@
 
 block_cipher = None
 
+added_files = [
+                ('scripts/', '.'),
+                ('data/AmDesp.env', '.'),
+                ('CmcLibNet_Setup.exe', '.')
+                ]
 
 a = Analysis(
     ['AmDesp.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=added_files,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

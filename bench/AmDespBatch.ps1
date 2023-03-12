@@ -36,12 +36,12 @@ $cursor.ExportToFile($JsonPath, $settings)
 $db.Close()
 
 # call python vbs supplying jsonpath
-#powershell $python_exe $python_script @JsonPath
+#scripts $python_exe $python_script @JsonPath
 
 "COMPLETE"
 
 # TODO sets ShipMe to False
 # TODO wrties despatchbay references to commence
 
-# $powershell -executionpolicy ByPass -File .\Get-Printers.ps1
+# $scripts -executionpolicy ByPass -File .\Get-Printers.ps1
  #>
