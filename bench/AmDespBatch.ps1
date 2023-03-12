@@ -2,7 +2,7 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
-#$python_exe = "C:\AmDesp\AmDesp_python\bin\AmDesp_python.exe"
+#$python_exe = "C:\AmDesp\python\bin\python.exe"
 #$python_script = "C:\AmDesp\main.py"
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 $JsonPath = "C:\AmDesp\data\AmShip.json"
@@ -35,7 +35,7 @@ $cursor.ExportToFile($JsonPath, $settings)
 #goodbye
 $db.Close()
 
-# call AmDesp_python vbs supplying jsonpath
+# call python vbs supplying jsonpath
 #powershell $python_exe $python_script @JsonPath
 
 "COMPLETE"
