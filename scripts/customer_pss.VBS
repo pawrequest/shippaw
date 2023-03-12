@@ -246,18 +246,17 @@ Sub Form_OnClick(ControlId)
                 Dim xmlfile : xmlfile = "C:\AmDesp\data\AmShip.xml"
                 AmDespShip(xmlfile)
             End if
-            MsgBox "Show me some serials"
 
-        Case "CommandButton2"
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
+        Case "CommandButton2"
             Form.Field("Name").Value = PCase(Form.Field("Name").Value, "")
-        Case "CommandButton3"
 	    ' change the contents of the "Contact Name" field to initial capitals, rest lower-case
+        Case "CommandButton3"
             Form.Field("Contact Name").Value = PCase(Form.Field("Contact Name").Value, "")
-        Case "CommandButton4"
 	    ' strip out any intermediate blank lines in address field
 		' change the contents of the "Address" field to initial capitals, rest lower-case, unless its all CAPS
 		' this only seems to work on first line of text as of April 2019
+        Case "CommandButton4"
 		    DIM temp_address
 			temp_address = Form.Field("Address").Value
 			temp_address = PCase(temp_address, "A")
