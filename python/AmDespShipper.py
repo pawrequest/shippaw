@@ -4,6 +4,7 @@ import os
 import pathlib
 import subprocess
 import sys
+from sys import exit
 import xml.etree.ElementTree as ET
 from datetime import datetime, date
 from pprint import pprint
@@ -12,10 +13,14 @@ from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, unsanitise
+import dotenv
+
+
+dotenv.load_dotenv()
 
 # FIELD_CONFIG = 'FIELD_CONFIG'
 LINE = '-' * 100
-DEBUG = True
+DEBUG = False
 
 
 class Config:
@@ -35,25 +40,23 @@ class Config:
 
         # paths
         self.root = pathlib.Path.cwd()
-        print (self.root)
+        if DEBUG:
+            print (f"{self.root=}")
         self.data_dir = self.root / "data"
         self.label_dir = self.data_dir / "Parcelforce Labels"
         self.Json_File = self.data_dir / "AmShip.json"
         if xmlfileloc:
             self.xml_file = self.data_dir / xmlfileloc
-            print(f"{self.xml_file=}")
-
         else:
             self.xml_file = self.data_dir / "AmShipSale.xml"
+        if DEBUG:
             print(f"{self.xml_file=}")
 
         self.log_file = self.data_dir / "AmLog.json"
-
-        # make the labels dirs (and parents)
         self.label_dir.mkdir(parents=True, exist_ok=True)
         self.log_to_commence_powershell_script = self.root.joinpath("scripts", "log_tracking_to_Commence.ps1")
         self.cmc_lib_net_dll = pathlib.Path("Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll")
-        self.cmcLibNet_installer = self.root.joinpath("dist", "CmcLibNet_Setup.exe")
+        self.cmcLibNet_installer = self.root / "CmcLibNet_Setup.exe"
 
         if DEBUG:
             print(f"{self.cmcLibNet_installer=}")
@@ -67,7 +70,7 @@ class Config:
                     print("CmcLib Installed")
                 else:
                     print("ERROR: CmcLibNet Installer Failed - logging to commence is impossible")
-            else:
+            else: # no installer
                 print(
                     "\n ERROR: CmcLinNet installer missing from '/dist' \nPlease download Installer from https://github.com/arnovb-github/CmcLibNet/releases and install to default program files location"
                     "\n Logging to Commence is impossible")
@@ -544,6 +547,7 @@ class Shipment:
             elif address_decision == "g":
                 address = self.address_from_postcode_candidates(address.postal_code)
                 self.address_script(address)
+
         return address
 
     def address_from_postcode_and_string(self, postcode: str = None, prompt_search: bool = False):
@@ -865,31 +869,8 @@ class Shipment:
 #
 
 """ 
-fake shipment to get service codes
-        # fake_ship = [
-        recip_add = self.client.address(
-            company_name='noname',
-            country_code="GB",
-            county="London",
-            locality='London',
-            postal_code='nw64te',
-            town_city="london",
-            street="72 kingsgate road"
-        )
-        recip = self.client.recipient(
-            name="fakename",
-            recipient_address=recip_add)
+            
+            
+            """
 
-        # sandy
-        shippy = self.client.shipment_request(
-            parcels=[self.client.parcel(
-                contents="Radios",
-                value=500,
-                weight=6,
-                length=60,
-                width=40,
-                height=40,
-            )],
-            collection_date=f"{date.today():%Y-%m-%d}",
-            sender_address=CNFG.sender,
-            recipient_address=recip)"""
+
