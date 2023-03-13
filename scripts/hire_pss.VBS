@@ -1123,14 +1123,17 @@ End Sub
 
 Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim amdesp_exe, commence_wrapper
+        Dim amdesp_exe
         amdesp_exe = "C:\AmDesp\AmDesp.exe"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+
         ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand
+        Dim oShell, strCommand
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = amdesp_exe & "prod" & xmlfile
-        oShell.run currentCommand,1,true
+
+        strCommand = amdesp_exe & " 'sand' " & xmlfile
+        msgbox strCommand
+        oShell.run strCommand,1,true
+
         set oShell = nothing
 End Sub
 '

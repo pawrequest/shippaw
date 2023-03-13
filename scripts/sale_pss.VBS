@@ -399,18 +399,16 @@ End Sub
 
 Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper, str_error
-'         python_exe = "C:\AmDesp\dist\python.exe"
-        python_script = "C:\AmDesp\AmDesp.py"
+        Dim amdesp_exe, commence_wrapper
+        amdesp_exe = "C:\AmDesp\AmDesp.exe"
         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
         ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
+        Dim oShell, currentCommand
         Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
+        currentCommand = amdesp_exe & "sand" & xmlfile
         oShell.run currentCommand,1,true
         set oShell = nothing
 End Sub
-
 ' backup going exe'
 ' Sub AmDespShip(xmlfile)
 '         ' AmDesp'
