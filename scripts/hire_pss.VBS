@@ -910,7 +910,7 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton21"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                AmDespShip("C:\AmDesp\data\AmShip.xml")
+                AmDespShip()
             End if
 
         Case "CommandButton22"
@@ -948,7 +948,7 @@ Sub PackHire()
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             If Form.Field("DB label printed").Value = 0 Then
                 if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                    AmDespShip("C:\AmDesp\data\AmShip.xml")
+                    AmDespShip()
                 End if
             Else MsgBox ("DB already printed so i wont launch AmDesp")
             End if
@@ -1076,10 +1076,10 @@ Sub EmailSendOut()
 ' close objects'
         Set olApp = Nothing
         Set objMailItem = Nothing
-        
+
 End Sub
 
-Sub EmailMissingKit() 
+Sub EmailMissingKit()
 ' emails 'Missing Kit' field to invoice and delivery email addresse
         Dim cCust : Set cCust = Form.Connection("To","Customer")
         Dim olApp : Set olApp = CreateObject("Outlook.Application")
@@ -1092,7 +1092,7 @@ Sub EmailMissingKit()
         if invoice_email <> del_email Then
             del_email = del_email & ";" & invoice_email
         End if
-        
+
 ' ' give user chance to change email address'
 '         if MsgBox("Delivery / invoice email addresses were " & del_email & vbNewLine & "Send missing-kit email to this address?" & vbNewLine & "(no to enter new email address)",4) = 7 Then
 '         del_email = InputBox("Enter new email address")
@@ -1121,18 +1121,18 @@ Sub EmailMissingKit()
 
 End Sub
 
-Sub AmDespShip(xmlfile)
+
+Sub AmDespShip()
         ' AmDesp'
 
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        locAmDesp = "c:\AmDesp"
+        locAmDesp = "c:\AmDesp\"
         exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
         ExportItemDetailForm(locXml)
 
-'         strCommand = "amdesp.exe sand " & xmlfile
         strCommand = exeAmDesp & " prod " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp

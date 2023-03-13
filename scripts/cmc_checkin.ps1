@@ -15,4 +15,5 @@ foreach ($category in $args)
 }
 ### Goodbye
 $db.Close()
-
+Read-Host -Prompt "Press Enter to exit"
+exit

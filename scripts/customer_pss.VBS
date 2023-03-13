@@ -209,15 +209,16 @@ End Sub
 
 
 
-Sub AmDespShip(xmlfile)
+
+Sub AmDespShip()
         ' AmDesp'
 
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        locAmDesp = "c:\AmDesp"
+        locAmDesp = "c:\AmDesp\"
         exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
         ExportItemDetailForm(locXml)
 
         strCommand = exeAmDesp & " prod " & locXml
@@ -229,30 +230,13 @@ Sub AmDespShip(xmlfile)
 End Sub
 
 
-' ' ' master
-' Sub AmDespShip(xmlfile)
-'         ' launch AmDesp python app'
-'         Dim python_exe, python_script, commence_wrapper, str_error
-'         python_exe = "C:\AmDesp\dist\python.exe"
-'         python_script = "C:\AmDesp\AmDesp.py"
-'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'         ExportItemDetailForm(xmlfile)
-'         Dim oShell, currentCommand, my_command
-'         Set oShell = CreateObject("Wscript.Shell")
-'         currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
-' '         currentCommand = "cmd /c " & python_exe & " " & python_script & " " & xmlfile & Chr(34)
-'         oShell.run currentCommand,1,true
-'         set oShell = nothing
-' End Sub
-' ' ' master
 
 ' code to respond to user clicking on the various command buttons on the screen
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
             if MsgBox ("Ship to this customer via Amdesp?", 4) = 6 Then
-                Dim xmlfile : xmlfile = "C:\AmDesp\data\AmShip.xml"
-                AmDespShip(xmlfile)
+                AmDespShip()
             End if
 
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
