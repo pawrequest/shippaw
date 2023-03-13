@@ -405,16 +405,16 @@ Sub AmDespShip()
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        locAmDesp = "c:\AmDesp\"
-        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
+        locAmDesp = "C:\AmDesp\"
+        exeAmDesp = "C:\AmDesp\AmDesp.exe"
+        locXml = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(locXml)
 
         strCommand = exeAmDesp & " prod " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
-        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
+        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
         set objShell = nothing
 End Sub
 
