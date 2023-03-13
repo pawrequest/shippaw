@@ -15,12 +15,9 @@ import dotenv
 
 dotenv.load_dotenv()
 
-SHIPDIR = os.path.abspath(os.path.dirname(__file__))
-mydir = pathlib.Path()
-
+DEBUG = False
 LINE = '-' * 100
 TABBER = "\t\t"
-DEBUG = False
 DT_DISPLAY = '%A - %B %#d'
 DT_HIRE = '%d/%m/%Y'
 DT_DB = '%Y-%m-%d'
@@ -31,12 +28,8 @@ class ShippingApp:
     def __init__(self, ship_mode):  # creat app-obj
         # create config object
         self.CNFG = Config(ship_mode)
-        # todo cnlear config refs to xmlfile
 
     def run(self, xmlfile):
-        # debug hacky xml insertion for restart
-        if xmlfile is None:
-            xmlfile = self.CNFG.data_dir / 'Amship.xml'
         shipment = self.prepare_shipment(xmlfile)
         self.process_shipment(shipment)
 
@@ -72,7 +65,7 @@ class ShippingApp:
             exit()
 
         elif decision == "RESTART":
-            self.run(xmlfile=None)
+            self.run(self.CNFG.data_dir / 'Amship.xml')
 
         elif decision == "EXIT":
             exit()
@@ -89,8 +82,6 @@ class ShippingApp:
                 if choice.isnumeric() and 0 < int(choice) <= len(services):
                     new_service = services[int(choice) - 1]
                     print(f"{new_service.service_id=}, {new_service.name=}")
-                    # self.shipment.CNFG.service_id = new_service.service_id
-                    # self.shipment.shippingServiceName = new_service.name
                     self.process_shipment(shipment, service=new_service)
                 else:
                     print("Bad input")
@@ -395,36 +386,6 @@ class Shipment:
 
         return address
 
-    #
-    # def address_script(self, address=None):
-    #     """a script to confirm a proper address has been selected
-    #     searches dbay using postcode and building number / firstline
-    #     if first result is not suitable lists addresses at given postcode
-    #     if none are suitable takes new postcode as input
-    #
-    #     once selected, address is presented to user for amendment and/or confirmation
-    #
-    #     :return: address:
-    #     """
-    #     if address is None:
-    #         if address_from_search := self.address_from_postcode_and_string(
-    #                 postcode=self.deliveryPostcode):  # walrus assigns and checks
-    #             address = address_from_search
-    #         else:
-    #             address = self.address_from_postcode_candidates(postcode=self.deliveryPostcode)
-    #
-    #     address = self.check_address(address)  # displays address to user
-    #     address_decision = input(f"\n[G]et new address or [A]mend current address, anything else to continue\n\n")
-    #     if address_decision:
-    #         address_decision = str(address_decision)[0].lower()
-    #         if address_decision == "a":
-    #             address = self.amend_address(address)
-    #         elif address_decision == "g":
-    #             address = self.address_from_postcode_candidates(address.postal_code)
-    #             self.address_script(address)
-    #
-    #     return address
-
     def address_from_postcode_and_string(self, postcode: str = None, search_string: str = None):
         """
         validates a postcode and search_string against despatchbay address database
@@ -727,7 +688,7 @@ class Shipment:
 
     def print_shipment_to_screen(self):
         print(
-            f"\n {LINE} \n {self.customer} | {self.boxes} | {self.address.street} | {self.date.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes} \n {LINE} \n")
+            f"\n {LINE} \n {self.customer} | {self.boxes} | {self.address.street} | {self.date.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes:2f} \n {LINE} \n")
 
     def log_tracking(self):
         """
@@ -791,10 +752,9 @@ class Config:
         # get root dir
         # PyInstaller sets sys._MEIPASS to the path of the executable
         if getattr(sys, 'frozen', False):
-            self.root = pathlib.Path(sys._MEIPASS) # pyinstaller voodoo -  ignore intellisense
+            self.root = pathlib.Path(sys._MEIPASS)  # pyinstaller voodoo -  ignore intellisense
         else:
             self.root = pathlib.Path.cwd()
-
 
         self.data_dir = self.root / 'data'
         self.scripts_dir = self.root / 'scripts'
@@ -826,7 +786,6 @@ class Config:
         if DEBUG:
             print(f"{self.root=}")
             print(f"{self.cmcLibNet_installer=}")
-
 
         # parse shipmode argument and setup despatchbay API keys from .env
         if ship_mode == "sand":
