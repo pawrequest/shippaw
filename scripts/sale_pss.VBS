@@ -389,25 +389,25 @@ Sub Form_OnClick(ControlId)
 
         Case "CommandButton3"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                AmDespShip("C:\AmDesp\data\AmShip.xml")
+                AmDespShip()
             End if
     End Select
 
 End Sub
- 
+
 '****************  pss-sub ***********************'
 
 
 
-Sub AmDespShip(xmlfile)
+Sub AmDespShip()
         ' AmDesp'
 
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        locAmDesp = "c:\AmDesp"
+        locAmDesp = "c:\AmDesp\"
         exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
         ExportItemDetailForm(locXml)
 
         strCommand = exeAmDesp & " prod " & locXml
