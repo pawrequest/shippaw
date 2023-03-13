@@ -23,7 +23,7 @@ If ($cursor.Filters.Apply() = 0){
     $ed_index = $ed.GetColumnIndex("Tracking Numbers")
     $ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
     $ed.Commit()
-    "I just edited commence tracking numbers"
+    "I just edited commence tracking numbers for $ref_name"
 }
 Else{
     "MULTIPLE RECORDS RETURNED"

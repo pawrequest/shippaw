@@ -31,8 +31,8 @@ class Utility:
                                         universal_newlines=True)  # CALL PROCESS
         if 'debug' in params:
             print(f"{commandline_options=}")
-        print(f"{process_result.stdout=}")  # PRINT STANDARD OUTPUT FROM POWERSHELL
-        print(f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
+            print(f"{process_result.stdout=}")  # PRINT STANDARD OUTPUT FROM POWERSHELL
+            print(f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
         return process_result.returncode
 
 

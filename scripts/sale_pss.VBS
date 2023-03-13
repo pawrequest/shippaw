@@ -397,19 +397,29 @@ End Sub
  
 '****************  pss-sub ***********************'
 
+
+
 Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim amdesp_exe, commence_wrapper
-        amdesp_exe = "C:\AmDesp\AmDesp.exe"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand
-        Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = amdesp_exe & "sand" & xmlfile
-        oShell.run currentCommand,1,true
-        set oShell = nothing
+
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
+        Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+        locAmDesp = "c:\AmDesp"
+        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
+        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        ExportItemDetailForm(locXml)
+
+'         strCommand = "amdesp.exe sand " & xmlfile
+        strCommand = exeAmDesp & " sand " & locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        objShell.CurrentDirectory = locAmDesp
+
+        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
+        set objShell = nothing
 End Sub
-' backup going exe'
+'
+' backup, moving to exe'
 ' Sub AmDespShip(xmlfile)
 '         ' AmDesp'
 '         Dim python_exe, python_script, commence_wrapper, str_error
@@ -425,8 +435,27 @@ End Sub
 ' End Sub
 
 
+'
+' Sub GetTrack()
+' Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
+'
+' ref_num = Form.Field("Reference Number").value
+' psScript = "C:\AmDesp\vbs\get_track.ps1"
+' strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
+'
+' Set WshShell = CreateObject("WScript.Shell")
+'
+' Set WshShellExec = WshShell.Exec(strCommand)
+' strOutput = WshShellExec.StdOut.ReadAll()
+' ' WScript.Echo "Python returned: " & strOutput
+' ' WScript.Echo "Exec status: " & WshShellExec.Status
+' MsgBox strOutput
+' End Sub
+'
 
-Sub ExportItemDetailForm(ByVal XmlFilePath)
+'**************** arno+ pss function to export item fields to xml  ***********'
+
+Sub ExportItemDetailForm(ByVal strPath)
 
     Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
     Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
@@ -482,7 +511,7 @@ Sub ExportItemDetailForm(ByVal XmlFilePath)
     Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
     el.text = sanitizeXMLString(connect.ItemName)
     Set el = xmlDoc.createElement("ToCategory")
-    xmlDoc.Save XmlFilePath
+    xmlDoc.Save strPath
 
 
     Set xmlDoc = Nothing
@@ -499,6 +528,7 @@ Sub ExportItemDetailForm(ByVal XmlFilePath)
 
 
 End Sub
+
 
 public Function sanitizeXMLString(invalidString)
 ' used to cleanup strings which interfere with xml format - AmDesp python reverses this'

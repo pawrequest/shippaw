@@ -1,24 +1,21 @@
 import json
 import os
 import pathlib
-import subprocess
-import sys
-import tomllib
 from sys import exit
 import xml.etree.ElementTree as ET
 from datetime import datetime, date
 from pprint import pprint
-
 from dateutil.parser import parse
 
 from python.despatchbay.despatchbay_sdk import DespatchBaySDK
 from python.utils_pss.utils_pss import toCamel, unsanitise, Utility
+
 import dotenv
 
 dotenv.load_dotenv()
 
-# FIELD_CONFIG = 'FIELD_CONFIG'
 LINE = '-' * 100
+TABBER = "\t\t"
 DEBUG = True
 DT_DISPLAY = '%A - %B %#d'
 DT_HIRE = '%d/%m/%Y'
@@ -33,6 +30,9 @@ class ShippingApp:
         # todo cnlear config refs to xmlfile
 
     def run(self, xmlfile):
+        # debug hacky xml insertion for restart
+        if xmlfile is None:
+            xmlfile = self.CNFG.data_dir / 'Amship.xml'
         shipment = self.prepare_shipment(xmlfile)
         self.process_shipment(shipment)
 
@@ -41,7 +41,7 @@ class ShippingApp:
         shipment = Shipment(ship_dict,
                             self.CNFG)  # creates shipment-obj from ship_dict, passes config object for dbay client etc
         shipment.boxes = shipment.boxes_script()  # checks if there are boxes on the shipment, prompts input and confirmation
-        shipment.dateObject = shipment.date_script()  # checks collection is available on the sending date, prompts confirmation
+        shipment.date = shipment.date_script()  # checks collection is available on the sending date, prompts confirmation
         shipment.address = shipment.address_script()  # checks provided address against dbay for user confirmation / amendment
         return shipment
 
@@ -60,12 +60,15 @@ class ShippingApp:
             shipment.desp_shipment_id = client.add_shipment(shipment.shipmentRequest)  # add to dbay queue
             shipment.book_collection()  # book collection
             shipment.print_label()  # download and print pdf (requires correct windows default pdf handler eg sumatra)
-            shipment.log_tracking()  # get tracking data and log it to commence db
+            if shipment.category == 'Customer':
+                print("Nowhere to log tracking for customer entries")
+            else:
+                shipment.log_tracking()  # get tracking data and log it to commence db
             shipment.log_json()  # log shipment and outcome to json
             exit()
 
         elif decision == "RESTART":
-            self.run()
+            self.run(xmlfile=None)
 
         elif decision == "EXIT":
             exit()
@@ -84,7 +87,7 @@ class ShippingApp:
                     print(f"{new_service.service_id=}, {new_service.name=}")
                     # self.shipment.CNFG.service_id = new_service.service_id
                     # self.shipment.shippingServiceName = new_service.name
-                    self.process_shipment(new_service)
+                    self.process_shipment(shipment, service=new_service)
                 else:
                     print("Bad input")
                 continue
@@ -127,6 +130,8 @@ class ShippingApp:
             ship_dict['send Out Date'] = datetime.today().strftime(
                 DT_HIRE)  # sets send_date to a string of today formatted like hire
             ship_dict['delivery tel'] = ship_dict['Deliv Telephone']
+            # ship_dict.update({'Name':ship_dict['Name']+f"{datetime.now():{DT_EXPORT}}"})
+            ship_dict['Name'] += f" {datetime.now():{DT_EXPORT}}"
 
         elif category == "Sale":
             customer = root[0][3].text  # debug
@@ -192,8 +197,6 @@ class ShippingApp:
         return newdict
 
 
-
-
 class Shipment:
     def __init__(self, ship_dict, CNFG, reference=None,
                  label_text=None):
@@ -204,11 +207,13 @@ class Shipment:
         :param label_text:
         """
 
+        self.desp_shipment_id = None
         self.CNFG = CNFG
         self.sender = CNFG.client.sender(address_id=CNFG.sender_id)
         self.available_dates = CNFG.client.get_available_collection_dates(self.sender,
                                                                           CNFG.courier_id)  # get dates
         ## mandatory shipment details
+
         try:
 
             self.deliveryContact = ship_dict['deliveryContact']
@@ -224,38 +229,23 @@ class Shipment:
             if DEBUG:
                 print(f"{self.shipmentName=}")
 
-        except KeyError:
-            print("Key error - something missing from shipdict")
+        except KeyError as e:
+            print(f"Key error - something missing from shipdict \n{e}")
+            if not self.deliveryTel:
+                self.deliveryTel = input("Enter Delivery Phone Number")
 
         if label_text:
             self.label_text = label_text
         else:
             self.label_text = self.customer
 
-        ## obtained shipment details
-        # self.deliveryBuildingNum = None
-        # self.deliveryFirstline = None
         self.parcels = None
-
         self.collectionBooked = False
-        # self.shipmentDocId = None
-        # self.labelUrl = None
-        # self.labelDownloaded = False
         self.labelLocation = None
-        # self.printed = False
         self.shippingServiceName = None
-
         self.shippingCost = None
         self.trackingNumbers = None
-
-        # DespatchBay Objects
-
-        # self.desp_shipment_id = None
-        self.address = ship_dict['deliveryAddress']
-        self.dateObject = None
-        # self.shipmentRequest = None
-        # self.shipmentReturn = None
-        # self.recipient = None
+        self.date = None
 
         if DEBUG:
             print(f"Shipment with {self.shipmentName=}")
@@ -287,15 +277,16 @@ class Shipment:
             if boxes == 0:
                 boxes = 1
             ui = input(
-                f"\n {boxes}  box(es) assigned for {self.customer} \n \n Enter a number to adjust, anything else to continue\n")
+                f"{TABBER} {boxes} box(es) assigned for {self.customer}"
+                f" \n \nEnter a number to adjust, anything else to continue\n")
             if ui.isnumeric():
                 print(f"Shipment updated to {ui} boxes")
                 boxes = int(ui)
 
             # backdoor to checkin vbs scripts to commence via powershell and cmclibnet
             if str(ui) == "check":
-                categories=input("Categories?")
-                categories=categories.split()
+                categories = input("Categories?")
+                categories = categories.split()
                 for category in categories:
                     Utility.powershell_runner(str(self.CNFG.cmc_checkin), category)
 
@@ -304,7 +295,7 @@ class Shipment:
 
         else:
             while True:
-                print("\n\t\t*** ERROR: No boxes added ***\n")
+                print(f"\n{TABBER}*** ERROR: No boxes added ***\n")
                 ui = input(f"- How many boxes for shipment to {self.customer}?\n")
                 if not ui.isnumeric():
                     print("- Enter a number")
@@ -328,7 +319,8 @@ class Shipment:
             potential_date_str = str(potential_collection_date.date)
             if potential_date_str == send_date:
                 dateObject = potential_collection_date
-                day = datetime.strftime(potential_collection_date, DT_DISPLAY)
+                day = parse(potential_collection_date.date)
+                day = datetime.strftime(day, DT_DISPLAY)
                 print(f"Collection date match - shipment for {self.customer} will be collected on {day}\n", LINE)
                 if not force:  # else continue to user input loop
                     return dateObject
@@ -340,11 +332,11 @@ class Shipment:
             for count, date in enumerate(available_dates, 1):  # 1 index
                 dt = parse(date.date)
                 out = datetime.strftime(dt, DT_DISPLAY)
-                print("\t\t", count, "|", out)
+                print(f"{TABBER} {count} | {out}")
 
             # get input
             choice = input(
-                f'\n- [Enter] to select {datetime.strftime(parse(available_dates[0].date), DT_DISPLAY)}, [A Number] to choose a date, [0] to exit\n')
+                f'\n- [Enter] for asap ({datetime.strftime(parse(available_dates[0].date), DT_DISPLAY)}), [A Number] to choose a date, [0] to exit\n')
 
             if not choice:  # enter to select first available (still 1 index)
                 choice = 1
@@ -364,7 +356,7 @@ class Shipment:
                     exit()
 
         dateObject = available_dates[choice - 1]  # 1 index
-        print("\t\tCollection date for", self.customer, "is now ", dateObject.date, "\n\n",
+        print(f"{TABBER} Collection date for", self.customer, "is now ", dateObject.date, "\n\n",
               LINE)
         return dateObject
 
@@ -449,7 +441,6 @@ class Shipment:
             search_string = input("Enter Search String")
 
         try:
-            print(f"Searching: {postcode=}, {search_string=}")
             address = self.CNFG.client.find_address(postcode, search_string)
         except:
             print("No address match found - go list from postcode")
@@ -528,11 +519,11 @@ class Shipment:
 
         address_vars = self.CNFG.db_address_fields  # get a list of vars considered 'address' from cnfg
 
-        print(f"current address: \n")
         while True:
+            print(f"current address: \n")
             # print each attribute of the address object with a 1-indexed identifier
             for c, var in enumerate(address_vars, start=1):
-                print(f"{c} - {var} = {getattr(address, var)}")
+                print(f"{TABBER} {c} - {var} = {getattr(address, var)}")
 
             # get user selection
             ui = input("\n [Enter] to continue or a number to edit the field\n")
@@ -582,15 +573,15 @@ class Shipment:
             # print address fields of shipment-obj to the screen
             filtered_address_fields = {k: v for k, v in vars(address).items() if k in self.CNFG.db_address_fields}
             print("Current address details:\n")
-            print(
-                f'{chr(10).join(f"{k}: {v}" for k, v in filtered_address_fields.items())}')  # chr(10) is newline (no \ allowed in fstrings)
+
+            print(f'{os.linesep.join(f"{TABBER}{k}: {v}" for k, v in filtered_address_fields.items())}')
 
             # offer to replace None company name with customer name
             if address.company_name is None:
-                ui = input(f"\n \n Replace 'None' Company Name with {self.customer}? [Y / N]\n")
+                ui = input(f"\n \nReplace 'None' Company Name with {self.customer}? [Y / N]\n")
                 if not ui or str(ui[0]).lower() == 'y':
                     address.company_name = self.customer
-                    print("Company Name updated")
+                    print(f"{TABBER} Company Name updated")
                 else:
                     print("Keep company 'None'")
             self.address = address
@@ -676,13 +667,13 @@ class Shipment:
         shipmentRequest = client.shipment_request(
             parcels=self.parcels,
             client_reference=self.label_text,
-            collection_date=self.dateObject.date,
+            collection_date=self.date.date,
             sender_address=self.sender,
             recipient_address=recipient,
             follow_shipment='true',
             service_id=self.CNFG.service_id
         )
-        shipmentRequest.collection_date = self.dateObject.date
+        shipmentRequest.collection_date = self.date.date
 
         services = client.get_available_services(shipmentRequest)
         if services[0].service_id != self.CNFG.service_id:
@@ -693,48 +684,46 @@ class Shipment:
         else:
             self.shippingServiceName = services[0].name
             self.shippingCost = services[0].cost
-
+        self.services = services
         self.shipmentRequest = shipmentRequest
 
     def book_collection(self):
         if DEBUG: print("func = BOOK_COLLECTION \n")
         client = self.CNFG.client
 
-        shipment_return = client.book_shipments(self.desp_shipment_id)[0]  # debug there could be more than one here!
+        # book collection
+        shipment_return = client.book_shipments(self.desp_shipment_id)[0]  # debug there could be more than one here??
+        self.collectionBooked = True
 
+        # save label
         label_pdf = client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
         try:
-            label_string = f"{self.customer} - {str(self.dateObject.date)}.pdf"
+            label_string = f"{self.customer} - {str(self.date.date)}.pdf"
         except:
             label_string = f"{self.customer}.pdf"
         label_pdf.download(self.CNFG.label_dir / label_string)
+        self.labelLocation = str(self.CNFG.label_dir / label_string)
+
+        # save tracking numbers
         self.trackingNumbers = []
         for parcel in shipment_return.parcels:
             self.trackingNumbers.append(parcel.tracking_number)
 
-        # self.shipmentReturn = shipment_return #debug why save this?
-        self.shipmentDocId = shipment_return.shipment_document_id
-        self.labelUrl = shipment_return.labels_url
-        # self.parcels = shipment_return.parcels #debug why save?
-        self.labelLocation = str(self.CNFG.label_dir / label_string)
-        # self.print_label() #debug printing as a seperate method call in process shipment script
-        self.collectionBooked = True
-        self.labelDownloaded = True
-        nl = "\n"  # AmDesp_python voodoo to newline in fstring
         print(
-            f"\n Collection has been booked for {self.customer} on {self.dateObject.date} \n Label downloaded to {self.labelLocation}.")
+            f"\nCollection has been booked for {self.customer} on {self.date.date} "
+            f"\nLabel downloaded to {self.labelLocation}.")
         return True
 
     def print_label(self):
         try:
             os.startfile(self.labelLocation, "print")
         except OSError:
-            print("\nERROR: Unable to print\n  -   no default PDF application selected in Windows")
+            print("\nERROR: Unable to print\n  -   is default PDF application selected in Windows?")
         self.printed = True
 
     def print_shipment_to_screen(self):
         print(
-            f"\n {LINE} \n {self.customer} | {self.boxes} | {self.address.street} | {self.dateObject.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes} \n {LINE} \n")
+            f"\n {LINE} \n {self.customer} | {self.boxes} | {self.address.street} | {self.date.date} | {self.shippingServiceName} | Price = {self.shippingCost * self.boxes} \n {LINE} \n")
 
     def log_tracking(self):
         """
@@ -745,10 +734,9 @@ class Shipment:
         cmcLibpath = self.CNFG.cmc_lib_net_dll
         tracking_nums = ', '.join(self.trackingNumbers)
         ps_script = str(self.CNFG.log_to_commence_powershell_script)
-
         try:  # utility class static method runs powershell script bypassing execuction policy
             commence_edit = Utility.powershell_runner(ps_script, self.shipmentName, tracking_nums,
-                                                      self.category, 'debug' if DEBUG else None)
+                                                      self.category)
             if DEBUG:
                 print(f"{commence_edit=}")
 
@@ -759,6 +747,8 @@ class Shipment:
                 print("  -   Powershell script missing")
             if not os.path.exists(cmcLibpath):
                 print("  -   Vovin CmCLibNet missing")
+        else:
+            print("\nCommence Tracking updated")
 
     def log_json(self):
         # export from object attrs
@@ -772,10 +762,12 @@ class Shipment:
             else:
                 print(f"{field} not found in shipment")
         export_dict.update({"timestamp": datetime.now().isoformat(' ', timespec='seconds')})
+        export_dict.update({"dispatch_address": f"{self.address.postal_code}-{self.address.street}"})
         with open(self.CNFG.log_file, 'a') as f:
             json.dump(export_dict, f, sort_keys=True)
             f.write(",\n")
-            pprint(f"\n Json exported to {self.CNFG.log_file} \n{export_dict =}")
+        print(f"{os.linesep} Json exported to {self.CNFG.log_file}:")
+        pprint(export_dict)
 
 
 class Config:
@@ -783,17 +775,15 @@ class Config:
 
         # fields
         self.export_fields = ['customer', 'shipmentName', 'deliveryContact', 'deliveryTel',
-                              'deliveryEmail',
-                              'deliveryAddress', 'deliveryPostcode', 'sendOutDate', 'referenceNumber',
-                              'trackingNumbers', 'desp_shipment_id', 'boxes', 'collectionBooked', 'shipRef',
+                              'deliveryEmail', 'trackingNumbers', 'desp_shipment_id', 'boxes', 'collectionBooked',
                               'category']  # debug 'deliveryName',
         self.shipment_fields = ['deliveryContact', 'deliveryTel', 'deliveryEmail',
-                                'deliveryAddress', 'deliveryPostcode', 'sendOutDate', 'referenceNumber',
+                                'deliveryAddress', 'deliveryPostcode', 'sendOutDate',
                                 'category', 'shipmentName']  # debug 'deliveryName',
         self.db_address_fields = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
 
         # paths
-        self.root = pathlib.Path.cwd()
+        self.root = pathlib.Path('/Amdesp')
         self.data_dir = self.root / 'data'
         self.label_dir = self.data_dir / 'Parcelforce Labels'
         self.log_file = self.data_dir / 'AmLog.json'

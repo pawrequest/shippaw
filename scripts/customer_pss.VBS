@@ -207,17 +207,25 @@ Form.Field("All Address").Value = addstring
 
 End Sub
 
+
+
 Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim amdesp_exe, commence_wrapper
-        amdesp_exe = "C:\AmDesp\AmDesp.exe"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand
-        Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = amdesp_exe & "prod" & xmlfile
-        oShell.run currentCommand,1,true
-        set oShell = nothing
+
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
+        Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+        locAmDesp = "c:\AmDesp"
+        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
+        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        ExportItemDetailForm(locXml)
+
+        strCommand = exeAmDesp & " sand " & locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        objShell.CurrentDirectory = locAmDesp
+
+        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
+        set objShell = nothing
 End Sub
 
 

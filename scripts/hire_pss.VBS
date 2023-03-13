@@ -1123,18 +1123,22 @@ End Sub
 
 Sub AmDespShip(xmlfile)
         ' AmDesp'
-        Dim amdesp_exe
-        amdesp_exe = "C:\AmDesp\AmDesp.exe"
 
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, strCommand
-        Set oShell = CreateObject("Wscript.Shell")
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
+        Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        strCommand = amdesp_exe & " 'sand' " & xmlfile
-        msgbox strCommand
-        oShell.run strCommand,1,true
+        locAmDesp = "c:\AmDesp"
+        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
+        locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
+        ExportItemDetailForm(locXml)
 
-        set oShell = nothing
+'         strCommand = "amdesp.exe sand " & xmlfile
+        strCommand = exeAmDesp & " sand " & locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        objShell.CurrentDirectory = locAmDesp
+
+        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
+        set objShell = nothing
 End Sub
 '
 ' backup, moving to exe'
