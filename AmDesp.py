@@ -1,7 +1,6 @@
 import sys
-
-from python.AmDespShipper import ShippingApp
-
+import os
+from py_code.AmDespShipper import ShippingApp
 def shipper(ship_mode, xmlfile):
     app = ShippingApp(ship_mode)
     app.run(xmlfile)

@@ -17,6 +17,7 @@ $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field
 $filter.FieldName = "Name"
 $filter.FieldValue = $ref_name
 $filter.Qualifier = "EqualTo"
+
 If ($cursor.Filters.Apply() = 0){
     # edit and write to db
     $ed = $cursor.GetEditRowSet()
@@ -24,6 +25,12 @@ If ($cursor.Filters.Apply() = 0){
     $ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
     $ed.Commit()
     "I just edited commence tracking numbers for $ref_name"
+
+    $ed_index = $ed.GetColumnIndex("DB label printed")
+    $ed.ModifyRow(0, $ed_index, $true, 0)
+
+    $ed.Commit()
+
 }
 Else{
     "MULTIPLE RECORDS RETURNED"
@@ -32,3 +39,10 @@ Else{
 $db.Close()
 
 # add set db printed = true
+#
+#  $ed2 = $cursor.GetEditRowSet()
+#    $ed2_index = $ed2.GetColumnIndex("DB label printed")
+#    $ed2.ModifyRow(0, $ed2_index, 1, 0)
+#    $ed2.Commit()
+#    "Set DB Printed = True"
+ #>

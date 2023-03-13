@@ -12,10 +12,10 @@ added_files = [
 
 a = Analysis(
     ['AmDesp.py'],
-    pathex=[],
+    pathex=['E:\\dev\\AmDesp'],
     binaries=[],
     datas=added_files,
-    hiddenimports=[],
+    hiddenimports=[''],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
