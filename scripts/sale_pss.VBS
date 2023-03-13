@@ -410,48 +410,13 @@ Sub AmDespShip(xmlfile)
         locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
         ExportItemDetailForm(locXml)
 
-'         strCommand = "amdesp.exe sand " & xmlfile
-        strCommand = exeAmDesp & " sand " & locXml
+        strCommand = exeAmDesp & " prod " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
-        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
+        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
         set objShell = nothing
 End Sub
-'
-' backup, moving to exe'
-' Sub AmDespShip(xmlfile)
-'         ' AmDesp'
-'         Dim python_exe, python_script, commence_wrapper, str_error
-' '         python_exe = "C:\AmDesp\dist\python.exe"
-'         python_script = "C:\AmDesp\AmDesp.py"
-'         commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-'         ExportItemDetailForm(xmlfile)
-'         Dim oShell, currentCommand, my_command
-'         Set oShell = CreateObject("Wscript.Shell")
-'         currentCommand = "cmd /k python " & python_script & " " & xmlfile & Chr(34)
-'         oShell.run currentCommand,1,true
-'         set oShell = nothing
-' End Sub
-
-
-'
-' Sub GetTrack()
-' Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
-'
-' ref_num = Form.Field("Reference Number").value
-' psScript = "C:\AmDesp\vbs\get_track.ps1"
-' strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
-'
-' Set WshShell = CreateObject("WScript.Shell")
-'
-' Set WshShellExec = WshShell.Exec(strCommand)
-' strOutput = WshShellExec.StdOut.ReadAll()
-' ' WScript.Echo "Python returned: " & strOutput
-' ' WScript.Echo "Exec status: " & WshShellExec.Status
-' MsgBox strOutput
-' End Sub
-'
 
 '**************** arno+ pss function to export item fields to xml  ***********'
 

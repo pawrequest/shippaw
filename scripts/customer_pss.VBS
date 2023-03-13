@@ -220,11 +220,11 @@ Sub AmDespShip(xmlfile)
         locXml = objFSO.BuildPath(locAmDesp, "AmShip.xml")
         ExportItemDetailForm(locXml)
 
-        strCommand = exeAmDesp & " sand " & locXml
+        strCommand = exeAmDesp & " prod " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
-        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
+        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
         set objShell = nothing
 End Sub
 
