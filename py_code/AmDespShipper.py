@@ -750,11 +750,13 @@ class Config:
         # paths
 
         # get root dir
+
         # PyInstaller sets sys._MEIPASS to the path of the executable
         if getattr(sys, 'frozen', False):
             self.root = pathlib.Path(sys._MEIPASS)  # pyinstaller voodoo -  ignore intellisense
         else:
             self.root = pathlib.Path.cwd()
+
 
         self.data_dir = self.root / 'data'
         self.scripts_dir = self.root / 'scripts'
@@ -846,3 +848,5 @@ class Config:
         services = self.client.get_available_services(shipment_request)
         for service in services:
             print(f"{service.service_id} - {service.name}")
+
+os.path.expandvars()

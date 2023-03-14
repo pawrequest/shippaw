@@ -1,0 +1,105 @@
+[fields]
+export_fields = ['customer', 'shipmentName', 'deliveryContact', 'deliveryTel',
+                      'deliveryEmail', 'trackingNumbers', 'desp_shipment_id', 'boxes', 'collectionBooked',
+                      'category']  # debug 'deliveryName',
+shipment_fields = ['deliveryContact', 'deliveryTel', 'deliveryEmail',
+                        'deliveryAddress', 'deliveryPostcode', 'sendOutDate',
+                        'category', 'shipmentName']  # debug 'deliveryName',
+db_address_fields = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
+
+#        # PyInstaller sets sys._MEIPASS to the path of the executable
+#        if getattr(sys, 'frozen', False):
+#            self.root = pathlib.Path(sys._MEIPASS)  # pyinstaller voodoo -  ignore intellisense
+#        else:
+#            self.root = pathlib.Path.cwd()
+root_dir = '$home/AmDesp'
+data_dir = root_dir / 'data'
+        self.scripts_dir = self.root / 'scripts'
+        self.label_dir = self.data_dir / 'Parcelforce Labels'
+        self.log_file = self.data_dir / 'AmLog.json'
+        self.label_dir.mkdir(parents=True, exist_ok=True)
+
+        # Vovin CmcLibNet files for interacting with Commence DB:
+        # powershell to check scripts into commence (backdoor = 'check' at first prompt, then category names)
+        self.cmc_checkin = self.scripts_dir / 'cmc_checkin.ps1'
+        # powershell to log tracking details
+        self.log_to_commence_powershell_script = self.scripts_dir / 'log_tracking_to_Commence.ps1'
+        self.cmc_lib_net_dll = pathlib.Path('c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll')
+        self.cmcLibNet_installer = self.root / 'CmcLibNet_Setup.exe'
+        if not self.cmc_lib_net_dll.exists():
+            print(
+                "ERROR: Vovin CmCLibNet is not installed in expected location 'Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'")
+            if self.cmcLibNet_installer.exists():
+                print("Launching CmcLibNet installer")
+                if os.startfile(self.cmcLibNet_installer):
+                    print("CmcLib Installed")
+                else:
+                    print("ERROR: CmcLibNet Installer Failed - logging to commence is impossible")
+            else:  # no installer
+                print(
+                    "\n ERROR: CmcLinNet installer missing from '/dist' \nPlease download Installer from https://github.com/arnovb-github/CmcLibNet/releases and install to default program files location"
+                    "\n Logging to Commence is impossible")
+
+        if DEBUG:
+            print(f"{self.root=}")
+            print(f"{self.cmcLibNet_installer=}")
+
+        # parse shipmode argument and setup despatchbay API keys from .env
+        if ship_mode == "sand":
+            print("\n \n \n *** !!! SANDBOX MODE !!! *** \n \n \n")
+            api_user = os.getenv("DESPATCH_API_USER_SANDBOX")
+            api_key = os.getenv("DESPATCH_API_KEY_SANDBOX")
+            self.courier_id = 99
+            self.service_id = 9992
+        elif ship_mode == 'prod':
+            api_user = os.getenv("DESPATCH_API_USER")
+            api_key = os.getenv("DESPATCH_API_KEY")
+            self.courier_id = 8  # parcelforce
+            self.service_id = 101  # parcelforce 24
+
+        else:
+            print("SHIPMODE FAULT - EXIT")
+            exit()
+
+        self.sender_id = os.getenv("DESPATCH_SENDER_ID")
+        self.client = DespatchBaySDK(api_user=api_user, api_key=api_key)
+        self.sender = self.client.sender(address_id=self.sender_id)
+
+    def check_in_vbs(self, category):
+        ...
+
+    def fake_ship_request(self):
+        """ for getting available serivces etc"""
+
+        recip_add = self.client.address(
+            company_name='noname',
+            country_code="GB",
+            county="London",
+            locality='London',
+            postal_code='nw64te',
+            town_city="london",
+            street="72 kingsgate road"
+        )
+        recip = self.client.recipient(
+            name="fakename",
+            recipient_address=recip_add)
+
+        # sandy
+        shippy = self.client.shipment_request(
+            parcels=[self.client.parcel(
+                contents="Radios",
+                value=500,
+                weight=6,
+                length=60,
+                width=40,
+                height=40,
+            )],
+            collection_date=f"{date.today():%Y-%m-%d}",
+            sender_address=self.sender,
+            recipient_address=recip)
+        return shippy
+
+    def list_services(self, shipment_request):
+        services = self.client.get_available_services(shipment_request)
+        for service in services:
+            print(f"{service.service_id} - {service.name}")
