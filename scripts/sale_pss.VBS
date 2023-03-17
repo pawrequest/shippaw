@@ -388,9 +388,17 @@ Sub Form_OnClick(ControlId)
     Select Case ControlId
 
         Case "CommandButton3"
-            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                AmDespShip()
+            if MsgBox("Launch AmDesp to ship sale?",4) =6 Then
+                AmDesp("prod")
             End if
+        Case "CommandButton4"
+            if MsgBox("Launch Amdesp to track shipment?",4) = 6 Then
+                AmDesp("track")
+            end if
+        Case "CommandButton5"
+            if MsgBox("Launch Amdesp to create a return from the delivery address??",4) = 6 Then
+                AmDesp("create_return")
+            end if
     End Select
 
 End Sub
@@ -399,22 +407,22 @@ End Sub
 
 
 
-Sub AmDespShip()
+Sub AmDesp(mode)
         ' AmDesp'
 
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
         locAmDesp = "C:\AmDesp\"
-        exeAmDesp = "C:\AmDesp\AmDesp.exe"
+        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
         locXml = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(locXml)
 
-        strCommand = exeAmDesp & " prod " & locXml
+        strCommand = exeAmDesp & " " & mode & " " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
-        objShell.run "%comspec% /k " & strCommand,1,false ' 1= activate window false = don't wait
+        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
         set objShell = nothing
 End Sub
 

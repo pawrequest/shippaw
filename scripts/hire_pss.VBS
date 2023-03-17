@@ -876,9 +876,6 @@ Sub Form_OnClick(ControlId)
 				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
 			End If
 
-        Case "CommandButton15"
-        ' get track'
-            GetTrack()
 
 		Case "CommandButton16"
 			' this button inserts the description "Absolutely car/van" into the Send Method field
@@ -901,29 +898,50 @@ Sub Form_OnClick(ControlId)
 '*************************************************************************'
 '******************  pss_buttons *****************************************'
 
+        Case "CommandButton21"
+       'Amdesp Shipping Outbound'
+            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
+                AmDesp("ship_out")
+            End if
+
+        Case "CommandButton25"
+       'Amdesp Shipping Inbound'
+            if MsgBox("Launch AmDesp to create return?",4) =6 Then
+                AmDesp("ship_in")
+            End if
+
+        Case "CommandButton15"
+       'Amdesp Tracking Outbound'
+            if MsgBox("Launch AmDesp to track hire?",4) =6 Then
+                AmDesp("track_out")
+            End if
+
+        Case "CommandButton24"
+       'Amdesp Tracking Inbound'
+            if MsgBox("Launch AmDesp to track hire?",4) =6 Then
+                AmDesp("track_in")
+            End if
+
+       'Amdesp Tracking Inbound'
+
+
+        ' packing and unpacking hires'
         Case "CommandButton19"
             PackHire()
-
-
-        Case "CommandButton20"
-            UnpackHire()
-
-        Case "CommandButton21"
-            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-                AmDespShip()
-            End if
-
-        Case "CommandButton22"
-        ' Email customer about missing kit
-            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
-                EmailMissingKit()
-            End if
-
         Case "CommandButton23"
         ' Send upcoming hire email'
             if MsgBox("Send email about upcoming shipment?",4) = 6 Then
                 EmailSendOut()
            End if
+
+        Case "CommandButton20"
+            UnpackHire()
+
+
+
+
+
+
 
 
 
@@ -932,6 +950,25 @@ End Sub
 
 
 '***************** pss funcs *******************'
+
+Sub AmDesp(mode)
+        ' AmDesp'
+
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
+        Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+        locAmDesp = "C:\AmDesp\"
+        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
+        locXml = "C:\AmDesp\data\AmShip.xml"
+        ExportItemDetailForm(locXml)
+
+        strCommand = exeAmDesp & " " & mode & " " & locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        objShell.CurrentDirectory = locAmDesp
+
+        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
+        set objShell = nothing
+End Sub
 
 Sub PackHire()
         Dim packedBy
@@ -948,7 +985,7 @@ Sub PackHire()
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             If Form.Field("DB label printed").Value = 0 Then
                 if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                    AmDespShip()
+                    AmDesp(ship_out)
                 End if
             Else MsgBox ("DB already printed so i wont launch AmDesp")
             End if
@@ -1121,25 +1158,6 @@ Sub EmailMissingKit()
 
 End Sub
 
-
-Sub AmDespShip()
-        ' AmDesp'
-
-        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
-        Set objFSO = CreateObject("Scripting.FileSystemObject")
-
-        locAmDesp = "c:\AmDesp\"
-        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
-        ExportItemDetailForm(locXml)
-
-        strCommand = exeAmDesp & " prod " & locXml
-        Set objShell = CreateObject("Wscript.Shell")
-        objShell.CurrentDirectory = locAmDesp
-
-        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
-        set objShell = nothing
-End Sub
 
 '**************** arno+ pss function to export item fields to xml  ***********'
 

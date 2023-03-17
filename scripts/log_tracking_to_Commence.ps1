@@ -3,9 +3,16 @@ using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-$ref_name = $args[0]
-$tracking_nums = $args[1]
-$category = $args[2]
+
+$category = $args[0]
+$ref_name = $args[1]
+$shipment_id = $args[2]
+$is_return = $args[3]
+$debug = $args[4]
+
+foreach ($arg in $args) {
+    Write-Host $arg
+}
 
 #cursor properties
 Add-Type -Path $commence_wrapper
@@ -18,17 +25,27 @@ $filter.FieldName = "Name"
 $filter.FieldValue = $ref_name
 $filter.Qualifier = "EqualTo"
 
+if ($is_return -eq 'True'){
+    Write-Host "IS RETURN IS TRUE"
+    $shipment_type = "Shipment ID Inbound"
+}
+Else {
+    Write-Host "IS RETURN IS FALSE"
+
+    $shipment_type = "Shipment ID Outbound"
+}
+Write-Host $shipment_type
+
 If ($cursor.Filters.Apply() = 0){
     # edit and write to db
     $ed = $cursor.GetEditRowSet()
-    $ed_index = $ed.GetColumnIndex("Tracking Numbers")
-    $ed.ModifyRow(0, $ed_index, $tracking_nums, 0)
-    $ed.Commit()
-    "I just edited commence tracking numbers for $ref_name"
 
     $ed_index = $ed.GetColumnIndex("DB label printed")
     $ed.ModifyRow(0, $ed_index, $true, 0)
+    $ed.commit
 
+    $ed_index = $ed.GetColumnIndex($shipment_type)
+    $ed.ModifyRow(0, $ed_index, $shipment_id, 0)
     $ed.Commit()
 
 }

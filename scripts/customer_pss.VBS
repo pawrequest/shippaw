@@ -210,18 +210,18 @@ End Sub
 
 
 
-Sub AmDespShip()
+Sub AmDesp(mode)
         ' AmDesp'
 
         Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
         Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-        locAmDesp = "c:\AmDesp\"
+        locAmDesp = "C:\AmDesp\"
         exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = objFSO.BuildPath("c:\AmDesp\data", "AmShip.xml")
+        locXml = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(locXml)
 
-        strCommand = exeAmDesp & " prod " & locXml
+        strCommand = exeAmDesp & " " & mode & " " & locXml
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
@@ -234,10 +234,32 @@ End Sub
 ' code to respond to user clicking on the various command buttons on the screen
 Sub Form_OnClick(ControlId)
     Select Case ControlId
-        Case "CommandButton1"
-            if MsgBox ("Ship to this customer via Amdesp?", 4) = 6 Then
-                AmDespShip()
+
+        Case "CommandButton3"
+            'Amdesp Shipping Outbound'
+            if MsgBox("Launch AmDesp to ship sale?",4) =6 Then
+                AmDesp("ship_out")
             End if
+
+        Case "CommandButton5"
+            'Amdesp Shipping Inbound'
+            if MsgBox("Launch AmDesp to create a return?",4) =6 Then
+                AmDesp("ship_in")
+            End if
+
+        Case "CommandButton4"
+           'Amdesp Tracking Outbound'
+            if MsgBox("Launch AmDesp to track sale?",4) =6 Then
+                AmDesp("track_out")
+            End if
+
+        Case "CommandButton6"
+           'Amdesp Tracking Inbound'
+            if MsgBox("Launch AmDesp to track sale?",4) =6 Then
+                AmDesp("track_in")
+            End if
+
+
 
 	    ' change the contents of the "Name" field to initial capitals, rest lower-case
         Case "CommandButton2"
@@ -248,7 +270,6 @@ Sub Form_OnClick(ControlId)
 	    ' strip out any intermediate blank lines in address field
 		' change the contents of the "Address" field to initial capitals, rest lower-case, unless its all CAPS
 		' this only seems to work on first line of text as of April 2019
-        Case "CommandButton4"
 		    DIM temp_address
 			temp_address = Form.Field("Address").Value
 			temp_address = PCase(temp_address, "A")

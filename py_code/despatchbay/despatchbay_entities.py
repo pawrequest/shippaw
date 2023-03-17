@@ -936,7 +936,7 @@ class ShipmentReturn(Entity):
         book_return = self.despatchbay_client.book_shipments([self.shipment_id])
         if book_return:
             self.shipment_document_id = book_return[0].shipment_document_id
-            self.collection_id = book_return[0].collection_id
+            self.collection_id = book_return[0].shipment_id_inbound
             self.collection_document_id = book_return[0].collection_document_id
             self.labels_url = book_return[0].labels_url
         return book_return[0]

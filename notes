@@ -1,0 +1,21 @@
+client:
+
+app:
+    process shipment
+
+shipment:
+    init
+    addres from postcoide and string
+    address from postcode candidates
+    make request
+    book collection
+
+config
+    init
+    fake ship request
+    list services
+
+
+
+
+put client and config in app, pass 'parent' to shipment

@@ -20,20 +20,23 @@ class DictObj:
 class Utility:
     @staticmethod
     def powershell_runner(script_path,
-                          *params):  # SCRIPT PATH = POWERSHELL SCRIPT PATH,  PARAM = POWERSHELL SCRIPT PARAMETERS ( IF ANY )
-        POWERSHELL_PATH = "powershell.exe"  # POWERSHELL EXE PATH
+                          *params):
+        POWERSHELL_PATH = "powershell.exe"
 
-        commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted',
-                               script_path]  # ADD POWERSHELL EXE AND EXECUTION POLICY TO COMMAND VARIABLE
-        for param in params:  # LOOP FOR EACH PARAMETER FROM ARRAY
-            commandline_options.append("'" + param + "'")  # APPEND YOUR FOR POWERSHELL SCRIPT
-        process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        universal_newlines=True)  # CALL PROCESS
-        if 'debug' in params:
-            print(f"{commandline_options=}")
-            print(f"{process_result.stdout=}")  # PRINT STANDARD OUTPUT FROM POWERSHELL
-            print(f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
-        return process_result.returncode
+        commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
+        for param in params:
+            commandline_options.append("'" + param + "'")
+        try:
+            process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        universal_newlines=True)
+        except Exception as e:
+            print(e)
+        else:
+            if 'debug' in params:
+                print(f"{commandline_options=}")
+                print(f"{process_result.stdout=}")  # PRINT STANDARD OUTPUT FROM POWERSHELL
+                print(f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
+            return process_result.returncode
 
 
 

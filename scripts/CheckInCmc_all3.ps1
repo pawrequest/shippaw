@@ -9,6 +9,8 @@ $categories = "hire", "sale", "customer"
 foreach ($category in $categories)
 {
     $formname = $category + '_pss'
+
+#    $vbsfile = 'E:\Dev\AmDesp\scripts\' + $formname + '.vbs' #switch for unbuilt changes
     $vbsfile = 'C:\AmDesp\scripts\' + $formname + '.vbs'
     $formchecked = $db.CheckInFormScript($category, $formname, $vbsfile)
     Write-Host $category " form checked in" is $formchecked
