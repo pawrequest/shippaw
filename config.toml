@@ -1,0 +1,36 @@
+[fields]
+export = ['recipient_address','customer', 'shipment_name', 'delivery_contact', 'delivery_tel',
+                      'delivery_email', 'shipment_id_inbound', 'shipment_id_outbound', 'parcels', 'collection_booked',
+                      'category', 'is_return', 'timestamp']
+shipment = ['search_term', 'delivery_cost','delivery_contact', 'delivery_tel', 'delivery_email',
+                        'delivery_address', 'delivery_postcode', 'send_out_date',
+                        'category', 'shipment_name', 'delivery_telephone', 'boxes', 'shipment_id_inbound', 'shipment_id_outbound']
+address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
+
+
+[[dbay]]
+[sand]
+courier = 99
+service = 9992
+api_user_keyname = "DESPATCH_API_USER_SANDBOX"
+api_key_keyname = "DESPATCH_API_KEY_SANDBOX"
+
+[prod]
+courier = 8  # parcelforce
+service = 101  # parcelforce 24
+api_user_keyname = "DESPATCH_API_USER"
+api_key_keyname = "DESPATCH_API_KEY"
+
+
+[paths]
+data = '/data/'
+scripts = 'scripts/'
+labels = 'Parcelforce Labels'
+log =  'AmLog.json'
+cmc_checkin = 'cmc_checkin.ps1'
+cmc_log = 'log_tracking_to_Commence.ps1'
+cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
+cmc_inst = 'CmcLibNet_Setup.exe'
+
+
+

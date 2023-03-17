@@ -1,2 +1,5 @@
-/data/AmShip.xml
-data/AmShip.json
+/data/
+/.env
+/dist/AmDesp/.env
+/build/
+
