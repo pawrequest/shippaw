@@ -1,21 +1,55 @@
 [fields]
-export = ['recipient_address','customer', 'shipment_name', 'delivery_contact', 'delivery_tel',
-                      'delivery_email', 'shipment_id_inbound', 'shipment_id_outbound', 'parcels', 'collection_booked',
-                      'category', 'is_return', 'timestamp']
-shipment = ['search_term', 'delivery_cost','delivery_contact', 'delivery_tel', 'delivery_email',
-                        'delivery_address', 'delivery_postcode', 'send_out_date',
-                        'category', 'shipment_name', 'delivery_telephone', 'boxes', 'shipment_id_inbound', 'shipment_id_outbound']
-address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
+export = ['category', 'collection_booked', 'customer', 'delivery_contact', 'delivery_email', 'delivery_tel',
+    'is_return', 'parcels', 'recipient_address', 'shipment_id_inbound', 'shipment_id_outbound', 'shipment_name', 'timestamp']
+
+shipment = ['boxes', 'category', 'delivery_address', 'delivery_contact', 'delivery_cost', 'delivery_email', 'delivery_postcode', 'delivery_tel', 'delivery_telephone',
+    'search_term', 'send_out_date', 'shipment_id_inbound', 'shipment_id_outbound', 'shipment_name']
+
+address = ['company_name', 'county', 'locality', 'postal_code', 'street', 'town_city']
+
+[gui]
+gui_fields = [
+    'shipment_name',
+    'send_out_date',
+    'customer',
+    'category',
+    'delivery_contact',
+    'delivery_tel',
+    'delivery_telephone',
+    'delivery_email',
+    'delivery_address',
+    'delivery_postcode',
+    'boxes',
+    'shipment_id_inbound',
+    'shipment_id_outbound',
+]
 
 
-[[dbay]]
-[sand]
+[gui.gui_map]
+'shipment_name' = "Shipment Name"
+'boxes' = 'Boxes'
+'category'= 'Category'
+'delivery_address' = 'Delivery Address'
+'delivery_contact' = 'Delivery Contact'
+'delivery_email' = 'Delivery Email'
+'delivery_postcode' = 'Delivery Postcode'
+'delivery_tel' = 'Delivery Tel'
+'delivery_telephone' = 'Delivery Telephone'
+'search_term' = 'Search Term'
+'send_out_date' = 'Send Out Date'
+'shipment_id_inbound' = 'Shipment Id Inbound'
+'shipment_id_outbound' = 'Shipment Id Outbound'
+
+
+
+[dbay]
+[dbay.sand]
 courier = 99
 service = 9992
 api_user_keyname = "DESPATCH_API_USER_SANDBOX"
 api_key_keyname = "DESPATCH_API_KEY_SANDBOX"
 
-[prod]
+[dbay.prod]
 courier = 8  # parcelforce
 service = 101  # parcelforce 24
 api_user_keyname = "DESPATCH_API_USER"
@@ -26,7 +60,7 @@ api_key_keyname = "DESPATCH_API_KEY"
 data = '/data/'
 scripts = 'scripts/'
 labels = 'Parcelforce Labels'
-log =  'AmLog.json'
+log = 'AmLog.json'
 cmc_checkin = 'cmc_checkin.ps1'
 cmc_log = 'log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'

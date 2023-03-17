@@ -17,7 +17,7 @@ from py_code.despatchbay.despatchbay_sdk import DespatchBaySDK
 from py_code.utils_pss.utils_pss import toCamel, Utility
 from py_code.amherst_importer import AmherstImport
 import dotenv
-
+from .gui import AmdespGui
 dotenv.load_dotenv()
 
 DEBUG = False
@@ -45,6 +45,8 @@ class ShippingApp:
     def run(self, mode, xml_file):
         self.mode = mode
         shipment = Shipment(xml_file, self.CNFG)
+        gui = AmdespGui(shipment)
+
         match mode:
             case 'ship_out':
                 """prepare and process a shipment. queue and book collections, download and print labels"""
@@ -164,13 +166,13 @@ class ShippingApp:
         else:
             print(f"Available services:\n")
             for n, service in enumerate(services, 1):
-                print(f"Service # {n} : {service.name} - £{service.cost}")
+                print(f"Service # {n} : {service.layout_format} - £{service.cost}")
 
             while True:
                 choice = input("\n - Enter a Service # \n")
                 if choice.isnumeric() and 0 < int(choice) <= len(services):
                     new_service = services[int(choice) - 1]
-                    print(f"{new_service.service_id=}, {new_service.name=}")
+                    print(f"{new_service.service_id=}, {new_service.layout_format=}")
                     return new_service
                 else:
                     print("Bad input")
@@ -239,12 +241,6 @@ class Shipment(AmherstImport):
             print(f"Shipment updated to {ui} boxes")
             boxes = int(ui)
 
-        # backdoor to checkin vbs scripts to commence via powershell and cmclibnet
-        if str(ui) == "check":
-            categories = input("Categories?")
-            categories = categories.split()
-            for category in categories:
-                Utility.powershell_runner(str(self.CNFG.cmc_checkin), category)
 
         parcels = []
         for x in range(int(boxes)):
@@ -328,8 +324,7 @@ class Shipment(AmherstImport):
                     print("out of range")
                     continue
             if choice == 0:
-                if input(str('[E]xit?'))[0].lower() == "e":
-                    exit()
+                sys.exit()
 
         dbay_date_obj = available_dates[choice - 1]  # 1 index
         print(f"\nCollection date for {self.customer} is now {dbay_date_obj.date}"
@@ -538,7 +533,7 @@ class Shipment(AmherstImport):
         if self.is_return:
             home_address = client.get_sender_addresses()[0]
             recipient = client.recipient(
-                name=home_address.name,
+                name=home_address.layout_format,
                 telephone=home_address.telephone,
                 email=home_address.email,
                 recipient_address=home_address.sender_address,
@@ -611,7 +606,7 @@ class Shipment(AmherstImport):
             f"\n"
             f"{'Collection' if self.is_return else 'Shipment'} of {len(self.parcels)} box(es) {'from' if self.is_return else 'for'} {self.customer} | "
             f"{'Collection' if self.is_return else 'Delivery'} Address : {self.address.street}\n"
-            f"Collection Date: {self.date.date} | Service: {self.service.name} | Price: {self.service.cost * len(self.parcels):.2f} \n  \n")
+            f"Collection Date: {self.date.date} | Service: {self.service.layout_format} | Price: {self.service.cost * len(self.parcels):.2f} \n  \n")
 
     def log_tracking(self):
         """
@@ -733,6 +728,10 @@ class Config:
         self.export_fields = config['fields']['export']
         self.shipment_fields = config['fields']['shipment']
         self.db_address_fields = config['fields']['address']
+        self.gui_map = config['gui']['gui_map']
+        self.gui_fields = config['gui']['gui_fields']
+
+
 
         # paths
         DATA_DIR = ROOT_DIR / config['paths']['data']
@@ -754,15 +753,15 @@ class Config:
         # parse shipmode argument and setup API keys from .env
         if sandbox:
             print(f"\n {TABBER * 2}*** !!! SANDBOX MODE !!! *** \n")
-            api_user = os.getenv(config['sand']['api_user_keyname'])
-            api_key = os.getenv(config['sand']['api_key_keyname'])
-            self.courier_id = config['sand']['courier']
-            self.service_id = config['sand']['service']
+            api_user = os.getenv(config['dbay']['sand']['api_user_keyname'])
+            api_key = os.getenv(config['dbay']['sand']['api_key_keyname'])
+            self.courier_id = config['dbay']['sand']['courier']
+            self.service_id = config['dbay']['sand']['service']
         else:
-            api_user = os.getenv(config['prod']['api_user_keyname'])
-            api_key = os.getenv(config['prod']['api_key_keyname'])
-            self.courier_id = config['prod']['courier']  # parcelforce
-            self.service_id = config['prod']['service']  # parcelforce 24
+            api_user = os.getenv(config['dbay']['prod']['api_user_keyname'])
+            api_key = os.getenv(config['dbay']['prod']['api_key_keyname'])
+            self.courier_id = config['dbay']['prod']['courier']  # parcelforce
+            self.service_id = config['dbay']['prod']['service']  # parcelforce 24
 
         # dbay client setup
         self.sender_id = os.getenv("DESPATCH_SENDER_ID")
