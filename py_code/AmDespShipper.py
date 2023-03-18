@@ -1,5 +1,4 @@
-#
-# import copy
+import PySimpleGUI as sg
 import inspect
 import json
 import os
@@ -14,10 +13,12 @@ from pprint import pprint
 from dateutil.parser import parse
 
 from py_code.despatchbay.despatchbay_sdk import DespatchBaySDK
-from py_code.utils_pss.utils_pss import toCamel, Utility
+from py_code.utils_pss.utils_pss import Utility
 from py_code.amherst_importer import AmherstImport
+
 import dotenv
 from .gui import AmdespGui
+
 dotenv.load_dotenv()
 
 DEBUG = False
@@ -46,29 +47,40 @@ class ShippingApp:
         self.mode = mode
         shipment = Shipment(xml_file, self.CNFG)
         gui = AmdespGui(shipment)
+        layout = gui.layouts.address_frame()
+        window = sg.Window("Amdesp Shipper", layout)
 
-        match mode:
-            case 'ship_out':
-                """prepare and process a shipment. queue and book collections, download and print labels"""
-                shipment = self.prepare_shipment(shipment)
-                self.process_shipment(shipment)
-
-            case 'ship_in':
-                remote_shipment = self.prepare_shipment(shipment, is_return=True)
-
-                self.process_shipment(remote_shipment)
-
-            case "track_out":
-                self.get_tracking(shipment.shipment_id_outbound)
-
-            case "track_in":
-                self.get_tracking(shipment.shipment_id_inbound)
+        while True:
+            event, values = window.read()
+            if event in (sg.WINDOW_CLOSED, "Cancel"):
+                window.close()
+                break
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        # match mode:
+        #     case 'ship_out':
+        #         """prepare and process a shipment. queue and book collections, download and print labels"""
+        #         shipment = self.prepare_shipment(shipment)
+        #         self.process_shipment(shipment)
+        #
+        #     case 'ship_in':
+        #         remote_shipment = self.prepare_shipment(shipment, is_return=True)
+        #
+        #         self.process_shipment(remote_shipment)
+        #
+        #     case "track_out":
+        #         self.get_tracking(shipment.shipment_id_outbound)
+        #
+        #     case "track_in":
+        #         self.get_tracking(shipment.shipment_id_inbound)
 
     def prepare_shipment(self, shipment, is_return=False):
         client = self.CNFG.client
-        if DEBUG: print(debug_msg())
-        shipment.parcels = shipment.boxes_script()
-        shipment.date = shipment.date_script()
 
         if is_return:
             shipment.is_return = True
@@ -76,12 +88,12 @@ class ShippingApp:
                 shipment.address = client.get_shipment(
                     shipment.shipment_id_outbound).recipient_address.recipient_address
             except AttributeError as e:
-                print(f"{LINE}\n{LINE}\n"
-                      f"*** ERROR:Bad Shipment_id exiting")
-                exit()
-        else:
-            shipment.address = shipment.address_script()  # checks provided address against dbay for user confirmation / amendment
+                print(f"{LINE}\n{LINE}\n*** ERROR:Bad Shipment_id can't get remote address exiting")
+                # todo get renmote address from xmlfile
 
+        shipment.parcels = shipment.boxes_script()
+        shipment.date = shipment.date_script()
+        shipment.address = shipment.address_script()  # checks provided address against dbay for user confirmation / amendment
         shipment.sender = shipment.get_sender(shipment.address)
         shipment.recipient = shipment.get_recip()
         return shipment
@@ -166,13 +178,13 @@ class ShippingApp:
         else:
             print(f"Available services:\n")
             for n, service in enumerate(services, 1):
-                print(f"Service # {n} : {service.layout_format} - £{service.cost}")
+                print(f"Service # {n} : {service.name} - £{service.cost}")
 
             while True:
                 choice = input("\n - Enter a Service # \n")
                 if choice.isnumeric() and 0 < int(choice) <= len(services):
                     new_service = services[int(choice) - 1]
-                    print(f"{new_service.service_id=}, {new_service.layout_format=}")
+                    print(f"{new_service.service_id=}, {new_service.name=}")
                     return new_service
                 else:
                     print("Bad input")
@@ -240,7 +252,6 @@ class Shipment(AmherstImport):
         if ui.isnumeric():
             print(f"Shipment updated to {ui} boxes")
             boxes = int(ui)
-
 
         parcels = []
         for x in range(int(boxes)):
@@ -533,7 +544,7 @@ class Shipment(AmherstImport):
         if self.is_return:
             home_address = client.get_sender_addresses()[0]
             recipient = client.recipient(
-                name=home_address.layout_format,
+                name=home_address.name,
                 telephone=home_address.telephone,
                 email=home_address.email,
                 recipient_address=home_address.sender_address,
@@ -606,7 +617,7 @@ class Shipment(AmherstImport):
             f"\n"
             f"{'Collection' if self.is_return else 'Shipment'} of {len(self.parcels)} box(es) {'from' if self.is_return else 'for'} {self.customer} | "
             f"{'Collection' if self.is_return else 'Delivery'} Address : {self.address.street}\n"
-            f"Collection Date: {self.date.date} | Service: {self.service.layout_format} | Price: {self.service.cost * len(self.parcels):.2f} \n  \n")
+            f"Collection Date: {self.date.date} | Service: {self.service.name} | Price: {self.service.cost * len(self.parcels):.2f} \n  \n")
 
     def log_tracking(self):
         """
@@ -730,8 +741,6 @@ class Config:
         self.db_address_fields = config['fields']['address']
         self.gui_map = config['gui']['gui_map']
         self.gui_fields = config['gui']['gui_fields']
-
-
 
         # paths
         DATA_DIR = ROOT_DIR / config['paths']['data']

@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
     # AmDesp called from IDE:
     else:
-        mode = 'ship_in'
-        xml_file = STORED_XML
+        mode = 'ship_out'
+        xml_file = STORED_XML#
         sandbox = True
 
     shipper(mode=mode, xml_file=xml_file, sandbox=sandbox)
