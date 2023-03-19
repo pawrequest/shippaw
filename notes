@@ -1,3 +1,26 @@
+this is what should happen:
+
+1) each potential_collection_date in available_dates is  converted to a date-object using parse and assigned to potential_date
+
+2) for each potential_collection_date ion available_dates::
+           a) potential_date is converted into a human readable version called potential_date_hr
+           b) if send_date matches potential_date then:
+               i)  modify potential_date_hr to equal "f"Send Date Match : {potential_date_hr}"
+               ii) set self.shipment.date to potential_date
+               iii) set chosen_date_hr to potential_date_hr
+           c) if no potential_collectioin_datye matches send_date then:
+               i) set self.shipment.date to avaiulable_dates[0]
+               i) set chosen_date_hr to available_dates[0
+
+
+
+
+
+gui address sdcrript:
+
+
+
+
 client:
 
 app:

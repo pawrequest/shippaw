@@ -1,10 +1,14 @@
 import xml.etree.ElementTree as ET
 import re
 from datetime import datetime
+from dateutil.parser import parse
+
 DT_DISPLAY = '%A - %B %#d'
 DT_HIRE = '%d/%m/%Y'
 DT_DB = '%Y-%m-%d'
 DT_EXPORT = '%d-%m-%Y'
+
+
 class AmherstImport:
     def __init__(self, xml_file, CNFG):
         pattern = re.compile(r"\bdeliv\b")
@@ -59,8 +63,12 @@ class AmherstImport:
         elif category == "Sale":
             self.customer = root[0][3].text
 
-        if self.send_out_date is None:
-            self.send_out_date = datetime.today().strftime(DT_HIRE)
+        if self.send_out_date:
+            date_obj = parse(self.send_out_date)
+            self.send_out_date = date_obj
+        else:
+            self.send_out_date = datetime.today()
+            # self.send_out_date = datetime.today().strftime(DT_HIRE)
 
         self.category = category
         self.ship_dict = ship_dict
@@ -103,7 +111,6 @@ class AmherstImport:
         :return:
         """
         pattern = re.compile(r"\bdeliv\b")
-
 
         newdict = {}
         for k, v in dict.items():

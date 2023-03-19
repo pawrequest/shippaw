@@ -25,9 +25,9 @@ DEBUG = False
 
 LINE = f"{'-' * 130}"
 TABBER = "\t\t"
-DT_DISPLAY = '%A - %B %#d'
-DT_HIRE = '%d/%m/%Y'
-DT_DB = '%Y-%m-%d'
+# DT_DISPLAY = '%A - %B %#d'
+# DT_HIRE = '%d/%m/%Y'
+# DT_DB = '%Y-%m-%d'
 
 SANDBOX_SHIPMENT_ID = '100786-5633'
 SHIPMENT_ID = '100786-20850029'
@@ -46,20 +46,10 @@ class ShippingApp:
     def run(self, mode, xml_file):
         self.mode = mode
         shipment = Shipment(xml_file, self.CNFG)
-        gui = AmdespGui(shipment)
-        layout = gui.layouts.address_frame()
-        window = sg.Window("Amdesp Shipper", layout)
 
-        while True:
-            event, values = window.read()
-            if event in (sg.WINDOW_CLOSED, "Cancel"):
-                window.close()
-                break
-        #
-        #
-        #
-        #
-        #
+        gui = AmdespGui(shipment)
+        gui.run()
+
         #
         #
         # match mode:
@@ -78,6 +68,8 @@ class ShippingApp:
         #
         #     case "track_in":
         #         self.get_tracking(shipment.shipment_id_inbound)
+        #
+        #
 
     def prepare_shipment(self, shipment, is_return=False):
         client = self.CNFG.client
@@ -222,8 +214,23 @@ class Shipment(AmherstImport):
         self.CNFG = CNFG
 
         self.service = None
-        self.sender = CNFG.client.sender(address_id=CNFG.sender_id)
-        self.available_dates = CNFG.client.get_available_collection_dates(self.sender,
+        self.amherst_sender = CNFG.client.sender(
+            address_id=CNFG.sender_id,
+            name = CNFG.amherst_address['contact'],
+            email = CNFG.amherst_address['email'],
+            telephone = CNFG.amherst_address['phone'],
+            sender_address = CNFG.client.get_sender_addresses()[0]
+        )
+        self.amherst_recipient = CNFG.client.recipient(
+            name=CNFG.amherst_address['contact'],
+            email=CNFG.amherst_address['email'],
+            telephone = CNFG.amherst_address['phone'],
+            recipient_address = CNFG.client.find_address(CNFG.amherst_address['postal_code'], CNFG.amherst_address['street'])
+
+
+
+        )
+        self.available_dates = CNFG.client.get_available_collection_dates(self.amherst_sender,
                                                                           CNFG.courier_id)  # get dates
         self.label_text = self.shipment_name
         self.is_return = is_return
@@ -275,10 +282,10 @@ class Shipment(AmherstImport):
         # get send out date from shipment, or use today if is_return
         if self.is_return:
             send_date_obj = datetime.today()
-            send_date = f"{datetime.today():{DT_DB}}"
+            send_date = f"{datetime.today():{self.CNFG.datetime_masks['DT_DB']}}"
         else:
             send_date_obj = parse(self.send_out_date)
-            send_date = datetime.strftime(send_date_obj, DT_DB)
+            send_date = datetime.strftime(send_date_obj, self.CNFG.datetime_masks['DT_DB'])
 
         # dbay client call for available dates
         print(f"--- Checking available collection dates...")
@@ -292,7 +299,7 @@ class Shipment(AmherstImport):
             potential_date_str = str(potential_collection_date.date)
             if potential_date_str == send_date:
                 dbay_date_obj = potential_collection_date
-                day = f"{parse(potential_collection_date.date):{DT_DISPLAY}}"
+                day = f"{parse(potential_collection_date.date):{self.CNFG.datetime_masks['DT_DISPLAY']}}"
                 ui = input(
                     f"Shipment {'from' if self.is_return else 'for'} "
                     f"{self.customer} can be collected on {day}\n"
@@ -303,7 +310,8 @@ class Shipment(AmherstImport):
                     case _:
                         continue
         else:
-            print(f"\n*** ERROR: No collections available on {send_date_obj:{DT_DISPLAY}} ***\n")
+            print(
+                f"\n*** ERROR: No collections available on {send_date_obj:{self.CNFG.datetime_masks['DT_DISPLAY']}} ***\n")
 
         new_date = self.get_date()
         return new_date
@@ -315,12 +323,13 @@ class Shipment(AmherstImport):
             # display available dates
             for count, date in enumerate(available_dates, 1):  # 1 index
                 dt = parse(date.date)
-                out = datetime.strftime(dt, DT_DISPLAY)
+                out = datetime.strftime(dt, self.CNFG.datetime_masks['DT_DISPLAY'])
                 print(f"{TABBER} {count} | {out}")
             # get input
-            choice = input(f'\n - [Enter] for ASAP ({datetime.strftime(parse(available_dates[0].date), DT_DISPLAY)})\n'
-                           f' - [1 - {len(available_dates)}] to choose a date \n'
-                           f' - [0] to exit\n')
+            choice = input(
+                f'\n - [Enter] for ASAP ({datetime.strftime(parse(available_dates[0].date), self.CNFG.datetime_masks["DT_DISPLAY"])})\n'
+                f' - [1 - {len(available_dates)}] to choose a date \n'
+                f' - [0] to exit\n')
             if not choice:  # enter to select first available (still 1 index)
                 choice = 1
                 break
@@ -538,7 +547,7 @@ class Shipment(AmherstImport):
         remote_address = client.get_shipment(shipment_id).recipient_address.recipient_address
         return remote_address
 
-    def get_recip(self):
+    def get_recip(self, address=None):
         client = self.CNFG.client
         # shipment is a return - set recipient to home base
         if self.is_return:
@@ -560,7 +569,7 @@ class Shipment(AmherstImport):
         recipient.country_code = "GB"
         return recipient
 
-    def get_sender(self, address=None):
+    def get_sender(self, address):
         """if is_return ios True then address is required
         """
         client = self.CNFG.client
@@ -719,30 +728,38 @@ class Config:
     """
 
     def __init__(self, sandbox=False):
+        self.export_fields = None
+        self.shipment_fields = None
+        self.db_address_fields = None
+
+        self.datetime_masks = None
+        DATA_DIR = None
+        SCRIPTS_DIR = None
+        self.label_dir = None
+        self.log_file = None
+        self.backup_xml = None
+        self.cmc_checkin = None
+        self.log_to_commence_powershell_script = None
+        self.cmc_dll = None
+        self.cmc_inst = None
+
+
         ROOT_DIR = pathlib.Path(pathlib.Path(__file__)).parent.parent
         config_path = ROOT_DIR / 'config.toml'
         with open(config_path, 'rb') as f:
             config = tomllib.load(f)
 
-        # using pickle to get intellisense access to config data but doesnt work
-        # try:
-        #     config_pkl = pathlib.Path(__file__).parent / 'config.pkl'
-        #     with open(config_pkl, 'rb') as f:
-        #         config = pickle.load(f)
-        # except Exception as e:
-        #     with open(config_path, 'rb') as f:
-        #         config = tomllib.load(f)
-        # else:
-        #     print("RESTORING CONFIG FROM PICKLE - I HOPE YOU'RE PAUL?")
-
         # fields
         self.export_fields = config['fields']['export']
         self.shipment_fields = config['fields']['shipment']
         self.db_address_fields = config['fields']['address']
-        self.gui_map = config['gui']['gui_map']
-        self.gui_fields = config['gui']['gui_fields']
+        self.gui_fields = config['gui']['fields']
+        self.gui_map = config['gui']['map']
+        self.amherst_address = config['amherst_address']
 
-        # paths
+        self.datetime_masks = config['datetime_masks']
+
+        # paths~
         DATA_DIR = ROOT_DIR / config['paths']['data']
         SCRIPTS_DIR = ROOT_DIR / config['paths']['scripts']
         self.label_dir = DATA_DIR / config['paths']['labels']

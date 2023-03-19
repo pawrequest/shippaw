@@ -2,13 +2,55 @@
 export = ['category', 'collection_booked', 'customer', 'delivery_contact', 'delivery_email', 'delivery_tel',
     'is_return', 'parcels', 'recipient_address', 'shipment_id_inbound', 'shipment_id_outbound', 'shipment_name', 'timestamp']
 
-shipment = ['boxes', 'category', 'delivery_address', 'delivery_contact', 'delivery_cost', 'delivery_email', 'delivery_postcode', 'delivery_tel', 'delivery_telephone',
-    'search_term', 'send_out_date', 'shipment_id_inbound', 'shipment_id_outbound', 'shipment_name']
+shipment = [
+    'boxes',
+    'category',
+    'delivery_address',
+    'delivery_contact',
+    'delivery_cost',
+    'delivery_email',
+    'delivery_postcode',
+    'delivery_tel',
+    'delivery_telephone',
+    'search_term',
+    'send_out_date',
+    'shipment_id_inbound',
+    'shipment_id_outbound',
+    'shipment_name',
+]
 
-address = ['company_name', 'county', 'locality', 'postal_code', 'street', 'town_city']
+address = ['company_name',
+    'street',
+    'locality',
+    'town_city',
+    'county',
+    'postal_code', ]
+
+
+[amherst]
+
+
+[amherst_address]
+contact = 'Giles Toman'
+email = 'radios@amherst.co.uk'
+phone = "0207 3289792"
+company_name = 'Amherst Radio Center'
+street = '70 Kingsgate Road'
+locality = 'Kilburn'
+town_city = 'London'
+county = "London"
+postal_code = "NW6 4TE"
+country_code = "GB"
+address_id = 5536 # remove from .env
+
+
+[datetime_masks]
+DT_DISPLAY = '%A - %B %#d'
+DT_HIRE = '%d/%m/%Y'
+DT_DB = '%Y-%m-%d'
 
 [gui]
-gui_fields = [
+fields = [
     'shipment_name',
     'send_out_date',
     'customer',
@@ -25,7 +67,7 @@ gui_fields = [
 ]
 
 
-[gui.gui_map]
+[gui.map]
 'shipment_name' = "Shipment Name"
 'boxes' = 'Boxes'
 'category'= 'Category'
@@ -39,6 +81,21 @@ gui_fields = [
 'send_out_date' = 'Send Out Date'
 'shipment_id_inbound' = 'Shipment Id Inbound'
 'shipment_id_outbound' = 'Shipment Id Outbound'
+'county' = 'County'
+'town_city' = 'Town / City'
+'company_name'='Company Name'
+'postal_code'= 'Postcode'
+
+#[gui.params]
+#[gui.params.text]
+#size = [20, 1]
+#justification = 'left'
+#[gui.params.box]
+#size = [20, 1]
+#justification = 'right'
+
+
+
 
 
 
