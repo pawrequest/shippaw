@@ -966,7 +966,7 @@ Sub AmDesp(mode)
         Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
 
-        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
+        objShell.run "%comspec% /k " & strCommand,1,true ' 1= activate window false = don't wait
         set objShell = nothing
 End Sub
 

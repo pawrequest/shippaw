@@ -6,9 +6,9 @@ block_cipher = None
 added_files = [
                 ('scripts/', 'scripts/'),
                 ('.env', '.'),
-                ('data/Amship.xml', 'data/'),
                 ('CmcLibNet_Setup.exe', '.'),
                 ('config.toml', '.'),
+                ('data/', 'data/')
                 ]
 
 a = Analysis(

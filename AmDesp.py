@@ -7,8 +7,6 @@ STORED_XML = "C:\AmDesp\data\Amship.xml"
 def shipper(mode, xml_file, sandbox=False):
     app = ShippingApp(sandbox=sandbox)
     app.run(mode=mode, xml_file=xml_file)
-    ui = input("Enter to close")
-    sys.exit()
 
 
 if __name__ == '__main__':
@@ -23,8 +21,16 @@ if __name__ == '__main__':
     # AmDesp called from IDE:
     else:
         mode = 'ship_out'
-        xml_file = STORED_XML#
+        xml_file = STORED_XML
         sandbox = True
+
+        # mode = 'track_out'
+        # xml_file = STORED_XML
+        # sandbox = True
+        # #
+        # mode = 'track_in'
+        # xml_file = STORED_XML
+        # sandbox=True
 
     shipper(mode=mode, xml_file=xml_file, sandbox=sandbox)
 

@@ -1,6 +1,19 @@
 [fields]
-export = ['category', 'collection_booked', 'customer', 'delivery_contact', 'delivery_email', 'delivery_tel',
-    'is_return', 'parcels', 'recipient_address', 'shipment_id_inbound', 'shipment_id_outbound', 'shipment_name', 'timestamp']
+export = [
+    'category',
+    'collection_booked',
+    'customer',
+    'delivery_contact',
+    'delivery_email',
+    'delivery_tel',
+    'is_return',
+    'boxes',
+    'recipient',
+    'sender',
+    'shipment_id_inbound',
+    'shipment_id_outbound',
+    'shipment_name',
+    'timestamp']
 
 shipment = [
     'boxes',
@@ -19,17 +32,17 @@ shipment = [
     'shipment_name',
 ]
 
-address = ['company_name',
+address = [
+    'company_name',
     'street',
     'locality',
     'town_city',
     'county',
-    'postal_code', ]
+    'postal_code',
+]
 
 
 [amherst]
-
-
 [amherst_address]
 contact = 'Giles Toman'
 email = 'radios@amherst.co.uk'
@@ -85,18 +98,6 @@ fields = [
 'town_city' = 'Town / City'
 'company_name'='Company Name'
 'postal_code'= 'Postcode'
-
-#[gui.params]
-#[gui.params.text]
-#size = [20, 1]
-#justification = 'left'
-#[gui.params.box]
-#size = [20, 1]
-#justification = 'right'
-
-
-
-
 
 
 [dbay]
