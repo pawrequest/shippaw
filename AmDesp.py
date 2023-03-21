@@ -1,3 +1,6 @@
+# todo updates commence when shipment delivered
+# imports in-range shipments to batch process
+
 import sys
 from py_code.AmDespShipper import ShippingApp
 
@@ -20,9 +23,13 @@ if __name__ == '__main__':
 
     # AmDesp called from IDE:
     else:
+        # mode = 'ship_in'
+        # xml_file = STORED_XML
+        # sandbox = True
+
         mode = 'ship_out'
         xml_file = STORED_XML
-        sandbox = False
+        sandbox = True
 
         # mode = 'track_out'
         # xml_file = STORED_XML

@@ -1,3 +1,10 @@
+params = {}
+params.update({'adsfggasf':'sadfdasgf'})
+
+
+
+
+
 import PySimpleGUI as sg
 
 menu_def = ['mon','tue','wed']

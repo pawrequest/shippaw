@@ -42,7 +42,7 @@ address = [
 ]
 
 
-[amherst]
+
 [amherst_address]
 contact = 'Giles Toman'
 email = 'radios@amherst.co.uk'
@@ -115,7 +115,7 @@ api_key_keyname = "DESPATCH_API_KEY"
 
 
 [paths]
-data = '/data/'
+data = 'data/'
 scripts = 'scripts/'
 labels = 'Parcelforce Labels'
 log = 'AmLog.json'

@@ -14,15 +14,6 @@ class GuiLayout:
             'font': 'Rockwell 14',
             'element_padding': (25, 5),
             'border_width': 3,
-            'background_color': 'aquamarine'
-
-        }
-
-        self.send_recip_frame_params = {
-            'pad': 20,
-            'font': "R♣ockwell 30",
-            'title_location': sg.TITLE_LOCATION_TOP,
-            # 'size': (500, 500),
         }
 
         self.address_input_params = {
@@ -30,120 +21,132 @@ class GuiLayout:
             'justification': 'left',
             'expand_x': True,
             'pad': (20, 8),
-            # 'enable_events': True,
         }
 
         self.address_fieldname_params = {
             'size': (15, 1),
             'justification': 'center',
-            # 'expand_x': True,
             'pad': (20, 8),
         }
 
-        self.address_frame_params = {
-            'pad': 20,
-            # 'size': (450, 400)
-        }
-
-        self.bottom_frame_params = {
-            # 'size':(250,160)
-            # 'expand_x': True
-            'pad': 20
-        }
-
-        self.customer_params = {
-            'expand_x': True,
-            # 'size':(,1),
-            'justification': 'left',
-            'font': 'Rockwell 24',
-            'border_width': 4,
-            # 'pad': ((20,20), 20)
-        }
-
         self.option_menu_params = {
-            # 'expand_y': True,
-            # 'expand_x': True,
             'pad': (10, 5),
-            'size': (25, 1),
-            'background_color': "aquamarine4",
-            # 'enable_events': True,
+            'size': (30, 1),
             'readonly': True,
-            # 'text_justification':'center'
-
         }
-
-        self.go_button_params = {
-            # 'expand_y': True,
-            # 'expand_x': True,
-            # 'pad': 40,
-            'size': (12, 5),
-            # 'border_width': 5,
-            'button_color': "aquamarine4",
-            'enable_events': True,
-            'expand_x': True,
-            'expand_y': True,
-            'pad': 20,
-        }
-
-        self.bottom_col_params = {
-            # 'size': (300,160),
-            'pad': 20,
-            'expand_x': True,
-        }
-        # self.parcels_params = self.option_menu_params.copy()
-        # self.parcels_params.update(
-        #     expand_x=False,
-        #     k='-PARCELS-',
-        #     size=10,
-        #     # enable_events =True,
-        # )
 
     # windows
     def main_window(self):
         sg.set_options(**self.default_params)
-        sg.theme('DarkTeal6')
         # elements
-        shipment_name = self.shipment_name_frame()
+        shipment_name = self.shipment_name_element()
         sender = self.sender_receiver_frame('sender')
         recipient = self.sender_receiver_frame('recipient')
         date_match = self.date_chooser()
         parcels = self.parcels_spin()
         service = self.service_combo()
         queue = self.queue_or_book_combo()
-        try:
+        ids = self.shipment_ids()
+
+        try:  # to get prices but they don't seem to exist?
             self.shipment.shipment_request = self.initial_request()
         except:
-            ...
+            pass
         book_button = self.go_button()
-        # book_frame = sg.Frame('',layout=book,element_justification='center')
+
         # frames
-        bottom_layout = [
+        button_layout = [
             [date_match],
             [parcels],
             [service],
             [queue],
         ]
-        bottom_col = sg.Column(layout=bottom_layout, element_justification='center', **self.bottom_col_params)
-        bottom_frame = sg.Frame('', layout=[[bottom_col, book_button]], **self.bottom_frame_params)
+        button_col = sg.Column(layout=button_layout, element_justification='center', pad=20, expand_x=True)
+        button_frame = sg.Frame('', layout=[[button_col, book_button]], pad=20, element_justification='center',
+                                border_width=8,
+                                relief=sg.RELIEF_GROOVE)
 
         layout = [
+            [shipment_name],
             [sender, recipient],
-            [shipment_name, bottom_frame],
+            [ids, button_frame],
         ]
 
-        # # temporarylayout
-        # layout = [[bottom_frame]]
-        # window = sg.Window("A TITLE", layout, finalize=True)
-        #
-        # return window
-
-        # windows
+        # layout = [[ids]]
         window = sg.Window("A TITLE", layout, finalize=True)
         return window
 
+    # self.theme_chooser()
+    def shipment_ids(self):
+        outbound = getattr(self.shipment, 'shipment_id_outbound')
+        inbound = getattr(self.shipment, 'shipment_id_inbound')
+        if not any([outbound, inbound]):
+            return None
+
+        sg.T("sdgfdsg", )
+
+        layout = [
+            [sg.T(f"Outbound: {outbound}",font='Rockwell 20',  size=20, border_width=3, justification='center', relief=sg.RELIEF_GROOVE, pad=20, enable_events=True, k='-OUTBOUND_ID-')],
+            [sg.T(f"Inbound: {inbound}", font='Rockwell 20', size=20, border_width=3,  justification='center', relief=sg.RELIEF_GROOVE, pad=20,enable_events=True, k='-INBOUND_ID-')],
+        ]
+
+        frame = sg.Frame('Shipment IDs', layout, pad=20, element_justification='center',
+                                        border_width=8,
+                                        relief=sg.RELIEF_GROOVE)
+        return frame
+
+    def tracking_viewer_window(self, shipment_id):
+        client = self.shipment.CNFG.client
+        shipment = None
+        tracking_layout=[]
+        # try:
+        shipment = client.get_shipment(shipment_id)
+        # except Exception as e:
+        #     sg.popup_error(e)
+        parcel_title = None
+        tracking_numbers = [parcel.tracking_number for parcel in shipment.parcels]
+        tracking_d = {}
+        sublayout=[]
+        parcel_frame = None
+        signatory=None
+        params={}
+        try:
+            for tracked_parcel in tracking_numbers:
+                tracking = client.get_tracking(tracked_parcel)
+                courier = tracking['CourierName']
+                parcel_title = [f'{tracked_parcel} ({courier}):']
+                history = tracking['TrackingHistory']
+                for event in history:
+                    if 'delivered' in event.Description.lower():
+                        signatory = f"{chr(10)}Signed for by: {event.Signatory}"
+                        params.update({'background_color':'aquamarine', 'text_color':'red'})
+
+                    event_text = sg.T(f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}', **params)
+                    sublayout.append([event_text])
+
+                parcel_frame = [sg.Column(sublayout)]
+                tracking_d.update({tracked_parcel: tracking})
+
+
+        except Exception as e:
+            sg.popup_error(e)
+        else:
+            shipment.tracking_dict = tracking_d
+
+            tracking_window = sg.Window('', [parcel_frame])
+            tracking_window.read()
+
+
+        # return parcel_title, tracking_layout
+
+
+
+
     # elements
-    def shipment_name_frame(self):
-        element = sg.Text(f'{self.shipment.shipment_name}', **self.customer_params)
+    def shipment_name_element(self):
+        element = sg.Text(f'{self.shipment.shipment_name}', expand_x=True, expand_y=True, justification='center',
+                          font='Rockwell 30',
+                          border_width=8, relief=sg.RELIEF_GROOVE, )
         return element
 
     def sender_receiver_frame(self, mode):
@@ -154,7 +157,7 @@ class GuiLayout:
         obj_to_edit = getattr(shipment, mode)
         address = None
         if mode == 'sender':
-            address = sender.sender_address.sender_address
+            address = sender.sender_address.sender_address  # debug somethign screwy here, surely?
         elif mode == 'recipient':
             address = recipient.recipient_address
 
@@ -172,7 +175,8 @@ class GuiLayout:
             # [sg.B("Update", k=f'-UPDATE_{title.upper()}')]
         ]
         k = f'-{title.upper()}-'
-        frame = sg.Frame(f'{title}', layout, k=k, **self.send_recip_frame_params)
+        frame = sg.Frame(f'{title}', layout, k=k, pad=20, font="Rockwell 30", border_width=5, relief=sg.RELIEF_GROOVE,
+                         title_location=sg.TITLE_LOCATION_TOP)
         return frame
 
     def address_frame(self, address, mode):
@@ -203,13 +207,15 @@ class GuiLayout:
             layout.append(([label_text, input_box]))
 
         # layout.append([sg.B("Search", k=f'-{mode.upper()}_SEARCH-')])
-        frame = sg.Frame(f"{mode.title()} Address", layout, **self.address_frame_params, k=f'-{mode.upper()}_ADDRESS-')
+        frame = sg.Frame(f"{mode.title()} Address", layout, k=f'-{mode.upper()}_ADDRESS-', pad=20, )
         return frame
 
-    def combo_popup(self, options_dict):
+    def combo_popup(self, options_dict: dict) -> object or None:
         """
         Creates a popup window with a sg.Combo() selector and waits for the user to select an option.
         Returns the selected option.
+        :param options_dict: human readable keys and object-friendly values
+        :return: the selected object
         """
         selected_option = None
         default_value = list(options_dict.keys())[0]
@@ -235,7 +241,10 @@ class GuiLayout:
 
         return options_dict.get(selected_option)
 
-    def date_chooser(self):
+    def date_chooser(self) -> sg.Combo:
+        """ PSG Combo to select a despatchbay collection date object
+        if match to send_out_date then green, else purple
+        """
         send_date = self.shipment.send_out_date
         available_dates = self.shipment.available_dates  # dbay objecrts
         datetime_mask = self.shipment.CNFG.datetime_masks['DT_DISPLAY']
@@ -243,7 +252,7 @@ class GuiLayout:
         menu_def = []
         chosen_date_db = None
         chosen_date_hr = None
-        params = self.option_menu_params.copy()
+        params = {'pad': (10, 5), 'size': (30), 'readonly': True, }
 
         for potential_collection_date in available_dates:
             potential_date = parse(potential_collection_date.date)
@@ -253,12 +262,13 @@ class GuiLayout:
                 potential_date_hr = potential_date_hr
                 chosen_date_db = potential_collection_date
                 chosen_date_hr = potential_date_hr
+                params.update({'background_color': 'green'})
             # to use human readable names in button and retrieve object later
             self.date_menu_map[potential_date_hr] = potential_collection_date
             # self.date_menu_map.update(potential_date_hr=potential_collection_date)
             menu_def.append(potential_date_hr)
         if not chosen_date_db:
-            params.update({'background_color': 'firebrick'})
+            params.update({'background_color': 'purple'})
             chosen_date_db = available_dates[0]
             chosen_date_hr = menu_def[0]
             self.date_menu_map[chosen_date_hr] = chosen_date_db
@@ -269,7 +279,6 @@ class GuiLayout:
             values=(menu_def),
             k='-DATE-',
         )
-        # element = sg.OptionMenu(default_value=chosen_date_hr, size=40, values=(menu_def), k='-DATE-', **self.option_menu_params)
         element = sg.Combo(**params)
 
         return element
@@ -279,7 +288,7 @@ class GuiLayout:
         boxes = shipment.boxes
         if not boxes or int(boxes) < 1:
             boxes = 1
-        element = sg.Spin(initial_value=boxes, k='-BOXES-', values=[i for i in range(10)], **self.option_menu_params)
+        element = sg.Combo(default_value=boxes, k='-BOXES-', values=[i for i in range(10)], **self.option_menu_params)
 
         return element
 
@@ -332,7 +341,8 @@ class GuiLayout:
         price_each = shipment.service.cost
 
         price_total = f'{parcels * price_each:.2}' if price_each else ''
-        element = sg.Button(f'{price_total}\nGo!', **self.go_button_params, k="-GO-")
+        element = sg.Button(f'{price_total}\nGo!', k="-GO-", size=(12, 5), enable_events=True,
+                            expand_y=True, pad=20, )
         return element
 
     # methods
@@ -353,21 +363,21 @@ class GuiLayout:
         return shipment_request
 
     def get_parcels(self, num_parcels):
-            # num_parcels = int(num_parcels.split(" ")[0])
-            client = self.shipment.CNFG.client
-            parcels = []
-            for x in range(int(num_parcels)):
-                parcel = client.parcel(
-                    contents="Radios",
-                    value=500,
-                    weight=6,
-                    length=60,
-                    width=40,
-                    height=40,
-                )
-                parcels.append(parcel)
-            self.shipment.parcels = parcels
-            return parcels
+        # num_parcels = int(num_parcels.split(" ")[0])
+        client = self.shipment.CNFG.client
+        parcels = []
+        for x in range(int(num_parcels)):
+            parcel = client.parcel(
+                contents="Radios",
+                value=500,
+                weight=6,
+                length=60,
+                width=40,
+                height=40,
+            )
+            parcels.append(parcel)
+        self.shipment.parcels = parcels
+        return parcels
 
     def get_sender_recip(self):
         shipment = self.shipment
@@ -391,6 +401,16 @@ class GuiLayout:
             )
         shipment.sender, shipment.recipient = sender, recipient
         return sender, recipient
+
+    def theme_chooser(self):
+        theme_layout = [[sg.Text("See how elements look under different themes by choosing a different theme here!")],
+                        [sg.Listbox(values=sg.theme_list(),
+                                    size=(20, 12),
+                                    key='-THEME LISTBOX-',
+                                    enable_events=True)],
+                        [sg.Button("Set Theme")]]
+        frame = sg.Frame('Themes', layout=theme_layout)
+        return frame
 
     # def blank_frame(self):
     #     return sg.Frame("", [[]], pad=(5, 3), expand_x=True, expand_y=True, border_width=0)

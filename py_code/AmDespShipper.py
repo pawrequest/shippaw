@@ -69,8 +69,8 @@ class AmdespGui:
         self.shipment = shipment
         self.layouts = GuiLayout(self)
 
-    def gui_ship(self, mode):
-        sg.theme('Dark Blue')
+    def gui_ship(self, mode, theme=None):
+
         client = self.shipment.CNFG.client
         match mode:
             case 'out':
@@ -80,17 +80,18 @@ class AmdespGui:
             case _:
                 sg.popup_error("WRONG MODE")
 
-
-
-
         window = self.layouts.main_window()
-        window['-SENDER_POSTAL_CODE-'].bind("<Return>", "_Enter")
-        window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", "_Enter")
-
+        if self.shipment.CNFG.sandbox:
+            sg.theme('Tan')
+        else:
+            sg.theme('Dark Blue')
+        if theme:
+            sg.theme(theme)
 
         while True:
             event, values = window.read()
-
+            window['-SENDER_POSTAL_CODE-'].bind("<Return>", "_Enter")
+            window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", "_Enter")
 
             self.event, self.values, self.window = event, values, window
             shipment = self.shipment
@@ -98,49 +99,34 @@ class AmdespGui:
             if not self.shipment.shipment_request:
                 self.shipment.shipment_request = self.make_request()
 
-
             if event in (sg.WINDOW_CLOSED, 'Exit'):
                 break
 
-            # if event == '-SERVICE-':
-
-            # if event == '-PARCELS-':
-            #     boxes = values['-PARCELS-']
-            #     self.shipment.parcels = self.layouts.get_parcels(boxes)
-
+            elif event == "Set Theme":
+                print("[LOG] Clicked Set Theme!")
+                theme_chosen = values['-THEME LISTBOX-'][0]
+                print("[LOG] User Chose Theme: " + str(theme_chosen))
+                window.close()
+                self.gui_ship(mode='out', theme=theme_chosen)
 
             if event == '-DATE-':
-                window['-DATE-'].update({'background_color': 'aquamarine'})
+                window['-DATE-'].update({'background_color': 'red'})
 
+            # click company name to copy customer in
             if 'company_name' in event:
                 window[event.upper()].update(self.shipment.customer)
                 # window[event.upper()].refresh()
 
+            # click 'postcode' or Return in postcode box to get address to choose from and update shipment
             if 'postal_code' in event.lower():
-                postcode=None
-                if 'sender' in event.lower():
-                    mode = 'sender'
-                    postcode = values['-SENDER_POSTAL_CODE-']
-                elif 'recipient' in event.lower():
-                    mode='recipient'
-                    postcode = values['-RECIPIENT_POSTAL_CODE-']
+                self.new_address_from_postcode()
 
-                returned_address = self.get_address_from_candidates_popup(postcode=postcode)
-                address_dict = {k: v for k, v in vars(returned_address).items() if 'soap' not in k}
-                address_dict.pop('country_code',None)
-
-                if mode == 'sender':
-                    shipment.sender.sender_address.sender_address = returned_address
-                elif mode =='recipient':
-                    shipment.recipient.recipient_address = returned_address
-
-                for k,v  in address_dict.items():
-                    try:
-                        window[f'-{mode.upper()}_{k.upper()}-'].update(v)
-                    except:
-                        ...
-                    # self.layouts.frame_updater(window['-RECIPIENT_ADDRESS-'], address_dict)
-
+            if event == '-INBOUND_ID-':
+                layout = self.layouts.tracking_viewer_window(shipment.shipment_id_inbound)
+                # inbound_frame = sg.Frame('Inbound Tracking: ', layout=layout)
+            if event == '-OUTBOUND_ID-':
+                layout = self.layouts.tracking_viewer_window(shipment.shipment_id_outbound)
+                # inbound_frame = sg.Frame('Outbound Tracking: ', layout=layout)
 
 
 
@@ -149,55 +135,52 @@ class AmdespGui:
 
                 if 'queue' or 'book' in decision:
                     shipment_request = self.make_request()
-                    answer = sg.popup_scrolled(f"{decision}?\n{shipment_request}")
+                    answer = sg.popup_scrolled(f"{decision}?\n{shipment_request}", size=(30,30))
 
-                    # if answer == 'Yes':
-                    #     shipment_id = self.queue_shipment(shipment_request)
-                    #     if 'book' in decision:
-                    #         shipment_return = self.book_collection(shipment_id)
-                    #         sg.popup(f"Collection booked: {shipment_return}")
-                    #     if 'print' in decision:
-                    #         self.print_label()
-                    #     self.update_commence()
-                    #     self.log_shipment()
-                    #     continue
+                    if answer == 'OK':
+                        if not self.shipment.CNFG.sandbox:
+                            if not sg.popup("NOT SANDBOX DO YOU WANT TO PAY?!!!") == 'Yes':
+                                continue
+                        shipment_id = self.queue_shipment(shipment_request)
+                        if 'book' in decision:
+                            shipment_return = self.book_collection(shipment_id)
+                            sg.popup(f"Collection booked: {shipment_return}")
+                        if 'print' in decision:
+                            self.print_label()
+                        self.update_commence()
+                        self.log_shipment()
+                        continue
 
         window.close()
 
+    def new_address_from_postcode(self):
+        event, values, shipment, window = self.event, self.values, self.shipment, self.window
+        postcode = None
+        mode = None
+        if 'sender' in event.lower():
+            mode = 'sender'
+            postcode = values['-SENDER_POSTAL_CODE-']
+        elif 'recipient' in event.lower():
+            mode = 'recipient'
+            postcode = values['-RECIPIENT_POSTAL_CODE-']
 
+        returned_address = self.get_address_from_candidates_popup(postcode=postcode)
+        if returned_address is None:
+            return
+        address_dict = {k: v for k, v in vars(returned_address).items() if 'soap' not in k}
+        address_dict.pop('country_code', None)
 
-    def check_address(self, mode):
-        window, values, shipment, client = self.window, self.values, self.shipment, self.shipment.CNFG.client
-        # element_key =
-        street = f'-{mode.upper()}_STREET-'
-        postcode = f'-{mode.upper()}_POSTCODE-'
-        search_term = shipment.parse_amherst_address_string(street)
-        sender_address = None
-        while True:
+        if mode == 'sender':
+            shipment.sender.sender_address = returned_address
+        elif mode == 'recipient':
+            shipment.recipient.recipient_address = returned_address
+
+        for k, v in address_dict.items():
             try:
-                address = client.find_address(postcode, search_term)
-            except Exception as e:
-                try:
-                    address = self.get_address_from_candidates_popup(postcode=postcode)
-
-                    # sender_address = client.get_address_by_key(popup)
-
-                except:
-                    postcode = sg.popup_get_text("Bad Postcode - try again")
-                    continue
-                else:
-                    break
-
-        sender = client.sender(
-            name=values['-SENDER_NAME-'],
-            email=values['-SENDER_EMAIL-'],
-            telephone=values['-SENDER_PHONE-'],
-            sender_address=sender_address
-        )
-
-        shipment.sender = sender
-        return sender
-
+                window[f'-{mode.upper()}_{k.upper()}-'].update(v)
+            except:
+                ...
+            # self.layouts.frame_updater(window['-RECIPIENT_ADDRESS-'], address_dict)
 
     def make_request(self):
         values, shipment, client = self.values, self.shipment, self.shipment.CNFG.client
@@ -219,6 +202,9 @@ class AmdespGui:
     def get_address_from_candidates_popup(self, postcode=None, ):
         window, shipment, client = self.window, self.shipment, self.shipment.CNFG.client
         candidates = None
+        address_key = None
+        address = None
+
         if postcode is None:
             postcode = shipment.delivery_postcode
 
@@ -230,12 +216,16 @@ class AmdespGui:
                 continue
             else:
                 break
-        address_key_dict={}
+        # build address option menu dict
+        address_key_dict = {}
         for candidate in candidates:
             candidate_hr = candidate.address
             address_key_dict.update({candidate_hr: candidate.key})
+
+        # deploy address option popup
         address_key = self.layouts.combo_popup(address_key_dict)
-        address = client.get_address_by_key(address_key)
+        if address_key:
+            address = client.get_address_by_key(address_key)
         return address
 
     def queue_shipment(self, shipment_request):
@@ -268,101 +258,120 @@ class AmdespGui:
             return shipment_return
 
     def print_label(self):
-            try:
-                os.startfile(self.shipment.label_location, "print")
-            except OSError as e:
-                ...
-                # sg.popup_error(f"\n ERROR: Unable to print \n {e.strerror}")
-            else:
-                # sg.popup_auto_close("Parcelforce Label printed")
-                self.printed = True
+        try:
+            os.startfile(self.shipment.label_location, "print")
+        except OSError as e:
+            ...
+            # sg.popup_error(f"\n ERROR: Unable to print \n {e.strerror}")
+        else:
+            # sg.popup_auto_close("Parcelforce Label printed")
+            self.printed = True
 
     def update_commence(self):
-            """
-                    runs cmclibnet via powershell script to add tracking numbes to commence db
+        """
+                runs cmclibnet via powershell script to add tracking numbes to commence db
 
-                    :return:
-                    """
+                :return:
+                """
 
-            class CommenceEditError(Exception):
-                pass
+        class CommenceEditError(Exception):
+            pass
 
-            ps_script = str(self.shipment.CNFG.log_to_commence_powershell_script)
-            try:  # utility class static method runs powershell script bypassing execuction policy
-                ship_id_to_pass = str(
-                    self.shipment.shipment_id_inbound if self.shipment.is_return else self.shipment.shipment_id_outbound)
-                commence_edit = Utility.powershell_runner(ps_script, self.shipment.category, self.shipment.shipment_name,
-                                                          ship_id_to_pass,
-                                                          str(self.shipment.is_return), 'debug')
+        ps_script = str(self.shipment.CNFG.log_to_commence_powershell_script)
+        try:  # utility class static method runs powershell script bypassing execuction policy
+            ship_id_to_pass = str(
+                self.shipment.shipment_id_inbound if self.shipment.is_return else self.shipment.shipment_id_outbound)
+            commence_edit = Utility.powershell_runner(ps_script, self.shipment.category, self.shipment.shipment_name,
+                                                      ship_id_to_pass,
+                                                      str(self.shipment.is_return), 'debug')
 
-                if commence_edit == 1:
-                    raise CommenceEditError("\nERROR: Commence Tracking not updated - is Commence running?")
+            if commence_edit == 1:
+                raise CommenceEditError("\nERROR: Commence Tracking not updated - is Commence running?")
 
-            except CommenceEditError as e:
-                ...
-                # sg.popup_error(f"{e}")
+        except CommenceEditError as e:
+            ...
+            # sg.popup_error(f"{e}")
 
-            except FileNotFoundError as e:
-                ...
-                # sg.popup(f"ERROR: Unable to log tracking to Commence - FileNotFoundError : {e.filename}")
+        except FileNotFoundError as e:
+            ...
+            # sg.popup(f"ERROR: Unable to log tracking to Commence - FileNotFoundError : {e.filename}")
 
-            except Exception as e:
-                ...
-                # sg.popup(f"{e=} \nERROR: Unable to log tracking to Commence")
+        except Exception as e:
+            ...
+            # sg.popup(f"{e=} \nERROR: Unable to log tracking to Commence")
 
-            else:
-                ...
-                # sg.popup("\nCommence Tracking updated")
+        else:
+            ...
+            # sg.popup("\nCommence Tracking updated")
 
     def log_shipment(self):
-            # export from object attrs
-            shipment = self.shipment
-            shipment.boxes = len(self.shipment.parcels)
-            export_dict = {}
+        # export from object attrs
+        shipment = self.shipment
+        shipment.boxes = len(self.shipment.parcels)
+        export_dict = {}
 
-            for field in self.shipment.CNFG.export_fields:
-                try:
-                    if field == 'sender':
-                        val = shipment.sender.sender_address.sender_address
-                        val = f'{val.street} - {val.postal_code}'
-                    elif field == 'recipient':
-                        val = shipment.recipient.recipient_address
-                        val = f'{val.street} - {val.postal_code}'
-                    else:
-                        val = getattr(self.shipment, field)
-                        if isinstance(val, datetime):
-                            val = f"{val.isoformat(sep=' ', timespec='seconds')}"
+        for field in self.shipment.CNFG.export_fields:
+            try:
+                if field == 'sender':
+                    val = shipment.sender.sender_address
+                    val = f'{val.street} - {val.postal_code}'
+                elif field == 'recipient':
+                    val = shipment.recipient.recipient_address
+                    val = f'{val.street} - {val.postal_code}'
+                else:
+                    val = getattr(self.shipment, field)
+                    if isinstance(val, datetime):
+                        val = f"{val.isoformat(sep=' ', timespec='seconds')}"
 
-                    export_dict.update({field: val})
-                except Exception as e:
-                    ...
-                    # sg.popup(f"{field} not found in shipment \n{e}")
+                export_dict.update({field: val})
+            except Exception as e:
+                ...
+                # sg.popup(f"{field} not found in shipment \n{e}")
 
-            with open(self.shipment.CNFG.log_file, 'a') as f:
-                json.dump(export_dict, f, sort_keys=True)
-                f.write(",\n")
-            sg.popup(f" Json exported to {self.shipment.CNFG.log_file}:\n {export_dict}")
+        with open(self.shipment.CNFG.log_file, 'a') as f:
+            json.dump(export_dict, f, sort_keys=True)
+            f.write(",\n")
+        sg.popup(f" Json exported to {self.shipment.CNFG.log_file}:\n {export_dict}")
 
     def email_label(self):
-            ...
-
+        ...
 
     def get_tracking(self, shipment_id):
-            client = self.shipment.CNFG.client
-            shipment = client.get_shipment(shipment_id)
-            tracking_numbers = [parcel.tracking_number for parcel in shipment.parcels]
-            tracking_d = {}
-            try:
-                for tracked_parcel in tracking_numbers:
-                    tracking = client.get_tracking(tracked_parcel)
-                    tracking_d.update({tracked_parcel: tracking})
+        window = self.layouts.tracking_viewer_window(shipment_id)
+        window.read()
 
-            except Exception as e:
-                sg.popup_error(e)
-            sg.popup_scrolled(f'{tracking_d}')
+    # def check_address(self, mode):
+    #     window, values, shipment, client = self.window, self.values, self.shipment, self.shipment.CNFG.client
+    #     # element_key =
+    #     street = f'-{mode.upper()}_STREET-'
+    #     postcode = f'-{mode.upper()}_POSTCODE-'
+    #     search_term = shipment.parse_amherst_address_string(street)
+    #     sender_address = None
+    #     while True:
+    #         try:
+    #             address = client.find_address(postcode, search_term)
+    #         except Exception as e:
+    #             try:
+    #                 address = self.get_address_from_candidates_popup(postcode=postcode)
+    #
+    #                 # sender_address = client.get_address_by_key(popup)
+    #
+    #             except:
+    #                 postcode = sg.popup_get_text("Bad Postcode - try again")
+    #                 continue
+    #             else:
+    #                 break
+    #
+    #     sender = client.sender(
+    #         name=values['-SENDER_NAME-'],
+    #         email=values['-SENDER_EMAIL-'],
+    #         telephone=values['-SENDER_PHONE-'],
+    #         sender_address=sender_address
+    #     )
+    #
+    #     shipment.sender = sender
+    #     return sender
 
-            shipment.tracking_d = tracking_d
-            return tracking_d
 
 
 class AmherstImport:
@@ -408,17 +417,20 @@ class AmherstImport:
                 if k in CNFG.shipment_fields:
                     setattr(self, k, v)
 
+        # get customer name
         if category == "Hire":
             self.customer = root[0][3].text
-
         elif category == "Customer":
             self.customer = fields[0][1].text
-            self.shipment_name = f'{self.shipment_name} - {datetime.now():{CNFG.datetime_masks["DT_EXPORT"]}}'
-
+            self.shipment_name = f'{self.shipment_name} - {datetime.now().isoformat(" ", timespec="seconds")}'
         elif category == "Sale":
             self.customer = root[0][3].text
 
-        if not self.send_out_date:
+        # convert to date object
+        if self.send_out_date:
+            # noinspection PyTypeChecker
+            self.send_out_date = parse(self.send_out_date)
+        else:
             self.send_out_date = datetime.today()
 
         self.category = category
@@ -433,7 +445,7 @@ class AmherstImport:
 
         ...
 
-    def to_snake_case(self,input_string):
+    def to_snake_case(self, input_string):
         """Convert a string to lowercase snake case."""
         # Replace spaces with underscores
         input_string = input_string.replace(" ", "_")
@@ -516,7 +528,7 @@ class Shipment(AmherstImport):
 
         self.service = None
         self.amherst_sender = CNFG.client.sender(
-            address_id=CNFG.sender_id,
+            address_id=CNFG.amherst_sender_id,
             name=CNFG.amherst_address['contact'],
             email=CNFG.amherst_address['email'],
             telephone=CNFG.amherst_address['phone'],
@@ -1030,13 +1042,12 @@ class Config:
     """
 
     def __init__(self, sandbox=False):
+        self.sandbox = sandbox
         self.export_fields = None
         self.shipment_fields = None
         self.db_address_fields = None
         self.datetime_masks = None
-        self.sender_id = None
-        # DATA_DIR = None
-        # SCRIPTS_DIR = None
+        self.amherst_sender_id = None
         self.label_dir = None
         self.log_file = None
         self.backup_xml = None
@@ -1045,20 +1056,10 @@ class Config:
         self.cmc_dll = None
         self.cmc_inst = None
 
-        ROOT_DIR = pathlib.Path(pathlib.Path(__file__)).parent.parent
+        ROOT_DIR = pathlib.Path(__file__).parent.parent
         config_path = ROOT_DIR / 'config.toml'
         with open(config_path, 'rb') as f:
             config = tomllib.load(f)
-
-        # fields
-        self.export_fields = config['fields']['export']
-        self.shipment_fields = config['fields']['shipment']
-        self.db_address_fields = config['fields']['address']
-        self.gui_fields = config['gui']['fields']
-        self.gui_map = config['gui']['map']
-        self.amherst_address = config['amherst_address']
-
-        self.datetime_masks = config['datetime_masks']
 
         # paths~
         DATA_DIR = ROOT_DIR / config['paths']['data']
@@ -1067,6 +1068,17 @@ class Config:
         self.log_file = DATA_DIR / config['paths']['log']
         self.backup_xml = DATA_DIR / 'AmShip.xml'
         self.label_dir.mkdir(parents=True, exist_ok=True)
+
+        # fields
+        self.export_fields = config['fields']['export']
+        self.shipment_fields = config['fields']['shipment']
+        self.db_address_fields = config['fields']['address']
+        self.gui_fields = config['gui']['fields']
+        self.gui_map = config['gui']['map']
+        self.amherst_address = config['amherst_address']
+        self.datetime_masks = config['datetime_masks']
+
+
 
         # CmcLibNet files for interacting with Commence DB:
         self.cmc_checkin = SCRIPTS_DIR / config['paths']['cmc_checkin']
@@ -1091,8 +1103,7 @@ class Config:
             self.service_id = config['dbay']['prod']['service']  # parcelforce 24
 
         # dbay client setup
-        self.sender_id = os.getenv("DESPATCH_SENDER_ID")
-        # noinspection PyUnboundLocalVariable
+        self.amherst_sender_id = config['amherst_address']['address_id']
         self.client = DespatchBaySDK(api_user=api_user, api_key=api_key)
 
         if DEBUG:
