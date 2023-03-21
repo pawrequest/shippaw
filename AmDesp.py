@@ -10,7 +10,7 @@ def shipper(mode, xml_file, sandbox=False):
 
 
 if __name__ == '__main__':
-    sandbox = False
+    sandbox = None
     # AmDesp called from commandline, i.e launched from Commence
     if len(sys.argv) > 1:
         print(sys.argv)
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     else:
         mode = 'ship_out'
         xml_file = STORED_XML
-        sandbox = True
+        sandbox = False
 
         # mode = 'track_out'
         # xml_file = STORED_XML

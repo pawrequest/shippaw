@@ -7,6 +7,7 @@
       <excludeFolder url="file://$MODULE_DIR$/AmDesp" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/bench" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11 (AmDesp) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
