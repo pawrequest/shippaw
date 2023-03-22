@@ -126,7 +126,7 @@ class Gui:
 
         window = self.layouts.main_window()
         self.window = window
-        self.initialise_window()
+        self.populate_window()
 
         if self.app.sandbox:
             self.theme = sg.theme('Tan')
@@ -198,7 +198,7 @@ class Gui:
         window.close()
         sys.exit()
 
-    def initialise_window(self):
+    def populate_window(self):
         window = self.window
         sender, recipient = self.app.get_sender_recip()
         for field in self.config.address_fields:
@@ -218,31 +218,6 @@ class Gui:
                     value = sg.popup_get_text(f"{field} Missing from {name} record- please enter:")
                     setattr(obj, field, value)
                 window[f'-{name.upper()}_{field.upper()}-'].update(value)
-    #
-    #     for name, object in adict.items():
-    #         for field in self.config.contact_fields:
-    #             try:
-    #                 if not getattr(object, field):
-    #                     setattr(object,field, sg.popup_get_text(f"{field} Missing - please enter:"))
-    #                 window[f'-{name}_{field.upper()}-'].update(getattr(object, field))
-    #             except Exception as e:
-    #                 pass
-    # #
-    # def initialise_window(self):
-    #     window = self.window
-    #     sender, recipient = self.app.get_sender_recip()
-    #     for field in self.config.address_fields:
-    #         try:
-    #             window[f'-SENDER_{field.upper()}-'].update(getattr(sender.sender_address.sender_address, field))
-    #             window[f'-RECIPIENT_{field.upper()}-'].update(getattr(recipient.recipient_address, field))
-    #         except Exception as e:
-    #             ...
-    #     for field in self.config.contact_fields:
-    #         try:
-    #             window[f'-SENDER_{field.upper()}-'].update(getattr(sender, field))
-    #             window[f'-RECIPIENT_{field.upper()}-'].update(getattr(recipient, field))
-    #         except Exception as e:
-    #             pass
 
     def new_address_from_postcode(self):
         event, values, shipment, window = self.event, self.values, self.shipment, self.window
@@ -267,7 +242,7 @@ class Gui:
                 shipment.recipient.recipient_address = chosen_address
 
             for k, v in address_dict.items():
-                window[f'-{mode.upper()}_{k.upper()}-'].update(v)
+                window[f'-{mode.upper()}_{k.upper()}-'].update(v if v else '')
         except:
             pass
 
@@ -573,6 +548,7 @@ class Shipment(AmherstImport):
             pprint(f"\n{self=}\n")
 
 
+# noinspection PyUnresolvedReferences
 class Config:
     """
     sets up the environment
@@ -580,31 +556,28 @@ class Config:
     """
 
     def __init__(self):
-        self.paths = {}
-        self.dbay_prod = {}
-        self.dbay_sand = {}
-        self.root_dir = pathlib.Path(pathlib.Path(__file__)).parent.parent
-
         # get config from toml
+        self.root_dir = pathlib.Path(pathlib.Path(__file__)).parent.parent
         config_path = self.root_dir / 'config.toml'
         with open(config_path, 'rb') as f:
             config = tomllib.load(f)
         for k, v in config.items():
             setattr(self, k, v)
 
+        cmc_dll = pathlib.Path
         self.label_path = pathlib.Path(self.root_dir / self.paths['labels'])
         self.label_path.mkdir(parents=True, exist_ok=True)
+        self.home_sender_id = config['home_address']['address_id']
 
         # commence setup
         if not pathlib.Path(self.paths['cmc_dll']).exists():
-            sg.popup_error(f"Vovin CmCLibNet is not installed in expected location {self.cmc_dll}")
-            print(f"Vovin CmCLibNet is not installed in expected location {self.cmc_dll}")
+            sg.popup_error(f"Vovin CmCLibNet is not installed in expected location {cmc_dll}")
+            print(f"Vovin CmCLibNet is not installed in expected location {cmc_dll}")
             self.install_cmc()
 
         if DEBUG:
             print_and_long_pop(f"{self.root_dir=} -- {config=} \n \n {self}")
             # dbay client setup
-        self.home_sender_id = config['home_address']['address_id']
 
     def get_client(self, sandbox=True):
         # parse shipmode argument and setup API keys from .env

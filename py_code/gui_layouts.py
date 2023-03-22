@@ -345,13 +345,13 @@ class GuiLayout:
         chosen_service = None
         chosen_service_hr = None
         for potential_service in services:
-
             if potential_service.service_id == self.config.service_id:
                 chosen_service = potential_service
                 chosen_service_hr = chosen_service.name
             menu_def.append(potential_service.name)
             services_menu_map.update({potential_service.name: potential_service})
         if not chosen_service:
+            sg.popup("Default service unavailable")
             chosen_service = services[0]
             chosen_service_hr = chosen_service.name
 
