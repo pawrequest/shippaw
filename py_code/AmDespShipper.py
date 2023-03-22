@@ -605,7 +605,12 @@ class Amherst_one_dbase:
         self.status = data['STATUS']
         self.email = data['DELIVERY_E'].split('\x00')[0]
         self.telephone = data['DELIVERY_T'].split('\x00')[0]
-        self.customer = data['FIELD17'].split('\x00')[0]
+        if data['FIELD10']:
+            self.customer = data['FIELD10'].split('\x00')[0] # work. wtf
+        elif data['FIELD17']:
+            self.customer = data['FIELD10'].split('\x00')[0]  # home
+        else:
+            print("an issue")
         self.is_return = is_return
         try:
             self.id_inbound = data['ID_INBOUND']

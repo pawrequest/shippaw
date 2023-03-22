@@ -4,11 +4,11 @@
 block_cipher = None
 
 added_files = [
-                ('scripts/', 'scripts/'),
+                ('config.toml', '.'),
                 ('.env', '.'),
                 ('CmcLibNet_Setup.exe', '.'),
-                ('config.toml', '.'),
-                ('data/', 'data/')
+                ('scripts/', '.'),
+                ('data/', '.'),
                 ]
 
 a = Analysis(
