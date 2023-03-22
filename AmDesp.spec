@@ -7,8 +7,8 @@ added_files = [
                 ('config.toml', '.'),
                 ('.env', '.'),
                 ('CmcLibNet_Setup.exe', '.'),
-                ('scripts/', '.'),
-                ('data/', '.'),
+                ('scripts/', './scripts/'),
+                ('data/', './data/'),
                 ]
 
 a = Analysis(
