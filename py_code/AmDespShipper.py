@@ -65,12 +65,12 @@ class App:
                 sg.popup("COMPLETE")
             case 'track_out':
                 try:
-                    gui.layouts.tracking_viewer_window(self.shipment.shipment_id_outbound)
+                    gui.layouts.tracking_viewer_window(self.shipment.outbound_id)
                 except:
                     sg.popup_error("No Shipment ID")
             case 'track_in':
                 try:
-                    gui.layouts.tracking_viewer_window(self.shipment.shipment_id_inbound)
+                    gui.layouts.tracking_viewer_window(self.shipment.inbound_id)
                 except:
                     sg.popup_error("No Shipment ID")
 
@@ -136,6 +136,8 @@ class Gui:
             sg.theme(theme)
 
         while True:
+            if not window:
+                break
             event, values = window.read()
             window['-SENDER_POSTAL_CODE-'].bind("<Return>", "_Enter")
             window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", "_Enter")
@@ -169,9 +171,9 @@ class Gui:
                 self.new_address_from_postcode()
 
             if event == '-INBOUND_ID-':
-                self.layouts.tracking_viewer_window(shipment.shipment_id_inbound)
+                self.layouts.tracking_viewer_window(shipment.inbound_id)
             if event == '-OUTBOUND_ID-':
-                self.layouts.tracking_viewer_window(shipment.shipment_id_outbound)
+                self.layouts.tracking_viewer_window(shipment.outbound_id)
 
             if event == '-GO-':
                 decision = values['-QUEUE OR BOOK-'].lower()
@@ -299,11 +301,11 @@ class Gui:
         shipment = self.shipment
         client = self.client
         if shipment.is_return:
-            shipment.shipment_id_inbound = client.add_shipment(shipment_request)
-            shipment_id = shipment.shipment_id_inbound
+            shipment.inbound_id = client.add_shipment(shipment_request)
+            shipment_id = shipment.inbound_id
         else:
-            shipment.shipment_id_outbound = client.add_shipment(shipment_request)
-            shipment_id = shipment.shipment_id_outbound
+            shipment.outbound_id = client.add_shipment(shipment_request)
+            shipment_id = shipment.outbound_id
         return shipment_id
 
     def book_collection(self, shipment_id):
@@ -349,7 +351,7 @@ class Gui:
         ps_script = str(self.config.paths['cmc_log'])
         try:  # utility class static method runs powershell script bypassing execuction policy
             ship_id_to_pass = str(
-                self.shipment.shipment_id_inbound if self.shipment.is_return else self.shipment.shipment_id_outbound)
+                self.shipment.inbound_id if self.shipment.is_return else self.shipment.outbound_id)
             commence_edit = Utility.powershell_runner(ps_script, self.shipment.category, self.shipment.shipment_name,
                                                       ship_id_to_pass,
                                                       str(self.shipment.is_return), 'debug')
@@ -405,7 +407,7 @@ class Gui:
         ...
 
 
-class AmherstImport:
+class AmherstXml:
     def __init__(self, xml_file, config):
 
         # inspect xml
@@ -462,21 +464,17 @@ class AmherstImport:
         for attr_name in shipment_fields:
             if attr_name not in vars(self):
                 if attr_name != 'delivery_cost':
-                    print(f"*** Warning - {attr_name} not found in ship_dict - Warning ***")
+                    print_and_pop(f"*** Warning - {attr_name} not found in ship_dict - Warning ***")
 
 
     def to_snake_case(self, input_string):
         """Convert a string to lowercase snake case."""
-        # Replace spaces with underscores
         input_string = input_string.replace(" ", "_")
-        # Replace any non-alphanumeric characters with underscores
         input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
-        # Convert to lowercase
         input_string = input_string.lower()
         return input_string
 
     def parse_amherst_address_string(self, str_address):
-        # crapstring = self.deliveryAddress
         firstline = str_address.strip().split("\n")[0]
         first_block = (str_address.split(" ")[0]).split(",")[0]
         first_char = first_block[0]
@@ -499,7 +497,7 @@ class AmherstImport:
         return input_string
 
 
-class Shipment(AmherstImport):
+class Shipment(AmherstXml):
     def __init__(self, app, is_return=False):
         """
         :param ship_dict: a dictionary of shipment details
@@ -507,9 +505,9 @@ class Shipment(AmherstImport):
         :param reference:
         :param label_text:
         """
-        self.shipment_id_outbound = None
+        self.outbound_id = None
         self.delivery_tel = None
-        self.shipment_id_inbound = None
+        self.inbound_id = None
         self.postcode = None
         self.email = None
         self.name = None

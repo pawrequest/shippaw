@@ -78,8 +78,8 @@ class GuiLayout:
     # self.theme_chooser()
     def shipment_ids(self):
         dirs={
-            'outbound': getattr(self.shipment, 'shipment_id_outbound', None),
-            'inbound': getattr(self.shipment, 'shipment_id_inbound', None)
+            'outbound': getattr(self.shipment, 'outbound_id', None),
+            'inbound': getattr(self.shipment, 'inbound_id', None)
         }
 
         layout = []
@@ -88,11 +88,6 @@ class GuiLayout:
                 [sg.T(f"{direction.title()}: {ID}" if direction else None, font='Rockwell 20', size=20, border_width=3,
                   justification='center', relief=sg.RELIEF_GROOVE, pad=20, enable_events=True if ID else False, k=f'-{direction.upper()}_ID-')]
             )
-
-            #
-            # [sg.T(f"Inbound: {inbound}" if inbound else None, font='Rockwell 20', size=20, border_width=3,
-            #       justification='center',
-            #       relief=sg.RELIEF_GROOVE, pad=20, enable_events=True if inbound else False, k='-INBOUND_ID-')],
 
         frame = sg.Frame('Shipment IDs', layout, pad=20, element_justification='center',
                          border_width=8,
@@ -470,3 +465,20 @@ class GuiLayout:
     #         layout.append([attr])
     #     element = sg.T("Shipment Request", layout)
     #     return element
+
+
+class AmherstDbase:
+    def __init__(self, data):
+        self.shipment_name = data['NAME'].split('\x00')[0]
+        self.send_out_date = data['SEND_OUT_D']
+        self.address = data['DELIVERY_A'].split('\x00')[0]
+        self.name = data['DELIVERY_C'].split('\x00')[0]  # contact
+        self.company_name = data['DELIVERY_N'].split('\x00')[0]
+        self.postcode = data['DELIVERY_P'].split('\x00')[0]
+        self.boxes = data['BOXES']
+        self.status = data['STATUS']
+        try:
+            self.id_inbound = data['ID_INBOUND']
+            self.id_outbound = data['ID_OUTBOUND']
+        except:
+            ...
