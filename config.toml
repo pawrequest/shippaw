@@ -1,11 +1,10 @@
-[fields]
-export = [
+export_fields = [
     'category',
     'collection_booked',
     'customer',
-    'delivery_contact',
-    'delivery_email',
-    'delivery_tel',
+    'contact',
+    'email',
+    'telephone',
     'is_return',
     'boxes',
     'recipient',
@@ -15,16 +14,15 @@ export = [
     'shipment_name',
     'timestamp']
 
-shipment = [
+shipment_fields = [
     'boxes',
     'category',
-    'delivery_address',
-    'delivery_contact',
-    'delivery_cost',
-    'delivery_email',
-    'delivery_postcode',
-    'delivery_tel',
-    'delivery_telephone',
+    'address',
+    'name',
+    'cost',
+    'email',
+    'postcode',
+    'telephone',
     'search_term',
     'send_out_date',
     'shipment_id_inbound',
@@ -32,7 +30,7 @@ shipment = [
     'shipment_name',
 ]
 
-address = [
+address_fields = [
     'company_name',
     'street',
     'locality',
@@ -41,12 +39,16 @@ address = [
     'postal_code',
 ]
 
+contact_fields =[
+    'telephone',
+    'name',
+    'email',
+]
 
-
-[amherst_address]
+[home_address]
 contact = 'Giles Toman'
 email = 'radios@amherst.co.uk'
-phone = "0207 3289792"
+telephone = "0207 3289792"
 company_name = 'Amherst Radio Center'
 street = '70 Kingsgate Road'
 locality = 'Kilburn'
@@ -55,6 +57,7 @@ county = "London"
 postal_code = "NW6 4TE"
 country_code = "GB"
 address_id = 5536 # remove from .env
+search_term = 'amherst'
 
 
 [datetime_masks]
@@ -62,67 +65,48 @@ DT_DISPLAY = '%A - %B %#d'
 DT_HIRE = '%d/%m/%Y'
 DT_DB = '%Y-%m-%d'
 
-[gui]
-fields = [
-    'shipment_name',
-    'send_out_date',
-    'customer',
-    'category',
-    'delivery_contact',
-    'delivery_tel',
-    'delivery_telephone',
-    'delivery_email',
-    'delivery_address',
-    'delivery_postcode',
-    'boxes',
-    'shipment_id_inbound',
-    'shipment_id_outbound',
-]
+[gui_map]
+shipment_name = 'Shipment Name'
+boxes = 'Boxes'
+category= 'Category'
+delivery_address = 'Delivery Address'
+delivery_contact = 'Delivery Contact'
+delivery_email = 'Delivery Email'
+delivery_postcode = 'Delivery Postcode'
+delivery_tel = 'Delivery Tel'
+delivery_telephone = 'Delivery Telephone'
+search_term = 'Search Term'
+send_out_date = 'Send Out Date'
+shipment_id_inbound = 'Shipment Id Inbound'
+shipment_id_outbound = 'Shipment Id Outbound'
+county = 'County'
+town_city = 'Town / City'
+company_name='Company Name'
+postal_code= 'Postcode'
 
 
-[gui.map]
-'shipment_name' = "Shipment Name"
-'boxes' = 'Boxes'
-'category'= 'Category'
-'delivery_address' = 'Delivery Address'
-'delivery_contact' = 'Delivery Contact'
-'delivery_email' = 'Delivery Email'
-'delivery_postcode' = 'Delivery Postcode'
-'delivery_tel' = 'Delivery Tel'
-'delivery_telephone' = 'Delivery Telephone'
-'search_term' = 'Search Term'
-'send_out_date' = 'Send Out Date'
-'shipment_id_inbound' = 'Shipment Id Inbound'
-'shipment_id_outbound' = 'Shipment Id Outbound'
-'county' = 'County'
-'town_city' = 'Town / City'
-'company_name'='Company Name'
-'postal_code'= 'Postcode'
-
-
-[dbay]
-[dbay.sand]
+[dbay_sand]
 courier = 99
 service = 9992
-api_user_keyname = "DESPATCH_API_USER_SANDBOX"
-api_key_keyname = "DESPATCH_API_KEY_SANDBOX"
+api_user = "DESPATCH_API_USER_SANDBOX"
+api_key = "DESPATCH_API_KEY_SANDBOX"
 
-[dbay.prod]
+[dbay_prod]
 courier = 8  # parcelforce
 service = 101  # parcelforce 24
-api_user_keyname = "DESPATCH_API_USER"
-api_key_keyname = "DESPATCH_API_KEY"
+api_user = "DESPATCH_API_USER"
+api_key = "DESPATCH_API_KEY"
 
 
 [paths]
 data = 'data/'
 scripts = 'scripts/'
-labels = 'Parcelforce Labels'
-log = 'AmLog.json'
-cmc_checkin = 'cmc_checkin.ps1'
-cmc_log = 'log_tracking_to_Commence.ps1'
+labels = 'data/Parcelforce Labels/'
+log = 'data/AmLog.json'
+cmc_checkin = 'scripts/cmc_checkin.ps1'
+cmc_log = 'scripts/log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
-cmc_inst = 'CmcLibNet_Setup.exe'
+cmc_inst = 'scripts/CmcLibNet_Setup.exe'
 
 
 

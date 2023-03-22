@@ -2,13 +2,13 @@
 # imports in-range shipments to batch process
 
 import sys
-from py_code.AmDespShipper import ShippingApp
+from py_code.AmDespShipper import App
 
 STORED_XML = "C:\AmDesp\data\Amship.xml"
 
 
 def shipper(mode, xml_file, sandbox=False):
-    app = ShippingApp(sandbox=sandbox)
+    app = App(sandbox=sandbox)
     app.run(mode=mode, xml_file=xml_file)
 
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 # todo [mobility] - repo on ryzen is e/dev/, at amherst is c/paul ... use c/pss on both / all systems? or home?
 #  package imports / sys.path etc. amdesp.spec[pathex].now = e/dev
-#  add Shipment ID to office db
+#  add Shipment ID fields, package delivered field, ship/track buttons to office db
 
 
 # mode = 'track_out'

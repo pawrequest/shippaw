@@ -6,10 +6,13 @@ import PySimpleGUI as sg
 
 
 class GuiLayout:
-    def __init__(self, parent):
-        self.parent = parent
-        self.shipment = parent.shipment
-        self.layout = None
+    def __init__(self, app):
+        self.app = app
+        self.config = app.config
+        self.client = app.client
+        self.shipment = app.shipment
+
+        # shared gui element parameters
         self.default_params = {
             'font': 'Rockwell 14',
             'element_padding': (25, 5),
@@ -65,52 +68,47 @@ class GuiLayout:
         button_frame = sg.Frame('', layout=[[button_col, book_button]], pad=20, element_justification='center',
                                 border_width=8,
                                 relief=sg.RELIEF_GROOVE)
-
-        layout = [
-            [shipment_name],
-            [sender, recipient],
-            [ids, button_frame],
-        ]
-
-        # layout = [[ids]]
+        layout = [[shipment_name],
+                  [sender, recipient],
+                  [ids, sg.P(),button_frame]
+                  ]
         window = sg.Window("A TITLE", layout, finalize=True)
         return window
 
     # self.theme_chooser()
     def shipment_ids(self):
-        outbound = getattr(self.shipment, 'shipment_id_outbound')
-        inbound = getattr(self.shipment, 'shipment_id_inbound')
-        if not any([outbound, inbound]):
-            return None
+        dirs={
+            'outbound': getattr(self.shipment, 'shipment_id_outbound', None),
+            'inbound': getattr(self.shipment, 'shipment_id_inbound', None)
+        }
 
-        sg.T("sdgfdsg", )
+        layout = []
+        for direction, ID in dirs.items():
+            layout.append(
+                [sg.T(f"{direction.title()}: {ID}" if direction else None, font='Rockwell 20', size=20, border_width=3,
+                  justification='center', relief=sg.RELIEF_GROOVE, pad=20, enable_events=True if ID else False, k=f'-{direction.upper()}_ID-')]
+            )
 
-        layout = [
-            [sg.T(f"Outbound: {outbound}",font='Rockwell 20',  size=20, border_width=3, justification='center', relief=sg.RELIEF_GROOVE, pad=20, enable_events=True, k='-OUTBOUND_ID-')],
-            [sg.T(f"Inbound: {inbound}", font='Rockwell 20', size=20, border_width=3,  justification='center', relief=sg.RELIEF_GROOVE, pad=20,enable_events=True, k='-INBOUND_ID-')],
-        ]
+            #
+            # [sg.T(f"Inbound: {inbound}" if inbound else None, font='Rockwell 20', size=20, border_width=3,
+            #       justification='center',
+            #       relief=sg.RELIEF_GROOVE, pad=20, enable_events=True if inbound else False, k='-INBOUND_ID-')],
 
         frame = sg.Frame('Shipment IDs', layout, pad=20, element_justification='center',
-                                        border_width=8,
-                                        relief=sg.RELIEF_GROOVE)
+                         border_width=8,
+                         relief=sg.RELIEF_GROOVE, expand_y=True)
         return frame
 
     def tracking_viewer_window(self, shipment_id):
-        client = self.shipment.CNFG.client
-        shipment = None
-        tracking_layout=[]
-        # try:
-        shipment = client.get_shipment(shipment_id)
-        # except Exception as e:
-        #     sg.popup_error(e)
-        parcel_title = None
-        tracking_numbers = [parcel.tracking_number for parcel in shipment.parcels]
-        tracking_d = {}
-        sublayout=[]
-        parcel_frame = None
-        signatory=None
-        params={}
+        client = self.client
         try:
+            shipment = client.get_shipment(shipment_id)
+            tracking_numbers = [parcel.tracking_number for parcel in shipment.parcels]
+            tracking_d = {}
+            sublayout = []
+            parcel_frame = None
+            signatory = None
+            params = {}
             for tracked_parcel in tracking_numbers:
                 tracking = client.get_tracking(tracked_parcel)
                 courier = tracking['CourierName']
@@ -119,28 +117,22 @@ class GuiLayout:
                 for event in history:
                     if 'delivered' in event.Description.lower():
                         signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-                        params.update({'background_color':'aquamarine', 'text_color':'red'})
+                        params.update({'background_color': 'aquamarine', 'text_color': 'red'})
 
-                    event_text = sg.T(f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}', **params)
+                    event_text = sg.T(
+                        f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
+                        **params)
                     sublayout.append([event_text])
 
                 parcel_frame = [sg.Column(sublayout)]
                 tracking_d.update({tracked_parcel: tracking})
 
-
         except Exception as e:
             sg.popup_error(e)
         else:
             shipment.tracking_dict = tracking_d
-
             tracking_window = sg.Window('', [parcel_frame])
             tracking_window.read()
-
-
-        # return parcel_title, tracking_layout
-
-
-
 
     # elements
     def shipment_name_element(self):
@@ -151,40 +143,59 @@ class GuiLayout:
 
     def sender_receiver_frame(self, mode):
         title = mode.title()
-        shipment = self.shipment
-        client = shipment.CNFG.client
-        sender, recipient = self.get_sender_recip()
-        obj_to_edit = getattr(shipment, mode)
-        address = None
-        if mode == 'sender':
-            address = sender.sender_address.sender_address  # debug somethign screwy here, surely?
-        elif mode == 'recipient':
-            address = recipient.recipient_address
-
         layout = [
-            [sg.Text(f'{title} Name:', **self.address_fieldname_params),
-             sg.InputText(default_text=getattr(obj_to_edit, 'name'), key=f'-{title.upper()}_NAME-',
-                          **self.address_input_params)],
-            [sg.Text(f'{title} Email:', **self.address_fieldname_params),
-             sg.InputText(default_text=getattr(obj_to_edit, 'email'), key=f'-{title.upper()}_EMAIL-',
-                          **self.address_input_params)],
-            [sg.Text(f'{title} Phone:', **self.address_fieldname_params),
-             sg.InputText(default_text=getattr(obj_to_edit, 'telephone'), key=f'-{title.upper()}_PHONE-',
-                          **self.address_input_params)],
-            [self.address_frame(address=address, mode=mode)],
-            # [sg.B("Update", k=f'-UPDATE_{title.upper()}')]
+            [sg.Text(f'Name:', **self.address_fieldname_params),
+             sg.InputText(key=f'-{title.upper()}_NAME-', **self.address_input_params)],
+
+            [sg.Text(f'Email:', **self.address_fieldname_params),
+             sg.InputText(key=f'-{title.upper()}_EMAIL-', **self.address_input_params)],
+
+            [sg.Text(f'Telephone:', **self.address_fieldname_params),
+             sg.InputText(key=f'-{title.upper()}_TELEPHONE-', **self.address_input_params)],
+
+            [self.address_frame(mode=mode)],
         ]
+
         k = f'-{title.upper()}-'
+        # noinspection PyTypeChecker
         frame = sg.Frame(f'{title}', layout, k=k, pad=20, font="Rockwell 30", border_width=5, relief=sg.RELIEF_GROOVE,
                          title_location=sg.TITLE_LOCATION_TOP)
         return frame
 
-    def address_frame(self, address, mode):
 
-        shipment = self.shipment
+    #
+    # def sender_receiver_frame(self, mode):
+    #     title = mode.title()
+    #     shipment = self.shipment
+    #     sender, recipient = self.get_sender_recip()
+    #     obj_to_edit = getattr(shipment, mode)
+    #     address = None
+    #     if mode == 'sender':
+    #         address = sender.sender_address  # debug somethign screwy here, surely?
+    #     elif mode == 'recipient':
+    #         address = recipient.recipient_address
+    #
+    #     layout = [
+    #         [sg.Text(f'{title} Name:', **self.address_fieldname_params),
+    #          sg.InputText(default_text=getattr(obj_to_edit, 'name'), key=f'-{title.upper()}_NAME-',
+    #                       **self.address_input_params)],
+    #         [sg.Text(f'{title} Email:', **self.address_fieldname_params),
+    #          sg.InputText(default_text=getattr(obj_to_edit, 'email'), key=f'-{title.upper()}_EMAIL-',
+    #                       **self.address_input_params)],
+    #         [sg.Text(f'{title} Phone:', **self.address_fieldname_params),
+    #          sg.InputText(default_text=getattr(obj_to_edit, 'telephone'), key=f'-{title.upper()}_PHONE-',
+    #                       **self.address_input_params)],
+    #         [self.address_frame(address=address, mode=mode)],
+    #         # [sg.B("Update", k=f'-UPDATE_{title.upper()}')]
+    #     ]
+    #     k = f'-{title.upper()}-'
+    #     frame = sg.Frame(f'{title}', layout, k=k, pad=20, font="Rockwell 30", border_width=5, relief=sg.RELIEF_GROOVE,
+    #                      title_location=sg.TITLE_LOCATION_TOP)
+    #     return frame
+
+    def address_frame(self, mode):
         layout = []
-        # (shipment.CNFG.db_address_fields)
-        db_address_fields = [
+        address_fields = [
             'company_name',
             'street',
             'locality',
@@ -192,23 +203,55 @@ class GuiLayout:
             'county',
             'postal_code',
         ]
-        params = {**self.address_fieldname_params}.copy()
+        params = self.address_fieldname_params.copy()
 
-        for attr in db_address_fields:
-            human_readable_attr = shipment.CNFG.gui_map.get(attr, attr.title())
+        for attr in address_fields:
+            key = f'-{mode}_{attr}-'.upper()
+            key_hr = attr.title().replace('_', ' ')
+
             if attr in ('company_name', 'postal_code'):
                 # is a button
                 params.pop('justification', None)
-                label_text = sg.B(human_readable_attr, k=f'-{mode}_{attr}-', **params)
+                label_text = sg.B(key_hr, k=key.lower(), **params)
             else:
-                label_text = sg.Text(human_readable_attr, k=f'-{mode}_{attr}-', **self.address_fieldname_params)
-            input_box = sg.InputText(default_text=getattr(address, attr, None), k=f'-{mode}_{attr}-'.upper(),
-                                     **self.address_input_params)
-            layout.append(([label_text, input_box]))
+                label_text = sg.Text(key_hr, k=key.lower(), **self.address_fieldname_params)
 
-        # layout.append([sg.B("Search", k=f'-{mode.upper()}_SEARCH-')])
+            input_box = sg.InputText(k=key, **self.address_input_params)
+            layout.append([label_text, input_box])
+
         frame = sg.Frame(f"{mode.title()} Address", layout, k=f'-{mode.upper()}_ADDRESS-', pad=20, )
         return frame
+    #
+    # def address_frame(self, address, mode):
+    #
+    #     shipment = self.shipment
+    #     layout = []
+    #     # (shipment.CNFG.db_address_fields)
+    #     db_address_fields = [
+    #         'company_name',
+    #         'street',
+    #         'locality',
+    #         'town_city',
+    #         'county',
+    #         'postal_code',
+    #     ]
+    #     params = {**self.address_fieldname_params}.copy()
+    #
+    #     for attr in db_address_fields:
+    #         human_readable_attr = self.config.gui_map.get(attr, attr.title())
+    #         if attr in ('company_name', 'postal_code'):
+    #             # is a button
+    #             params.pop('justification', None)
+    #             label_text = sg.B(human_readable_attr, k=f'-{mode}_{attr}-', **params)
+    #         else:
+    #             label_text = sg.Text(human_readable_attr, k=f'-{mode}_{attr}-', **self.address_fieldname_params)
+    #         input_box = sg.InputText(default_text=getattr(address, attr, None), k=f'-{mode}_{attr}-'.upper(),
+    #                                  **self.address_input_params)
+    #         layout.append(([label_text, input_box]))
+    #
+    #     # layout.append([sg.B("Search", k=f'-{mode.upper()}_SEARCH-')])
+    #     frame = sg.Frame(f"{mode.title()} Address", layout, k=f'-{mode.upper()}_ADDRESS-', pad=20, )
+    #     return frame
 
     def combo_popup(self, options_dict: dict) -> object or None:
         """
@@ -247,7 +290,7 @@ class GuiLayout:
         """
         send_date = self.shipment.send_out_date
         available_dates = self.shipment.available_dates  # dbay objecrts
-        datetime_mask = self.shipment.CNFG.datetime_masks['DT_DISPLAY']
+        datetime_mask = self.config.datetime_masks['DT_DISPLAY']
         self.date_menu_map = {}
         menu_def = []
         chosen_date_db = None
@@ -293,7 +336,7 @@ class GuiLayout:
         return element
 
     def service_combo(self):
-        client = self.shipment.CNFG.client
+        client = self.client
         services = client.get_services()
         services_menu_map = {}
         menu_def = []
@@ -303,15 +346,14 @@ class GuiLayout:
         chosen_service_hr = None
         for potential_service in services:
 
-            if potential_service.service_id == self.shipment.CNFG.service_id:
+            if potential_service.service_id == self.config.service_id:
                 chosen_service = potential_service
                 chosen_service_hr = chosen_service.name
             menu_def.append(potential_service.name)
-            services_menu_map.update({chosen_service_hr: potential_service})
+            services_menu_map.update({potential_service.name: potential_service})
         if not chosen_service:
             chosen_service = services[0]
             chosen_service_hr = chosen_service.name
-            services_menu_map.update({chosen_service_hr: chosen_service})
 
         self.shipment.service = chosen_service
         element = sg.Combo(default_value=chosen_service_hr, values=menu_def, k='-SERVICE-',
@@ -348,23 +390,28 @@ class GuiLayout:
     # methods
     def initial_request(self):
         shipment = self.shipment
-        client = shipment.CNFG.client
+        client = self.client
         shipment.parcels = self.get_parcels(shipment.boxes)
 
-        shipment_request = client.shipment_request(
-            service_id=shipment.service.service_id,
-            parcels=shipment.parcels,
-            client_reference=shipment.label_text,
-            collection_date=shipment.date,
-            sender_address=shipment.sender,
-            recipient_address=shipment.recipient,
-            follow_shipment=True
-        )
-        return shipment_request
+        try:
+            shipment_request = client.shipment_request(
+                service_id=shipment.service.service_id,
+                parcels=shipment.parcels,
+                client_reference=shipment.shipment_name.replace(r'/', '-'),
+                collection_date=shipment.date,
+                sender_address=shipment.sender,
+                recipient_address=shipment.recipient,
+                follow_shipment=True
+            )
+        except:
+            sg.popup_error("Initial import failed")
+            return None
+        else:
+            return shipment_request
 
     def get_parcels(self, num_parcels):
         # num_parcels = int(num_parcels.split(" ")[0])
-        client = self.shipment.CNFG.client
+        client = self.client
         parcels = []
         for x in range(int(num_parcels)):
             parcel = client.parcel(
@@ -379,28 +426,30 @@ class GuiLayout:
         self.shipment.parcels = parcels
         return parcels
 
-    def get_sender_recip(self):
-        shipment = self.shipment
-        client = shipment.CNFG.client
-        if shipment.is_return:
-            recipient = shipment.amherst_recipient
-            sender = client.sender(
-                name=shipment.delivery_contact,
-                email=shipment.delivery_email,
-                telephone=shipment.delivery_tel,
-                sender_address=client.find_address(shipment.delivery_postcode, shipment.search_term)
-            )
-        else:
-            sender = shipment.amherst_sender
 
-            recipient = client.recipient(
-                name=shipment.delivery_contact,
-                email=shipment.delivery_email,
-                telephone=shipment.delivery_tel,
-                recipient_address=client.find_address(shipment.delivery_postcode, shipment.search_term)
-            )
-        shipment.sender, shipment.recipient = sender, recipient
-        return sender, recipient
+    #
+    # def get_sender_recip(self):
+    #     shipment = self.shipment
+    #     client = shipment.CNFG.client
+    #     if shipment.is_return:
+    #         recipient = shipment.home_recipient
+    #         sender = client.sender(
+    #             name=shipment.delivery_contact,
+    #             email=shipment.delivery_email,
+    #             telephone=shipment.delivery_tel,
+    #             sender_address=client.find_address(shipment.delivery_postcode, shipment.search_term)
+    #         )
+    #     else:
+    #         sender = shipment.home_sender
+    #
+    #         recipient = client.recipient(
+    #             name=shipment.delivery_contact,
+    #             email=shipment.delivery_email,
+    #             telephone=shipment.delivery_tel,
+    #             recipient_address=client.find_address(shipment.delivery_postcode, shipment.search_term)
+    #         )
+    #     shipment.sender, shipment.recipient = sender, recipient
+    #     return sender, recipient
 
     def theme_chooser(self):
         theme_layout = [[sg.Text("See how elements look under different themes by choosing a different theme here!")],
