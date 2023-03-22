@@ -12,7 +12,7 @@ added_files = [
                 ]
 
 a = Analysis(
-    ['AmDesp.py'],
+    ['Main.py'],
     pathex=['E:\\dev\\AmDesp'],
     binaries=[],
     datas=added_files,

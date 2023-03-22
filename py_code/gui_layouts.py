@@ -1,3 +1,4 @@
+from dbfread import DBF
 from dataclasses import dataclass
 from datetime import datetime
 from dateutil.parser import parse
@@ -283,7 +284,7 @@ class GuiLayout:
         """ PSG Combo to select a despatchbay collection date object
         if match to send_out_date then green, else purple
         """
-        send_date = self.shipment.send_out_date
+        send_date = self.shipment.date
         available_dates = self.shipment.available_dates  # dbay objecrts
         datetime_mask = self.config.datetime_masks['DT_DISPLAY']
         self.date_menu_map = {}
@@ -467,18 +468,3 @@ class GuiLayout:
     #     return element
 
 
-class AmherstDbase:
-    def __init__(self, data):
-        self.shipment_name = data['NAME'].split('\x00')[0]
-        self.send_out_date = data['SEND_OUT_D']
-        self.address = data['DELIVERY_A'].split('\x00')[0]
-        self.name = data['DELIVERY_C'].split('\x00')[0]  # contact
-        self.company_name = data['DELIVERY_N'].split('\x00')[0]
-        self.postcode = data['DELIVERY_P'].split('\x00')[0]
-        self.boxes = data['BOXES']
-        self.status = data['STATUS']
-        try:
-            self.id_inbound = data['ID_INBOUND']
-            self.id_outbound = data['ID_OUTBOUND']
-        except:
-            ...

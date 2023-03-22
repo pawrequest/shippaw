@@ -25,8 +25,8 @@ shipment_fields = [
     'telephone',
     'search_term',
     'send_out_date',
-    'shipment_id_inbound',
-    'shipment_id_outbound',
+    'inbound_id',
+    'outbound_id',
     'shipment_name',
 ]
 
@@ -107,6 +107,7 @@ cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_log = 'scripts/log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_inst = 'scripts/CmcLibNet_Setup.exe'
+dbase_import = 'E:\Dev\AmDesp\data\shipping_candidates.dbf'
 
 
 

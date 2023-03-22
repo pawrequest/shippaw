@@ -1,5 +1,8 @@
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+
+from dbfread import DBF
+
 from .gui_layouts import GuiLayout
 import PySimpleGUI as sg
 import inspect
@@ -51,28 +54,40 @@ class App:
 
     def run(self, mode, xml_file):
         self.mode = mode
-        self.xml = xml_file
-        self.shipment = Shipment(self)
-        gui = Gui(self)
-        self.gui = gui
+        # self.xml = xml_file
+        # self.shipment = Shipment(self)
+        self.bulk = self.get_bulk_dbase()
+        for shipment in self.bulk:
+            self.shipment = shipment
+            gui = Gui(self)
+            self.gui = gui
 
-        match mode:
-            case 'ship_out':
-                gui.gui_ship('out')
-                sg.popup("COMPLETE")
-            case 'ship_in':
-                gui.gui_ship('in')
-                sg.popup("COMPLETE")
-            case 'track_out':
-                try:
-                    gui.layouts.tracking_viewer_window(self.shipment.outbound_id)
-                except:
-                    sg.popup_error("No Shipment ID")
-            case 'track_in':
-                try:
-                    gui.layouts.tracking_viewer_window(self.shipment.inbound_id)
-                except:
-                    sg.popup_error("No Shipment ID")
+            match mode:
+                case 'ship_out':
+                    gui.gui_ship('out')
+                    sg.popup("COMPLETE")
+                case 'ship_in':
+                    gui.gui_ship('in')
+                    sg.popup("COMPLETE")
+                case 'track_out':
+                    try:
+                        gui.layouts.tracking_viewer_window(self.shipment.outbound_id)
+                    except:
+                        sg.popup_error("No Shipment ID")
+                case 'track_in':
+                    try:
+                        gui.layouts.tracking_viewer_window(self.shipment.inbound_id)
+                    except:
+                        sg.popup_error("No Shipment ID")
+
+    def get_bulk_dbase(self):
+        datapath = self.config.paths['dbase_import']
+        bulk_dbase = DBF(datapath)
+        dbase_records = []
+        for single_record in (bulk_dbase.records):
+            obj = Shipment(self, single_record)
+            dbase_records.append(obj)
+        return dbase_records
 
     def get_sender_recip(self):
         shipment = self.shipment
@@ -188,7 +203,7 @@ class Gui:
                         shipment_id = self.queue_shipment(shipment_request)
                         if 'book' in decision:
                             shipment_return = self.book_collection(shipment_id)
-                            sg.popup(f"Collection booked: {shipment_return}")
+                            sg.popup(f"Collection for {self.shipment.shipment_name} booked")
                         if 'print' in decision:
                             self.print_label()
                         if 'email' in decision:
@@ -198,7 +213,6 @@ class Gui:
                         break
 
         window.close()
-        sys.exit()
 
     def populate_window(self):
         window = self.window
@@ -210,8 +224,7 @@ class Gui:
             except Exception as e:
                 ...
 
-
-        adict= {'sender':sender, 'recipient':recipient}
+        adict = {'sender': sender, 'recipient': recipient}
 
         for name, obj in adict.items():
             for field in self.config.contact_fields:
@@ -222,6 +235,11 @@ class Gui:
                 window[f'-{name.upper()}_{field.upper()}-'].update(value)
 
     def new_address_from_postcode(self):
+        """ click 'postcode' label, or press Return in postcode input to call.
+            parses sender vs recipient from event code.
+            takes postcode from window, gets list of candidate addresses with given postcode
+            popup a chooser,
+            """
         event, values, shipment, window = self.event, self.values, self.shipment, self.window
         postcode = None
         mode = None
@@ -232,6 +250,7 @@ class Gui:
             mode = 'recipient'
             postcode = values['-RECIPIENT_POSTAL_CODE-']
 
+        address_dict={}
         try:
             candidates = self.get_address_candidates(postcode=postcode)
             chosen_address = self.address_chooser(candidates)
@@ -313,7 +332,7 @@ class Gui:
         client = self.client
         try:
             shipment_return = client.book_shipments(shipment_id)[0]  # debug there could be more than one here??
-            sg.popup_scrolled(f'Shipment booked: \n{shipment_return}')
+            sg.popup_scrolled(f'Shipment booked: \n{shipment_return}', size=(30, 30))
             shipment.collection_booked = True
         except:
             sg.popup_error("Unable to Book")
@@ -461,11 +480,13 @@ class AmherstXml:
         # noinspection PyTypeChecker
         self.search_term = self.parse_amherst_address_string(self.address)
 
+        missing = []
         for attr_name in shipment_fields:
             if attr_name not in vars(self):
-                if attr_name != 'delivery_cost':
-                    print_and_pop(f"*** Warning - {attr_name} not found in ship_dict - Warning ***")
-
+                if attr_name not in ['delivery_cost', 'inbound_id', 'outbound_id']:
+                    missing.append(attr_name)
+        if missing:
+            print_and_pop(f"*** Warning - {missing} not found in ship_dict - Warning ***")
 
     def to_snake_case(self, input_string):
         """Convert a string to lowercase snake case."""
@@ -497,55 +518,6 @@ class AmherstXml:
         return input_string
 
 
-class Shipment(AmherstXml):
-    def __init__(self, app, is_return=False):
-        """
-        :param ship_dict: a dictionary of shipment details
-        :param config: a config() object
-        :param reference:
-        :param label_text:
-        """
-        self.outbound_id = None
-        self.delivery_tel = None
-        self.inbound_id = None
-        self.postcode = None
-        self.email = None
-        self.name = None
-
-        xml_file = app.xml
-        config = app.config
-        client = app.client
-        # attrs from importer class
-        super().__init__(xml_file, config)
-
-        self.home_sender = client.sender(
-            address_id=config.home_sender_id,
-            name=config.home_address['contact'],
-            email=config.home_address['email'],
-            telephone=config.home_address['telephone'],
-            sender_address=client.get_sender_addresses()[0]
-        )
-        self.home_recipient = client.recipient(
-            name=config.home_address['contact'],
-            email=config.home_address['email'],
-            telephone=config.home_address['telephone'],
-            recipient_address=client.find_address(config.home_address['postal_code'],
-                                                  config.home_address['search_term'])
-
-        )
-        self.available_dates = client.get_available_collection_dates(self.home_sender, config.courier_id)  # get dates
-        self.service = None
-        self.is_return = is_return
-        self.sender = None
-        self.recipient = None
-        self.parcels = None
-        self.collection_booked = False
-        self.shipping_cost = None
-        self.date = None
-        if DEBUG:
-            pprint(f"\n{self=}\n")
-
-
 # noinspection PyUnresolvedReferences
 class Config:
     """
@@ -562,6 +534,7 @@ class Config:
         for k, v in config.items():
             setattr(self, k, v)
 
+        self.paths = config['paths']
         cmc_dll = pathlib.Path
         self.label_path = pathlib.Path(self.root_dir / self.paths['labels'])
         self.label_path.mkdir(parents=True, exist_ok=True)
@@ -618,3 +591,66 @@ def print_and_pop(print_text: str):
 def print_and_long_pop(print_string: str):
     sg.popup_scrolled(print_string)
     pprint(print_string)
+
+
+class Amherst_one_dbase:
+    def __init__(self, data, is_return=False):
+        self.shipment_name = data['NAME'].split('\x00')[0]
+        self.date = data['SEND_OUT_D']
+        self.address = data['DELIVERY_A'].split('\x00')[0]
+        self.name = data['DELIVERY_C'].split('\x00')[0]  # contact
+        self.company_name = data['DELIVERY_N'].split('\x00')[0]
+        self.postcode = data['DELIVERY_P'].split('\x00')[0]
+        self.boxes = data['BOXES']
+        self.status = data['STATUS']
+        self.email = data['DELIVERY_E'].split('\x00')[0]
+        self.telephone = data['DELIVERY_T'].split('\x00')[0]
+        self.customer = data['FIELD17'].split('\x00')[0]
+        self.is_return = is_return
+        try:
+            self.id_inbound = data['ID_INBOUND']
+            self.id_outbound = data['ID_OUTBOUND']
+        except:
+            ...
+        self.service = None
+        self.sender = None
+        self.recipient = None
+        self.parcels = None
+        self.collection_booked = False
+
+
+class Shipment(Amherst_one_dbase):
+    def __init__(self, app, single_dbase, is_return=False):
+        """
+        :param ship_dict: a dictionary of shipment details
+        :param config: a config() object
+        :param reference:
+        :param label_text:
+        """
+        super().__init__(single_dbase)
+        # xml_file = app.xml
+        # attrs from importer class
+        # super().__init__(xml_file, config)
+
+        config = app.config
+        client = app.client
+
+        self.home_sender = client.sender(
+            address_id=config.home_sender_id,
+            name=config.home_address['contact'],
+            email=config.home_address['email'],
+            telephone=config.home_address['telephone'],
+            sender_address=client.get_sender_addresses()[0]
+        )
+        self.home_recipient = client.recipient(
+            name=config.home_address['contact'],
+            email=config.home_address['email'],
+            telephone=config.home_address['telephone'],
+            recipient_address=client.find_address(config.home_address['postal_code'],
+                                                  config.home_address['search_term'])
+
+        )
+        self.available_dates = client.get_available_collection_dates(self.home_sender, config.courier_id)  # get dates
+
+        if DEBUG:
+            pprint(f"\n{self=}\n")

@@ -8,6 +8,7 @@ STORED_XML = "C:\AmDesp\data\Amship.xml"
 
 
 def shipper(mode, xml_file, sandbox=False):
+    """ sandbox = fake shipping client, no money for labels!"""
     app = App(sandbox=sandbox)
     app.run(mode=mode, xml_file=xml_file)
 
@@ -29,7 +30,7 @@ if __name__ == '__main__':
 
         mode = 'ship_out'
         xml_file = STORED_XML
-        sandbox = True
+        sandbox = False
 
         # mode = 'track_out'
         # xml_file = STORED_XML
