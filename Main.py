@@ -21,7 +21,7 @@ if __name__ == '__main__':
         print(sys.argv)
         mode = sys.argv[1]
         xml_file = sys.argv[2]
-        sandbox = False
+        sandbox = True
 
     # AmDesp called from IDE:
     else:
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
         mode = 'ship_out'
         xml_file = STORED_XML
-        sandbox = False
+        sandbox = True
 
 
         # mode = 'track_out'
