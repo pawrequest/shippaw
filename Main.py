@@ -2,16 +2,16 @@
 # imports in-range shipments to batch process
 
 import sys
-from py_code.AmDespShipper import App
+from AmDesp.shipper import App
 
 
-STORED_XML = "C:\AmDesp\data\Amship.xml"
+STORED_XML = r"C:\Users\Surface\PycharmProjects\AmDesp\data\AmShip.xml"
 
 
 def shipper(mode, xml_file, sandbox=False):
     """ sandbox = fake shipping client, no money for labels!"""
     app = App(sandbox=sandbox)
-    app.run(mode=mode, xml_file=xml_file)
+    app.run(mode=mode, in_file=STORED_XML)
 
 
 if __name__ == '__main__':

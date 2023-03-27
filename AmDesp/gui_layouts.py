@@ -11,7 +11,7 @@ class GuiLayout:
         self.app = app
         self.config = app.config
         self.client = app.client
-        self.shipment = app.shipment
+        # self.shipment = app.shipment
 
         # shared gui element parameters
         self.default_params = {
@@ -284,9 +284,12 @@ class GuiLayout:
         """ PSG Combo to select a despatchbay collection date object
         if match to send_out_date then green, else purple
         """
+        client = self.client
+        config = self.config
+        shipment= self.shipment
         send_date = self.shipment.date
-        available_dates = self.shipment.available_dates  # dbay objecrts
-        datetime_mask = self.config.datetime_masks['DT_DISPLAY']
+        available_dates = client.get_available_collection_dates(shipment.sender, config.courier_id)  # get dates
+        datetime_mask = config.datetime_masks['DT_DISPLAY']
         self.date_menu_map = {}
         menu_def = []
         chosen_date_db = None
