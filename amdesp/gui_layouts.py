@@ -11,7 +11,7 @@ class GuiLayout:
         self.app = app
         self.config = app.config
         self.client = app.client
-        # self.shipment = app.shipment
+        self.shipment = app.shipment
 
         # shared gui element parameters
         self.default_params = {
@@ -46,6 +46,7 @@ class GuiLayout:
         shipment_name = self.shipment_name_element()
         sender = self.sender_receiver_frame('sender')
         recipient = self.sender_receiver_frame('recipient')
+        # todo get addresses before dates
         date_match = self.date_chooser()
         parcels = self.parcels_spin()
         service = self.service_combo()
@@ -288,7 +289,7 @@ class GuiLayout:
         config = self.config
         shipment= self.shipment
         send_date = self.shipment.date
-        available_dates = client.get_available_collection_dates(shipment.sender, config.courier_id)  # get dates
+        available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.courier_id)
         datetime_mask = config.datetime_masks['DT_DISPLAY']
         self.date_menu_map = {}
         menu_def = []

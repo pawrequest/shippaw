@@ -2,15 +2,12 @@ export_fields = [
     'category',
     'collection_booked',
     'customer',
-    'contact',
-    'email',
-    'telephone',
     'is_return',
     'boxes',
     'recipient',
     'sender',
-    'shipment_id_inbound',
-    'shipment_id_outbound',
+    'inbound_id',
+    'outbound_id',
     'shipment_name',
     'timestamp']
 
@@ -77,8 +74,8 @@ delivery_tel = 'Delivery Tel'
 delivery_telephone = 'Delivery Telephone'
 search_term = 'Search Term'
 send_out_date = 'Send Out Date'
-shipment_id_inbound = 'Shipment Id Inbound'
-shipment_id_outbound = 'Shipment Id Outbound'
+inbound_id = 'Inbound ID'
+outbound_id = 'Outbound ID'
 county = 'County'
 town_city = 'Town / City'
 company_name='Company Name'

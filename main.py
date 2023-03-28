@@ -2,7 +2,7 @@
 # imports in-range shipments to batch process
 
 import sys
-from AmDesp.shipper import App
+from amdesp.shipper import App
 
 
 STORED_XML = r"C:\Users\Surface\PycharmProjects\AmDesp\data\AmShip.xml"
