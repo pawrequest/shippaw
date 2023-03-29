@@ -5,3 +5,4 @@ suds
 pyinstaller
 pysimplegui
 dbfread
+platformdirs

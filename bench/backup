@@ -1,3 +1,107 @@
+  #
+    # def address_frame(self, address, mode):
+    #
+    #     shipment = self.shipment
+    #     layout = []
+    #     # (shipment.CNFG.db_address_fields)
+    #     db_address_fields = [
+    #         'company_name',
+    #         'street',
+    #         'locality',
+    #         'town_city',
+    #         'county',
+    #         'postal_code',
+    #     ]
+    #     params = {**self.address_fieldname_params}.copy()
+    #
+    #     for attr in db_address_fields:
+    #         human_readable_attr = self.config.gui_map.get(attr, attr.title())
+    #         if attr in ('company_name', 'postal_code'):
+    #             # is a button
+    #             params.pop('justification', None)
+    #             label_text = sg.B(human_readable_attr, k=f'-{mode}_{attr}-', **params)
+    #         else:
+    #             label_text = sg.Text(human_readable_attr, k=f'-{mode}_{attr}-', **self.address_fieldname_params)
+    #         input_box = sg.InputText(default_text=getattr(address, attr, None), k=f'-{mode}_{attr}-'.upper(),
+    #                                  **self.address_input_params)
+    #         layout.append(([label_text, input_box]))
+    #
+    #     # layout.append([sg.B("Search", k=f'-{mode.upper()}_SEARCH-')])
+    #     frame = sg.Frame(f"{mode.title()} Address", layout, k=f'-{mode.upper()}_ADDRESS-', pad=20, )
+    #     return frame
+
+
+
+# class Amherst_one_dbase:
+#     def __init__(self, data, is_return=False):
+#         self.shipment_name = data['NAME'].split('\x00')[0]
+#         self.date = data['SEND_OUT_D']
+#         self.address = data['DELIVERY_A'].split('\x00')[0]
+#         self.name = data['DELIVERY_C'].split('\x00')[0]  # contact
+#         self.company_name = data['DELIVERY_N'].split('\x00')[0]
+#         self.postcode = data['DELIVERY_P'].split('\x00')[0]
+#         self.boxes = data['BOXES']
+#         self.status = data['STATUS']
+#         self.email = data['DELIVERY_E'].split('\x00')[0]
+#         # different fieldnames at home vs at work...
+#         self.telephone = data['DELIVERY_T'].split('\x00')[0]
+#         if data['FIELD10']:
+#             self.customer = data['FIELD10'].split('\x00')[0]
+#         elif data['FIELD17']:
+#             self.customer = data['FIELD10'].split('\x00')[0]
+#         else:
+#             print("Customer fieldname is neither FIELD10 nor FIELD17 in Commence export DBase")
+#         self.is_return = is_return
+#         try:
+#             self.inbound_id = data['ID_INBOUND']
+#             self.outbound_id = data['ID_OUTBOUND']
+#         except:
+#             ...
+#         self.service = None
+#         self.sender = None
+#         self.recipient = None
+#         self.parcels = None
+#         self.collection_booked = False
+
+
+# class Shipment(Amherst_one_dbase):
+#     def __init__(self, app, single_dbase, is_return=False):
+#         """
+#         :param ship_dict: a dictionary of shipment details
+#         :param config: a config() object
+#         :param reference:
+#         :param label_text:
+#         """
+#         super().__init__(single_dbase)
+#         # xml_file = app.xml
+#         # attrs from importer class
+#         # super().__init__(xml_file, config)
+#
+#         config = app.config
+#         client = app.client
+#
+#         self.home_sender = client.sender(
+#             address_id=config.home_sender_id,
+#             name=config.home_address['contact'],
+#             email=config.home_address['email'],
+#             telephone=config.home_address['telephone'],
+#             sender_address=client.get_sender_addresses()[0]
+#         )
+#         self.home_recipient = client.recipient(
+#             name=config.home_address['contact'],
+#             email=config.home_address['email'],
+#             telephone=config.home_address['telephone'],
+#             recipient_address=client.find_address(config.home_address['postal_code'],
+#                                                   config.home_address['search_term'])
+#
+#         )
+#
+#         if DEBUG:
+#             pprint(f"\n{self=}\n")
+
+
+
+
           '''
         def boxes_script(self):
         """:returns a number of boxes to send"""

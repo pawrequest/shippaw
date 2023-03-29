@@ -1,4 +1,5 @@
 # import sys
+import pathlib
 import subprocess
 
 
@@ -6,41 +7,40 @@ import subprocess
 # from pyexcel_ods3 import get_data
 
 class DictObj:
-    def __init__(self, in_dict:dict):
+    def __init__(self, in_dict: dict):
         assert isinstance(in_dict, dict)
         for key, val in in_dict.items():
             if isinstance(val, (list, tuple)):
-               setattr(self, key, [DictObj(x) if isinstance(x, dict) else x for x in val])
+                setattr(self, key, [DictObj(x) if isinstance(x, dict) else x for x in val])
             else:
-               setattr(self, key, DictObj(val) if isinstance(val, dict) else val)
-
-
+                setattr(self, key, DictObj(val) if isinstance(val, dict) else val)
 
 
 class Utility:
     @staticmethod
-    def powershell_runner(script_path,
-                          *params):
+    def powershell_runner(script_path: str,
+                          *params:list[str]):
         POWERSHELL_PATH = "powershell.exe"
 
         commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
         for param in params:
+            # todo type annotation is wrong
             commandline_options.append("'" + param + "'")
         try:
             process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        universal_newlines=True)
+                                            universal_newlines=True)
         except Exception as e:
             print(e)
         else:
             if 'debug' in params:
                 print(f"{commandline_options=}")
                 print(f"{process_result.stdout=}")  # PRINT STANDARD OUTPUT FROM POWERSHELL
-                print(f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
+                print(
+                    f"{process_result.stderr=}")  # PRINT STANDARD ERROR FROM POWERSHELL ( IF ANY OTHERWISE ITS NULL|NONE )
             return process_result.returncode
 
 
-
-def printel(*els): # elementtree elements
+def printel(*els):  # elementtree elements
     print("printel")
     if isinstance(els, str):
         els = [els]
@@ -79,7 +79,7 @@ def printel(*els): # elementtree elements
 #     return out_dict  # #, rows # does it need a list of rows?
 
 
-def toPascal(x): #LikeThis
+def toPascal(x):  # LikeThis
     x = x.title()
     for y in x:
         if not y.isalpha():
@@ -90,7 +90,7 @@ def toPascal(x): #LikeThis
     return ''.join(i.capitalize() for i in s[1:])
 
 
-def toCamel(x): #likeThis
+def toCamel(x):  # likeThis
     for i in str(x):
         if not i.isalnum():
             x = x.replace(i, ' ')
@@ -115,7 +115,6 @@ def toCamel(x): #likeThis
 def withoutKeys(d, keys):
     ...
     return {x: d[x] for x in d if x not in keys}
-
 
 
 def unsanitise(string):
