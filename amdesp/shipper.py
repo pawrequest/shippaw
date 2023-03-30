@@ -16,11 +16,7 @@ from amdesp.gui_layouts import GuiLayout, tracking_viewer_window, combo_popup
 from amdesp.shipment import Shipment, parse_amherst_address_string
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
-DEBUG = False
 dotenv.load_dotenv()
-LINE = f"{'-' * 130}"
-TABBER = "\t\t"
-
 
 class App:
     def __init__(self):
@@ -42,30 +38,6 @@ class App:
         self.service_menu_map = services_menu_map
 
         return {'values': [service.name for service in services], 'default_value': chosen_service.name}
-
-    # def get_service_menu(self, shipment, config, client):
-    #     services = client.get_services()
-    #     services_menu_map = {}
-    #     menu_def = []
-    #
-    #     # get services
-    #     chosen_service = None
-    #     chosen_service_hr = None
-    #     for potential_service in services:
-    #         if potential_service.service_id == config.service_id:
-    #             chosen_service = potential_service
-    #             chosen_service_hr = chosen_service.name
-    #         menu_def.append(potential_service.name)
-    #         services_menu_map.update({potential_service.name: potential_service})
-    #     if not chosen_service:
-    #         sg.popup("Default service unavailable")
-    #         chosen_service = services[0]
-    #         chosen_service_hr = chosen_service.name
-    #
-    #     shipment.service = chosen_service
-    #     self.service_menu_map = services_menu_map
-    #
-    #     return {'values': menu_def, 'default_value': chosen_service_hr}
 
     def get_dates_menu(self, client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
         dates_params = {}
@@ -126,7 +98,7 @@ class App:
             except Exception as e:
                 print_and_pop(e.__repr__())
         window['-SHIPMENT_NAME-'].update(shipment.shipment_name)
-        # todo color date based on match.... how to update without bg-color in update method?
+        # todo color date based on match.... how to update without bg-color in update method? = learn TKinter
         window['-DATE-'].update(values=dates_dict['values'], value=dates_dict['default_value'])
         window['-SERVICE-'].update(values=services_dict['values'], value=services_dict['default_value'])
         if shipment.inbound_id:
@@ -367,7 +339,7 @@ def address_chooser(candidates: list, client: DespatchBaySDK) -> Address:
         return address
 
 
-def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request: ShipmentRequest) -> ShipmentReturn:
+def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request: ShipmentRequest) -> str:
     if shipment.is_return:
         shipment.inbound_id = client.add_shipment(shipment_request)
         shipment_id = shipment.inbound_id
@@ -530,7 +502,7 @@ def log_shipment(config: Config, shipment: Shipment):
         sg.popup(f" Json exported to {str(f)}:\n {export_dict}")
 
 
-def to_snake_case(input_string: str)->str:
+def to_snake_case(input_string: str) -> str:
     """Convert a string to lowercase snake case."""
     input_string = input_string.replace(" ", "_")
     input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
