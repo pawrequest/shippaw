@@ -11,6 +11,7 @@ from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 class Config:
     def __init__(self):
         # get config from toml
+        self.log_json = pathlib.Path()
         self.cmc_logger = pathlib.Path()
         self.service_id = None
         self.courier_id = None
@@ -24,7 +25,8 @@ class Config:
             config = tomllib.load(f)
 
         for path in config['paths']:
-            setattr(self, path, pathlib.Path(self.root_dir).joinpath(config['paths'][path]))
+            setattr(self, path, self.root_dir / config['paths'][path])
+            # setattr(self, path, pathlib.Path(self.root_dir).joinpath(config['paths'][path]))
         self.labels.mkdir(parents=True, exist_ok=True)
         self.home_address = config['home_address']
         self.home_sender_id = config['home_address']['address_id']

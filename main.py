@@ -2,13 +2,19 @@
 # imports in-range shipments to batch process
 
 import sys
-from amdesp.shipper import App, get_shipments, get_sender_recip
+
 from amdesp.config import Config
-from bench.gui import Gui
-from amdesp.gui_layouts import GuiLayout, tracking_viewer_window
+from amdesp.gui_layouts import tracking_viewer_window
+from amdesp.shipper import App, get_shipments, get_sender_recip
 
 STORED_XML = r"C:\Users\Surface\PycharmProjects\AmDesp\data\AmShip.xml"
 SANDBOX = None
+
+"""
+Paul Sees Solutions Amdesp - middleware to connect Commence RM to DespatchBay's shipping service. 
+takes xml and (soon) dbase as inputs, validates and corrects data to conform to shipping service, 
+allows user to update addressed / select shipping services etc
+"""
 
 
 def shipper():
@@ -16,9 +22,6 @@ def shipper():
     config = Config()
     client = config.get_dbay_client(sandbox=SANDBOX)
     app = App()
-    # app.setup_commence(config)
-    gui = Gui()
-    layout = GuiLayout()
     shipments = get_shipments(in_file=in_file, config=config)
     for shipment in shipments:
         if 'ship' in mode:

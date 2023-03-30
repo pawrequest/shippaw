@@ -1,6 +1,5 @@
 import json
 import os
-import pathlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pprint import pprint
@@ -9,12 +8,13 @@ import PySimpleGUI as sg
 import dotenv
 from PySimpleGUI import Window
 from dateutil.parser import parse
-from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
-from amdesp.despatchbay.despatchbay_entities import ShipmentRequest
 
-from amdesp.gui_layouts import GuiLayout, tracking_viewer_window, combo_popup
-from amdesp.utils_pss.utils_pss import Utility, unsanitise
 from amdesp.config import Config
+from amdesp.despatchbay.despatchbay_entities import ShipmentRequest
+from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
+from amdesp.gui_layouts import GuiLayout, tracking_viewer_window, combo_popup
+from amdesp.shipment import Shipment, parse_amherst_address_string
+from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
 DEBUG = False
 dotenv.load_dotenv()
@@ -30,35 +30,46 @@ class App:
         self.date_menu_map = {}
         self.shipments = []
 
-    def get_service_menu(self, shipment, config, client):
+    def get_service_menu(self, shipment: Shipment, config: Config, client: DespatchBaySDK):
         services = client.get_services()
-        services_menu_map = {}
-        menu_def = []
-
-        # get services
-        chosen_service = None
-        chosen_service_hr = None
-        for potential_service in services:
-            if potential_service.service_id == config.service_id:
-                chosen_service = potential_service
-                chosen_service_hr = chosen_service.name
-            menu_def.append(potential_service.name)
-            services_menu_map.update({potential_service.name: potential_service})
+        # todo get AVAILABLE services needs a request
+        # services = client.get_available_services()
+        services_menu_map = {service.name: service for service in services}
+        chosen_service = next((service for service in services if service.service_id == config.service_id), services[0])
         if not chosen_service:
-            sg.popup("Default service unavailable")
-            chosen_service = services[0]
-            chosen_service_hr = chosen_service.name
-
+            print_and_pop("Default service unavailable")
         shipment.service = chosen_service
         self.service_menu_map = services_menu_map
 
-        return {'values': menu_def, 'default_value': chosen_service_hr}
+        return {'values': [service.name for service in services], 'default_value': chosen_service.name}
+
+    # def get_service_menu(self, shipment, config, client):
+    #     services = client.get_services()
+    #     services_menu_map = {}
+    #     menu_def = []
+    #
+    #     # get services
+    #     chosen_service = None
+    #     chosen_service_hr = None
+    #     for potential_service in services:
+    #         if potential_service.service_id == config.service_id:
+    #             chosen_service = potential_service
+    #             chosen_service_hr = chosen_service.name
+    #         menu_def.append(potential_service.name)
+    #         services_menu_map.update({potential_service.name: potential_service})
+    #     if not chosen_service:
+    #         sg.popup("Default service unavailable")
+    #         chosen_service = services[0]
+    #         chosen_service_hr = chosen_service.name
+    #
+    #     shipment.service = chosen_service
+    #     self.service_menu_map = services_menu_map
+    #
+    #     return {'values': menu_def, 'default_value': chosen_service_hr}
 
     def get_dates_menu(self, shipment, client, config):
         dates_params = {}
-        # send-out date as datetime obj
-        send_date = shipment.date
-        # potential dates as dbay date objs
+        # potential dates as dbay objs
         available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.courier_id)
         datetime_mask = config.datetime_masks['DT_DISPLAY']
         menu_def = []
@@ -67,10 +78,9 @@ class App:
 
         for potential_collection_date in available_dates:
             potential_date = parse(potential_collection_date.date)
-            potential_date_hr = datetime.strftime(potential_date.date(), datetime_mask)
+            potential_date_hr = f'{potential_date:{datetime_mask}}'
 
-            if potential_date == send_date:
-                potential_date_hr = potential_date_hr
+            if potential_date == shipment.date:
                 chosen_date_db = potential_collection_date
                 chosen_date_hr = potential_date_hr
                 dates_params.update({'background_color': 'green'})
@@ -87,6 +97,7 @@ class App:
         shipment.date = chosen_date_db
         dates_params.update(default_value=chosen_date_hr, values=menu_def)
         return dates_params
+
 
     def make_request(self, values, shipment, client):
         shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment)
@@ -221,38 +232,6 @@ class App:
         ...
 
 
-class Shipment:
-    def __init__(self, ship_dict, is_return=False):
-        """
-        :param ship_dict: a dictionary of shipment details
-        :param is_return: shipment is outbound or inbound?
-        """
-        self.category = ship_dict['category']
-        self.shipment_name = ship_dict['shipment_name']
-        self.date = ship_dict['send_out_date']
-        self.address_as_str = ship_dict['address_as_str']
-        self.contact = ship_dict['contact']
-        self.company_name = None
-        self.postcode = ship_dict['postcode']
-        self.boxes = ship_dict['boxes']
-        self.status = ship_dict['status']
-        self.email = ship_dict['email']
-        self.telephone = ship_dict['telephone']
-        self.customer = ship_dict['customer']
-        self.is_return = is_return
-        self.inbound_id = ship_dict.get('inbound_id', None)
-        self.outbound_id = ship_dict.get('outbound_id', None)
-        self.service = None
-        self.sender = None
-        self.recipient = None
-        self.parcels = None
-        self.collection_booked = False
-        self.search_term = parse_amherst_address_string(self.address_as_str)
-
-        if DEBUG:
-            print_and_long_pop(f"\n{self=}\n")
-
-
 def setup_commence(config: Config()):
     """ looks for CmcLibNet in prog files, if absent attempts to install from path defined in config.toml"""
     try:
@@ -283,7 +262,7 @@ def get_parcels(num_parcels: int, client: DespatchBaySDK, shipment: Shipment):
     return parcels
 
 
-def get_queue_or_book_menu(shipment:Shipment):
+def get_queue_or_book_menu(shipment: Shipment):
     q_o_b_dict = {}
     print_or_email = "email" if shipment.is_return else "print"
     values = [
@@ -297,7 +276,7 @@ def get_queue_or_book_menu(shipment:Shipment):
     return q_o_b_dict
 
 
-def ship_dict_from_xml(xml_file:str, config:Config):
+def ship_dict_from_xml(xml_file: str, config: Config):
     # inspect xml
     shipment_fields = config.shipment_fields
     ship_dict = dict()
@@ -360,7 +339,7 @@ def ship_dict_from_xml(xml_file:str, config:Config):
     return ship_dict
 
 
-def get_address_candidates(shipment:Shipment, client:DespatchBaySDK, postcode=None):
+def get_address_candidates(shipment: Shipment, client: DespatchBaySDK, postcode=None):
     if postcode is None:
         postcode = shipment.postcode
 
@@ -378,7 +357,7 @@ def get_address_candidates(shipment:Shipment, client:DespatchBaySDK, postcode=No
             return candidates
 
 
-def address_chooser(candidates:list, client:DespatchBaySDK):
+def address_chooser(candidates: list, client: DespatchBaySDK):
     # build address option menu dict
     address_key_dict = {}
     for candidate in candidates:
@@ -392,7 +371,7 @@ def address_chooser(candidates:list, client:DespatchBaySDK):
         return address
 
 
-def queue_shipment(client:DespatchBaySDK, shipment:Shipment, shipment_request:ShipmentRequest):
+def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request: ShipmentRequest):
     if shipment.is_return:
         shipment.inbound_id = client.add_shipment(shipment_request)
         shipment_id = shipment.inbound_id
@@ -402,7 +381,7 @@ def queue_shipment(client:DespatchBaySDK, shipment:Shipment, shipment_request:Sh
     return shipment_id
 
 
-def book_collection(shipment:Shipment, client:DespatchBaySDK, config:Config, shipment_id:str):
+def book_collection(shipment: Shipment, client: DespatchBaySDK, config: Config, shipment_id: str):
     try:
         shipment_return = client.book_shipments(shipment_id)[0]  # debug there could be more than one here??
         sg.popup_scrolled(f'Shipment booked: \n{shipment_return}', size=(30, 30))
@@ -423,7 +402,7 @@ def book_collection(shipment:Shipment, client:DespatchBaySDK, config:Config, shi
         return shipment_return
 
 
-def get_shipments(in_file:str, config:Config):
+def get_shipments(in_file: str, config: Config):
     # todo type hint paths? strings? both?
     shipments = []
     file_ext = in_file.split('.')[-1]
@@ -437,7 +416,7 @@ def get_shipments(in_file:str, config:Config):
     return shipments
 
 
-def get_sender_recip(shipment:Shipment, client:DespatchBaySDK):
+def get_sender_recip(shipment: Shipment, client: DespatchBaySDK):
     if shipment.is_return:
         # home address is recipient
         recipient = client.get_sender_addresses()[0]
@@ -465,7 +444,7 @@ def get_sender_recip(shipment:Shipment, client:DespatchBaySDK):
     return sender, recipient
 
 
-def new_address_from_postcode(client:DespatchBaySDK, event:str, values:dict, shipment:Shipment, window:Window):
+def new_address_from_postcode(client: DespatchBaySDK, event: str, values: dict, shipment: Shipment, window: Window):
     """ click 'postcode' label, or press Return in postcode input to call.
         parses sender vs recipient from event code.
         takes postcode from window, gets list of candidate addresses with given postcode
@@ -497,7 +476,7 @@ def new_address_from_postcode(client:DespatchBaySDK, event:str, values:dict, shi
         pass
 
 
-def update_commence(shipment:Shipment, config:Config):
+def update_commence(shipment: Shipment, config: Config):
     """
             runs cmclibnet via powershell script to add tracking numbes to commence db
 
@@ -532,7 +511,7 @@ def update_commence(shipment:Shipment, config:Config):
         # sg.popup("\nCommence Tracking updated")
 
 
-def log_shipment(config:Config, shipment:Shipment):
+def log_shipment(config: Config, shipment: Shipment):
     # export from object attrs
     shipment.boxes = len(shipment.parcels)
     export_dict = {}
@@ -557,32 +536,18 @@ def log_shipment(config:Config, shipment:Shipment):
         except Exception as e:
             print(f"{field} not found in shipment \n{e}")
 
-    with open(config.paths['log'], 'a') as f:
+    with open(config.log_json, 'a') as f:
         json.dump(export_dict, f, sort_keys=True)
         f.write(",\n")
         sg.popup(f" Json exported to {str(f)}:\n {export_dict}")
 
 
-def to_snake_case(input_string:str):
+def to_snake_case(input_string: str):
     """Convert a string to lowercase snake case."""
     input_string = input_string.replace(" ", "_")
     input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
     input_string = input_string.lower()
     return input_string
-
-
-def parse_amherst_address_string(str_address:str):
-    firstline = str_address.strip().split("\n")[0]
-    first_block = (str_address.split(" ")[0]).split(",")[0]
-    first_char = first_block[0]
-    for char in firstline:
-        if not char.isalnum() and char != " ":
-            firstline = firstline.replace(char, "")
-
-    if first_char.isnumeric():
-        return first_block
-    else:
-        return firstline
 
 
 def print_and_pop(print_text: str):
