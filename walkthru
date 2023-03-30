@@ -1,0 +1,3 @@
+[Commence-UI]  press button
+[Commence-VBS]  call AmDesp.exe -mode [ship_out, ship_in, track_out, track_in]
+[AmDesp.py]

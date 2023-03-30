@@ -1,3 +1,70 @@
+ # class Fields:
+        #     def __init__(self, fields_dict:dict):
+        #         for k,v in fields_dict.items():
+        #             setattr(self,k,v)
+        #     pass
+
+        # fields
+        # self.fields = Fields(config)
+        # self.fields.contact = config['fields']['contact']
+        # self.fields.export = config['fields']['export']
+        # self.fields.shipment = config['fields']['shipment']
+        # self.fields.address = config['fields']['address']
+        # self.fields.datetime_masks = config['datetime_masks']
+        # self.gui_map = config['gui_map']
+        # self.home_address = config['home_address']
+        # self.contact_fields = config['fields']['contact'].export_fields = config['fields']['export']
+        # self.shipment_fields = config['fields']['shipment']
+        # self.db_address_fields = config['fields']['address']
+        # self.datetime_masks = config['datetime_masks']
+        # self.gui_map = config['gui_map']
+        # self.home_address = config['home_address']
+        # self.contact_fields = config['fields']['contact']
+        # .export_fields = config['fields']['export']
+
+
+        # paths~
+        # DATA_DIR = self.root_dir / config['paths']['data']
+        # SCRIPTS_DIR = self.root_dir / config['paths']['scripts']
+        # self.label_dir = DATA_DIR / config['paths']['labels']
+        # self.log_file = DATA_DIR / config['paths']['log']
+        # self.backup_xml = DATA_DIR / 'AmShip.xml'
+        # self.label_dir.mkdir(parents=True, exist_ok=True)
+        #
+
+
+        # # CmcLibNet files for interacting with Commence DB:
+        # self.cmc_checkin = SCRIPTS_DIR / config['paths']['cmc_checkin']
+        # self.log_to_commence_powershell_script = SCRIPTS_DIR / config['paths']['cmc_log']
+        # self.cmc_dll = pathlib.Path(config['paths']['cmc_dll'])
+        # self.cmc_inst = pathlib.Path(self.root_dir / config['paths']['cmc_inst'])
+
+
+
+
+this is what should happen:
+
+1) each potential_collection_date in available_dates is  converted to a date-object using parse and assigned to potential_date
+
+2) for each potential_collection_date ion available_dates::
+           a) potential_date is converted into a human readable version called potential_date_hr
+           b) if send_date matches potential_date then:
+               i)  modify potential_date_hr to equal "f"Send Date Match : {potential_date_hr}"
+               ii) set self.shipment.date to potential_date
+               iii) set chosen_date_hr to potential_date_hr
+           c) if no potential_collectioin_datye matches send_date then:
+               i) set self.shipment.date to avaiulable_da♣♣tes[0]
+               i) set chosen_date_hr to available_dates[0
+
+
+
+
+
+gui address sdcrript:
+
+
+
+
 client:
 
 app:
