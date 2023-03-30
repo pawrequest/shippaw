@@ -1,5 +1,4 @@
 # import sys
-import pathlib
 import subprocess
 
 
@@ -19,7 +18,7 @@ class DictObj:
 class Utility:
     @staticmethod
     def powershell_runner(script_path: str,
-                          *params:list[str]):
+                          *params: str):
         POWERSHELL_PATH = "powershell.exe"
 
         commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]

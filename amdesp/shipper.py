@@ -10,7 +10,7 @@ from PySimpleGUI import Window
 from dateutil.parser import parse
 
 from amdesp.config import Config
-from amdesp.despatchbay.despatchbay_entities import ShipmentRequest
+from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, Address, ShipmentReturn, Sender, Recipient
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.gui_layouts import GuiLayout, tracking_viewer_window, combo_popup
 from amdesp.shipment import Shipment, parse_amherst_address_string
@@ -30,7 +30,7 @@ class App:
         self.date_menu_map = {}
         self.shipments = []
 
-    def get_service_menu(self, shipment: Shipment, config: Config, client: DespatchBaySDK):
+    def get_service_menu(self, client: DespatchBaySDK, config: Config, shipment: Shipment):
         services = client.get_services()
         # todo get AVAILABLE services needs a request
         # services = client.get_available_services()
@@ -67,7 +67,7 @@ class App:
     #
     #     return {'values': menu_def, 'default_value': chosen_service_hr}
 
-    def get_dates_menu(self, shipment, client, config):
+    def get_dates_menu(self, client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
         dates_params = {}
         # potential dates as dbay objs
         available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.courier_id)
@@ -98,8 +98,7 @@ class App:
         dates_params.update(default_value=chosen_date_hr, values=menu_def)
         return dates_params
 
-
-    def make_request(self, values, shipment, client):
+    def make_request(self, client: DespatchBaySDK, shipment: Shipment, values: dict) -> ShipmentRequest:
         shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment)
         shipment.date = self.date_menu_map.get(values['-DATE-'])
         shipment.service = self.service_menu_map.get(values['-SERVICE-'])
@@ -115,10 +114,10 @@ class App:
         )
         return shipment_request
 
-    def populate_window(self, window, config, shipment, client):
-        sender, recipient = get_sender_recip(shipment, client=client)
+    def populate_window(self, client: DespatchBaySDK, config: Config, shipment: Shipment, window: Window):
+        sender, recipient = get_sender_recip(client=client, shipment=shipment)
         services_dict = self.get_service_menu(client=client, config=config, shipment=shipment)
-        dates_dict = self.get_dates_menu(shipment=shipment, client=client, config=config)
+        dates_dict = self.get_dates_menu(client=client, config=config, shipment=shipment)
         q_o_b_dict = get_queue_or_book_menu(shipment=shipment)
         for field in config.address_fields:
             try:
@@ -146,12 +145,12 @@ class App:
                     setattr(obj, field, value)
                 window[f'-{name.upper()}_{field.upper()}-'].update(value)
 
-    def gui_ship(self, client, config, shipment, sandbox, theme=None):
+    def main_loop(self, client: DespatchBaySDK, config: Config, sandbox: bool, shipment: Shipment, theme=None):
         window = GuiLayout().main_window()
-        self.populate_window(shipment=shipment, config=config, client=client, window=window)
+        self.populate_window(client=client, config=config, shipment=shipment, window=window)
 
         if sandbox:
-            self.theme = sg.theme('Tan')
+            sg.theme('Tan')
         else:
             sg.theme('Dark Blue')
         if theme:
@@ -159,25 +158,22 @@ class App:
 
         while True:
             if not window:
+                # prevent crash on exit
                 break
             event, values = window.read()
             window['-SENDER_POSTAL_CODE-'].bind("<Return>", "_Enter")
             window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", "_Enter")
-            pprint(f'{event}  -  {[values.items()]}')
-            # if not shipment.shipment_request:
-            #     shipment.shipment_request = self.make_request(client=client, shipment=shipment,values=values)
+
             if event in (sg.WINDOW_CLOSED, 'Exit'):
                 break
 
             elif event == "Set Theme":
-                print("[LOG] Clicked Set Theme!")
                 theme_chosen = values['-THEME LISTBOX-'][0]
-                print("[LOG] User Chose Theme: " + str(theme_chosen))
                 window.close()
-                self.gui_ship(client=client, config=config, sandbox=sandbox, theme=theme_chosen, shipment=shipment)
+                self.main_loop(client=client, config=config, sandbox=sandbox, shipment=shipment, theme=theme_chosen)
 
-            if event == '-DATE-':
-                window['-DATE-'].update({'background_color': 'red'})
+            # if event == '-DATE-':
+            #     window['-DATE-'].update({'background_color': 'red'})
 
             # click company name to copy customer in
             if 'company_name' in event:
@@ -186,8 +182,7 @@ class App:
 
             # click 'postcode' or Return in postcode box to get address to choose from and update shipment
             if 'postal_code' in event.lower():
-                new_address_from_postcode(client=client, shipment=shipment, event=event, window=window,
-                                          values=values)
+                new_address_from_postcode(client=client, event=event, shipment=shipment, values=values, window=window)
 
             if event == '-INBOUND_ID-':
                 tracking_viewer_window(shipment.inbound_id, client=client)
@@ -197,7 +192,7 @@ class App:
             if event == '-GO-':
                 decision = values['-QUEUE_OR_BOOK-'].lower()
                 if 'queue' or 'book' in decision:
-                    shipment_request = self.make_request(shipment=shipment, values=values, client=client)
+                    shipment_request = self.make_request(client=client, shipment=shipment, values=values)
                     answer = sg.popup_scrolled(f"{decision}?\n{shipment_request}", size=(30, 30))
 
                     if answer == 'OK':
@@ -207,8 +202,8 @@ class App:
                         shipment_id = queue_shipment(shipment_request=shipment_request, shipment=shipment,
                                                      client=client)
                         if 'book' in decision:
-                            shipment_return = book_collection(shipment_id=shipment_id, shipment=shipment,
-                                                              client=client, config=config)
+                            shipment_return = book_collection(client=client, config=config, shipment=shipment,
+                                                              shipment_id=shipment_id)
                             sg.popup(f"Collection for {shipment.shipment_name} booked")
                         if 'print' in decision:
                             self.print_label(shipment=shipment)
@@ -229,6 +224,7 @@ class App:
             self.printed = True
 
     def email_label(self):
+        # todo this
         ...
 
 
@@ -262,7 +258,7 @@ def get_parcels(num_parcels: int, client: DespatchBaySDK, shipment: Shipment):
     return parcels
 
 
-def get_queue_or_book_menu(shipment: Shipment):
+def get_queue_or_book_menu(shipment: Shipment) -> dict:
     q_o_b_dict = {}
     print_or_email = "email" if shipment.is_return else "print"
     values = [
@@ -276,7 +272,7 @@ def get_queue_or_book_menu(shipment: Shipment):
     return q_o_b_dict
 
 
-def ship_dict_from_xml(xml_file: str, config: Config):
+def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     # inspect xml
     shipment_fields = config.shipment_fields
     ship_dict = dict()
@@ -339,7 +335,7 @@ def ship_dict_from_xml(xml_file: str, config: Config):
     return ship_dict
 
 
-def get_address_candidates(shipment: Shipment, client: DespatchBaySDK, postcode=None):
+def get_address_candidates(client: DespatchBaySDK, shipment: Shipment, postcode=None) -> list | None:
     if postcode is None:
         postcode = shipment.postcode
 
@@ -357,7 +353,7 @@ def get_address_candidates(shipment: Shipment, client: DespatchBaySDK, postcode=
             return candidates
 
 
-def address_chooser(candidates: list, client: DespatchBaySDK):
+def address_chooser(candidates: list, client: DespatchBaySDK) -> Address:
     # build address option menu dict
     address_key_dict = {}
     for candidate in candidates:
@@ -371,7 +367,7 @@ def address_chooser(candidates: list, client: DespatchBaySDK):
         return address
 
 
-def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request: ShipmentRequest):
+def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request: ShipmentRequest) -> ShipmentReturn:
     if shipment.is_return:
         shipment.inbound_id = client.add_shipment(shipment_request)
         shipment_id = shipment.inbound_id
@@ -381,7 +377,8 @@ def queue_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_request:
     return shipment_id
 
 
-def book_collection(shipment: Shipment, client: DespatchBaySDK, config: Config, shipment_id: str):
+def book_collection(client: DespatchBaySDK, config: Config, shipment: Shipment,
+                    shipment_id: str) -> ShipmentReturn | None:
     try:
         shipment_return = client.book_shipments(shipment_id)[0]  # debug there could be more than one here??
         sg.popup_scrolled(f'Shipment booked: \n{shipment_return}', size=(30, 30))
@@ -402,12 +399,12 @@ def book_collection(shipment: Shipment, client: DespatchBaySDK, config: Config, 
         return shipment_return
 
 
-def get_shipments(in_file: str, config: Config):
+def get_shipments(config: Config, in_file: str) -> list:
     # todo type hint paths? strings? both?
     shipments = []
     file_ext = in_file.split('.')[-1]
     if file_ext == 'xml':
-        ship_dict = ship_dict_from_xml(in_file, config=config)
+        ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
         shipments.append(Shipment(ship_dict=ship_dict))
     elif file_ext == 'dbase':
         ...
@@ -416,7 +413,7 @@ def get_shipments(in_file: str, config: Config):
     return shipments
 
 
-def get_sender_recip(shipment: Shipment, client: DespatchBaySDK):
+def get_sender_recip(client: DespatchBaySDK, shipment: Shipment) -> tuple[Sender, Recipient]:
     if shipment.is_return:
         # home address is recipient
         recipient = client.get_sender_addresses()[0]
@@ -434,7 +431,7 @@ def get_sender_recip(shipment: Shipment, client: DespatchBaySDK):
         try:
             recipient_address = client.find_address(shipment.postcode, shipment.search_term)
         except:
-            candidates = get_address_candidates(shipment=shipment, client=client)
+            candidates = get_address_candidates(client=client, shipment=shipment)
             recipient_address = address_chooser(candidates=candidates, client=client)
         recipient = client.recipient(name=shipment.contact, email=shipment.email,
                                      telephone=shipment.telephone, recipient_address=recipient_address)
@@ -444,11 +441,11 @@ def get_sender_recip(shipment: Shipment, client: DespatchBaySDK):
     return sender, recipient
 
 
-def new_address_from_postcode(client: DespatchBaySDK, event: str, values: dict, shipment: Shipment, window: Window):
+def new_address_from_postcode(client: DespatchBaySDK, event: str, shipment: Shipment, values: dict, window: Window):
     """ click 'postcode' label, or press Return in postcode input to call.
         parses sender vs recipient from event code.
         takes postcode from window, gets list of candidate addresses with given postcode
-        popup a chooser,
+        popup a chooser, updates window
         """
     postcode = None
     mode = None
@@ -460,7 +457,7 @@ def new_address_from_postcode(client: DespatchBaySDK, event: str, values: dict, 
         postcode = values['-RECIPIENT_POSTAL_CODE-']
 
     try:
-        candidates = get_address_candidates(postcode=postcode, client=client, shipment=shipment)
+        candidates = get_address_candidates(client=client, shipment=shipment, postcode=postcode)
         chosen_address = address_chooser(candidates, client=client)
         address_dict = {k: v for k, v in vars(chosen_address).items() if 'soap' not in k}
         address_dict.pop('country_code', None)
@@ -476,12 +473,8 @@ def new_address_from_postcode(client: DespatchBaySDK, event: str, values: dict, 
         pass
 
 
-def update_commence(shipment: Shipment, config: Config):
-    """
-            runs cmclibnet via powershell script to add tracking numbes to commence db
-
-            :return:
-            """
+def update_commence(config: Config, shipment: Shipment):
+    """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
     class CommenceEditError(Exception):
         pass
@@ -520,13 +513,8 @@ def log_shipment(config: Config, shipment: Shipment):
         try:
             if field == 'sender':
                 val = shipment.sender.__repr__()
-                # val = shipment.sender.sender_address
-                # val = f'{val.street} - {val.postal_code}'
             elif field == 'recipient':
                 val = shipment.recipient.__repr__()
-                # val = f'{val.street} - {val.postal_code}'
-                # val = shipment.recipient.recipient_address
-                # val = f'{val.street} - {val.postal_code}'
             else:
                 val = getattr(shipment, field)
                 if isinstance(val, datetime):
@@ -542,7 +530,7 @@ def log_shipment(config: Config, shipment: Shipment):
         sg.popup(f" Json exported to {str(f)}:\n {export_dict}")
 
 
-def to_snake_case(input_string: str):
+def to_snake_case(input_string: str)->str:
     """Convert a string to lowercase snake case."""
     input_string = input_string.replace(" ", "_")
     input_string = ''.join(c if c.isalnum() else '_' for c in input_string)

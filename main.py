@@ -27,13 +27,13 @@ def shipper():
     config = Config()
     client = config.get_dbay_client(sandbox=SANDBOX)
     app = App()
-    shipments = get_shipments(in_file=in_file, config=config)
+    shipments = get_shipments(config=config, in_file=in_file)
     for shipment in shipments:
         if 'ship' in mode:
             if 'in' in mode:
                 shipment.is_return = True
-            shipment.sender, shipment.recipient = get_sender_recip(shipment, client=client)
-            app.gui_ship(client=client, config=config, shipment=shipment, sandbox=SANDBOX)
+            shipment.sender, shipment.recipient = get_sender_recip(client=client, shipment=shipment)
+            app.main_loop(client=client, config=config, sandbox=SANDBOX, shipment=shipment)
         elif 'track' in mode:
             if 'in' in mode:
                 try:

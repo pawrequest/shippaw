@@ -2,14 +2,20 @@ class Shipment:
     def __init__(self, ship_dict: dict, is_return: bool = False):
         """
         :param ship_dict: a dictionary of shipment details
-        :param is_return: shipment is outbound or inbound?
+        :param is_return: recipient is user's own sender_address[0]
         """
+        self.label_location = None
+        self.company_name = None
+        self.service = None
+        self.sender = None
+        self.recipient = None
+        self.parcels = None
+        self.collection_booked = None
         self.category = ship_dict['category']
         self.shipment_name = ship_dict['shipment_name']
         self.date = ship_dict['send_out_date']
         self.address_as_str = ship_dict['address_as_str']
         self.contact = ship_dict['contact']
-        self.company_name = None
         self.postcode = ship_dict['postcode']
         self.boxes = ship_dict['boxes']
         self.status = ship_dict['status']
@@ -19,11 +25,6 @@ class Shipment:
         self.is_return = is_return
         self.inbound_id = ship_dict.get('inbound_id', None)
         self.outbound_id = ship_dict.get('outbound_id', None)
-        self.service = None
-        self.sender = None
-        self.recipient = None
-        self.parcels = None
-        self.collection_booked = False
         self.search_term = parse_amherst_address_string(self.address_as_str)
 
 
