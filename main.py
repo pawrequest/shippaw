@@ -13,7 +13,12 @@ SANDBOX = None
 """
 Paul Sees Solutions Amdesp - middleware to connect Commence RM to DespatchBay's shipping service. 
 takes xml and (soon) dbase as inputs, validates and corrects data to conform to shipping service, 
-allows user to update addressed / select shipping services etc
+allows user to update addresses / select shipping services etc, queue and book collection, 
+prints labels, gets tracking info on existing shipments
+includes Commence vbs scripts for exporting xml, 
+powershell to check vbs into commence 
+powershell to log shipment ids to commence
+Vovin CmcLibNet installer for interacting with commence
 """
 
 
@@ -46,7 +51,7 @@ def shipper():
 
 
 if __name__ == '__main__':
-    # AmDesp called from commandline, i.e launched from Commence
+    # AmDesp called from commandline, i.e launched from Commence vbs script
     if len(sys.argv) > 1:
         print(sys.argv)
         mode = sys.argv[1]
@@ -72,20 +77,3 @@ if __name__ == '__main__':
         # SANDBOX=True
 
     shipper()
-
-# todo [mobility] - repo on ryzen is e/dev/, at amherst is c/paul ... use c/pss on both / all systems? or home?
-#  package imports / sys.path etc. amdesp.spec[pathex].now = e/dev
-#  add Shipment ID fields, package delivered field, ship/track buttons to office db
-
-
-# mode = 'track_out'
-# xml_file = STORED_XML
-# sandbox = True
-# #
-# mode = 'track_in'
-# xml_file = STORED_XML
-# sandbox=True
-
-# mode = 'ship_out'
-# xml_file = STORED_XML
-# sandbox = True
