@@ -39,8 +39,8 @@ class App:
         populate_non_address_fields(client=client, config=config, shipment=shipment, window=window)
 
         while True:
-            # window['-SENDER_POSTAL_CODE-'].bind("<Return>", "_Enter")
-            # window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", "_Enter")
+            window['-SENDER_POSTAL_CODE-'].bind("<Return>", '')
+            window['-RECIPIENT_POSTAL_CODE-'].bind("<Return>", '')
             if not window:
                 # prevent crash on exit
                 break
@@ -55,9 +55,7 @@ class App:
 
             # click 'postcode' or enter 'Return' in postcode box to list and choose from addresses at postcode
             if 'postal_code' in event.lower():
-                new_address = get_new_address(client=client, postcode=values[event.upper()])
-                sender_or_recip = 'sender' if 'sender' in event.lower() else 'recipient'
-                update_address_gui(address=new_address, window=window, sender_or_recip=sender_or_recip)
+                self.postcode_click(client, event, values, window)
 
             # click existing shipment id to track shipping
             if event == '-INBOUND_ID-':
@@ -99,6 +97,12 @@ class App:
                         break
 
         window.close()
+
+    def postcode_click(self, client, event, values, window):
+        new_address = get_new_address(client=client, postcode=values[event.upper()])
+        if new_address:
+            sender_or_recip = 'sender' if 'sender' in event.lower() else 'recipient'
+            update_address_gui(address=new_address, window=window, sender_or_recip=sender_or_recip)
 
 
 def get_remote_sender(client: DespatchBaySDK, shipment: Shipment) -> Sender:
