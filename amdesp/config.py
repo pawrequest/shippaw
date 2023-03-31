@@ -11,6 +11,10 @@ from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 class Config:
     def __init__(self):
         # get config from toml
+        config = self.get_config_from_toml()
+        for path in config['paths']:
+            setattr(self, path, config['root_dir'] / config['paths'][path])
+
         self.log_json = pathlib.Path()
         self.cmc_logger = pathlib.Path()
         self.service_id = None
@@ -18,16 +22,9 @@ class Config:
         self.cmc_installer = None
         self.labels = pathlib.Path()
         self.cmc_dll = pathlib.Path()
-        self.root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 
-        config_path = self.root_dir / 'config.toml'
-        with open(config_path, 'rb') as f:
-            config = tomllib.load(f)
-
-        for path in config['paths']:
-            setattr(self, path, self.root_dir / config['paths'][path])
-            # setattr(self, path, pathlib.Path(self.root_dir).joinpath(config['paths'][path]))
         self.labels.mkdir(parents=True, exist_ok=True)
+
         self.home_address = config['home_address']
         self.home_sender_id = config['home_address']['address_id']
         self.shipment_fields = config['shipment_fields']
@@ -38,6 +35,15 @@ class Config:
         self.gui_map = config['gui_map']
         self.dbay_sand = config['dbay_sand']
         self.dbay_prod = config['dbay_prod']
+
+    @staticmethod
+    def get_config_from_toml():
+        root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
+        config_path = root_dir / 'config.toml'
+        with open(config_path, 'rb') as f:
+            config = tomllib.load(f)
+        config['root_dir'] = root_dir
+        return config
 
     def get_dbay_client(self, sandbox=True):
         if sandbox:
@@ -57,5 +63,6 @@ class Config:
 
     #
     def install_cmc_lib_net(self):
+        """ install Vovin CmcLibNet from bundled exe"""
         subprocess.run([self.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        check=True)

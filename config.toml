@@ -14,7 +14,7 @@ export_fields = [
 shipment_fields = [
     'boxes',
     'category',
-    'address',
+    'address_as_str',
     'name',
     'cost',
     'email',

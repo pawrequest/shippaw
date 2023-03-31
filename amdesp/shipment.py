@@ -11,6 +11,7 @@ class Shipment:
         self.recipient = None
         self.parcels = None
         self.collection_booked = None
+        self.printed = None
         self.category = ship_dict['category']
         self.shipment_name = ship_dict['shipment_name']
         self.date = ship_dict['send_out_date']

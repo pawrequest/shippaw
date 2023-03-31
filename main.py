@@ -5,7 +5,7 @@ import sys
 
 from amdesp.config import Config
 from amdesp.gui_layouts import tracking_viewer_window
-from amdesp.shipper import App, get_shipments, get_sender_recip
+from amdesp.shipper import App, get_shipments # , get_sender_recip
 
 STORED_XML = r"C:\Users\Surface\PycharmProjects\AmDesp\data\AmShip.xml"
 SANDBOX = None
@@ -28,11 +28,13 @@ def shipper():
     client = config.get_dbay_client(sandbox=SANDBOX)
     app = App()
     shipments = get_shipments(config=config, in_file=in_file)
+
+
     for shipment in shipments:
         if 'ship' in mode:
             if 'in' in mode:
                 shipment.is_return = True
-            shipment.sender, shipment.recipient = get_sender_recip(client=client, shipment=shipment)
+            # shipment.sender, shipment.recipient = get_sender_recip(client=client, shipment=shipment)
             app.main_loop(client=client, config=config, sandbox=SANDBOX, shipment=shipment)
         elif 'track' in mode:
             if 'in' in mode:
@@ -51,14 +53,14 @@ def shipper():
 
 
 if __name__ == '__main__':
-    # AmDesp called from commandline, i.e launched from Commence vbs script
+    # AmDesp called from commandline, i.e launched from Commence vbs script - parse args for mode
     if len(sys.argv) > 1:
         print(sys.argv)
         mode = sys.argv[1]
         in_file = sys.argv[2]
         SANDBOX = True
 
-    # AmDesp called from IDE:
+    # AmDesp called from IDE, set mode synthetically:
     else:
         # mode = 'ship_in'
         # xml_file = STORED_XML
