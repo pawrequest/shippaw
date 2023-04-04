@@ -27,12 +27,12 @@ $filter.Qualifier = "EqualTo"
 
 if ($is_return -eq 'True'){
     Write-Host "IS RETURN IS TRUE"
-    $shipment_type = "Shipment ID Inbound"
+    $shipment_type = "Inbound ID"
 }
 Else {
     Write-Host "IS RETURN IS FALSE"
 
-    $shipment_type = "Shipment ID Outbound"
+    $shipment_type = "Outbound ID"
 }
 Write-Host $shipment_type
 

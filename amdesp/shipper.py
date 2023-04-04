@@ -180,6 +180,7 @@ def get_dates_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -
 
     chosen_collection_date_dbay = next((date for date in available_dates if parse(date.date) == shipment.date),
                                        available_dates[0])
+
     chosen_date_hr = f'{parse(chosen_collection_date_dbay.date):{datetime_mask}}'
     shipment.date_menu_map.update({f'{parse(date.date):{datetime_mask}}' : date for date in available_dates})
     men_def = [f'{parse(date.date):{datetime_mask}}' for date in available_dates]
@@ -498,7 +499,8 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     # convert send-out-date to dt object, or insert today
     ship_dict['send_out_date'] = ship_dict.get('send_out_date', None)
     if ship_dict['send_out_date']:
-        ship_dict['send_out_date'] = parse(ship_dict['send_out_date'])
+        # ship_dict['send_out_date'] = parse(ship_dict['send_out_date'])
+        ship_dict['send_out_date'] = datetime.strptime(ship_dict['send_out_date'], config.datetime_masks['DT_HIRE'])
     else:
         ship_dict['send_out_date'] = datetime.today()
 

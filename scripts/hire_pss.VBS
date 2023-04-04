@@ -970,7 +970,7 @@ Sub AmDesp(mode)
         objShell.CurrentDirectory = locAmDesp
         ' change k = keep shell open (c to close) #debug'
         ' 1= activate window, false = don't wait
-        objShell.run "%comspec% /c " & strCommand,1,true
+        objShell.run "%comspec% /k " & strCommand,1,true
         set objShell = nothing
 End Sub
 

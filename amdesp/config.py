@@ -12,18 +12,19 @@ class Config:
     def __init__(self):
         # get config from toml
         config = self.get_config_from_toml()
-        for path in config['paths']:
-            setattr(self, path, config['root_dir'] / config['paths'][path])
 
-        self.log_json = pathlib.Path()
-        self.cmc_logger = pathlib.Path()
-        self.service_id = None
-        self.courier_id = None
-        self.cmc_installer = None
-        self.labels = pathlib.Path()
-        self.cmc_dll = pathlib.Path()
+        self.service_id: str = ''
+        self.courier_id: str = ''
+        self.log_json: pathlib.Path = pathlib.Path()
+        self.cmc_logger: pathlib.Path = pathlib.Path()
+        self.cmc_installer: pathlib.Path = pathlib.Path()
+        self.cmc_dll: pathlib.Path = pathlib.Path()
+        self.labels: pathlib.Path = pathlib.Path()
 
         self.labels.mkdir(parents=True, exist_ok=True)
+
+        for path in config['paths']:
+            setattr(self, path, config['root_dir'] / config['paths'][path])
 
         self.home_address = config['home_address']
         self.home_sender_id = config['home_address']['address_id']
