@@ -11,7 +11,9 @@ foreach ($category in $categories)
     $formname = $category + '_pss'
 
 #    $vbsfile = 'E:\Dev\AmDesp\scripts\' + $formname + '.vbs' #switch for unbuilt changes
-    $vbsfile = 'C:\paul\AmDesp\scripts\' + $formname + '.vbs'
+#    $vbsfile = 'C:\paul\AmDesp\scripts\' + $formname + '.vbs'
+    $vbsfile = $env:LOCALAPPDATA + '\pss\AmDesp\scripts\' + $formname + '.vbs'
+#    write-Host $vbsfile
     $formchecked = $db.CheckInFormScript($category, $formname, $vbsfile)
     Write-Host $category " form checked in" is $formchecked
 }

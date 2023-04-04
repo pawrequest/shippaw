@@ -951,22 +951,26 @@ End Sub
 
 '***************** pss funcs *******************'
 
+
+
+
+
 Sub AmDesp(mode)
         ' AmDesp'
 
-        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
-        Set objFSO = CreateObject("Scripting.FileSystemObject")
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        locAmDesp = objShell.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\PSS\AmDesp\"
+        exeAmDesp = locAmDesp & "AmDesp.exe"
+        locXml = locAmDesp & "data\AmShip.xml"
+        strCommand = exeAmDesp & " " & mode & " " & locXml
 
-        locAmDesp = "C:\AmDesp\"
-        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(locXml)
 
-        strCommand = exeAmDesp & " " & mode & " " & locXml
-        Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
-
-        objShell.run "%comspec% /k " & strCommand,1,true ' 1= activate window false = don't wait
+        ' change k = keep shell open (c to close) #debug'
+        ' 1= activate window, false = don't wait
+        objShell.run "%comspec% /c " & strCommand,1,true
         set objShell = nothing
 End Sub
 
@@ -985,7 +989,7 @@ Sub PackHire()
         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
             If Form.Field("DB label printed").Value = 0 Then
                 if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-                    AmDesp(ship_out)
+                    AmDesp("ship_out")
                 End if
             Else MsgBox ("DB already printed so i wont launch AmDesp")
             End if

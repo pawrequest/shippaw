@@ -1,13 +1,17 @@
 # todo updates commence when shipment delivered
 # imports in-range shipments to batch process
-
+import pathlib
 import sys
+
+import platformdirs
 
 from amdesp.config import Config
 from amdesp.gui_layouts import tracking_viewer_window
 from amdesp.shipper import App, get_shipments # , get_sender_recip
 
-STORED_XML = r"C:\Users\Surface\PycharmProjects\AmDesp\data\AmShip.xml"
+root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
+STORED_XML = str(root_dir / 'data' / 'amship.xml')
+
 SANDBOX = None
 
 """
@@ -58,7 +62,7 @@ if __name__ == '__main__':
         print(sys.argv)
         mode = sys.argv[1]
         in_file = sys.argv[2]
-        SANDBOX = True
+        SANDBOX = False
 
     # AmDesp called from IDE, set mode synthetically:
     else:

@@ -9,7 +9,8 @@ $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 foreach ($category in $args)
 {
     $formname = $category + '_pss'
-    $vbsfile = 'C:\AmDesp\scripts\' + $formname + '.vbs'
+    $vbsfile = 'C:\paul\AmDesp\scripts\' + $formname + '.vbs'
+#    $vbsfile = $env:LOCALAPPDATA + '\pss\AmDesp\scripts\' + $formname + '.vbs'
     $formchecked = $db.CheckInFormScript($category, $formname, $vbsfile)
     Write-Host $category " form checked in" is $formchecked
 }
@@ -17,3 +18,5 @@ foreach ($category in $args)
 $db.Close()
 Read-Host -Prompt "Press Enter to exit"
 exit
+
+C:\paul\AmDesp\scripts\hire_pss.VBS

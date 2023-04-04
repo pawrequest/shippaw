@@ -19,8 +19,7 @@ from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
 dotenv.load_dotenv()
 
-SERVICE_MENU_MAP = {}
-DATE_MENU_MAP = {}
+
 
 
 class App:
@@ -154,8 +153,8 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
 def make_request(client: DespatchBaySDK, shipment: Shipment, values: dict) -> ShipmentRequest:
     """ retrieves values from gui and returns a dbay shipment request object """
     shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment)
-    shipment.date = DATE_MENU_MAP.get(values['-DATE-'])
-    shipment.service = SERVICE_MENU_MAP.get(values['-SERVICE-'])
+    shipment.date = shipment.date_menu_map.get(values['-DATE-'])
+    shipment.service = shipment.service_menu_map.get(values['-SERVICE-'])
 
     shipment_request = client.shipment_request(
         service_id=shipment.service.service_id,
@@ -182,7 +181,7 @@ def get_dates_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -
     chosen_collection_date_dbay = next((date for date in available_dates if parse(date.date) == shipment.date),
                                        available_dates[0])
     chosen_date_hr = f'{parse(chosen_collection_date_dbay.date):{datetime_mask}}'
-    DATE_MENU_MAP.update({f'{parse(date.date)}:{datetime_mask}': date for date in available_dates})
+    shipment.date_menu_map.update({f'{parse(date.date):{datetime_mask}}' : date for date in available_dates})
     men_def = [f'{parse(date.date):{datetime_mask}}' for date in available_dates]
 
     shipment.date = chosen_collection_date_dbay
@@ -196,7 +195,7 @@ def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment)
     services = client.get_services()
     # todo get AVAILABLE services needs a request
     # services = client.get_available_services()
-    SERVICE_MENU_MAP.update({service.name: service for service in services})
+    shipment.service_menu_map.update({service.name: service for service in services})
     chosen_service = next((service for service in services if service.service_id == config.service_id), services[0])
     if not chosen_service:
         print_and_pop("Default service unavailable")

@@ -5,15 +5,13 @@ block_cipher = None
 
 added_files = [
                 ('config.toml', '.'),
-                ('.env', '.'),
-                ('CmcLibNet_Setup.exe', '.'),
                 ('scripts/', './scripts/'),
                 ('data/', './data/'),
                 ]
 
 a = Analysis(
     ['Main.py'],
-    pathex=['E:\\dev\\AmDesp'],
+    pathex=['E:\\dev\\AmDesp', 'C:\\Paul\Amdesp'],
     binaries=[],
     datas=added_files,
     hiddenimports=[''],
