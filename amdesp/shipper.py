@@ -71,7 +71,7 @@ class App:
                     # todo remove safety checks when ship
                     if answer == 'OK':
                         if not sandbox:
-                            if not sg.popup("NOT SANDBOX DO YOU WANT TO PAY?!!!") == 'Yes':
+                            if not sg.popup("NOT SANDBOX DO YOU WANT TO PAY?!!!") == 'OK':
                                 continue
 
                         # queue shipment
@@ -120,9 +120,12 @@ def get_remote_recipient(client: DespatchBaySDK, shipment: Shipment) -> Recipien
     """ return a dbay recipient object representing the customer address defined in imported xml or dbase file
     if supplied data does not yield a valid address call get_new_address"""
     try:
-        recipient_address = client.find_address(shipment.postcode, shipment.search_term)
+        recipient_address = client.find_address(shipment.postcode, shipment.customer)
     except ApiException:
-        recipient_address = get_new_address(client=client, postcode=shipment.postcode)
+        try:
+            recipient_address = client.find_address(shipment.postcode, shipment.search_term)
+        except ApiException:
+            recipient_address = get_new_address(client=client, postcode=shipment.postcode)
     recipient = client.recipient(name=shipment.contact, email=shipment.email, telephone=shipment.telephone,
                                  recipient_address=recipient_address)
     return recipient
@@ -155,6 +158,7 @@ def make_request(client: DespatchBaySDK, shipment: Shipment, values: dict) -> Sh
     shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment)
     shipment.date = shipment.date_menu_map.get(values['-DATE-'])
     shipment.service = shipment.service_menu_map.get(values['-SERVICE-'])
+    # todo update address from values
 
     shipment_request = client.shipment_request(
         service_id=shipment.service.service_id,
@@ -324,7 +328,7 @@ def book_collection(client: DespatchBaySDK, config: Config, shipment: Shipment,
         shipment_return = client.book_shipments(shipment_id)[0]
     except:
         sg.popup_error("Unable to Book")
-        return None
+        # return None
     else:
         shipment.collection_booked = True
         sg.popup_scrolled(f'Shipment booked: \n{shipment_return}', size=(20, 20))
@@ -357,7 +361,10 @@ def get_shipments(config: Config, in_file: str) -> list:
     file_ext = in_file.split('.')[-1]
     if file_ext == 'xml':
         ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
-        shipments.append(Shipment(ship_dict=ship_dict))
+        try:
+            shipments.append(Shipment(ship_dict=ship_dict))
+        except KeyError as e:
+            print (f"Shipdict Key missing: {e}")
     elif file_ext == 'dbase':
         ...
     else:
@@ -473,8 +480,8 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
             k = unsanitise(k)
             v = unsanitise(v)
 
-            if "Number" in k:
-                v = v.replace(',', '')
+            if "number" in k.lower():
+                v = int(v.replace(',', ''))
             if k == 'name':
                 k = 'shipment_name'
             if k[:6] == "deliv ":

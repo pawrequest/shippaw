@@ -15,7 +15,6 @@ shipment_fields = [
     'boxes',
     'category',
     'address_as_str',
-    'name',
     'cost',
     'email',
     'postcode',

@@ -213,19 +213,19 @@ End Sub
 Sub AmDesp(mode)
         ' AmDesp'
 
-        Dim locAmDesp, exeAmDesp, objShell, strCommand, objFSO, locXml
-        Set objFSO = CreateObject("Scripting.FileSystemObject")
+        Dim locAmDesp, exeAmDesp, objShell, strCommand, locXml
+        Set objShell = CreateObject("Wscript.Shell")
+        locAmDesp = objShell.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\PSS\AmDesp\"
+        exeAmDesp = locAmDesp & "AmDesp.exe"
+        locXml = locAmDesp & "data\AmShip.xml"
+        strCommand = exeAmDesp & " " & mode & " " & locXml
 
-        locAmDesp = "C:\AmDesp\"
-        exeAmDesp = objFSO.BuildPath(locAmDesp, "AmDesp.exe")
-        locXml = "C:\AmDesp\data\AmShip.xml"
         ExportItemDetailForm(locXml)
 
-        strCommand = exeAmDesp & " " & mode & " " & locXml
-        Set objShell = CreateObject("Wscript.Shell")
         objShell.CurrentDirectory = locAmDesp
-
-        objShell.run "%comspec% /c " & strCommand,1,false ' 1= activate window false = don't wait
+        ' change k = keep shell open (c to close) #debug'
+        ' 1= activate window, false = don't wait
+        objShell.run "%comspec% /k " & strCommand,1,true
         set objShell = nothing
 End Sub
 
@@ -235,9 +235,9 @@ End Sub
 Sub Form_OnClick(ControlId)
     Select Case ControlId
 
-        Case "CommandButton3"
+        Case "CommandButton1"
             'Amdesp Shipping Outbound'
-            if MsgBox("Launch AmDesp to ship sale?",4) =6 Then
+            if MsgBox("Launch AmDesp to ship to customer?",4) =6 Then
                 AmDesp("ship_out")
             End if
 
