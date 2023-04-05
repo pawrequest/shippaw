@@ -3,6 +3,7 @@ import os
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pprint import pprint
+from typing import Literal
 
 import PySimpleGUI as sg
 import dotenv
@@ -18,8 +19,6 @@ from amdesp.shipment import Shipment, parse_amherst_address_string
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
 dotenv.load_dotenv()
-
-
 
 
 class App:
@@ -80,7 +79,8 @@ class App:
                         if 'book' in decision:
                             shipment_return = book_collection(client=client, config=config, shipment=shipment,
                                                               shipment_id=shipment_id)
-                            download_label(client=client, config=config,shipment_return=shipment_return, shipment=shipment)
+                            download_label(client=client, config=config, shipment_return=shipment_return,
+                                           shipment=shipment)
 
                         if 'print' in decision:
                             print_label(shipment=shipment)
@@ -104,31 +104,69 @@ class App:
             update_address_gui(address=new_address, window=window, sender_or_recip=sender_or_recip)
 
 
-def get_remote_sender(client: DespatchBaySDK, shipment: Shipment) -> Sender:
-    """ return a dbay sender object representing the customer address defined in imported xml or dbase file
-        if supplied data does not yield a valid address call get_new_address"""
+def get_remote_address(client: DespatchBaySDK, shipment: Shipment) -> Address:
+    """
+    Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
+    If supplied data does not yield a valid address, call get_new_address.
+    """
     try:
-        sender_address = client.find_address(shipment.postcode, shipment.search_term)
+        address = client.find_address(shipment.postcode, shipment.customer)
     except ApiException:
-        sender_address = get_new_address(client=client, postcode=shipment.postcode)
-    sender = client.sender(name=shipment.contact, email=shipment.email, telephone=shipment.telephone,
-                           sender_address=sender_address)
+        try:
+            address = client.find_address(shipment.postcode, shipment.search_term)
+        except:
+            address = None
+
+    while not address:
+        if sg.popup_yes_no("No address - try again?") == "Yes":
+            address = get_new_address(client=client, postcode=shipment.postcode)
+        else:
+            sg.popup_error("Well if you don't have an address I guess I'll crash now.\nGoodbye")
+            break
+    return address
+
+
+def get_remote_sender(shipment: Shipment, address: Address,
+                      client: DespatchBaySDK) -> Sender:
+    """ return a dbay sender object for the given address and shipment contact details"""
+    sender = client.sender(
+        name=shipment.contact,
+        email=shipment.email,
+        telephone=shipment.telephone,
+        sender_address=address)
     return sender
 
 
-def get_remote_recipient(client: DespatchBaySDK, shipment: Shipment) -> Recipient:
-    """ return a dbay recipient object representing the customer address defined in imported xml or dbase file
-    if supplied data does not yield a valid address call get_new_address"""
-    try:
-        recipient_address = client.find_address(shipment.postcode, shipment.customer)
-    except ApiException:
-        try:
-            recipient_address = client.find_address(shipment.postcode, shipment.search_term)
-        except ApiException:
-            recipient_address = get_new_address(client=client, postcode=shipment.postcode)
-    recipient = client.recipient(name=shipment.contact, email=shipment.email, telephone=shipment.telephone,
-                                 recipient_address=recipient_address)
+def get_remote_recipient(shipment: Shipment, address: Address,
+                         client: DespatchBaySDK) -> Recipient:
+    """ return a dbay recipient object for the given address and shipment contact details"""
+    recipient = client.recipient(
+        name=shipment.contact,
+        email=shipment.email,
+        telephone=shipment.telephone,
+        recipient_address=address)
     return recipient
+
+
+#
+# def get_remote_sender_or_recip(sender_or_recip: Literal['sender', 'recipient'], shipment: Shipment, address: Address,
+#                                client: DespatchBaySDK) -> [Sender | Recipient]:
+#     if sender_or_recip == 'recipient':
+#         recipient_or_sender = client.recipient(
+#             name=shipment.contact,
+#             email=shipment.email,
+#             telephone=shipment.telephone,
+#             recipient_address=address
+#         )
+#     else:
+#         recipient_or_sender = client.sender(
+#             name=shipment.contact,
+#             email=shipment.email,
+#             telephone=shipment.telephone,
+#             sender_address=address
+#         )
+# 
+#     return recipient_or_sender
 
 
 def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
@@ -186,7 +224,7 @@ def get_dates_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -
                                        available_dates[0])
 
     chosen_date_hr = f'{parse(chosen_collection_date_dbay.date):{datetime_mask}}'
-    shipment.date_menu_map.update({f'{parse(date.date):{datetime_mask}}' : date for date in available_dates})
+    shipment.date_menu_map.update({f'{parse(date.date):{datetime_mask}}': date for date in available_dates})
     men_def = [f'{parse(date.date):{datetime_mask}}' for date in available_dates]
 
     shipment.date = chosen_collection_date_dbay
@@ -228,7 +266,6 @@ def populate_non_address_fields(client: DespatchBaySDK, config: Config, shipment
     window['-BOXES-'].update(value=shipment.boxes or 1)
 
 
-
 def populate_home_address(client: DespatchBaySDK, config: Config, shipment: Shipment,
                           window: Window):
     """ updates shipment and gui window with homebase contact and address details in sender or recipient position as appropriate"""
@@ -236,7 +273,7 @@ def populate_home_address(client: DespatchBaySDK, config: Config, shipment: Ship
         shipment.recipient = get_home_recipient(client=client, config=config)
         update_contact_gui(config=config, sender_or_recip=shipment.recipient, window=window)
         update_address_gui(address=shipment.recipient.recipient_address, sender_or_recip='recipient',
-                                    window=window)
+                           window=window)
     else:
         shipment.sender = get_home_sender(client=client, config=config)
         update_contact_gui(config=config, sender_or_recip=shipment.sender, window=window)
@@ -245,17 +282,17 @@ def populate_home_address(client: DespatchBaySDK, config: Config, shipment: Ship
 
 def populate_remote_address(client: DespatchBaySDK, config: Config, shipment: Shipment, window: Window):
     """ updates shipment and gui window with customer contact and address details in sender or recipient position as appropriate"""
-
+    remote_address = get_remote_address(client=client, shipment=shipment)
     if shipment.is_return:
-        shipment.sender = get_remote_sender(client=client, shipment=shipment)
+        shipment.sender = get_remote_sender(client=client, shipment=shipment, address=remote_address)
         update_contact_gui(config=config, sender_or_recip=shipment.sender, window=window)
         update_address_gui(address=shipment.sender.sender_address, sender_or_recip='sender', window=window)
 
     else:
-        shipment.recipient = get_remote_recipient(client=client, shipment=shipment)
+        shipment.recipient = get_remote_recipient(client=client, shipment=shipment, address=remote_address)
         update_contact_gui(config=config, sender_or_recip=shipment.recipient, window=window)
         update_address_gui(address=shipment.recipient.recipient_address, sender_or_recip='recipient',
-                                    window=window)
+                           window=window)
 
 
 def email_label():
@@ -336,7 +373,7 @@ def book_collection(client: DespatchBaySDK, config: Config, shipment: Shipment,
         return shipment_return
 
 
-def download_label(client:DespatchBaySDK, config:Config, shipment_return:ShipmentReturn, shipment:Shipment):
+def download_label(client: DespatchBaySDK, config: Config, shipment_return: ShipmentReturn, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name}.pdf at location specified in config.toml"""
     try:
         label_pdf = client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
@@ -345,6 +382,7 @@ def download_label(client:DespatchBaySDK, config:Config, shipment_return:Shipmen
         label_pdf.download(shipment.label_location)
     except:
         sg.popup_error("Label not downloaded")
+
 
 def print_label(shipment):
     """ prints the labels stored at shipment.label_location """
@@ -355,6 +393,7 @@ def print_label(shipment):
     else:
         shipment.printed = True
 
+
 def get_shipments(config: Config, in_file: str) -> list:
     """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
     shipments = []
@@ -364,7 +403,7 @@ def get_shipments(config: Config, in_file: str) -> list:
         try:
             shipments.append(Shipment(ship_dict=ship_dict))
         except KeyError as e:
-            print (f"Shipdict Key missing: {e}")
+            print(f"Shipdict Key missing: {e}")
     elif file_ext == 'dbase':
         ...
     else:
@@ -389,10 +428,9 @@ def get_new_address(client: DespatchBaySDK, postcode: str = None) -> Address:
 def address_chooser(candidates: list, client: DespatchBaySDK) -> Address:
     """ returns an address as chosen by user from a given list of candidates"""
     # build address option menu dict
-    address_key_dict = {}
-    for candidate in candidates:
-        candidate_hr = candidate.address
-        address_key_dict.update({candidate_hr: candidate.key})
+    address_key_dict = {candidate.address: candidate.key for candidate in candidates}
+    # for candidate in candidates:
+    #     address_key_dict.update({candidate.address: candidate.key})
 
     # deploy address option popup using dict as mapping
     address_key = address_chooser_popup(address_key_dict)
@@ -408,10 +446,9 @@ def update_contact_gui(config: Config, sender_or_recip: Sender | Recipient, wind
         window[f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-'].update(value)
 
 
-def update_address_gui(address: Address, sender_or_recip: str, window: Window):
+def update_address_gui(address: Address, sender_or_recip: str, window: Window, client: DespatchBaySDK = None):
     address_dict = {k: v for k, v in vars(address).items() if 'soap' not in k}
     address_dict.pop('country_code', None)
-
     for k, v in address_dict.items():
         window[f'-{sender_or_recip.upper()}_{k.upper()}-'].update(v or '')
 
