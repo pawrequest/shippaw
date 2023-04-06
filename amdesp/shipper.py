@@ -377,7 +377,7 @@ def download_label(client: DespatchBaySDK, config: Config, shipment_return: Ship
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name}.pdf at location specified in config.toml"""
     try:
         label_pdf = client.get_labels(shipment_return.shipment_document_id, label_layout='2A4')
-        label_string = shipment.shipment_name.replace(r'/', '-') + '.pdf'
+        label_string = shipment.shipment_name.replace(r':', '-') + '.pdf'
         shipment.label_location = config.labels / label_string
         label_pdf.download(shipment.label_location)
     except:

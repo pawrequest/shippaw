@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
         mode = 'ship_out'
         in_file = STORED_XML
-        SANDBOX = False
+        SANDBOX = True
 
         # mode = 'track_out'
         # xml_file = STORED_XML
