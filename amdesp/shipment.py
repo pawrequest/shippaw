@@ -1,3 +1,8 @@
+from pathlib import Path
+
+from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel
+
+
 import datetime
 import pathlib
 
@@ -22,7 +27,7 @@ class Shipment:
         self.date_menu_map:dict = dict()
         self.category:str = ship_dict['category']
         self.shipment_name:str = ship_dict['shipment_name']
-        self.date:datetime.date = ship_dict['send_out_date']
+        self.date:datetime.date = ship_dict['date']
         self.address_as_str:str = ship_dict['address_as_str']
         # self.contact:str = ship_dict.get('contact', None)
         # if self.contact is None:

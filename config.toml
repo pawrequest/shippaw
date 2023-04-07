@@ -20,7 +20,7 @@ shipment_fields = [
     'postcode',
     'telephone',
     'search_term',
-    'send_out_date',
+    'date',
     'inbound_id',
     'outbound_id',
     'shipment_name',
@@ -54,6 +54,7 @@ postal_code = "NW6 4TE"
 country_code = "GB"
 address_id = 5536 # remove from .env
 search_term = 'amherst'
+parcel_contents = 'Radios'
 
 
 [datetime_masks]
@@ -104,6 +105,7 @@ cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
 dbase_import = 'c:\paul\shipments.dbf'
+stored_xml = 'data/AmShip.xml'
 
 
 

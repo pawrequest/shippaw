@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import xml.etree.ElementTree as ET
 import time
 from datetime import datetime
@@ -55,7 +56,7 @@ class App:
 
             # click 'postcode' or enter 'Return' in postcode box to list and choose from addresses at postcode
             if 'postal_code' in event.lower():
-                self.postcode_click(client, event, values, window)
+                self.postcode_click(client=client, event=event, values=values, window=window)
 
             # click existing shipment id to track shipping
             if event == '-INBOUND_ID-':
@@ -106,68 +107,59 @@ class App:
             update_address_gui(address=new_address, window=window, sender_or_recip=sender_or_recip)
 
 
-def get_remote_address(client: DespatchBaySDK, shipment: Shipment) -> Address:
+def get_remote_address(client: DespatchBaySDK, shipment: Shipment):
     """
     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
     If supplied data does not yield a valid address, call get_new_address.
     """
-    fuzzy_match: (Address(str, int))
     address = None
-    # try:
-    #     address = client.find_address(shipment.postcode, shipment.customer)
-    # except ApiException:
-    #     try:
-    #         address = client.find_address(shipment.postcode, shipment.search_term)
-    #     except:
-    #         address = None
-    #         # fuzzy_address = get_fuzzy_address(client=client, shipment=shipment, postcode=shipment.postcode)
-
-    if fuzzy_match := get_fuzzy_address(client=client, shipment=shipment, postcode=shipment.postcode):
-        sg.popup_yes_no(f"No exact address match - accept fuzzy match?\n"
-                        f"{fuzzy_match[1][0]} score = {fuzzy_match[1][1]}\n "
-                        f"address: {fuzzy_match[0].company_name} at {fuzzy_match[0].street}")
+    try:
+        # search by customer name
+        address = client.find_address(shipment.postcode, shipment.customer)
+    except ApiException:
+        try:
+            # search by building number or address firstline
+            address = client.find_address(shipment.postcode, shipment.search_term)
+        except:
+            # fuzzy search returns None if no scores over 60, walrus assign and conditional same time
+            if fuzzy_match := get_fuzzy_address(client=client, shipment=shipment, postcode=shipment.postcode):
+                address = fuzzy_match
 
     while not address:
-        if sg.popup_yes_no("No address - try again?") == "Yes":
+        if sg.popup_yes_no("No address - choose from postcode?") == "Yes":
             address = get_new_address(client=client, postcode=shipment.postcode)
         else:
-            sg.popup_error("Well if you don't have a postcode I guess I'll crash now.\nGoodbye")
+            sg.popup_error("Well then I guess I'll crash now.\nGoodbye")
             break
     return address
 
 
 # todo fuzzy logic
-def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None) -> (Address(str,int)):
+def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None):
     """
-    return a fuzzy matched address if any score > 60 else None
+    return nested tuple  (fuzzy matched address, (match category and score)) if any score > 60 else None
     """
 
-    best_match = None
     match_dict = {}
 
-    # address_str_to_match = shipment.address_as_str.split('\n')[0]
-    address_str_to_match = shipment.address_as_str
-    address_str_to_match = address_str_to_match.replace('Units', 'Unit')
+    # todo test cases from dbase export, create table of inpuyt addresses to auto-search outcomes
+    address_str_to_match = shipment.address_as_str.split('\n')[0].replace('Units', 'Unit')
     candidates: [Address] = client.get_address_keys_by_postcode(postcode)
 
     for candidate in candidates:
         candidate_address: Address = client.get_address_by_key(candidate.key)
-        # candidate_street1 = candidate_address.street.split(',')[0]
-        candidate_street1 = candidate_address.street
 
         if shipment.customer == candidate_address.company_name or address_str_to_match == candidate_address.street:
-            best_match = (candidate_address, ('Exact', 100))
+            best_match = candidate_address
             break
 
         str_to_company_nam = fuzz.partial_ratio(address_str_to_match, candidate_address.company_name)
         company_match_ratio = fuzz.partial_ratio(shipment.customer, candidate_address.company_name)
-        street_match_ratio = fuzz.partial_ratio(candidate_street1, address_str_to_match)
-
-        match_scores = [str_to_company_nam, company_match_ratio, street_match_ratio]
+        street_match_ratio = fuzz.partial_ratio(address_str_to_match, candidate_address.street)
 
         match_dict.update(
             {candidate_address: {'street_match': street_match_ratio, 'company_match': company_match_ratio,
-                             'str_to_company': str_to_company_nam}})
+                                 'str_to_company': str_to_company_nam}})
         time.sleep(.2)
     else:
         best_match = get_best_match(match_dict)
@@ -175,8 +167,10 @@ def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None)
     return best_match
 
 
-def get_best_match(match_dict):
-    best_match = {}
+def get_best_match(match_dict) -> Address | None:
+    """ return best address match from match_dict or None if no match > 60"""
+
+    best_address: Address | None = None
     best_score = 0
     best_category = ""
 
@@ -185,9 +179,18 @@ def get_best_match(match_dict):
         if max_score > best_score:
             best_score = max_score
             best_category = max(scores, key=scores.get)
-            best_match.update({address: (best_category, best_score)})
+            best_address = address
+    # todo only if high score > 60
+    # if best_score > 60:
 
-    return best_match if best_score > 60 else None
+    if sg.popup_yes_no(f"No exact address match - accept fuzzy match?\n"
+                       f"{best_category} score = {best_score}\n "
+                       f"address: {best_address.company_name} at {best_address.street}") == 'Yes':
+        return best_address
+
+    #
+    # else:
+    #     return None
 
 
 #
@@ -253,7 +256,7 @@ def get_remote_recipient(shipment: Shipment, address: Address,
 #             telephone=shipment.telephone,
 #             sender_address=address
 #         )
-# 
+#
 #     return recipient_or_sender
 
 
@@ -388,7 +391,7 @@ def email_label():
     ...
 
 
-def setup_commence(config: Config()):
+def setup_commence(config: Config):
     """ looks for CmcLibNet in prog files, if absent attempts to install exe located at path defined in config.toml"""
     try:
         if not config.cmc_dll.exists():
@@ -401,13 +404,13 @@ def setup_commence(config: Config()):
             # error message built into cmclibnet installer
 
 
-def get_parcels(num_parcels: int, client: DespatchBaySDK, shipment: Shipment) -> list[Parcel]:
+def get_parcels(num_parcels: int, client: DespatchBaySDK, config: Config, shipment: Shipment) -> list[Parcel]:
     """ return an array of dbay parcel objects equal to the number of boxes provided
         uses arbitrary sizes because dbay api wont allow skipping even though website does"""
     parcels = []
     for x in range(num_parcels):
         parcel = client.parcel(
-            contents="Radios",
+            contents=config.home_address['parcel_contents'],
             value=500,
             weight=6,
             length=60,
@@ -534,7 +537,7 @@ def update_contact_gui(config: Config, sender_or_recip: Sender | Recipient, wind
         window[f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-'].update(value)
 
 
-def update_address_gui(address: Address, sender_or_recip: str, window: Window, client: DespatchBaySDK = None):
+def update_address_gui(address: Address, sender_or_recip: str, window: Window):
     address_dict = {k: v for k, v in vars(address).items() if 'soap' not in k}
     address_dict.pop('country_code', None)
     for k, v in address_dict.items():
@@ -606,7 +609,15 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
             v = unsanitise(v)
 
             if "number" in k.lower():
-                v = int(v.replace(',', ''))
+                # if not v.isnumeric():
+                #     v = re.sub(r"\D", "", v)
+                if 'serial' in k.lower():
+                    v = [int(x) for x in v.split() if x.isdigit()]
+                else:
+                    if isinstance(v, str):
+                        v = re.sub(r"\D", "", v)
+
+                        # v = int(v.replace(',', ''))
             if k == 'name':
                 k = 'shipment_name'
                 v = "".join(ch if ch.isalnum() else '_' for ch in v)
@@ -617,7 +628,6 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
                 k = 'telephone'
             if k == 'address':
                 k = 'address_as_str'
-                # v=v.replace('Units', 'Unit')
             ship_dict.update({k: v})
 
     # get customer name
@@ -631,12 +641,12 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
         ship_dict['customer'] = root[0][3].text
 
     # convert send-out-date to dt object, or insert today
-    ship_dict['send_out_date'] = ship_dict.get('send_out_date', None)
-    if ship_dict['send_out_date']:
-        # ship_dict['send_out_date'] = parse(ship_dict['send_out_date'])
-        ship_dict['send_out_date'] = datetime.strptime(ship_dict['send_out_date'], config.datetime_masks['DT_HIRE'])
+    ship_dict['date'] = ship_dict.get('send_out_date', None)
+    if ship_dict['date']:
+        # ship_dict['date'] = parse(ship_dict['date'])
+        ship_dict['date'] = datetime.strptime(ship_dict['date'], config.datetime_masks['DT_HIRE'])
     else:
-        ship_dict['send_out_date'] = datetime.today()
+        ship_dict['date'] = datetime.today()
 
     ship_dict['category'] = category
     ship_dict['search_term'] = parse_amherst_address_string(ship_dict['address_as_str'])

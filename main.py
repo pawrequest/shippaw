@@ -15,18 +15,22 @@ STORED_XML = str(root_dir / 'data' / 'amship.xml')
 SANDBOX = None
 
 """
-Paul Sees Solutions Amdesp - middleware to connect Commence RM to DespatchBay's shipping service. 
-takes xml and (soon) dbase as inputs, validates and corrects data to conform to shipping service, 
+Amdesp - middleware to connect Commence RM to DespatchBay's shipping service. 
+modes = [ship_in, ship_out, track_in, track_out]
+takes xml and (soon) dbase files as inputs - location provided as argument
+validates and corrects data to conform to shipping service requirements, 
 allows user to update addresses / select shipping services etc, queue and book collection, 
 prints labels, gets tracking info on existing shipments
-includes Commence vbs scripts for exporting xml, 
-powershell to check vbs into commence 
-powershell to log shipment ids to commence
-Vovin CmcLibNet installer for interacting with commence
+includes
++ Commence vbs scripts for exporting xml,
++ python app with pysimplegui gui  
++ powershell to check vbs into commence 
++ powershell to log shipment ids to commence
++ Vovin CmcLibNet installer for interacting with commence
 """
 
 
-def shipper():
+def main():
     """ sandbox = fake shipping client, no money for labels!"""
     config = Config()
     client = config.get_dbay_client(sandbox=SANDBOX)
@@ -38,7 +42,6 @@ def shipper():
         if 'ship' in mode:
             if 'in' in mode:
                 shipment.is_return = True
-            # shipment.sender, shipment.recipient = get_sender_recip(client=client, shipment=shipment)
             app.main_loop(client=client, config=config, sandbox=SANDBOX, shipment=shipment)
         elif 'track' in mode:
             if 'in' in mode:
@@ -66,20 +69,10 @@ if __name__ == '__main__':
 
     # AmDesp called from IDE, set mode synthetically:
     else:
-        # mode = 'ship_in'
-        # xml_file = STORED_XML
-        # SANDBOX = True
+        in_file = STORED_XML
+        SANDBOX = True
 
         mode = 'ship_out'
-        in_file = STORED_XML
-        SANDBOX = False
-
-        # mode = 'track_out'
-        # xml_file = STORED_XML
-        # SANDBOX = True
-        # #
         # mode = 'track_in'
-        # xml_file = STORED_XML
-        # SANDBOX=True
 
-    shipper()
+    main()
