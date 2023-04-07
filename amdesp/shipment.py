@@ -15,6 +15,7 @@ class Shipment:
         :param ship_dict: a dictionary of shipment details
         :param is_return: recipient is user's own sender_address[0]
         """
+        self.candidates:list|None = None
         self.label_location: pathlib.Path = pathlib.Path()
         self.company_name:str = ''
         self.service:Service | None = None

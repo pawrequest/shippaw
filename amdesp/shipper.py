@@ -56,7 +56,7 @@ class App:
 
             # click 'postcode' or enter 'Return' in postcode box to list and choose from addresses at postcode
             if 'postal_code' in event.lower():
-                self.postcode_click(client=client, event=event, values=values, window=window)
+                self.postcode_click(client=client, event=event, values=values, window=window, shipment=shipment)
 
             # click existing shipment id to track shipping
             if event == '-INBOUND_ID-':
@@ -100,8 +100,8 @@ class App:
 
         window.close()
 
-    def postcode_click(self, client, event, values, window):
-        new_address = get_new_address(client=client, postcode=values[event.upper()])
+    def postcode_click(self, client:DespatchBaySDK, event:str, values:dict, shipment:Shipment, window:Window):
+        new_address = get_new_address(client=client, postcode=values[event.upper()], shipment=shipment)
         if new_address:
             sender_or_recip = 'sender' if 'sender' in event.lower() else 'recipient'
             update_address_gui(address=new_address, window=window, sender_or_recip=sender_or_recip)
@@ -127,7 +127,7 @@ def get_remote_address(client: DespatchBaySDK, shipment: Shipment):
 
     while not address:
         if sg.popup_yes_no("No address - choose from postcode?") == "Yes":
-            address = get_new_address(client=client, postcode=shipment.postcode)
+            address = get_new_address(client=client, postcode=shipment.postcode, shipment=shipment)
         else:
             sg.popup_error("Well then I guess I'll crash now.\nGoodbye")
             break
@@ -144,9 +144,9 @@ def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None)
 
     # todo test cases from dbase export, create table of inpuyt addresses to auto-search outcomes
     address_str_to_match = shipment.address_as_str.split('\n')[0].replace('Units', 'Unit')
-    candidates: [Address] = client.get_address_keys_by_postcode(postcode)
+    shipment.candidates: [Address] = client.get_address_keys_by_postcode(postcode)
 
-    for candidate in candidates:
+    for candidate in shipment.candidates:
         candidate_address: Address = client.get_address_by_key(candidate.key)
 
         if shipment.customer == candidate_address.company_name or address_str_to_match == candidate_address.street:
@@ -169,7 +169,7 @@ def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None)
 
 def get_best_match(match_dict) -> Address | None:
     """ return best address match from match_dict or None if no match > 60"""
-
+    min_to_match = 60
     best_address: Address | None = None
     best_score = 0
     best_category = ""
@@ -180,8 +180,8 @@ def get_best_match(match_dict) -> Address | None:
             best_score = max_score
             best_category = max(scores, key=scores.get)
             best_address = address
-    # todo only if high score > 60
-    # if best_score > 60:
+    # todo unswitch
+    # if best_score > min_to_match:
 
     if sg.popup_yes_no(f"No exact address match - accept fuzzy match?\n"
                        f"{best_category} score = {best_score}\n "
@@ -502,12 +502,15 @@ def get_shipments(config: Config, in_file: str) -> list:
     return shipments
 
 
-def get_new_address(client: DespatchBaySDK, postcode: str = None) -> Address:
+def get_new_address(client: DespatchBaySDK, shipment:Shipment, postcode: str = None) -> Address:
     """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
     while True:
         postcode = postcode or sg.popup_get_text("Bad Postcode - please enter")
         try:
-            candidates = client.get_address_keys_by_postcode(postcode)
+            if shipment.candidates:
+                candidates = shipment.candidates
+            else:
+                candidates = client.get_address_keys_by_postcode(postcode)
         except:
             postcode = None
             continue
