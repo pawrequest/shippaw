@@ -6,11 +6,12 @@ import sys
 import platformdirs
 
 from amdesp.config import Config
-from amdesp.gui_layouts import tracking_viewer_window
-from amdesp.shipper import App, get_shipments # , get_sender_recip
+from amdesp.shipper import App
+from amdesp.shipment import Shipment
 
 root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
-STORED_XML = str(root_dir / 'data' / 'amship.xml')
+STORED_XML = str(root_dir / 'data' / 'amhers_export.dbf')
+STORED_DBASE = str(root_dir / 'data' / '')
 
 SANDBOX = None
 
@@ -35,28 +36,8 @@ def main():
     config = Config()
     client = config.get_dbay_client(sandbox=SANDBOX)
     app = App()
-    shipments = get_shipments(config=config, in_file=in_file)
-
-
-    for shipment in shipments:
-        if 'ship' in mode:
-            if 'in' in mode:
-                shipment.is_return = True
-            app.main_loop(client=client, config=config, sandbox=SANDBOX, shipment=shipment)
-        elif 'track' in mode:
-            if 'in' in mode:
-                try:
-                    tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
-                except:
-                    ...
-                    # sg.popup_error("No Shipment ID")
-
-            elif 'out' in mode:
-                try:
-                    tracking_viewer_window(shipment.outbound_id, client=client)
-                except:
-                    ...
-                    # sg.popup_error("No Shipment ID")
+    shipments = Shipment.get_shipments(config=config, in_file=in_file)
+    app.process_shipments(shipments=shipments, mode=mode, config=config, client=client, sandbox=SANDBOX)
 
 
 if __name__ == '__main__':
@@ -70,7 +51,7 @@ if __name__ == '__main__':
     # AmDesp called from IDE, set mode synthetically:
     else:
         in_file = STORED_XML
-        SANDBOX = True
+        SANDBOX = False
 
         mode = 'ship_out'
         # mode = 'track_in'

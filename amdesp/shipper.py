@@ -3,6 +3,8 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import time
+from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 from pprint import pprint
 from typing import Literal
@@ -14,7 +16,8 @@ from PySimpleGUI import Window
 from dateutil.parser import parse
 
 from amdesp.config import Config
-from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, Address, ShipmentReturn, Sender, Recipient, Parcel
+from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, Address, ShipmentReturn, Sender, Recipient, Parcel, \
+    AddressKey
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.despatchbay.exceptions import ApiException
 from amdesp.gui_layouts import main_window, tracking_viewer_window, address_chooser_popup
@@ -22,13 +25,37 @@ from amdesp.shipment import Shipment, parse_amherst_address_string
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
 dotenv.load_dotenv()
+BestMatch = namedtuple('BestMatch', ['address', 'category', 'score'])
+FuzzyScores = namedtuple('FuzzyScores',
+                         ['address', 'str_to_match', 'customer_to_company', 'str_to_company', 'str_to_street'])
 
 
 class App:
     def __init__(self):
         self.shipments: [Shipment]
 
-    def main_loop(self, client: DespatchBaySDK, config: Config, sandbox: bool, shipment: Shipment):
+    def process_shipments(self, shipments: [Shipment], mode: str, client, config, sandbox):
+        for shipment in shipments:
+            shipment.is_return = 'in' in mode
+            if mode.startswith('ship'):
+                self.shipping_loop(client=client, config=config, sandbox=sandbox, shipment=shipment)
+            elif mode.startswith('track'):
+                self.tracking_loop(mode=mode, client=client, shipment=shipment)
+
+    def tracking_loop(self, mode: str, shipment: Shipment, client: DespatchBaySDK):
+        if 'in' in mode:
+            try:
+                tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
+            except Exception as e:
+                # todo handle better
+                print(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
+        elif 'out' in mode:
+            try:
+                tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
+            except Exception as e:
+                print(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
+
+    def shipping_loop(self, client: DespatchBaySDK, config: Config, sandbox: bool, shipment: Shipment):
         if sandbox:
             sg.theme('Tan')
         else:
@@ -60,14 +87,14 @@ class App:
 
             # click existing shipment id to track shipping
             if event == '-INBOUND_ID-':
-                tracking_viewer_window(shipment.inbound_id, client=client)
+                tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
             if event == '-OUTBOUND_ID-':
-                tracking_viewer_window(shipment.outbound_id, client=client)
+                tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
 
             if event == '-GO-':
                 decision = values['-QUEUE_OR_BOOK-'].lower()
                 if 'queue' or 'book' in decision:
-                    shipment_request = make_request(client=client, shipment=shipment, values=values)
+                    shipment_request = make_request(client=client, shipment=shipment, values=values, config=config)
                     answer = sg.popup_scrolled(f"{decision}?\n{shipment_request}", size=(30, 30))
 
                     # todo remove safety checks when ship
@@ -100,7 +127,7 @@ class App:
 
         window.close()
 
-    def postcode_click(self, client:DespatchBaySDK, event:str, values:dict, shipment:Shipment, window:Window):
+    def postcode_click(self, client: DespatchBaySDK, event: str, values: dict, shipment: Shipment, window: Window):
         new_address = get_new_address(client=client, postcode=values[event.upper()], shipment=shipment)
         if new_address:
             sender_or_recip = 'sender' if 'sender' in event.lower() else 'recipient'
@@ -110,20 +137,37 @@ class App:
 def get_remote_address(client: DespatchBaySDK, shipment: Shipment):
     """
     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
-    If supplied data does not yield a valid address, call get_new_address.
+    search by customer name, then shipment search_term
+    call explicit_matches to compare strings,
+    call get_bestmatch for fuzzy results,
+    if best score exceed threshold ask user to confirm
+    If still no valid address, call get_new_address.
     """
     address = None
+    fuzzy_match_threshold = 60
+
     try:
-        # search by customer name
         address = client.find_address(shipment.postcode, shipment.customer)
     except ApiException:
         try:
-            # search by building number or address firstline
             address = client.find_address(shipment.postcode, shipment.search_term)
-        except:
-            # fuzzy search returns None if no scores over 60, walrus assign and conditional same time
-            if fuzzy_match := get_fuzzy_address(client=client, shipment=shipment, postcode=shipment.postcode):
-                address = fuzzy_match
+        except ApiException:
+            try:
+                fuzzy_match = get_bestmatch(client=client, shipment=shipment, postcode=shipment.postcode)
+            except Exception as e:
+                ...
+            else:
+                if fuzzy_match.score > fuzzy_match_threshold:
+                    chosen_bestmatch = popup_confirm_fuzzy(fuzzy_match)
+                    if chosen_bestmatch:
+                        return chosen_bestmatch.address
+
+    # # todo unswitch
+    # temp_fuzzy_match = get_bestmatch(client=client, shipment=shipment, postcode=shipment.postcode)
+    # if temp_fuzzy_match := popup_confirm_fuzzy(temp_fuzzy_match):
+    #     ...
+    # else:
+    #     ...
 
     while not address:
         if sg.popup_yes_no("No address - choose from postcode?") == "Yes":
@@ -134,63 +178,93 @@ def get_remote_address(client: DespatchBaySDK, shipment: Shipment):
     return address
 
 
-# todo fuzzy logic
-def get_fuzzy_address(client: DespatchBaySDK, shipment: Shipment, postcode=None):
+def get_bestmatch(client: DespatchBaySDK, shipment: Shipment, postcode=None) -> BestMatch:
     """
-    return nested tuple  (fuzzy matched address, (match category and score)) if any score > 60 else None
+    takes a shipment and optional postcode, searches dbay api
+    returns a BestMatch namedtuple with address, best-matched category, and best-match score
+    stores candidate list in shipment object
+    calls
     """
-
     match_dict = {}
+    postcode = postcode or shipment.postcode
+    shipment.address_as_str = shipment.address_as_str.split('\n')[0].replace('Units', 'Unit')
 
-    # todo test cases from dbase export, create table of inpuyt addresses to auto-search outcomes
-    address_str_to_match = shipment.address_as_str.split('\n')[0].replace('Units', 'Unit')
-    shipment.candidates: [Address] = client.get_address_keys_by_postcode(postcode)
+    try:
+        shipment.candidate_keys = client.get_address_keys_by_postcode(postcode)
+        for candidate_key in shipment.candidate_keys:
+            candidate_address = client.get_address_by_key(candidate_key.key)
+            if best_match := explicit_match(shipment=shipment, candidate_address=candidate_address):
+                break
+            else:
+                fuzzyscores = get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment)
+                match_dict.update({candidate_address: fuzzyscores})
+                time.sleep(.2)
+        else:
+            # finished loop, no explicit matches so get highest scoring one from the dict
+            best_match = bestmatch_from_dict(match_dict)
+        return best_match
 
-    for candidate in shipment.candidates:
-        candidate_address: Address = client.get_address_by_key(candidate.key)
+    except ApiException:
+        ...
 
-        if shipment.customer == candidate_address.company_name or address_str_to_match == candidate_address.street:
-            best_match = candidate_address
-            break
 
-        str_to_company_nam = fuzz.partial_ratio(address_str_to_match, candidate_address.company_name)
-        company_match_ratio = fuzz.partial_ratio(shipment.customer, candidate_address.company_name)
-        street_match_ratio = fuzz.partial_ratio(address_str_to_match, candidate_address.street)
-
-        match_dict.update(
-            {candidate_address: {'street_match': street_match_ratio, 'company_match': company_match_ratio,
-                                 'str_to_company': str_to_company_nam}})
-        time.sleep(.2)
+def explicit_match(shipment, candidate_address) -> BestMatch | None:
+    """ if an explicit match is found return a bestmatch else None"""
+    address_str_to_match = shipment.address_as_str
+    if shipment.customer == candidate_address.company_name or \
+            address_str_to_match == candidate_address.street:
+        best_match = BestMatch(address=candidate_address, category='explicit', score=100)
+        return best_match
     else:
-        best_match = get_best_match(match_dict)
-
-    return best_match
+        return None
 
 
-def get_best_match(match_dict) -> Address | None:
-    """ return best address match from match_dict or None if no match > 60"""
-    min_to_match = 60
-    best_address: Address | None = None
+def popup_confirm_fuzzy(best_match: BestMatch) -> BestMatch | None:
+    """ takes a bestmatch tuple
+    return the bestmatch object or none if user declines"""
+    display_vars = ['company_name', 'street', 'locality']
+    choice = sg.popup_yes_no(f"No exact address match - accept fuzzy match?\n\n"
+                             f"Best match was {best_match.category} with a score of {best_match.score}\n\n"
+                             f"Best Address match is "
+                             f"{[getattr(best_match.address, var) or '' for var in display_vars]}")
+
+    return best_match if choice == "Yes" else None
+
+
+def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
+    """" return a fuzzyscopres tuple"""
+    address_str_to_match = shipment.address_as_str
+
+    str_to_company = fuzz.partial_ratio(address_str_to_match, candidate_address.company_name)
+    customer_to_company = fuzz.partial_ratio(shipment.customer, candidate_address.company_name)
+    str_to_street = fuzz.partial_ratio(address_str_to_match, candidate_address.street)
+
+    fuzzy_scores = FuzzyScores(
+        address=candidate_address,
+        str_to_match=address_str_to_match,
+        customer_to_company=customer_to_company,
+        str_to_company=str_to_company,
+        str_to_street=str_to_street)
+
+    return fuzzy_scores
+
+
+def bestmatch_from_dict(match_dict: {Address: FuzzyScores}) -> BestMatch:
+    """ return BestMatch named tuple"""
+    best_address = None
     best_score = 0
     best_category = ""
 
-    for address, scores in match_dict.items():
-        max_score = max(scores.values())
+    for address, fuzzyscores in match_dict.items():
+        # scores = [score for score in fuzzyscores]
+        max_score = max(fuzzyscores.values())
         if max_score > best_score:
             best_score = max_score
-            best_category = max(scores, key=scores.get)
+            best_category = max(fuzzyscores, key=fuzzyscores.get)
             best_address = address
-    # todo unswitch
-    # if best_score > min_to_match:
+    best_match = BestMatch(address=best_address, category=best_category, score=best_score)
 
-    if sg.popup_yes_no(f"No exact address match - accept fuzzy match?\n"
-                       f"{best_category} score = {best_score}\n "
-                       f"address: {best_address.company_name} at {best_address.street}") == 'Yes':
-        return best_address
-
-    #
-    # else:
-    #     return None
+    return best_match
 
 
 #
@@ -217,27 +291,27 @@ def get_best_match(match_dict) -> Address | None:
 #     return address
 #
 
-def get_remote_sender(shipment: Shipment, address: Address,
-                      client: DespatchBaySDK) -> Sender:
-    """ return a dbay sender object for the given address and shipment contact details"""
-    sender = client.sender(
-        name=shipment.contact,
-        email=shipment.email,
-        telephone=shipment.telephone,
-        sender_address=address)
-    return sender
-
-
-def get_remote_recipient(shipment: Shipment, address: Address,
-                         client: DespatchBaySDK) -> Recipient:
-    """ return a dbay recipient object for the given address and shipment contact details"""
-    recipient = client.recipient(
-        name=shipment.contact,
-        email=shipment.email,
-        telephone=shipment.telephone,
-        recipient_address=address)
-    return recipient
-
+# def get_remote_sender(shipment: Shipment, address: Address,
+#                       client: DespatchBaySDK) -> Sender:
+#     """ return a dbay sender object for the given address and shipment contact details"""
+#     sender = client.sender(
+#         name=shipment.contact,
+#         email=shipment.email,
+#         telephone=shipment.telephone,
+#         sender_address=address)
+#     return sender
+#
+#
+# def get_remote_recipient(shipment: Shipment, address: Address,
+#                          client: DespatchBaySDK) -> Recipient:
+#     """ return a dbay recipient object for the given address and shipment contact details"""
+#     recipient = client.recipient(
+#         name=shipment.contact,
+#         email=shipment.email,
+#         telephone=shipment.telephone,
+#         recipient_address=address)
+#     return recipient
+#
 
 #
 # def get_remote_sender_or_recip(sender_or_recip: Literal['sender', 'recipient'], shipment: Shipment, address: Address,
@@ -282,9 +356,9 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
     )
 
 
-def make_request(client: DespatchBaySDK, shipment: Shipment, values: dict) -> ShipmentRequest:
+def make_request(client: DespatchBaySDK, config: Config, shipment: Shipment, values: dict) -> ShipmentRequest:
     """ retrieves values from gui and returns a dbay shipment request object """
-    shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment)
+    shipment.parcels = get_parcels(values['-BOXES-'], client=client, shipment=shipment, config=config)
     shipment.date = shipment.date_menu_map.get(values['-DATE-'])
     shipment.service = shipment.service_menu_map.get(values['-SERVICE-'])
     # todo update address from values
@@ -374,13 +448,24 @@ def populate_home_address(client: DespatchBaySDK, config: Config, shipment: Ship
 def populate_remote_address(client: DespatchBaySDK, config: Config, shipment: Shipment, window: Window):
     """ updates shipment and gui window with customer contact and address details in sender or recipient position as appropriate"""
     remote_address = get_remote_address(client=client, shipment=shipment)
+
     if shipment.is_return:
-        shipment.sender = get_remote_sender(client=client, shipment=shipment, address=remote_address)
+        shipment.sender = client.sender(
+            name=shipment.contact,
+            email=shipment.email,
+            telephone=shipment.telephone,
+            sender_address=remote_address)
+
         update_contact_gui(config=config, sender_or_recip=shipment.sender, window=window)
         update_address_gui(address=shipment.sender.sender_address, sender_or_recip='sender', window=window)
 
     else:
-        shipment.recipient = get_remote_recipient(client=client, shipment=shipment, address=remote_address)
+        shipment.recipient = client.recipient(
+            name=shipment.contact,
+            email=shipment.email,
+            telephone=shipment.telephone,
+            recipient_address=remote_address)
+
         update_contact_gui(config=config, sender_or_recip=shipment.recipient, window=window)
         update_address_gui(address=shipment.recipient.recipient_address, sender_or_recip='recipient',
                            window=window)
@@ -485,30 +570,30 @@ def print_label(shipment):
         shipment.printed = True
 
 
-def get_shipments(config: Config, in_file: str) -> list:
-    """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
-    shipments = []
-    file_ext = in_file.split('.')[-1]
-    if file_ext == 'xml':
-        ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
-        try:
-            shipments.append(Shipment(ship_dict=ship_dict))
-        except KeyError as e:
-            print(f"Shipdict Key missing: {e}")
-    elif file_ext == 'dbase':
-        ...
-    else:
-        print_and_pop("Invalid input file")
-    return shipments
+# def get_shipments(config: Config, in_file: str) -> list:
+#     """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
+#     shipments = []
+#     file_ext = in_file.split('.')[-1]
+#     if file_ext == 'xml':
+#         ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
+#         try:
+#             shipments.append(Shipment(ship_dict=ship_dict))
+#         except KeyError as e:
+#             print(f"Shipdict Key missing: {e}")
+#     elif file_ext == 'dbase':
+#         ...
+#     else:
+#         print_and_pop("Invalid input file")
+#     return shipments
 
 
-def get_new_address(client: DespatchBaySDK, shipment:Shipment, postcode: str = None) -> Address:
+def get_new_address(client: DespatchBaySDK, shipment: Shipment, postcode: str = None) -> Address:
     """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
     while True:
         postcode = postcode or sg.popup_get_text("Bad Postcode - please enter")
         try:
-            if shipment.candidates:
-                candidates = shipment.candidates
+            if shipment.candidate_keys:
+                candidates = shipment.candidate_keys
             else:
                 candidates = client.get_address_keys_by_postcode(postcode)
         except:
@@ -594,84 +679,85 @@ def log_shipment(config: Config, shipment: Shipment):
         sg.popup(f" Json exported to {str(f)}:\n {export_dict}")
 
 
-def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
-    """parse amherst shipment xml"""
-    shipment_fields = config.shipment_fields
-    ship_dict = dict()
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
-    fields = root[0][2]
+#
+# def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
+#     """parse amherst shipment xml"""
+#     shipment_fields = config.shipment_fields
+#     ship_dict = dict()
+#     tree = ET.parse(xml_file)
+#     root = tree.getroot()
+#     fields = root[0][2]
+#
+#     category = root[0][0].text
+#     for field in fields:
+#         k = field[0].text
+#         k = to_snake_case(k)
+#         v = field[1].text
+#         if v:
+#             k = unsanitise(k)
+#             v = unsanitise(v)
+#
+#             if "number" in k.lower():
+#                 # if not v.isnumeric():
+#                 #     v = re.sub(r"\D", "", v)
+#                 if 'serial' in k.lower():
+#                     v = [int(x) for x in v.split() if x.isdigit()]
+#                 else:
+#                     if isinstance(v, str):
+#                         v = re.sub(r"\D", "", v)
+#
+#                         # v = int(v.replace(',', ''))
+#             if k == 'name':
+#                 k = 'shipment_name'
+#                 v = "".join(ch if ch.isalnum() else '_' for ch in v)
+#             if k[:6] == "deliv ":
+#                 k = k.replace('deliv', 'delivery')
+#             k = k.replace('delivery_', '')
+#             if k == 'tel':
+#                 k = 'telephone'
+#             if k == 'address':
+#                 k = 'address_as_str'
+#             ship_dict.update({k: v})
+#
+#     # get customer name
+#     if category == "Hire":
+#         ship_dict['customer'] = root[0][3].text
+#     elif category == "Customer":
+#         ship_dict['customer'] = fields[0][1].text
+#         ship_dict[
+#             'shipment_name'] = f'{ship_dict["shipment_name"]} - {datetime.now().isoformat(" ", timespec="seconds")}'
+#     elif category == "Sale":
+#         ship_dict['customer'] = root[0][3].text
+#
+#     # convert send-out-date to dt object, or insert today
+#     ship_dict['date'] = ship_dict.get('send_out_date', None)
+#     if ship_dict['date']:
+#         # ship_dict['date'] = parse(ship_dict['date'])
+#         ship_dict['date'] = datetime.strptime(ship_dict['date'], config.datetime_masks['DT_HIRE'])
+#     else:
+#         ship_dict['date'] = datetime.today()
+#
+#     ship_dict['category'] = category
+#     ship_dict['search_term'] = parse_amherst_address_string(ship_dict['address_as_str'])
+#
+#     ship_dict['boxes'] = ship_dict.get('boxes', 1)
+#
+#     missing = []
+#     for attr_name in shipment_fields:
+#         if attr_name not in ship_dict.keys():
+#             if attr_name not in ['cost', 'inbound_id', 'outbound_id']:
+#                 missing.append(attr_name)
+#     if missing:
+#         print_and_pop(f"*** Warning - {missing} not found in ship_dict - Warning ***")
+#     return ship_dict
+#
 
-    category = root[0][0].text
-    for field in fields:
-        k = field[0].text
-        k = to_snake_case(k)
-        v = field[1].text
-        if v:
-            k = unsanitise(k)
-            v = unsanitise(v)
-
-            if "number" in k.lower():
-                # if not v.isnumeric():
-                #     v = re.sub(r"\D", "", v)
-                if 'serial' in k.lower():
-                    v = [int(x) for x in v.split() if x.isdigit()]
-                else:
-                    if isinstance(v, str):
-                        v = re.sub(r"\D", "", v)
-
-                        # v = int(v.replace(',', ''))
-            if k == 'name':
-                k = 'shipment_name'
-                v = "".join(ch if ch.isalnum() else '_' for ch in v)
-            if k[:6] == "deliv ":
-                k = k.replace('deliv', 'delivery')
-            k = k.replace('delivery_', '')
-            if k == 'tel':
-                k = 'telephone'
-            if k == 'address':
-                k = 'address_as_str'
-            ship_dict.update({k: v})
-
-    # get customer name
-    if category == "Hire":
-        ship_dict['customer'] = root[0][3].text
-    elif category == "Customer":
-        ship_dict['customer'] = fields[0][1].text
-        ship_dict[
-            'shipment_name'] = f'{ship_dict["shipment_name"]} - {datetime.now().isoformat(" ", timespec="seconds")}'
-    elif category == "Sale":
-        ship_dict['customer'] = root[0][3].text
-
-    # convert send-out-date to dt object, or insert today
-    ship_dict['date'] = ship_dict.get('send_out_date', None)
-    if ship_dict['date']:
-        # ship_dict['date'] = parse(ship_dict['date'])
-        ship_dict['date'] = datetime.strptime(ship_dict['date'], config.datetime_masks['DT_HIRE'])
-    else:
-        ship_dict['date'] = datetime.today()
-
-    ship_dict['category'] = category
-    ship_dict['search_term'] = parse_amherst_address_string(ship_dict['address_as_str'])
-
-    ship_dict['boxes'] = ship_dict.get('boxes', 1)
-
-    missing = []
-    for attr_name in shipment_fields:
-        if attr_name not in ship_dict.keys():
-            if attr_name not in ['cost', 'inbound_id', 'outbound_id']:
-                missing.append(attr_name)
-    if missing:
-        print_and_pop(f"*** Warning - {missing} not found in ship_dict - Warning ***")
-    return ship_dict
-
-
-def to_snake_case(input_string: str) -> str:
-    """Convert a string to lowercase snake case."""
-    input_string = input_string.replace(" ", "_")
-    input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
-    input_string = input_string.lower()
-    return input_string
+# def to_snake_case(input_string: str) -> str:
+#     """Convert a string to lowercase snake case."""
+#     input_string = input_string.replace(" ", "_")
+#     input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
+#     input_string = input_string.lower()
+#     return input_string
 
 
 def print_and_pop(print_text: str):
