@@ -290,7 +290,7 @@ def popup_confirm_fuzzy(best_match: BestMatch) -> BestMatch | None:
     return best_match if choice == "Yes" else None
 
 
-def sender_recip_from_bestmatch(shipment: Shipment, client: DespatchBaySDK, bestmatch: BestMatch):
+def remote_frame_from_bestmatch(shipment: Shipment, client: DespatchBaySDK, bestmatch: BestMatch):
     if shipment.is_return:
         sender_or_recip = client.sender(
             name=shipment.contact,
@@ -312,13 +312,6 @@ def sender_recip_from_bestmatch(shipment: Shipment, client: DespatchBaySDK, best
     return remote_frame
 
 
-def update_address_from_gui(config: Config, shipment: Shipment, sender_or_recip: Sender | Recipient, values: dict):
-    address_to_edit = sender_or_recip.sender_address if shipment.is_return else sender_or_recip.recipient_address
-    address_fields = config.address_fields
-    for field in address_fields:
-        value = values.get(f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-', None)
-        setattr(address_to_edit, field, value)
-    return address_to_edit
 
 
 def get_sender_or_recip(shipment: Shipment):
@@ -326,7 +319,7 @@ def get_sender_or_recip(shipment: Shipment):
 
 
 def address_from_user(bestmatch: BestMatch, client: DespatchBaySDK, config: Config, shipment: Shipment):
-    remote_frame = sender_recip_from_bestmatch(shipment=shipment, client=client, bestmatch=bestmatch)
+    remote_frame = remote_frame_from_bestmatch(shipment=shipment, client=client, bestmatch=bestmatch)
     sender_or_recip = get_sender_or_recip(shipment)
     window = sg.Window('Sender' if shipment.is_return else 'Recipient', layout=[[remote_frame]], finalize=True)
     update_gui_from_contact(config=config, sender_or_recip=sender_or_recip, window=window)
@@ -367,12 +360,6 @@ def bulk_postcode_click(client: DespatchBaySDK, event: str, values: dict, shipme
 
 
 
-
-def update_contact_from_gui(config: Config, sender_or_recip: Sender | Recipient, values: dict):
-    contact_fields = config.contact_fields
-    for field in contact_fields:
-        value = values.get(f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-', None)
-        setattr(sender_or_recip, field, value)
 
 
 def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
@@ -792,33 +779,6 @@ def download_label(client: DespatchBaySDK, config: Config, shipment_return: Ship
         sg.popup_error("Label not downloaded")
 
 
-def print_label(shipment):
-    """ prints the labels stored at shipment.label_location """
-    try:
-        os.startfile(str(shipment.label_location), "print")
-    except Exception as e:
-        sg.popup_error(f"\n ERROR: Unable to print \n{e}")
-    else:
-        shipment.printed = True
-
-
-# def get_shipments(config: Config, in_file: str) -> list:
-#     """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
-#     shipments = []
-#     file_ext = in_file.split('.')[-1]
-#     if file_ext == 'xml':
-#         ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
-#         try:
-#             shipments.append(Shipment(ship_dict=ship_dict))
-#         except KeyError as e:
-#             print(f"Shipdict Key missing: {e}")
-#     elif file_ext == 'dbase':
-#         ...
-#     else:
-#         print_and_pop("Invalid input file")
-#     return shipments
-
-
 def get_new_address(client: DespatchBaySDK, shipment: Shipment, postcode: str = None) -> Address:
     """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
     while True:
@@ -863,6 +823,20 @@ def update_gui_from_address(address: Address, sender_or_recip: Sender | Recipien
     for k, v in address_dict.items():
         window[f'-{type(sender_or_recip).__name__.upper()}_{k.upper()}-'].update(v or '')
 
+def update_address_from_gui(config: Config, shipment: Shipment, sender_or_recip: Sender | Recipient, values: dict):
+    address_to_edit = sender_or_recip.sender_address if shipment.is_return else sender_or_recip.recipient_address
+    address_fields = config.address_fields
+    for field in address_fields:
+        value = values.get(f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-', None)
+        setattr(address_to_edit, field, value)
+    return address_to_edit
+
+def update_contact_from_gui(config: Config, sender_or_recip: Sender | Recipient, values: dict):
+    contact_fields = config.contact_fields
+    for field in contact_fields:
+        value = values.get(f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-', None)
+        setattr(sender_or_recip, field, value)
+
 
 def update_commence(config: Config, shipment: Shipment):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
@@ -884,6 +858,15 @@ def update_commence(config: Config, shipment: Shipment):
     except Exception as e:
         print_and_pop(f"{e=} \nERROR: Unable to log tracking to Commence")
 
+
+def print_label(shipment):
+    """ prints the labels stored at shipment.label_location """
+    try:
+        os.startfile(str(shipment.label_location), "print")
+    except Exception as e:
+        sg.popup_error(f"\n ERROR: Unable to print \n{e}")
+    else:
+        shipment.printed = True
 
 def log_shipment(config: Config, shipment: Shipment):
     # export from object attrs
