@@ -13,6 +13,7 @@ class Config:
         # get config from toml
         config = self.get_config_from_toml()
 
+        self.sandbox: bool = False
         self.service_id: str = ''
         self.courier_id: str = ''
         self.log_json: pathlib.Path = pathlib.Path()
@@ -46,8 +47,8 @@ class Config:
         config['root_dir'] = root_dir
         return config
 
-    def get_dbay_client(self, sandbox=True):
-        if sandbox:
+    def get_dbay_client(self):
+        if self.sandbox:
             print(f"\n\t\t*** !!! SANDBOX MODE !!! *** \n")
             api_user = os.getenv(self.dbay_sand['api_user'])
             api_key = os.getenv(self.dbay_sand['api_key'])

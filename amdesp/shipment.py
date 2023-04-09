@@ -6,7 +6,7 @@ import PySimpleGUI as sg
 from pathlib import Path
 from dbfread import DBF
 from amdesp.config import Config
-from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel
+from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel, ShipmentRequest
 
 from datetime import datetime
 import pathlib
@@ -20,32 +20,33 @@ class Shipment:
         :param ship_dict: a dictionary of shipment details
         :param is_return: recipient is user's own sender_address[0]
         """
-        self.candidate_keys: list | None = None
-        self.label_location: pathlib.Path = pathlib.Path()
-        self.company_name: str = ''
-        self.service: Service | None = None
-        self.sender: Sender | None = None
-        self.recipient: Recipient | None = None
-        self.parcels: [Parcel] = []
-        self.collection_booked: bool = False
-        self.printed: bool = False
-        self.service_menu_map: dict = dict()
-        self.date_menu_map: dict = dict()
-        self.category: str = ship_dict['category']
-        self.shipment_name: str = ship_dict['shipment_name']
-        self.date: datetime.date = ship_dict['date']
         self.address_as_str: str = ship_dict['address_as_str']
-        self.contact = next((ship_dict.get(key) for key in ['contact', 'contact_name'] if key in ship_dict), None)
-        self.postcode: str = ship_dict['postcode']
         self.boxes: int = ship_dict['boxes']
-        self.status: str = ship_dict['status']
-        self.email: str = ship_dict['email']
-        self.telephone: str = ship_dict['telephone']
+        self.candidate_keys: list | None = None
+        self.category: str = ship_dict['category']
+        self.collection_booked: bool = False
+        self.company_name: str = ''
         self.customer: str = ship_dict['customer']
-        self.is_return: bool = is_return
+        self.contact = next((ship_dict.get(key) for key in ['contact', 'contact_name'] if key in ship_dict), None)
+        self.date_menu_map: dict = dict()
+        self.date: datetime.date = ship_dict['date']
+        self.email: str = ship_dict['email']
         self.inbound_id: str | None = ship_dict.get('inbound_id', None)
+        self.is_return: bool = is_return
+        self.label_location: pathlib.Path = pathlib.Path()
         self.outbound_id: str | None = ship_dict.get('outbound_id', None)
-        self.search_term: str| None = ship_dict.get('search_term', None)
+        self.parcels: [Parcel] = []
+        self.postcode: str = ship_dict['postcode']
+        self.printed: bool = False
+        self.recipient: Recipient | None = None
+        self.search_term: str | None = ship_dict.get('search_term', None)
+        self.sender: Sender | None = None
+        self.service: Service | None = None
+        self.service_menu_map: dict = dict()
+        self.shipment_name: str = ship_dict['shipment_name']
+        self.shipment_request: ShipmentRequest|None = None
+        self.status: str = ship_dict['status']
+        self.telephone: str = ship_dict['telephone']
 
     @classmethod
     def get_shipments(cls, config: Config, in_file: str) -> list:
@@ -58,17 +59,94 @@ class Shipment:
                 shipments.append(Shipment(ship_dict=ship_dict))
             except KeyError as e:
                 print(f"Shipdict Key missing: {e}")
-        elif file_ext == 'dbase':
-            shipments.append(cls.shipments_from_dbase(dbase_file=in_file))
+        elif file_ext == 'dbf':
+            shipments = cls.bulk_shipments_from_dbase(dbase_file=in_file)
+            # shipments.append(cls.shipments_from_dbase(dbase_file=in_file))
         else:
             sg.popup("Invalid input file")
         return shipments
 
     @classmethod
-    def shipments_from_dbase(cls, dbase_file):
+    def bulk_shipments_from_dbase(cls, dbase_file):
         shipments = []
         for record in DBF(dbase_file):
-            shipments.append(record)
+            shipdict = cls.shipdict_from_dbase(record=record)
+            shipment = Shipment(ship_dict=shipdict)
+            shipments.append(shipment)
+        return shipments
+
+    @classmethod
+    def shipdict_from_dbase(cls, record):
+        # todo check thse
+        # shipdict = {}
+        # shipdict.update({'address_as_str': record.get('DELIVERY_A', '').split('\x00')[0]})
+        # shipdict.update({'boxes': record.get('BOXES', 1)})
+        # shipdict.update({'date': record.get('SEND_OUT_D', '') or datetime.today()})
+        # shipdict.update({'category': 'Hire'})
+        # shipdict.update({'contact': record.get('DELIVERY_C', '').split('\x00')[0]})
+        # shipdict.update({'customer': record.get('FIELD17', '').split('\x00')[0]})
+        # shipdict.update({'delivery_name': record.get('DELIVERY_N', '').split('\x00')[0]})
+        # shipdict.update({'email': record.get('DELIVERY_E', '').split('\x00')[0]})
+        # if inbound := record.get('INBOUND_ID'):
+        #     shipdict.update({'inbound_ID': inbound.split('\x00')[0]})
+        # if outbound := record.get('OUTBOUND_I'):
+        #     shipdict.update({'inbound_ID': outbound.split('\x00')[0]})
+        #
+        # shipdict.update({'postcode': record.get('DELIVERY_P', '').split('\x00')[0]})
+        # shipdict.update({'shipment_name': record.get('NAME', '').split('\x00')[0]})
+        # shipdict.update({'status': record.get('STATUS', None)})
+        # shipdict.update({'telephone': record.get('DELIVERY_T', '').split('\x00')[0]})
+
+        ship_dict_from_dbf = {}
+        for k, v in record.items():
+            if isinstance(v, str):
+                v = v.split('\x00')[0]
+            match k:
+                case 'DELIVERY_A':
+                    k = 'address_as_str'
+                case 'DELIVERY_C':
+                    k = 'contact'
+                case 'DELIVERY_E':
+                    k = 'email'
+                case 'DELIVERY_N':
+                    k = 'delivery_name'
+                case 'DELIVERY_P':
+                    k = 'postcode'
+                case 'DELIVERY_R':
+                    k = 'delivery_ref'
+                case 'DELIVERY_T':
+                    k= 'telephone'
+                case 'BOXES':
+                    k='boxes'
+                case 'DB_LABEL_P':
+                    k='label_printed'
+                case 'SEND___COL':
+                    k = 'send_collect'
+                case 'SEND_METHO':
+                    k = 'send_method'
+                case 'INBOUND_ID':
+                    k = 'inbound_id'
+                case 'OUTBOUND_I':
+                    k = 'outbound_id'
+                case 'STATUS':
+                    k = 'status'
+                case 'FIELD17':
+                    k = 'customer'
+                case 'NAME':
+                    k = 'shipment_name'
+                    v = re.sub(r"\W", "_", v)
+                    ...
+                case 'SEND_OUT_D':
+                    k = 'date'
+
+                case _:
+                    sg.popup_error(f'{k}, {v}')
+            ship_dict_from_dbf.update({k: v})
+
+
+
+        ship_dict_from_dbf.update({'category':'Hire'})
+        return ship_dict_from_dbf
 
 
 def ship_dict_from_xml(config: Config, xml_file: str) -> dict:

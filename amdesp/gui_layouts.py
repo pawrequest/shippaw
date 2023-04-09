@@ -5,12 +5,20 @@ from PySimpleGUI import Window
 
 from amdesp.despatchbay.despatchbay_entities import Address
 from amdesp.config import Config
+from amdesp.shipment import Shipment
+
 address_fields = Config.get_config_from_toml()['address_fields']
 
 default_params = {
     'font': 'Rockwell 14',
     'element_padding': (25, 5),
     'border_width': 3,
+}
+
+bulk_params = {
+    'size': (25, 1),
+    'justification': 'center',
+    'pad': (20, 8),
 }
 
 address_input_params = {
@@ -32,12 +40,13 @@ option_menu_params = {
     'readonly': True,
 }
 
-def main_window()-> Window:
+
+def main_window() -> Window:
     sg.set_options(**default_params)
     # elements
     shipment_name = shipment_name_element()
-    sender = sender_receiver_frame('sender')
-    recipient = sender_receiver_frame('recipient')
+    sender = sender_recipient_frame('sender')
+    recipient = sender_recipient_frame('recipient')
     # todo get addresses before dates
     date_match = date_chooser()
     parcels = parcels_spin()
@@ -65,8 +74,19 @@ def main_window()-> Window:
     return window
 
 
+def bulk_shipper_window(shipments: [Shipment]):
+    sg.set_options(**default_params)
+    layout = []
+    for c, shipment in enumerate(shipments):
+        layout.append(
+            [sg.T(shipment.customer, **bulk_params), sg.T(shipment.date.date, **bulk_params), sg.T(shipment.sender.sender_address.street, **bulk_params),
+             sg.T(shipment.recipient.recipient_address.street, **bulk_params), sg.T(shipment.shipment_request, **bulk_params)]
+        )
+    window = sg.Window('Bulk Shipper', layout=layout, finalize=True)
+    return window
 
-def sender_receiver_frame(mode):
+
+def bulk_sender_recipient_frame(mode):
     title = mode.title()
     layout = [
         [sg.Text(f'Name:', **address_fieldname_params),
@@ -79,6 +99,7 @@ def sender_receiver_frame(mode):
          sg.InputText(key=f'-{title.upper()}_TELEPHONE-', **address_input_params)],
 
         [address_frame(sender_or_recipient=mode)],
+        [sg.B('Submit', k=f'-{title.upper()}_SUBMIT-')]
     ]
 
     k = f'-{title.upper()}-'
@@ -86,6 +107,26 @@ def sender_receiver_frame(mode):
     frame = sg.Frame(f'{title}', layout, k=k, pad=20, font="Rockwell 30", border_width=5, relief=sg.RELIEF_GROOVE,
                      title_location=sg.TITLE_LOCATION_TOP)
     return frame
+# def sender_recipient_frame(mode):
+#     title = mode.title()
+#     layout = [
+#         [sg.Text(f'Name:', **address_fieldname_params),
+#          sg.InputText(key=f'-{title.upper()}_NAME-', **address_input_params)],
+#
+#         [sg.Text(f'Email:', **address_fieldname_params),
+#          sg.InputText(key=f'-{title.upper()}_EMAIL-', **address_input_params)],
+#
+#         [sg.Text(f'Telephone:', **address_fieldname_params),
+#          sg.InputText(key=f'-{title.upper()}_TELEPHONE-', **address_input_params)],
+#
+#         [address_frame(sender_or_recipient=mode)],
+#     ]
+#
+#     k = f'-{title.upper()}-'
+#     # noinspection PyTypeChecker
+#     frame = sg.Frame(f'{title}', layout, k=k, pad=20, font="Rockwell 30", border_width=5, relief=sg.RELIEF_GROOVE,
+#                      title_location=sg.TITLE_LOCATION_TOP)
+#     return frame
 
 
 def service_combo():

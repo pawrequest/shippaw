@@ -10,8 +10,8 @@ from amdesp.shipper import App
 from amdesp.shipment import Shipment
 
 root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
-STORED_XML = str(root_dir / 'data' / 'amhers_export.dbf')
-STORED_DBASE = str(root_dir / 'data' / '')
+STORED_XML = str(root_dir / 'data' / 'amship.xml')
+STORED_DBASE = str(root_dir / 'data' / 'shipping_candidates.dbf')
 
 SANDBOX = None
 
@@ -34,10 +34,11 @@ includes
 def main():
     """ sandbox = fake shipping client, no money for labels!"""
     config = Config()
-    client = config.get_dbay_client(sandbox=SANDBOX)
+    config.sandbox = SANDBOX
+    client = config.get_dbay_client()
     app = App()
     shipments = Shipment.get_shipments(config=config, in_file=in_file)
-    app.process_shipments(shipments=shipments, mode=mode, config=config, client=client, sandbox=SANDBOX)
+    app.process_shipments(shipments=shipments, mode=mode, config=config, client=client)
 
 
 if __name__ == '__main__':
@@ -50,7 +51,8 @@ if __name__ == '__main__':
 
     # AmDesp called from IDE, set mode synthetically:
     else:
-        in_file = STORED_XML
+        # in_file = STORED_XML
+        in_file = STORED_DBASE
         SANDBOX = False
 
         mode = 'ship_out'
