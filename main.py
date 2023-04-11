@@ -1,7 +1,11 @@
 # todo updates commence when shipment delivered
-# imports in-range shipments to batch process
+# todo tests
+#todo better logging
+# todo async / multiproces
+
 import pathlib
 import sys
+from typing import Literal
 
 import platformdirs
 
@@ -30,15 +34,17 @@ includes
 + Vovin CmcLibNet installer for interacting with commence
 """
 
+# todo Literal typehint throwing warnings? mode:Literal['ship_in', 'ship_out', 'track_in','track_out']
 
-def main():
+def main(mode:str):
     """ sandbox = fake shipping client, no money for labels!"""
     config = Config()
     config.sandbox = SANDBOX
     client = config.get_dbay_client()
+    outbound_shipments = Shipment.get_shipments(config=config, in_file=in_file)
     app = App()
-    shipments = Shipment.get_shipments(config=config, in_file=in_file)
-    app.process_shipments(shipments=shipments, mode=mode, config=config, client=client)
+    # app.process_outbound(shipments=shipments, mode=mode, config=config, client=client)
+    app.go_ship_out(shipments=outbound_shipments,config=config, client=client)
 
 
 if __name__ == '__main__':
@@ -53,9 +59,8 @@ if __name__ == '__main__':
     else:
         # in_file = STORED_XML
         in_file = STORED_DBASE
-        SANDBOX = False
-
+        SANDBOX = True
         mode = 'ship_out'
         # mode = 'track_in'
 
-    main()
+    main(mode=mode)

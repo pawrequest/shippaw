@@ -27,6 +27,7 @@ class Config:
         for path in config['paths']:
             setattr(self, path, config['root_dir'] / config['paths'][path])
 
+        self.import_mapping = config['import_mapping']
         self.home_address = config['home_address']
         self.home_sender_id = config['home_address']['address_id']
         self.shipment_fields = config['shipment_fields']

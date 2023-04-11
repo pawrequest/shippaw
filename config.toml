@@ -26,6 +26,7 @@ shipment_fields = [
     'shipment_name',
 ]
 
+
 address_fields = [
     'company_name',
     'street',
@@ -35,11 +36,30 @@ address_fields = [
     'postal_code',
 ]
 
-contact_fields =[
+contact_fields = [
     'telephone',
     'name',
     'email',
 ]
+
+[import_mapping]
+'DELIVERY_A' = 'address_as_str'
+'DELIVERY_C' = 'contact'
+'DELIVERY_E' = 'email'
+'DELIVERY_N' = 'delivery_name'
+'DELIVERY_P' = 'postcode'
+'DELIVERY_R' = 'delivery_ref'
+'DELIVERY_T' = 'telephone'
+'BOXES' = 'boxes'
+'DB_LABEL_P' = 'label_printed'
+'SEND___COL' = 'send_collect'
+'SEND_METHO' = 'send_method'
+'SEND_OUT_D' = 'send_out_date'
+'INBOUND_ID' = 'inbound_id'
+'OUTBOUND_I' = 'outbound_id'
+'STATUS' = 'status'
+'FIELD17' = 'customer'
+'NAME' = 'shipment_name'
 
 [home_address]
 contact = 'Giles Toman'
@@ -65,7 +85,7 @@ DT_DB = '%Y-%m-%d'
 [gui_map]
 shipment_name = 'Shipment Name'
 boxes = 'Boxes'
-category= 'Category'
+category = 'Category'
 delivery_address = 'Delivery Address'
 delivery_contact = 'Delivery Contact'
 delivery_email = 'Delivery Email'
@@ -78,8 +98,8 @@ inbound_id = 'Inbound ID'
 outbound_id = 'Outbound ID'
 county = 'County'
 town_city = 'Town / City'
-company_name='Company Name'
-postal_code= 'Postcode'
+company_name = 'Company Name'
+postal_code = 'Postcode'
 
 
 [dbay_sand]
