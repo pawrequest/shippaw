@@ -22,13 +22,48 @@ bulk_params = {
     'size': (15, 2),
     'justification': 'center',
     'pad': (5, 5),
+    'border_width': 4,
+    'relief': sg.RELIEF_GROOVE,
+    'auto_size_text': True,
+}
+
+head_params = {
+    'size': (15, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+    'auto_size_text': True,
 }
 
 recip_params = {
     'size': (45, 2),
     'justification': 'center',
     'pad': (5, 5),
+    'border_width': 4,
+    'relief': sg.RELIEF_GROOVE,
+    'auto_size_text': True,
+}
 
+recip_head_params = {
+    'size': (45, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+    'auto_size_text': True,
+}
+
+boxes_head_params = {
+    'size': (5, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+    'auto_size_text': True,
+}
+
+boxes_params = {
+    'size': (5, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+    'border_width': 4,
+    'relief': sg.RELIEF_GROOVE,
+    'auto_size_text': True,
 }
 
 address_input_params = {
@@ -51,28 +86,6 @@ option_menu_params = {
 }
 
 
-def blank_window(config: Config):
-    sg.set_options(**default_params)
-
-    if config.sandbox:
-        sg.theme('Tan')
-    else:
-        sg.theme('Dark Blue')
-
-    layout = []
-    headers = [
-        sg.T('Customer', **bulk_params),
-        sg.Text('Collection Date', **bulk_params),
-        sg.T('Sender', **bulk_params),
-        sg.T('Recipient', **bulk_params),
-        sg.T('Service', **bulk_params)
-    ]
-    layout.append(headers)
-
-    window = sg.Window('Bulk Shipper', layout=layout, finalize=True)
-    return window
-
-
 def booked_shipments_frame(shipments: [Shipment]):
     params = {
         'expand_x': True,
@@ -85,33 +98,15 @@ def booked_shipments_frame(shipments: [Shipment]):
         ship_res = []
         ship_res.append(sg.Text(shipment.shipment_request.client_reference, **params))
         ship_res.append(sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params))
-        ship_res.append(sg.Text(f'{shipment.service.name} - £{shipment.service.cost}'))
+        ship_res.append(sg.Text(f'{shipment.service.name} - {len(shipment.parcels)} boxes = £{shipment.service.cost}'))
         if shipment.printed:
             ship_res.append(sg.Text('Shipment Printed'))
-        if shipment.loged_to_commence:
+        if shipment.logged_to_commence:
             ship_res.append(sg.Text('Shipment ID Logged to Commence'))
         # result_layout.append([sg.Frame('', layout=[ship_res])])
         result_layout.append(ship_res)
         # result_layout.append([sg.Text('')])
     return sg.Frame('', layout=result_layout)
-
-
-def shipment_layout(shipment: Shipment):
-    layout = []
-    key_string = shipment.shipment_name.upper()
-
-    layout.append(
-        [sg.T(shipment.customer, **bulk_params),
-
-         sg.Text(enable_events=True, k=f'-{key_string}_DATE-', **bulk_params),
-
-         sg.T(enable_events=True, k=f'-{key_string}_SENDER-', **bulk_params),
-
-         sg.T(enable_events=True, k=f'-{key_string}_RECIPIENT-', **bulk_params),
-
-         sg.T(enable_events=True, k=f'-{key_string}_SERVICE-', **bulk_params)]
-    )
-    return layout
 
 
 def bulk_shipper_window(shipments: [Shipment], config: Config):
@@ -123,11 +118,13 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
     sg.set_options(**default_params)
     layout = []
     headers = [
-        sg.T('Customer', **bulk_params),
-        sg.Text('Collection Date', **bulk_params),
-        sg.T('Sender', **bulk_params),
-        sg.T('Recipient', **recip_params),
-        sg.T('Service', **bulk_params)
+        sg.Push(),
+        sg.T('Customer', **head_params),
+        sg.Text('Collection Date', **head_params),
+        sg.T('Sender', **head_params),
+        sg.T('Recipient', **recip_head_params),
+        sg.T('Boxes', **boxes_head_params),
+        sg.T('Service', **head_params)
     ]
     layout.append(headers)
 
@@ -137,22 +134,31 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
         service_col = 'green' if shipment.default_service_matched else 'maroon4'
         address_name = get_address_button_string(shipment.recipient.recipient_address)
         friendly_date = f'{parse(shipment.collection_date.date):{config.datetime_masks["DT_DISPLAY"]}}'
-        layout.append(
-            [sg.Button('remove', k=f'-{shipment.shipment_name}_REMOVE-'),
-                sg.T(shipment.customer, **bulk_params),
+        num_parcels = len(shipment.parcels)
 
+        layout.append(
+            # remove button
+            [sg.Button('remove', k=f'-{shipment.shipment_name}_REMOVE-'),
+             sg.T(shipment.customer, **bulk_params),
+
+             # shipment name
              sg.Text(friendly_date, background_color=date_col, enable_events=True,
                      k=f'-{shipment.shipment_name.upper()}_DATE-', **bulk_params),
 
+             # Sender
              sg.T(shipment.sender.sender_address.street, enable_events=True,
                   k=f'-{shipment.shipment_name.upper()}_SENDER-', **bulk_params),
 
+             # Recipient
              sg.Text(address_name, enable_events=True,
-                     k=f'-{shipment.shipment_name.upper()}_RECIPIENT-', auto_size_text=True, border_width=4,
-                     relief=sg.RELIEF_GROOVE, **recip_params),
-
-             sg.Text(f'{shipment.service.name}\n£{shipment.service.cost}', background_color=service_col,
-                  enable_events=True, k=f'-{shipment.shipment_name.upper()}_SERVICE-', **bulk_params)]
+                     k=f'-{shipment.shipment_name.upper()}_RECIPIENT-', **recip_params),
+             # Boxes
+             sg.Text(f'{num_parcels}', k=f'-{shipment.shipment_name.upper()}_BOXES-', enable_events=True,
+                     **boxes_params),
+             # Service
+             sg.Text(f'{shipment.service.name} \n£{num_parcels * shipment.service.cost}',
+                     background_color=service_col,
+                     enable_events=True, k=f'-{shipment.shipment_name.upper()}_SERVICE-', **bulk_params)]
         )
 
     layout.append([
@@ -233,7 +239,8 @@ def new_date_selector(shipment: Shipment, config: Config):
     datetime_mask = config.datetime_masks['DT_DISPLAY']
     default_date = f'{parse(shipment.collection_date.date).date():{datetime_mask}}'
 
-    layout = [[sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date, **option_menu_params)]]
+    layout = [
+        [sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date, **option_menu_params)]]
 
     window = Window('Select a date', layout=layout)
     while True:

@@ -13,7 +13,6 @@ from typing import Literal
 import PySimpleGUI as sg
 import dotenv
 from fuzzywuzzy import fuzz
-from PySimpleGUI import Window
 from dateutil.parser import parse
 
 from amdesp.config import Config
@@ -64,31 +63,42 @@ class App:
                 print(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
 
     def go_ship_out(self, client: DespatchBaySDK, config: Config, shipments: [Shipment]):
-        outbound_shipments = outbound_prep_loop(config=config, client=client, shipments=shipments)
-        window = bulk_shipper_window(shipments=outbound_shipments, config=config)
-        if outbound_loop(config=config, client=client, shipments=outbound_shipments, window=window) == True:
-            ...
+        if prepped_shipments := outbound_prep(config=config, client=client, shipments=shipments):
+            if window := bulk_shipper_window(shipments=prepped_shipments, config=config):
+                if booked_shipments := outbound_loop(config=config, client=client, shipments=prepped_shipments, window=window):
+                    if post_cleanup := post_book(shipments=booked_shipments):
+                        sg.popup_error("Something is very strange")
 
 
-def outbound_prep_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK):
+def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK):
     """ loops through shipments and gets sender, recipient. \n
     calls non_address_prep to get service, date, parcels and shipment requests.\n
     stores all in shipment attrs"""
+    prepped_shipments = []
     home_sender = get_home_sender(client=client, config=config)
-
     for shipment in shipments:
-        shipment.search_term = parse_amherst_address_string(shipment.address_as_str)
-        shipment.sender = home_sender
-        shipment.remote_address = get_matched_address(client=client, config=config, shipment=shipment)
-        shipment.recipient = get_remote_recip(client=client, shipment=shipment, remote_address=shipment.remote_address)
         try:
-            non_address_prep(shipment=shipment, client=client, config=config)
+            shipment.remote_address = get_matched_address(client=client, config=config, shipment=shipment)
+            shipment.sender = home_sender
+            shipment.recipient = get_remote_recip(client=client, shipment=shipment,
+                                                  remote_address=shipment.remote_address)
+            shipment.service = get_arbitrary_service(client=client, config=config)
+            shipment.collection_date = get_collection_date(client=client, config=config, shipment=shipment)
+            shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client, config=config)
+            shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
+            shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
+
+            # non_address_prep(shipment=shipment, client=client, config=config)
+
+            prepped_shipments.append(shipment)
+
         except Exception as e:
-            ...
-    return shipments
+            sg.popup_error(f'Error with {shipment.shipment_name}:\n'
+                           f'{e}')
+    return prepped_shipments
 
 
-def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK, window: Window):
+def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK, window: sg.Window):
     """ pysimplegui main_loop, listens for user input and updates dates, service, recipient as appropriate
     listens for go_ship  button to start booking"""
     while True:
@@ -96,13 +106,22 @@ def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK,
         if e == sg.WIN_CLOSED or e == "Cancel":
             break
 
-        shipment_to_edit = next(
+        shipment_to_edit: Shipment = next(
             (shipment for shipment in shipments if shipment.shipment_name.lower() in e.lower()), None)
 
+        if 'boxes' in e.lower():
+            new_boxes = get_new_parcels(client=client, config=config)
+            shipment_to_edit.parcels = new_boxes
+            window[e].update(f'{len(shipment_to_edit.parcels)}')
+            window[f'-{shipment_to_edit.shipment_name}_SERVICE-'.upper()].update(
+                f'{shipment_to_edit.service.name} \n£{len(new_boxes) * shipment_to_edit.service.cost}')
+
         if 'service' in e.lower():
+            num_boxes = len(shipment_to_edit.parcels)
             new_service = new_service_selector(shipment=shipment_to_edit)
             shipment_to_edit.service = new_service
-            window[e].update(f'{new_service.name} - £{new_service.cost}')
+            # window[e].update(f'{new_service.name} - £{new_service.cost}')
+            window[e].update(f'{new_service.name}\n{num_boxes * new_service.cost}')
 
         elif 'date' in e.lower():
             # location = window[e]
@@ -125,12 +144,19 @@ def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK,
 
         elif e == '-GO_SHIP-':
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
-                queue_and_book(shipments=shipments, config=config, client=client)
-                post_book(shipments=shipments)
-                window.close()
-                return True
+                if booked_ship := queue_and_book(shipments=shipments, config=config, client=client):
+                    window.close()
+                    return booked_ship
 
     window.close()
+
+
+def get_new_parcels(client: DespatchBaySDK, config: Config):
+    while True:
+        new_boxes = sg.popup_get_text("Enter a number")
+        if new_boxes.isnumeric():
+            parcels = get_parcels(int(new_boxes), client=client, config=config)
+            return parcels
 
 
 def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config):
@@ -210,8 +236,10 @@ def get_matched_address(client: DespatchBaySDK, config: Config, shipment: Shipme
     if best score exceed threshold ask user to confirm
     If still no valid address, call get_new_address.
     """
-    address = None
+    address: Address | None = None
     if address := search_adddress(client=client, shipment=shipment):
+        if address.company_name != shipment.customer:
+            sg.popup("Shipment and Address Customer do not match")
         return address
 
     shipment.candidate_key_dict = get_candidate_keys_dict(client=client, shipment=shipment, postcode=shipment.postcode)
@@ -495,14 +523,9 @@ def get_parcels(num_parcels: int, client: DespatchBaySDK, config: Config) -> lis
 
 
 def book_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_id: str):
-    try:
-        shipment_return = client.book_shipments(shipment_id)[0]
-    except:
-        sg.popup_error(f"Unable to Book {shipment.shipment_name}")
-    else:
-        shipment.collection_booked = True
-        shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
-        return shipment_return
+    shipment_return = client.book_shipments(shipment_id)[0]
+    shipment.collection_booked = True
+    return shipment_return
 
 
 # def bulk_book(client: DespatchBaySDK, shipments: [Shipment], shipment_id: str):
@@ -516,6 +539,7 @@ def book_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_id: str):
 #             shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
 
 def queue_and_book(shipments: [Shipment], client: DespatchBaySDK, config: Config):
+    booked_shipments = []
     for shipment in shipments:
 
         if not config.sandbox:
@@ -526,17 +550,26 @@ def queue_and_book(shipments: [Shipment], client: DespatchBaySDK, config: Config
             shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
             id_to_log = client.add_shipment(shipment.shipment_request)
             setattr(shipment, f'{"inbound_id" if shipment.is_return else "outbound_id"}', id_to_log)
-            shipment.shipment_return = book_shipment(client=client, shipment=shipment, shipment_id=id_to_log)
-            shipment.collection_booked = True
-            download_label(client=client, config=config, shipment=shipment)
-            print_label(shipment=shipment)
-            update_commence(config=config, shipment=shipment)
+            if shipment_return := book_shipment(client=client, shipment=shipment, shipment_id=id_to_log):
+                shipment.shipment_return = shipment_return
+                download_label(client=client, config=config, shipment=shipment)
+                print_label(shipment=shipment)
+                update_commence(config=config, shipment=shipment, id_to_pass=id_to_log)
+                booked_shipments.append(shipment)
             log_shipment(config=config, shipment=shipment)
-        except Exception as e:
-            sg.popup_error(f"Error with{shipment.shipment_name}"
-                           f"Error = {e}")
 
-def post_book(shipments:[Shipment]):
+        except ApiException as e:
+            sg.popup_error(f"Unable to Book {shipment.shipment_name}\n"
+                           f"\nServer returned the following error:\n"
+                           f"{e}\n"
+                           f"\nThat probably didn't help?\n"
+                           f"How about this?:\n"
+                           f"Available balance = £{client.get_account_balance().available}\n")
+        else:
+            return booked_shipments
+
+
+def post_book(shipments: [Shipment]):
     frame = booked_shipments_frame(shipments=shipments)
     window2 = sg.Window('', layout=[[frame]])
     while True:
@@ -546,6 +579,7 @@ def post_book(shipments:[Shipment]):
 
         window2.close()
         break
+
 
 def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name}.pdf at location specified in config.toml"""
@@ -568,11 +602,12 @@ def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
 #         window[f'-CONTACT_{field.upper()}-'].update(value)
 
 
-def address_gui_from_address(address: Address, window: Window):
-    address_dict = {k: v for k, v in vars(address).items() if 'soap' not in k}
-    address_dict.pop('country_code', None)
-    for k, v in address_dict.items():
-        window[f'-{k.upper()}-'].update(v or '')
+def address_gui_from_address(address: Address, window: sg.Window):
+    if address:
+        address_dict = {k: v for k, v in vars(address).items() if 'soap' not in k}
+        address_dict.pop('country_code', None)
+        for k, v in address_dict.items():
+            window[f'-{k.upper()}-'].update(v or '')
 
 
 def update_address_from_gui(config: Config, address: Address, values: dict):
@@ -588,25 +623,24 @@ def update_contact_from_gui(config: Config, contact: Sender | Recipient, values:
     contact_type = type(contact).__name__
     for field in contact_fields:
         value = values.get(f'-{contact_type}_{field}-'.upper())
-        setattr(contact, field, value)
+        if all([value, field]):
+            setattr(contact, field, value)
 
 
-def update_commence(config: Config, shipment: Shipment):
+def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
     ps_script = str(config.cmc_logger)
     try:  # utility class static method runs powershell script bypassing execuction policy
-        ship_id_to_pass = str(
-            shipment.inbound_id if shipment.is_return else shipment.outbound_id)
         commence_edit = Utility.powershell_runner(ps_script, shipment.category, shipment.shipment_name,
-                                                  ship_id_to_pass,
+                                                  id_to_pass,
                                                   str(shipment.is_return), 'debug')
     except Exception as e:
         ...
     else:
         if commence_edit == 0:
-            shipment.loged_to_commence = True
-    return shipment.loged_to_commence
+            shipment.logged_to_commence = True
+    return shipment.logged_to_commence
 
 
 def print_label(shipment):

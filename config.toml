@@ -60,6 +60,8 @@ contact_fields = [
 'STATUS' = 'status'
 'FIELD17' = 'customer'
 'NAME' = 'shipment_name'
+'FIELD10' = 'customer'
+
 
 [home_address]
 contact = 'Giles Toman'

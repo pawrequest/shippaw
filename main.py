@@ -1,6 +1,6 @@
 # todo updates commence when shipment delivered
 # todo tests
-#todo better logging
+# todo better logging
 # todo async / multiproces
 
 import pathlib
@@ -12,10 +12,13 @@ import platformdirs
 from amdesp.config import Config
 from amdesp.shipper import App
 from amdesp.shipment import Shipment
+import PySimpleGUI as sg
 
 root_dir = pathlib.Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 STORED_XML = str(root_dir / 'data' / 'amship.xml')
-STORED_DBASE = str(root_dir / 'data' / 'shipping_candidates.dbf')
+# STORED_DBASE = str(root_dir / 'data' / 'hire_in_range_bulk.dbf')
+STORED_DBASE = str(root_dir / 'data' / 'single_hire.dbf')
+# STORED_DBASE = r'C:\Users\giles\AppData\Local\pss\AmDesp\data\single_hire.DBF'
 
 SANDBOX = None
 
@@ -43,8 +46,10 @@ def main(mode:str):
     client = config.get_dbay_client()
     outbound_shipments = Shipment.get_shipments(config=config, in_file=in_file)
     app = App()
-    # app.process_outbound(shipments=shipments, mode=mode, config=config, client=client)
-    app.go_ship_out(shipments=outbound_shipments,config=config, client=client)
+    if mode == 'ship_out':
+        app.go_ship_out(shipments=outbound_shipments,config=config, client=client)
+    else:
+        sg.popup_error(f"Mode Fault: {mode}")
 
 
 if __name__ == '__main__':
@@ -59,7 +64,7 @@ if __name__ == '__main__':
     else:
         # in_file = STORED_XML
         in_file = STORED_DBASE
-        SANDBOX = True
+        SANDBOX = False
         mode = 'ship_out'
         # mode = 'track_in'
 
