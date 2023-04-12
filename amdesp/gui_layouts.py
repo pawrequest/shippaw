@@ -176,25 +176,25 @@ def get_address_button_string(address):
 
 
 def remote_address_frame(shipment: Shipment, config: Config, address: Address):
-    sender_or_recip = shipment.get_sender_or_recip()
-    key_string = type(sender_or_recip).__name__.upper()
+    # sender_or_recip = shipment.get_sender_or_recip()
+    # key_string = type(sender_or_recip).__name__.upper()
 
     layout = [
         [sg.Text(f'Name:', **address_fieldname_params),
-         sg.InputText(f'{shipment.contact}', key=f'-{key_string}_NAME-', **address_input_params)],
+         sg.InputText(f'{shipment.contact}', key=f'-NAME-', **address_input_params)],
 
         [sg.Text(f'Email:', **address_fieldname_params),
-         sg.InputText(f'{shipment.email}', key=f'-{key_string}_EMAIL-', **address_input_params)],
+         sg.InputText(f'{shipment.email}', key=f'-EMAIL-', **address_input_params)],
 
         [sg.Text(f'Telephone:', **address_fieldname_params),
-         sg.InputText(f'{shipment.telephone}', key=f'-{key_string}_TELEPHONE-', **address_input_params)],
+         sg.InputText(f'{shipment.telephone}', key=f'-TELEPHONE-', **address_input_params)],
 
         [address_frame(address=address, config=config)],
-        [sg.B('Submit', k=f'-{key_string}_SUBMIT-')]
+        [sg.B('Submit', k=f'-SUBMIT-')]
     ]
 
     # noinspection PyTypeChecker
-    frame = sg.Frame(f'{key_string.title()}', layout=layout, k=f'-{key_string}-', pad=20, font="Rockwell 30",
+    frame = sg.Frame(f'Remote Address', layout=layout, k=f'-REMOTE_ADDRESS-', pad=20, font="Rockwell 30",
                      border_width=5, relief=sg.RELIEF_GROOVE,
                      title_location=sg.TITLE_LOCATION_TOP)
     return frame

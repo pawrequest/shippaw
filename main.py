@@ -16,8 +16,8 @@ import logging
 
 ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
-# STORED_DBASE = str(root_dir / 'data' / 'hire_in_range_bulk.dbf')
-STORED_DBASE = str(ROOT_DIR / 'data' / 'single_hire.dbf')
+STORED_DBASE = str(ROOT_DIR / 'data' / 'hire_in_range_bulk.dbf')
+# STORED_DBASE = str(ROOT_DIR / 'data' / 'single_hire.dbf')
 # STORED_DBASE = r'C:\Users\giles\AppData\Local\pss\AmDesp\data\single_hire.DBF'
 
 SANDBOX = None
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     else:
         # in_file = STORED_XML
         in_file = STORED_DBASE
-        SANDBOX = True
+        SANDBOX = False
         mode = 'ship_out'
         # mode = 'track_in'
 

@@ -1,6 +1,8 @@
 import logging
 import re
 
+import pytz as pytz
+
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 import xml.etree.ElementTree as ET
 import PySimpleGUI as sg
@@ -53,8 +55,8 @@ class Shipment:
         self.parcels: [Parcel] = []
         self.remote_address: Address | None = None
         self.collection_date: CollectionDate | None = None
-        self.recipient: Recipient | None = None
-        self.sender: Sender | None = None
+        self.recipient = Recipient
+        self.sender = Sender
         self.shipment_request: ShipmentRequest | None = None
         self.shipment_return: ShipmentReturn | None = None
         self.service: Service | None = None
