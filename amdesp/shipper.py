@@ -1,5 +1,7 @@
 import dataclasses
+import functools
 import json
+import logging
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -15,7 +17,7 @@ import dotenv
 from fuzzywuzzy import fuzz
 from dateutil.parser import parse
 
-from amdesp.config import Config
+from amdesp.config import Config, log_function
 from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, Address, ShipmentReturn, Sender, Recipient, Parcel, \
     AddressKey, Service, CollectionDate
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
@@ -26,10 +28,10 @@ from amdesp.shipment import Shipment, parse_amherst_address_string
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
 dotenv.load_dotenv()
-FuzzyScores = namedtuple('FuzzyScores',
-                         ['address', 'str_matched', 'customer_to_company', 'str_to_company', 'str_to_street'])
+# FuzzyScores = namedtuple('FuzzyScores',
+#                          ['address', 'str_matched', 'customer_to_company', 'str_to_company', 'str_to_street'])
 
-
+logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class FuzzyScoresCls:
     address: Address
@@ -45,29 +47,28 @@ class FuzzyScoresCls:
                        }
 
 
-class App:
-    def __init__(self):
-        self.shipments: [Shipment]
+def tracking_loop(mode: str, shipment: Shipment, client: DespatchBaySDK):
+    if 'in' in mode:
+        try:
+            tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
+        except Exception as e:
+            # todo handle better
+            logger.critical(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
+    elif 'out' in mode:
+        try:
+            tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
+        except Exception as e:
+            logger.critical(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
 
-    def tracking_loop(self, mode: str, shipment: Shipment, client: DespatchBaySDK):
-        if 'in' in mode:
-            try:
-                tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
-            except Exception as e:
-                # todo handle better
-                print(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
-        elif 'out' in mode:
-            try:
-                tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
-            except Exception as e:
-                print(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
+def go_ship_out(client: DespatchBaySDK, config: Config, shipments: [Shipment]):
+    if prepped_shipments := outbound_prep(config=config, client=client, shipments=shipments):
+        if window := bulk_shipper_window(shipments=prepped_shipments, config=config):
+            if booked_shipments := outbound_gui_loop(config=config, client=client, shipments=prepped_shipments,
+                                                     window=window):
+                if post_cleanup := post_book(shipments=booked_shipments):
+                    sg.popup_error("Something is very strange")
 
-    def go_ship_out(self, client: DespatchBaySDK, config: Config, shipments: [Shipment]):
-        if prepped_shipments := outbound_prep(config=config, client=client, shipments=shipments):
-            if window := bulk_shipper_window(shipments=prepped_shipments, config=config):
-                if booked_shipments := outbound_loop(config=config, client=client, shipments=prepped_shipments, window=window):
-                    if post_cleanup := post_book(shipments=booked_shipments):
-                        sg.popup_error("Something is very strange")
+
 
 
 def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK):
@@ -78,17 +79,46 @@ def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK)
     home_sender = get_home_sender(client=client, config=config)
     for shipment in shipments:
         try:
+            # shipment.remote_address = get_matched_address(client=client, config=config, shipment=shipment)
+            # logger.info(f'PREPPING SHIPMENT - REMOTE ADDRESS {shipment.remote_address}')
+            # shipment.sender = home_sender
+            # logger.info(f'PREPPING SHIPMENT - HOME SENDER {shipment.sender}')
+            # shipment.recipient = get_remote_recip(client=client, shipment=shipment,
+            #                                       remote_address=shipment.remote_address)
+            # shipment.service = get_arbitrary_service(client=client, config=config)
+            # shipment.collection_date = get_collection_date(client=client, config=config, shipment=shipment)
+            # shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client, config=config)
+            # shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
+            # shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
+
             shipment.remote_address = get_matched_address(client=client, config=config, shipment=shipment)
+
+            # logger.info(f'PREPPING SHIPMENT - REMOTE ADDRESS {shipment.remote_address}')
             shipment.sender = home_sender
+            logger.info(f'PREPPING SHIPMENT - HOME SENDER {shipment.sender}')
             shipment.recipient = get_remote_recip(client=client, shipment=shipment,
                                                   remote_address=shipment.remote_address)
+            logger.info(f'PREPPING SHIPMENT - REMOTE RECIPIENT {shipment.recipient}')
             shipment.service = get_arbitrary_service(client=client, config=config)
-            shipment.collection_date = get_collection_date(client=client, config=config, shipment=shipment)
-            shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client, config=config)
-            shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-            shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
+            logger.info(f'PREPPING SHIPMENT - ARBITRARY SERVICE {shipment.service.name}')
 
-            # non_address_prep(shipment=shipment, client=client, config=config)
+            shipment.collection_date = get_collection_date(client=client, config=config, shipment=shipment)
+            logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {shipment.collection_date}')
+
+            shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client, config=config)
+            logger.info(f'PREPPING SHIPMENT - PARCELS {shipment.parcels}')
+
+
+
+
+            shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
+            logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST {shipment.shipment_request}')
+
+
+
+
+            shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
+            logger.info(f'PREPPING SHIPMENT - ACTUAL SERVICE {shipment.service.name}')
 
             prepped_shipments.append(shipment)
 
@@ -98,9 +128,11 @@ def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK)
     return prepped_shipments
 
 
-def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK, window: sg.Window):
-    """ pysimplegui main_loop, listens for user input and updates dates, service, recipient as appropriate
+def outbound_gui_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK, window: sg.Window):
+    """ pysimplegui main_loop, takes a prebuilt window and shipment list,
+    listens for user input and updates shipments
     listens for go_ship  button to start booking"""
+
     while True:
         e, v = window.read()
         if e == sg.WIN_CLOSED or e == "Cancel":
@@ -137,9 +169,9 @@ def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK,
             window[e].update(get_address_button_string(address=new_address))
 
         elif 'remove' in e.lower():
-            shipments = [s for s in shipments if s != shipment_to_edit]
+            less_shipments = [s for s in shipments if s != shipment_to_edit]
             window.close()
-            window = bulk_shipper_window(shipments=shipments, config=config)
+            window = bulk_shipper_window(shipments=less_shipments, config=config)
             continue
 
         elif e == '-GO_SHIP-':
@@ -151,50 +183,34 @@ def outbound_loop(config: Config, shipments: [Shipment], client: DespatchBaySDK,
     window.close()
 
 
+# @log_function(logger)
 def get_new_parcels(client: DespatchBaySDK, config: Config):
     while True:
         new_boxes = sg.popup_get_text("Enter a number")
-        if new_boxes.isnumeric():
-            parcels = get_parcels(int(new_boxes), client=client, config=config)
-            return parcels
+        if new_boxes:
+            if new_boxes.isnumeric():
+                if parcels := get_parcels(int(new_boxes), client=client, config=config):
+                    return parcels
 
 
-def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config):
-    """ despatchbay requires us to supply a service to get a shipment_request and a shipment_request to get an available_service. funtimes.
-    so we get a service regardless of avilability, make a request, then get available services and check against pre-selected one"""
-    try:
-        shipment.service = get_arbitrary_service(client=client, config=config)
-    except Exception as e:
-        ...
-    try:
-        shipment.collection_date = get_collection_date(client=client, config=config, shipment=shipment)
-    except Exception as e:
-        ...
-    try:
-        shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client, config=config)
-    except Exception as e:
-        ...
-    try:
-        shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-    except Exception as e:
-        ...
-    try:
-        shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
-    except Exception as e:
-        ...
-
-
+# @log_function(logger)
 def get_arbitrary_service(client: DespatchBaySDK, config: Config):
     all_services = client.get_services()
-    arbitrary_service = next((service for service in all_services if service.service_id == config.service_id),
+    arbitrary_service = next((service for service in all_services if service.service_id == config.dbay['service']),
                              all_services[0])
     return arbitrary_service
 
 
-def get_actual_service(client: DespatchBaySDK, shipment: Shipment, config: Config):
-    available_services = client.get_available_services(shipment.shipment_request)
+# @log_function(logger)
+def get_actual_service(client: DespatchBaySDK, shipment: Shipment, config: Config) -> Service:
+    """
+    requires a shipment request object to exist in given shipment
+    returns the service specified in config.toml or first available
+    marks shipment.default_service_matched
+    """
+    available_services= client.get_available_services(shipment.shipment_request)
     shipment.service_menu_map = ({service.name: service for service in available_services})
-    available_service_match = next((a for a in available_services if a.service_id == config.service_id), None)
+    available_service_match = next((a for a in available_services if a.service_id == config.dbay['service']), None)
     shipment.default_service_matched = True if available_service_match else False
     shipment.available_services = available_services
 
@@ -226,7 +242,7 @@ def quick_match(shipment: Shipment, client: DespatchBaySDK):
         if add == shipment.str_to_match:
             return client.get_address_by_key(key)
 
-
+# @log_function(logger)
 def get_matched_address(client: DespatchBaySDK, config: Config, shipment: Shipment) -> Address:
     """
     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
@@ -406,7 +422,7 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScoresCls]) -> BestMatch:
 def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
     """ return a dbay sender object representing home address defined in toml"""
     return client.sender(
-        address_id=config.home_sender_id,
+        address_id=config.home_address['address_id'],
         name=config.home_address['contact'],
         email=config.home_address['email'],
         telephone=config.home_address['telephone'],
@@ -441,7 +457,7 @@ def get_shipment_request(client: DespatchBaySDK, shipment: Shipment):
 def get_collection_date(client: DespatchBaySDK, config: Config, shipment: Shipment) -> CollectionDate:
     """ return despatchbay CollecitonDate Entity"""
 
-    available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.courier_id)
+    available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.dbay['courier'])
     datetime_mask = config.datetime_masks['DT_DISPLAY']
 
     collection_date = next(
@@ -483,7 +499,7 @@ def get_service(client: DespatchBaySDK, config: Config, shipment: Shipment):
     # services = client.get_available_services()
     # shipment.service_menu_map.update({service.name: service for service in services})
 
-    return next((service for service in services if service.service_id == config.service_id),
+    return next((service for service in services if service.service_id == config.dbay['service']),
                 services[0])
 
 
@@ -495,13 +511,14 @@ def email_label():
 def setup_commence(config: Config):
     """ looks for CmcLibNet in prog files, if absent attempts to install exe located at path defined in config.toml"""
     try:
-        if not config.cmc_dll.exists():
-            raise FileNotFoundError("CmcLibNet not installed - launching setup.exe")
+        config.pathscmc_dll.exists()
     except Exception as e:
+        logger.warning('Vovin cmc_lib_net is not installed')
         try:
             config.install_cmc_lib_net()
         except Exception as e:
-            print_and_pop("Unable to find or install CmcLibNet - logging to commence is impossible")
+            logger.error("Unable to find or install CmcLibNet - logging to commence is impossible"
+                          f"\n{e}")
             # error message built into cmclibnet installer
 
 
@@ -692,3 +709,4 @@ def print_and_long_pop(print_string: str):
 
 def get_friendly_date(collection_date, config: Config):
     return f'{parse(collection_date.date):{config.datetime_masks["DT_DISPLAY"]}}'
+

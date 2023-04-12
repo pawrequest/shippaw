@@ -1,3 +1,4 @@
+import logging
 import re
 
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
@@ -5,15 +6,15 @@ import xml.etree.ElementTree as ET
 import PySimpleGUI as sg
 from pathlib import Path
 from dbfread import DBF
-from amdesp.config import Config
+from amdesp.config import Config, log_function
 from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel, ShipmentRequest, CollectionDate, \
     Address, ShipmentReturn
 
 from datetime import datetime
-import pathlib
 
 from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel
 
+logger = logging.getLogger(__name__)
 
 class Shipment:
     def __init__(self, ship_dict: dict, is_return: bool = False):
@@ -32,7 +33,7 @@ class Shipment:
         self.contact: str = next((ship_dict.get(key) for key in ['contact', 'contact_name'] if key in ship_dict), None)
         self.email: str = ship_dict.get('email')
         self.postcode: str = ship_dict.get('postcode')
-        self.send_out_date: datetime.date = ship_dict.get('send_out_date', datetime.today().date())
+        self.send_out_date: datetime.date = ship_dict.get('send_out_date', datetime.today())
         self.shipment_name: str = ship_dict.get('shipment_name')
         self.status: str = ship_dict.get('status')
         self.telephone: str = ship_dict.get('telephone')
@@ -46,7 +47,7 @@ class Shipment:
         self.company_name = str()
         self.date_menu_map = dict()
         self.service_menu_map: dict = dict()
-        self.label_location: pathlib.Path = pathlib.Path()
+        self.label_location: Path = Path()
 
         self.candidate_key_dict = {}
         self.parcels: [Parcel] = []
@@ -61,6 +62,8 @@ class Shipment:
         self.default_service_matched = False
         self.bestmatch = None
         self.logged_to_commence = None
+
+        [logger.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
 
     def get_sender_or_recip(self):
         return self.sender if self.is_return else self.recipient
@@ -79,8 +82,8 @@ class Shipment:
             elif file_ext == 'dbf':
                 dbase_file = in_file
                 for record in DBF(dbase_file):
-                    shipdict = shipdict_from_dbase(record=record, config=config)
-                    shipment = Shipment(ship_dict=shipdict)
+                    ship_dict = shipdict_from_dbase(record=record, config=config)
+                    shipment = Shipment(ship_dict=ship_dict)
                     shipments.append(shipment)
 
         except Exception as e:
@@ -103,20 +106,12 @@ def shipdict_from_dbase(record, config: Config):
         k = mapping[k]
         if k == 'shipment_name':
             v = re.sub(r"\W", "_", v)
+
         ship_dict_from_dbf.update({k: v})
 
     ship_dict_from_dbf.update({'category': 'Hire'})
+
     return ship_dict_from_dbf
-
-    # @classmethod
-    # def bulk_shipments_from_dbase(cls, dbase_file, config: Config):
-    #     shipments = []
-    #     for record in DBF(dbase_file):
-    #         shipdict = cls.shipdict_from_dbase(record=record, config=config)
-    #         shipment = Shipment(ship_dict=shipdict)
-    #         shipments.append(shipment)
-    #     return shipments
-
 
 def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     """parse amherst shipment xml"""

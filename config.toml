@@ -43,24 +43,24 @@ contact_fields = [
 ]
 
 [import_mapping]
-'DELIVERY_A' = 'address_as_str'
-'DELIVERY_C' = 'contact'
-'DELIVERY_E' = 'email'
-'DELIVERY_N' = 'delivery_name'
-'DELIVERY_P' = 'postcode'
-'DELIVERY_R' = 'delivery_ref'
-'DELIVERY_T' = 'telephone'
-'BOXES' = 'boxes'
-'DB_LABEL_P' = 'label_printed'
-'SEND___COL' = 'send_collect'
-'SEND_METHO' = 'send_method'
-'SEND_OUT_D' = 'send_out_date'
-'INBOUND_ID' = 'inbound_id'
-'OUTBOUND_I' = 'outbound_id'
-'STATUS' = 'status'
-'FIELD17' = 'customer'
-'NAME' = 'shipment_name'
-'FIELD10' = 'customer'
+DELIVERY_A = 'address_as_str'
+DELIVERY_C = 'contact'
+DELIVERY_E = 'email'
+DELIVERY_N = 'delivery_name'
+DELIVERY_P = 'postcode'
+DELIVERY_R = 'delivery_ref'
+DELIVERY_T = 'telephone'
+BOXES = 'boxes'
+DB_LABEL_P = 'label_printed'
+SEND___COL = 'send_collect'
+SEND_METHO = 'send_method'
+SEND_OUT_D = 'send_out_date'
+INBOUND_ID = 'inbound_id'
+OUTBOUND_I = 'outbound_id'
+STATUS = 'status'
+FIELD17 = 'customer'
+NAME = 'shipment_name'
+FIELD10 = 'customer'
 
 
 [home_address]
@@ -104,17 +104,18 @@ company_name = 'Company Name'
 postal_code = 'Postcode'
 
 
-[dbay_sand]
-courier = 99
-service = 9992
-api_user = "DESPATCH_API_USER_SANDBOX"
-api_key = "DESPATCH_API_KEY_SANDBOX"
+[dbay]
+    [dbay.sand]
+    courier = 99
+    service = 9992
+    api_user = "DESPATCH_API_USER_SANDBOX"
+    api_key = "DESPATCH_API_KEY_SANDBOX"
 
-[dbay_prod]
-courier = 8  # parcelforce
-service = 101  # parcelforce 24
-api_user = "DESPATCH_API_USER"
-api_key = "DESPATCH_API_KEY"
+    [dbay.prod]
+    courier = 8  # parcelforce
+    service = 101  # parcelforce 24
+    api_user = "DESPATCH_API_USER"
+    api_key = "DESPATCH_API_KEY"
 
 
 [paths]
