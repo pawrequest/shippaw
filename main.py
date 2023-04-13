@@ -15,12 +15,14 @@ import PySimpleGUI as sg
 import logging
 
 ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
-STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
+# STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
+STORED_XML = r'c:\amdesp\data\amship.xml'
 STORED_DBASE = str(ROOT_DIR / 'data' / 'hire_in_range_bulk.dbf')
-# STORED_DBASE = str(ROOT_DIR / 'data' / 'single_hire.dbf')
-# STORED_DBASE = r'C:\Users\giles\AppData\Local\pss\AmDesp\data\single_hire.DBF'
-
-SANDBOX = None
+# STORED_DBASE = str(ROOT_DIR / 'data' / 'single_hire.dbf').lower()
+# STORED_DBASE = r'E:\Dev\AmDesp\data\all_hires.DBF'
+#
+# INPUT_FILE = STORED_XML
+INPUT_FILE = STORED_DBASE
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service. 
@@ -50,19 +52,26 @@ logging.basicConfig(
 )
 
 
-def main(mode: str):
+def main(mode: str, sandbox:bool, in_file:str):
     """ sandbox = fake shipping client, no money for labels!"""
     sg.popup_quick_message('Please Wait')
-    # config:Config = Config.from_toml(root_dir=ROOT_DIR, sandbox=SANDBOX)
-    config = Config.from_toml2(sandbox=SANDBOX)
+    mode_list = ['ship_in', 'ship_out', 'track_in','track_out']
+    try:
 
-    config.log_config()
-    client = config.get_dbay_client_ag(config.dbay)
-    if mode == 'ship_out':
-        outbound_shipments = Shipment.get_shipments(config=config, in_file=in_file)
-        go_ship_out(shipments=outbound_shipments, config=config, client=client)
-    else:
-        sg.popup_error(f"Mode Fault: {mode}")
+        config = Config.from_toml2(sandbox=sandbox)
+
+        config.log_config()
+        client = config.get_dbay_client_ag(config.dbay)
+        if mode == 'ship_out':
+            outbound_shipments = Shipment.get_shipments(config=config, in_file=in_file)
+            go_ship_out(shipments=outbound_shipments, config=config, client=client)
+        else:
+            sg.popup_error(f"Mode Fault: {mode}")
+
+
+    except Exception as e:
+        ...
+
 
 
 if __name__ == '__main__':
@@ -74,14 +83,13 @@ if __name__ == '__main__':
                  f'{[arg + os.linesep for arg in sys.argv]}')
         mode = sys.argv[1]
         in_file = sys.argv[2]
-        SANDBOX = False
+        sandbox = False
 
-    # AmDesp called from IDE, set mode synthetically:
+    # AmDesp called from IDE - inject mode
     else:
-        # in_file = STORED_XML
-        in_file = STORED_DBASE
-        SANDBOX = False
+        in_file = INPUT_FILE
+        sandbox = False
         mode = 'ship_out'
         # mode = 'track_in'
 
-    main(mode=mode)
+    main(mode=mode, in_file=in_file, sandbox=sandbox)

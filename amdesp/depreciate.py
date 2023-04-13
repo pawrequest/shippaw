@@ -926,3 +926,34 @@ def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config)
 #     window['-QUEUE_OR_BOOK-'].update(values=q_o_b_dict['values'], value=q_o_b_dict['default_value'])
 #     window['-BOXES-'].update(value=shipment.boxes or 1)
 #
+
+
+
+#
+# def get_matched_address_new(client: DespatchBaySDK, config: Config, shipment: Shipment) -> Address:
+#     """
+#     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
+#     search by customer name, then shipment search_term
+#     call explicit_matches to compare strings,
+#     call get_bestmatch for fuzzy results,
+#     if best score exceed threshold ask user to confirm
+#     If still no valid address, call get_new_address.
+#     """
+#     address: Address | None = None
+#     while not address:
+#         address = search_adddress(client=client, shipment=shipment)
+#         if address.company_name:
+#             if address.company_name != shipment.customer:
+#                 pop_msg = f'Address matched from direct search\n' \
+#                           f'But <Shipment Customer> and <Address Company Name> do not match:\n' \
+#                           f'\n{shipment.customer} =/= {address.company_name}\n'
+#                 if address.company_name in shipment.address_as_str:
+#                     pop_msg += f'\nHowever <Company Name> is in <Shipment address string>:' \
+#                                f'{address.company_name} -> {shipment.address_as_str} \n'
+#                 pop_msg += '\n[Yes] to accept matched address or [No] to fetch a new one'
+#                 if sg.popup_yes_no(pop_msg) == 'Yes':
+#                     return address
+#                 else:
+#                     return address_from_user_loop(client=client, config=config, shipment=shipment,
+#                                                   address=shipment.bestmatch.address)
+#

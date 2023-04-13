@@ -189,7 +189,8 @@ def remote_address_frame(shipment: Shipment, config: Config, address: Address):
         [sg.Text(f'Telephone:', **address_fieldname_params),
          sg.InputText(f'{shipment.telephone}', key=f'-TELEPHONE-', **address_input_params)],
 
-        [address_frame(address=address, config=config)],
+        [get_address_frame(address=address, config=config)],
+
         [sg.B('Submit', k=f'-SUBMIT-')]
     ]
 
@@ -198,7 +199,6 @@ def remote_address_frame(shipment: Shipment, config: Config, address: Address):
                      border_width=5, relief=sg.RELIEF_GROOVE,
                      title_location=sg.TITLE_LOCATION_TOP)
     return frame
-
 
 
 def new_date_selector(shipment: Shipment, config: Config):
@@ -247,31 +247,36 @@ def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment)
     # todo get AVAILABLE services needs a request
     # services = client.get_available_services()
     shipment.service_menu_map.update({service.name: service for service in services})
-    chosen_service = next((service for service in services if service.service_id == config.dbay['service_id']), services[0])
+    chosen_service = next((service for service in services if service.service_id == config.dbay['service_id']),
+                          services[0])
     shipment.service = chosen_service
     return {'values': [service.name for service in services], 'default_value': chosen_service.name}
 
 
-
-def address_frame(config: Config, address: Address) -> sg.Frame:
+def get_address_frame(config: Config, address: Address, index: str = None) -> sg.Frame:
     layout = []
     params = address_fieldname_params.copy()
     address_fields = config.address_fields
-
+    input_text = ''
     for field in address_fields:
-        upper_key = f'-{field.upper()}-'
-        lower_key = f'-{field.lower()}-'
-        value = getattr(address, field)
-        key_hr = field.title().replace('_', ' ')
+        if index:
+            upper_key = f'-ADDRESS_{field}-'.upper()
+            lower_key = f'-ADDRESS_{field}-'.lower()
+        else:
+            upper_key = f'-ADDRESS_{field}-'.upper()
+            lower_key = f'-ADDRESS_{field}-'.lower()
+        if isinstance(address, Address):
+            input_text = getattr(address, field)
+        key_for_humans = field.title().replace('_', ' ')
 
         if field in ('company_name', 'postal_code'):
             # is a button
             params.pop('justification', None)
-            label_text = sg.B(key_hr, k=lower_key, **params)
+            label_text = sg.B(key_for_humans, k=lower_key, **params)
         else:
-            label_text = sg.Text(key_hr, k=lower_key, **address_fieldname_params)
+            label_text = sg.Text(key_for_humans, k=lower_key, **address_fieldname_params)
 
-        input_box = sg.InputText(value, k=upper_key, **address_input_params)
+        input_box = sg.InputText(input_text, k=upper_key, **address_input_params)
         layout.append([label_text, input_box])
 
     frame = sg.Frame('Address', layout, pad=20, )
@@ -331,6 +336,44 @@ def tracking_viewer_window(shipment_id, client):
         shipment.tracking_dict = tracking_d
         tracking_window = sg.Window('', [parcel_frame])
         tracking_window.read()
+
+
+def compare_addresses_window(address: Address, address_dict: dict, config: Config):
+    layout = [[get_address_frame(config=config, address=address),
+               get_address_dict_frame(address_dict=address_dict, config=config)],
+              [sg.Submit(k='-COMPARE_SUBMIT-')]
+              ]
+
+    frame = sg.Frame(f'Compare Addresses', layout=layout, k=f'-COMPARE_ADDRESS-', pad=20, font="Rockwell 30",
+                     border_width=5, relief=sg.RELIEF_GROOVE, title_location=sg.TITLE_LOCATION_TOP)
+
+    window = sg.Window('Compare Addresses', layout=[[frame]])
+
+    return window
+
+
+def get_address_dict_frame(config: Config, address_dict):
+    layout = []
+    params = address_fieldname_params.copy()
+    address_fields = config.address_fields
+    for field in address_fields:
+        upper_key = f'-ADDRESS_DICT_{field}-'.upper()
+        lower_key = f'-ADDRESS_DICT_{field}-'.lower()
+        address_field = field.title().replace('_', ' ')
+        address_value = address_dict.get(field)
+
+        # if field in ('company_name', 'postal_code'):
+        #     # is a button
+        #     params.pop('justification', None)
+        #     label_text = sg.B(key_for_humans, k=lower_key, **params)
+        # else:
+        label_text = sg.Text(address_field, k=lower_key, **address_fieldname_params)
+
+        input_box = sg.InputText(address_value, k=upper_key, **address_input_params)
+        layout.append([label_text, input_box])
+
+    frame = sg.Frame('Address', layout, pad=20, )
+    return frame
 
 
 def shipment_name_element() -> sg.Text:

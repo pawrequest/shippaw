@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/bench" />
       <excludeFolder url="file://$MODULE_DIR$/data/Parcelforce Labels" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (AmDesp)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (AmDesp) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyNamespacePackagesService">

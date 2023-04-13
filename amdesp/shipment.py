@@ -1,20 +1,27 @@
 import logging
 import re
-
-import pytz as pytz
-
-from amdesp.utils_pss.utils_pss import Utility, unsanitise
 import xml.etree.ElementTree as ET
 import PySimpleGUI as sg
 from pathlib import Path
 from dbfread import DBF
-from amdesp.config import Config, log_function
-from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel, ShipmentRequest, CollectionDate, \
-    Address, ShipmentReturn
-
 from datetime import datetime
-
+import chardet
+from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, CollectionDate, Address, ShipmentReturn
 from amdesp.despatchbay.despatchbay_entities import Service, Sender, Recipient, Parcel
+
+from amdesp.utils_pss.utils_pss import unsanitise
+from amdesp.config import Config
+from amdesp.exceptions import *
+
+
+from bs4.dammit import UnicodeDammit
+
+def decode(input_data):
+    t = type(input_data)
+    detected_encoding = chardet.detect(input_data)
+    return input_data.decode(detected_encoding)
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +31,7 @@ class Shipment:
         :param ship_dict: a dictionary of shipment details
         :param is_return: recipient is user's own sender_address[0]
         """
+
         self.address_as_str: str = ship_dict.get('address_as_str')
         self.str_to_match = ''.join(self.address_as_str.split('\r')[0:1]).replace('Units', 'Unit').replace('c/o ',
                                                                                                            '').replace(
@@ -46,7 +54,7 @@ class Shipment:
 
         self.collection_booked = False
         self.printed = False
-        self.company_name = str()
+        # self.company_name = str()
         self.date_menu_map = dict()
         self.service_menu_map: dict = dict()
         self.label_location: Path = Path()
@@ -75,26 +83,38 @@ class Shipment:
         """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
         shipments: [Shipment] = []
         file_ext = in_file.split('.')[-1].lower()
-        try:
-            if file_ext == 'xml':
-                ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
-                shipments.append(Shipment(ship_dict=ship_dict))
+        if file_ext == 'xml':
+            ship_dict = ship_dict_from_xml(config=config, xml_file=in_file)
+            shipments.append(Shipment(ship_dict=ship_dict))
 
-
-            elif file_ext == 'dbf':
-                dbase_file = in_file
+        elif file_ext == 'dbf':
+            dbase_file = in_file
+            try:
                 for record in DBF(dbase_file):
-                    ship_dict = shipdict_from_dbase(record=record, config=config)
-                    shipment = Shipment(ship_dict=ship_dict)
-                    shipments.append(shipment)
+                    try:
+                        ship_dict = shipdict_from_dbase(record=record, config=config)
+                        shipment = Shipment(ship_dict=ship_dict)
+                        shipments.append(shipment)
+                    except Exception as e:
+                        ...
+            except UnicodeDecodeError as e:
+                logger.error((f'Error with Dbase record. Last shipment was {shipments[-1]}'))
 
-        except Exception as e:
-            sg.popup(f"Error: {e}"
-                     f"Input file = {in_file}"
-                     f"Config: {config.__repr__()}"
-                     f"Shipments: f'{(shipment.shipment_name for shipment in shipments if shipments)}'")
-        else:
-            return shipments
+            except Exception as e:
+                raise DbaseError(*e.args)
+        return shipments
+
+    def to_dict(self):
+        allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
+        result = {}
+        for attr_name in dir(self):
+            attr_value = getattr(self, attr_name)
+            if type(attr_value) in allowed_types:
+                result[attr_name] = attr_value
+        return result
+
+
+
 
 
 def shipdict_from_dbase(record, config: Config):
@@ -103,14 +123,15 @@ def shipdict_from_dbase(record, config: Config):
     mapping = config.import_mapping
     ship_dict_from_dbf = {}
     for k, v in record.items():
-        if isinstance(v, str):
-            v = v.split('\x00')[0]
-        k = mapping[k]
-        if k == 'shipment_name':
-            v = re.sub(r"\W", "_", v)
-
-        ship_dict_from_dbf.update({k: v})
-
+        try:
+            if isinstance(v, str):
+                v = v.split('\x00')[0]
+                v = re.sub(r'[:/\\|?*<">]', "_", v)
+            k = mapping[k]
+            logger.info(f'SHIPDICT_FROM_DBASE - {k} : {v}')
+            ship_dict_from_dbf.update({k: v})
+        except:
+            raise ShipDictError(f'ShipDictError: {k=},\n{v=}')
     ship_dict_from_dbf.update({'category': 'Hire'})
 
     return ship_dict_from_dbf

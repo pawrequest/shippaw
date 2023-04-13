@@ -22,8 +22,10 @@ from amdesp.despatchbay.despatchbay_entities import ShipmentRequest, Address, Sh
     AddressKey, Service, CollectionDate
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.despatchbay.exceptions import ApiException
+from amdesp.exceptions import PrepError, WindowClosedError
 from amdesp.gui_layouts import bulk_shipper_window, tracking_viewer_window, address_chooser_popup, BestMatch, \
-    get_address_button_string, new_service_selector, new_date_selector, remote_address_frame, booked_shipments_frame
+    get_address_button_string, new_service_selector, new_date_selector, remote_address_frame, booked_shipments_frame, \
+    compare_addresses_window
 from amdesp.shipment import Shipment, parse_amherst_address_string
 from amdesp.utils_pss.utils_pss import Utility, unsanitise
 
@@ -49,27 +51,17 @@ class FuzzyScoresCls:
                        }
 
 
-def tracking_loop(mode: str, shipment: Shipment, client: DespatchBaySDK):
-    if 'in' in mode:
-        try:
-            tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
-        except Exception as e:
-            # todo handle better
-            logger.critical(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
-    elif 'out' in mode:
-        try:
-            tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
-        except Exception as e:
-            logger.critical(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
 
 
 def go_ship_out(client: DespatchBaySDK, config: Config, shipments: [Shipment]):
-    if prepped_shipments := outbound_prep(config=config, client=client, shipments=shipments):
-        if window := bulk_shipper_window(shipments=prepped_shipments, config=config):
-            if booked_shipments := outbound_gui_loop(config=config, client=client, shipments=prepped_shipments,
-                                                     window=window):
-                if post_cleanup := post_book(shipments=booked_shipments):
-                    sg.popup_error("Something is very strange")
+    try:
+        prepped_shipments = outbound_prep(config=config, client=client, shipments=shipments)
+        window = bulk_shipper_window(shipments=prepped_shipments, config=config)
+        booked_shipments = outbound_gui_loop(config=config, client=client, shipments=prepped_shipments, window=window)
+        post_cleanup = post_book(shipments=booked_shipments)
+    except Exception as e:
+        if sg.popup_yes_no("Close?") == 'Yes':
+            exit()
 
 
 def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK):
@@ -114,6 +106,7 @@ def outbound_prep(config: Config, shipments: [Shipment], client: DespatchBaySDK)
         except Exception as e:
             sg.popup_error(f'Error with {shipment.shipment_name}:\n'
                            f'{e}')
+            raise PrepError(f'Outbound prep Error: {shipment.shipment_name=}')
     return prepped_shipments
 
 def get_remote_address(shipment:Shipment, client:DespatchBaySDK, config:Config):
@@ -128,7 +121,7 @@ def get_remote_address(shipment:Shipment, client:DespatchBaySDK, config:Config):
         address = bestmatch.address
 
     if address:
-        address = check_address_company(address=address, shipment=shipment)
+        address = check_address_company(address=address, shipment=shipment, config=config)
 
     if not address:
         candidate_keys = candidate_keys or get_candidate_keys_dict(client=client, shipment=shipment)
@@ -144,7 +137,8 @@ def outbound_gui_loop(config: Config, shipments: [Shipment], client: DespatchBay
     while True:
         e, v = window.read()
         if e == sg.WIN_CLOSED or e == "Cancel":
-            break
+            raise WindowClosedError
+
 
         shipment_to_edit: Shipment = next(
             (shipment for shipment in shipments if shipment.shipment_name.lower() in e.lower()), None)
@@ -251,35 +245,6 @@ def quick_match(shipment: Shipment, candidate_key_dict:dict, client: DespatchBay
             return client.get_address_by_key(key)
 
 
-#
-# def get_matched_address_new(client: DespatchBaySDK, config: Config, shipment: Shipment) -> Address:
-#     """
-#     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
-#     search by customer name, then shipment search_term
-#     call explicit_matches to compare strings,
-#     call get_bestmatch for fuzzy results,
-#     if best score exceed threshold ask user to confirm
-#     If still no valid address, call get_new_address.
-#     """
-#     address: Address | None = None
-#     while not address:
-#         address = search_adddress(client=client, shipment=shipment)
-#         if address.company_name:
-#             if address.company_name != shipment.customer:
-#                 pop_msg = f'Address matched from direct search\n' \
-#                           f'But <Shipment Customer> and <Address Company Name> do not match:\n' \
-#                           f'\n{shipment.customer} =/= {address.company_name}\n'
-#                 if address.company_name in shipment.address_as_str:
-#                     pop_msg += f'\nHowever <Company Name> is in <Shipment address string>:' \
-#                                f'{address.company_name} -> {shipment.address_as_str} \n'
-#                 pop_msg += '\n[Yes] to accept matched address or [No] to fetch a new one'
-#                 if sg.popup_yes_no(pop_msg) == 'Yes':
-#                     return address
-#                 else:
-#                     return address_from_user_loop(client=client, config=config, shipment=shipment,
-#                                                   address=shipment.bestmatch.address)
-#
-
 def get_bestmatch(client: DespatchBaySDK, candidate_key_dict:dict, shipment: Shipment) -> BestMatch:
     """
     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
@@ -304,17 +269,18 @@ def get_bestmatch(client: DespatchBaySDK, candidate_key_dict:dict, shipment: Shi
 
 
 def search_adddress(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
+    address = Address
     try:
-        address: Address = client.find_address(shipment.postcode, shipment.customer)
+        address = client.find_address(shipment.postcode, shipment.customer)
     except ApiException as e1:
         try:
             address = client.find_address(shipment.postcode, shipment.search_term)
         except ApiException as e2:
             return None
-    return address
+    return address or None
 
 
-def check_address_company(address: Address, shipment: Shipment):
+def check_address_company(address: Address, shipment: Shipment, config:Config):
     if not address.company_name:
         return address
     elif address.company_name:
@@ -324,9 +290,38 @@ def check_address_company(address: Address, shipment: Shipment):
         if address.company_name in shipment.address_as_str:
             pop_msg += f'\nHowever <Company Name> ({address.company_name} is in <address string> ({shipment.address_as_str})'
         pop_msg += '\n[Yes] to accept matched address or [No] to fetch a new one'
-        answer = sg.popup_yes_no(pop_msg)
-        return address if answer == 'Yes' else None
+        # answer = sg.popup_yes_no(pop_msg)
+        # return address if answer == 'Yes' else None
+        compare_address_to_shipment(address, config, shipment)
 
+
+def compare_address_to_shipment(address, config, shipment):
+    address_dict = dict(
+        street=shipment.str_to_match,
+        company_name=shipment.customer,
+        postcode=shipment.postcode,
+    )
+    window = compare_addresses_window(config=config, address=address, address_dict=address_dict)
+    e, v = window.read()
+    while True:
+        if sg.WIN_CLOSED in e:
+            break
+    window.close()
+
+#
+# def check_address_company(address: Address, shipment: Shipment):
+#     if not address.company_name:
+#         return address
+#     elif address.company_name:
+#         pop_msg = f'Address matched from direct search\n'
+#         if address.company_name != shipment.customer:
+#             pop_msg += f'But <Customer> ({shipment.customer}) and <Company> ({address.company_name}) do not match:\n'
+#         if address.company_name in shipment.address_as_str:
+#             pop_msg += f'\nHowever <Company Name> ({address.company_name} is in <address string> ({shipment.address_as_str})'
+#         pop_msg += '\n[Yes] to accept matched address or [No] to fetch a new one'
+#         answer = sg.popup_yes_no(pop_msg)
+#         return address if answer == 'Yes' else None
+#
 
 def get_candidate_keys_dict(client: DespatchBaySDK, shipment: Shipment, postcode=None):
     postcode = postcode or shipment.postcode
@@ -761,3 +756,16 @@ def check_today_ship(shipment):
             f"{shipment.shipment_name} will not be collected today.\n"
             "'Ok' to continue, 'Cancel' to remove shipment from manifest?") == 'Ok' else False
     return shipment if keep_shipment else None
+
+def tracking_loop(mode: str, shipment: Shipment, client: DespatchBaySDK):
+    if 'in' in mode:
+        try:
+            tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
+        except Exception as e:
+            # todo handle better
+            logger.critical(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
+    elif 'out' in mode:
+        try:
+            tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
+        except Exception as e:
+            logger.critical(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
