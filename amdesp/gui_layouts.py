@@ -1,10 +1,10 @@
 from collections import namedtuple
-from typing import Literal
+from datetime import datetime
 
 import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
-from amdesp.despatchbay.despatchbay_entities import Address, Recipient, Sender, AddressKey
+from amdesp.despatchbay.despatchbay_entities import Address, CollectionDate
 from amdesp.config import Config
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.shipment import Shipment
@@ -17,24 +17,36 @@ default_params = {
     'border_width': 3,
 }
 
-bulk_params = {
-    'size': (15, 2),
+shipment_params = {
+    'size': (22, 2),
     'justification': 'center',
     'pad': (5, 5),
     'border_width': 4,
     'relief': sg.RELIEF_GROOVE,
-    'auto_size_text': True,
 }
 
 head_params = {
-    'size': (15, 2),
+    'size': (22, 2),
     'justification': 'center',
     'pad': (5, 5),
-    'auto_size_text': True,
 }
 
-recip_params = {
-    'size': (45, 2),
+date_params = {
+    'size': (12, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+    'border_width': 4,
+    'relief': sg.RELIEF_GROOVE,
+}
+
+date_head_params = {
+    'size': (12, 2),
+    'justification': 'center',
+    'pad': (5, 5),
+}
+
+address_params = {
+    'size': (30, 2),
     'justification': 'center',
     'pad': (5, 5),
     'border_width': 4,
@@ -42,18 +54,17 @@ recip_params = {
     'auto_size_text': True,
 }
 
-recip_head_params = {
-    'size': (45, 2),
+address_head_params = {
+    'size': (30, 2),
     'justification': 'center',
     'pad': (5, 5),
-    'auto_size_text': True,
 }
 
 boxes_head_params = {
     'size': (5, 2),
     'justification': 'center',
     'pad': (5, 5),
-    'auto_size_text': True,
+    # 'auto_size_text': True,
 }
 
 boxes_params = {
@@ -62,7 +73,7 @@ boxes_params = {
     'pad': (5, 5),
     'border_width': 4,
     'relief': sg.RELIEF_GROOVE,
-    'auto_size_text': True,
+    # 'auto_size_text': True,
 }
 
 address_input_params = {
@@ -85,29 +96,6 @@ option_menu_params = {
 }
 
 
-def booked_shipments_frame(shipments: [Shipment]):
-    params = {
-        'expand_x': True,
-        'expand_y': True,
-        'size': (25, 2)
-    }
-
-    result_layout = []
-    for shipment in shipments:
-        ship_res = []
-        ship_res.append(sg.Text(shipment.shipment_request.client_reference, **params))
-        ship_res.append(sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params))
-        ship_res.append(sg.Text(f'{shipment.service.name} - {len(shipment.parcels)} boxes = £{shipment.service.cost}'))
-        if shipment.printed:
-            ship_res.append(sg.Text('Shipment Printed'))
-        if shipment.logged_to_commence:
-            ship_res.append(sg.Text('Shipment ID Logged to Commence'))
-        # result_layout.append([sg.Frame('', layout=[ship_res])])
-        result_layout.append(ship_res)
-        # result_layout.append([sg.Text('')])
-    return sg.Frame('', layout=result_layout)
-
-
 def bulk_shipper_window(shipments: [Shipment], config: Config):
     if config.sandbox:
         sg.theme('Tan')
@@ -117,48 +105,44 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
     sg.set_options(**default_params)
     layout = []
     headers = [
-        sg.Push(),
-        sg.T('Customer', **head_params),
-        sg.Text('Collection Date', **head_params),
-        sg.T('Sender', **head_params),
-        sg.T('Recipient', **recip_head_params),
+        sg.Sizer(30, 0),
+        sg.T('Sender', **address_head_params),
+        sg.T('Contact / Customer', **head_params),
+        sg.T('Recipient', **address_head_params),
+        sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
-        sg.T('Service', **head_params)
+        sg.T('Service', **head_params),
+        sg.Push(),
     ]
     layout.append(headers)
 
     for shipment in shipments:
-        collection_date = parse(shipment.collection_date.date).date()
+        date_name = get_date_label(config=config, collection_date=shipment.collection_date)
+        collection_date = datetime.strptime(shipment.collection_date.date, config.datetime_masks['DT_DB']).date()
+
         date_col = 'green' if shipment.send_out_date == collection_date else 'maroon4'
         service_col = 'green' if shipment.default_service_matched else 'maroon4'
-        address_name = get_address_button_string(shipment.recipient.recipient_address)
-        friendly_date = f'{parse(shipment.collection_date.date):{config.datetime_masks["DT_DISPLAY"]}}'
+
+        sender_address_name = get_address_button_string(shipment.sender.sender_address)
+        recipient_address_name = get_address_button_string(shipment.recipient.recipient_address)
+
         num_parcels = len(shipment.parcels)
 
-        layout.append(
-            # remove button
-            [sg.Button('remove', k=f'-{shipment.shipment_name}_REMOVE-'),
-             sg.T(shipment.customer, **bulk_params),
+        remove_button = sg.Button('remove', k=f'-{shipment.shipment_name}_REMOVE-')
+        customer_display = sg.T(f'{shipment.contact}\n{shipment.customer}', **shipment_params)
+        collection_date_button = get_date_button(date_col, date_name, shipment)
+        sender_button = get_sender_button(sender_address_name, shipment)
+        recipient_button = get_recip_button(recipient_address_name, shipment)
+        parcels_button = get_parcels_button(num_parcels, shipment)
+        service_name_button = get_service_button(num_parcels, service_col, shipment)
 
-             # shipment name
-             sg.Text(friendly_date, background_color=date_col, enable_events=True,
-                     k=f'-{shipment.shipment_name.upper()}_DATE-', **bulk_params),
+        frame_lay = [
+            [sender_button, customer_display, recipient_button, collection_date_button,
+             parcels_button, service_name_button, remove_button]
+        ]
+        frame = sg.Frame('', layout=frame_lay, k=f'-SHIPMENT_{shipment.shipment_name}-'.upper())
 
-             # Sender
-             sg.T(shipment.sender.sender_address.street, enable_events=True,
-                  k=f'-{shipment.shipment_name.upper()}_SENDER-', **bulk_params),
-
-             # Recipient
-             sg.Text(address_name, enable_events=True,
-                     k=f'-{shipment.shipment_name.upper()}_RECIPIENT-', **recip_params),
-             # Boxes
-             sg.Text(f'{num_parcels}', k=f'-{shipment.shipment_name.upper()}_BOXES-', enable_events=True,
-                     **boxes_params),
-             # Service
-             sg.Text(f'{shipment.service.name} \n£{num_parcels * shipment.service.cost}',
-                     background_color=service_col,
-                     enable_events=True, k=f'-{shipment.shipment_name.upper()}_SERVICE-', **bulk_params)]
-        )
+        layout.append([frame])
 
     layout.append([
         [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
@@ -167,90 +151,28 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
     return window
 
 
-def get_c(address: Address):
-    return f'{address.company_name} \n {address.street}' if address.company_name else address.street
+def booked_shipments_frame(shipments: [Shipment]):
+    params = {
+        'expand_x': True,
+        'expand_y': True,
+        'size': (25, 2)
+    }
 
 
-def get_address_button_string(address):
-    return f'{address.company_name}\n{address.street}' if address.company_name else address.street
+    result_layout = []
+    for shipment in shipments:
+        ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
+                    sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
+                    sg.Text(f'{shipment.service.name} - {len(shipment.parcels)} boxes = £{shipment.service.cost}')]
 
-
-def remote_address_frame(shipment: Shipment, config: Config, address: Address):
-    # sender_or_recip = shipment.get_sender_or_recip()
-    # key_string = type(sender_or_recip).__name__.upper()
-
-    layout = [
-        [sg.Text(f'Name:', **address_fieldname_params),
-         sg.InputText(f'{shipment.contact}', key=f'-NAME-', **address_input_params)],
-
-        [sg.Text(f'Email:', **address_fieldname_params),
-         sg.InputText(f'{shipment.email}', key=f'-EMAIL-', **address_input_params)],
-
-        [sg.Text(f'Telephone:', **address_fieldname_params),
-         sg.InputText(f'{shipment.telephone}', key=f'-TELEPHONE-', **address_input_params)],
-
-        [get_address_frame(address=address, config=config)],
-
-        [sg.B('Submit', k=f'-SUBMIT-')]
-    ]
-
-    # noinspection PyTypeChecker
-    frame = sg.Frame(f'Remote Address', layout=layout, k=f'-REMOTE_ADDRESS-', pad=20, font="Rockwell 30",
-                     border_width=5, relief=sg.RELIEF_GROOVE,
-                     title_location=sg.TITLE_LOCATION_TOP)
-    return frame
-
-
-def new_date_selector(shipment: Shipment, config: Config):
-    menu_map = shipment.date_menu_map
-    men_def = [k for k in menu_map.keys()]
-    datetime_mask = config.datetime_masks['DT_DISPLAY']
-    default_date = f'{parse(shipment.collection_date.date).date():{datetime_mask}}'
-
-    layout = [
-        [sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date, **option_menu_params)]]
-
-    window = Window('Select a date', layout=layout)
-    while True:
-        e, v = window.read()
-        if e in [sg.WIN_CLOSED, "Cancel"]:
-            window.close()
-            return shipment.collection_date
-        if 'date' in e.lower():
-            window.close()
-            return menu_map.get(v['-DATE-'])
-
-
-def new_service_selector(shipment: Shipment):
-    menu_map = shipment.service_menu_map
-    men_def = [k for k in menu_map.keys()]
-
-    layout = [[sg.Combo(k='-SERVICE-', values=men_def, enable_events=True, default_value=shipment.service.name,
-                        **option_menu_params)]]
-    window = Window('Select a service', layout=layout)
-
-    while True:
-        e, v = window.read()
-        if e in [sg.WIN_CLOSED, "Cancel"]:
-            window.close()
-            return shipment.service
-        if 'service' in e.lower():
-            window.close()
-            return menu_map.get(v['-SERVICE-'])
-
-
-def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
-    """ gets available shipping services for shipment sender and recipient
-    builds menu_def of potential services and if any matches service_id specified in config.toml then select it by default
-     return a dict of menu_def and default_value"""
-    services = client.get_services()
-    # todo get AVAILABLE services needs a request
-    # services = client.get_available_services()
-    shipment.service_menu_map.update({service.name: service for service in services})
-    chosen_service = next((service for service in services if service.service_id == config.dbay['service_id']),
-                          services[0])
-    shipment.service = chosen_service
-    return {'values': [service.name for service in services], 'default_value': chosen_service.name}
+        if shipment.printed:
+            ship_res.append(sg.Text('Shipment Printed'))
+        if shipment.logged_to_commence:
+            ship_res.append(sg.Text('Shipment ID Logged to Commence'))
+        # result_layout.append([sg.Frame('', layout=[ship_res])])
+        result_layout.append(ship_res)
+        # result_layout.append([sg.Text('')])
+    return sg.Frame('', layout=result_layout)
 
 
 def get_address_frame(config: Config, address: Address, index: str = None) -> sg.Frame:
@@ -279,8 +201,49 @@ def get_address_frame(config: Config, address: Address, index: str = None) -> sg
         input_box = sg.InputText(input_text, k=upper_key, **address_input_params)
         layout.append([label_text, input_box])
 
-    frame = sg.Frame('Address', layout, pad=20, )
+    frame = sg.Frame('Address', layout, pad=20)
     return frame
+
+
+def get_address_button_string(address):
+    # return f'{address.company_name}\n{address.street}' if address.company_name else address.street
+    return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}'
+
+
+def new_date_selector(shipment: Shipment, config: Config, location):
+    location = location
+    menu_map = shipment.date_menu_map
+    men_def = [k for k in menu_map.keys()]
+    datetime_mask = config.datetime_masks['DT_DISPLAY']
+    default_date = f'{parse(shipment.collection_date.date).date():{datetime_mask}}'
+
+    layout = [
+        [sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date,
+                  **option_menu_params)]]
+
+    window = Window('Select a date', layout=layout, location=location, relative_location=(-100, -50))
+    while True:
+        e, v = window.read()
+        if e in [sg.WIN_CLOSED, "Cancel"]:
+            window.close()
+            return shipment.collection_date
+        if 'date' in e.lower():
+            window.close()
+            return menu_map.get(v['-DATE-'])
+
+
+def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
+    """ gets available shipping services for shipment sender and recipient
+    builds menu_def of potential services and if any matches service_id specified in config.toml then select it by default
+     return a dict of menu_def and default_value"""
+    services = client.get_services()
+    # todo get AVAILABLE services needs a request
+    # services = client.get_available_services()
+    shipment.service_menu_map.update({service.name: service for service in services})
+    chosen_service = next((service for service in services if service.service_id == config.dbay['service_id']),
+                          services[0])
+    shipment.service = chosen_service
+    return {'values': [service.name for service in services], 'default_value': chosen_service.name}
 
 
 def parcels_spin() -> sg.Combo:
@@ -302,7 +265,6 @@ def shipment_ids_frame() -> sg.Frame:
     return frame
 
 
-# todo
 def tracking_viewer_window(shipment_id, client):
     try:
         shipment = client.get_shipment(shipment_id)
@@ -338,23 +300,8 @@ def tracking_viewer_window(shipment_id, client):
         tracking_window.read()
 
 
-def compare_addresses_window(address: Address, address_dict: dict, config: Config):
-    layout = [[get_address_frame(config=config, address=address),
-               get_address_dict_frame(address_dict=address_dict, config=config)],
-              [sg.Submit(k='-COMPARE_SUBMIT-')]
-              ]
-
-    frame = sg.Frame(f'Compare Addresses', layout=layout, k=f'-COMPARE_ADDRESS-', pad=20, font="Rockwell 30",
-                     border_width=5, relief=sg.RELIEF_GROOVE, title_location=sg.TITLE_LOCATION_TOP)
-
-    window = sg.Window('Compare Addresses', layout=[[frame]])
-
-    return window
-
-
 def get_address_dict_frame(config: Config, address_dict):
     layout = []
-    params = address_fieldname_params.copy()
     address_fields = config.address_fields
     for field in address_fields:
         upper_key = f'-ADDRESS_DICT_{field}-'.upper()
@@ -385,16 +332,21 @@ def shipment_name_element() -> sg.Text:
 
 def address_chooser_popup(candidate_dict: dict, client: DespatchBaySDK) -> Address:
     """ popup mapping address keys to human readable addresses
-    :param address_dict - a dicitonary of addresses (keys) and their dbay keys (values)
-    :return dbay address key
     """
     default_value = next(c for c in candidate_dict)
 
-    layout = [
-        [sg.Listbox(list(candidate_dict.keys()), select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, expand_x=True,
-                    expand_y=True, enable_events=True, size=(50, 20), bind_return_key=True,
-                    default_values=default_value, k='select')],
-    ]
+    layout = [[sg.Listbox(list(candidate_dict.keys()), select_mode=sg.LISTBOX_SELECT_MODE_SINGLE, expand_x=True,
+                          expand_y=True, enable_events=True, size=(50, 20), bind_return_key=True,
+                          default_values=default_value, k='select', auto_size_text=True)]]
+
+    # layout = [
+    #     [sg.Combo(values = list(candidate_dict.keys()),default_value=default_value,
+    #               size=(50, 20),
+    #               expand_x=True, expand_y=True,
+    #               enable_events=True, readonly=True, bind_return_key=True,
+    #               k='select',
+    #               auto_size_text=True)],
+    # ]
 
     window = sg.Window('Address Selector', layout)
 
@@ -410,3 +362,102 @@ def address_chooser_popup(candidate_dict: dict, client: DespatchBaySDK) -> Addre
             return address
         else:
             continue
+
+
+def loading():
+    layout = [
+        [sg.Text("Loading Shipments")]
+    ]
+
+    return sg.Window('Loading', layout, modal=True, disable_close=True, finalize=True)
+
+
+def compare_addresses_window(address: Address, address_dict: dict, config: Config):
+    layout = [[get_address_frame(config=config, address=address),
+               get_address_dict_frame(address_dict=address_dict, config=config)],
+              [sg.Submit(k='-COMPARE_SUBMIT-')]
+              ]
+
+    frame = sg.Frame(f'Compare Addresses', layout=layout, k=f'-COMPARE_ADDRESS-', pad=20, font="Rockwell 30",
+                     border_width=5, relief=sg.RELIEF_GROOVE, title_location=sg.TITLE_LOCATION_TOP)
+
+    window = sg.Window('Compare Addresses', layout=[[frame]])
+
+    return window
+
+
+def new_service_selector(shipment: Shipment, location):
+    menu_map = shipment.service_menu_map
+    men_def = [k for k in menu_map.keys()]
+
+    layout = [[sg.Combo(k='-SERVICE-', values=men_def, enable_events=True, default_value=shipment.service.name,
+                        **option_menu_params)]]
+    window = Window('Select a service', layout=layout, location=location, relative_location=(-100, -50))
+
+    while True:
+        e, v = window.read()
+        if e in [sg.WIN_CLOSED, "Cancel"]:
+            window.close()
+            return shipment.service
+        if 'service' in e.lower():
+            window.close()
+            return menu_map.get(v['-SERVICE-'])
+
+
+def get_service_button(num_parcels, service_col, shipment):
+    service_name_button = sg.Text(f'{shipment.service.name} \n£{num_parcels * shipment.service.cost}',
+                                  background_color=service_col, enable_events=True,
+                                  k=f'-{shipment.shipment_name.upper()}_SERVICE-', **shipment_params)
+    return service_name_button
+
+
+def get_parcels_button(num_parcels, shipment):
+    parcels_button = sg.Text(f'{num_parcels}', k=f'-{shipment.shipment_name.upper()}_BOXES-', enable_events=True,
+                             **boxes_params)
+    return parcels_button
+
+
+def get_recip_button(recipient_address_name, shipment):
+    recipient_button = sg.Text(recipient_address_name, enable_events=True,
+                               k=f'-{shipment.shipment_name.upper()}_RECIPIENT-', **address_params)
+    return recipient_button
+
+
+def get_sender_button(sender_address_name, shipment):
+    sender_button = sg.Text(sender_address_name, enable_events=True,
+                            k=f'-{shipment.shipment_name.upper()}_SENDER-', **address_params)
+
+    return sender_button
+
+
+def get_date_button(date_col, date_name, shipment):
+    collection_date_button = sg.Text(date_name, background_color=date_col, enable_events=True,
+                                     k=f'-{shipment.shipment_name.upper()}_DATE-', **date_params)
+    return collection_date_button
+
+
+def get_contact_frame(shipment: Shipment, config: Config, address: Address):
+    layout = [
+        [sg.Text(f'Name:', **address_fieldname_params),
+         sg.InputText(f'{shipment.contact}', key=f'-NAME-', **address_input_params)],
+
+        [sg.Text(f'Email:', **address_fieldname_params),
+         sg.InputText(f'{shipment.email}', key=f'-EMAIL-', **address_input_params)],
+
+        [sg.Text(f'Telephone:', **address_fieldname_params),
+         sg.InputText(f'{shipment.telephone}', key=f'-TELEPHONE-', **address_input_params)],
+
+        [get_address_frame(address=address, config=config)],
+
+        [sg.B('Submit', k=f'-SUBMIT-')]
+    ]
+
+    # noinspection PyTypeChecker
+    frame = sg.Frame(f'Remote Address', layout=layout, k=f'-REMOTE_ADDRESS-', pad=20, font="Rockwell 30",
+                     border_width=5, relief=sg.RELIEF_GROOVE,
+                     title_location=sg.TITLE_LOCATION_TOP)
+    return frame
+
+
+def get_date_label(collection_date: CollectionDate, config: Config):
+    return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'

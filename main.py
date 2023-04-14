@@ -8,12 +8,15 @@ import sys
 
 import platformdirs
 
-from amdesp.config import Config
-from amdesp.shipper import go_ship_out
-from amdesp.shipment import Shipment
+from amdesp.config import Config, get_amdesp_logger
+from amdesp.shipper import Shipper
 import PySimpleGUI as sg
 import logging
 
+# sandbox switch for non CLI:
+SANDBOX = True
+
+# get stored data files for non CLI
 ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 # STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
 STORED_XML = r'c:\amdesp\data\amship.xml'
@@ -38,40 +41,36 @@ includes
 + powershell to log shipment ids to commence
 + Vovin CmcLibNet installer for interacting with commence
 """
-# filename = logfile
+#
+# logger = logging.getLogger(name=__name__)
+# logfile = f'{__file__.replace("py", "log")}'
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='{asctime} {levelname:<8} {message}',
+#     style='{',
+#     # filename=logfile,
+#     # filemode='w',
+#     handlers=[
+#         logging.FileHandler(logfile, mode='w'),
+#         logging.StreamHandler(sys.stdout)
+#     ])
 
-# todo Literal typehint throwing warnings? mode:Literal['ship_in', 'ship_out', 'track_in','track_out']
-logger = logging.getLogger(name=__name__)
-logfile = f'{__file__.replace("py", "log")}'
-logging.basicConfig(
-    level=logging.INFO,
-    format='{asctime} {levelname:<8} {message}',
-    style='{',
-    filename=logfile,
-    filemode='w'
-)
+logger = get_amdesp_logger()
 
 
-def main(mode: str, sandbox:bool, in_file:str):
+def main(main_mode: str, main_sandbox: bool, infile: str):
     """ sandbox = fake shipping client, no money for labels!"""
-    sg.popup_quick_message('Please Wait')
-    mode_list = ['ship_in', 'ship_out', 'track_in','track_out']
+    sg.popup_quick_message('Config')
     try:
-
-        config = Config.from_toml2(sandbox=sandbox)
-
+        root_dir = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
+        config = Config.from_toml2(sandbox=main_sandbox, root_dir=root_dir)
         config.log_config()
         client = config.get_dbay_client_ag(config.dbay)
-        if mode == 'ship_out':
-            outbound_shipments = Shipment.get_shipments(config=config, in_file=in_file)
-            go_ship_out(shipments=outbound_shipments, config=config, client=client)
-        else:
-            sg.popup_error(f"Mode Fault: {mode}")
-
+        shipper = Shipper(config=config)
+        shipper.dispatch(mode=main_mode, client=client, in_file=infile)
 
     except Exception as e:
         ...
-
 
 
 if __name__ == '__main__':
@@ -88,8 +87,8 @@ if __name__ == '__main__':
     # AmDesp called from IDE - inject mode
     else:
         in_file = INPUT_FILE
-        sandbox = False
+        sandbox = SANDBOX
         mode = 'ship_out'
         # mode = 'track_in'
 
-    main(mode=mode, in_file=in_file, sandbox=sandbox)
+    main(main_mode=mode, infile=in_file, main_sandbox=sandbox)

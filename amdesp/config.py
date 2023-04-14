@@ -2,16 +2,29 @@ import functools
 import logging
 import os
 import subprocess
+import sys
 import tomllib
 from dataclasses import dataclass
-from typing import Dict
-
-import platformdirs
 
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from pathlib import Path
-logger = logging.getLogger(name=__name__)
 
+
+def get_amdesp_logger():
+    logger = logging.getLogger(name=__name__)
+    logfile = f'{__file__.replace("py", "log")}'
+    logging.basicConfig(
+        level=logging.INFO,
+        format='{asctime} {levelname:<8} {message}',
+        style='{',
+        handlers=[
+            logging.FileHandler(logfile, mode='w'),
+            logging.StreamHandler(sys.stdout)
+        ])
+    return logger
+
+
+logger= get_amdesp_logger()
 
 
 @dataclass
@@ -19,7 +32,6 @@ class Config:
     def __init__(self, config_dict: dict):
         # get config from toml
         config = config_dict
-        self.sandbox: bool = False
         self.service_id: str = ''
         self.courier_id: str = ''
         self.log_json: Path = Path()
@@ -33,50 +45,64 @@ class Config:
         for path in config['paths']:
             setattr(self, path, config['root_dir'] / config['paths'][path])
 
-        self.home_sender_id:str = config['home_address']['address_id']
-        self.shipment_fields:list = config['shipment_fields']
-        self.export_fields:list = config['export_fields']
-        self.address_fields:list = config['address_fields']
-        self.contact_fields:list = config['contact_fields']
+        self.sandbox: bool = config['sandbox']
+        self.home_sender_id: str = config['home_address']['address_id']
+        self.shipment_fields: list = config['shipment_fields']
+        self.export_fields: list = config['export_fields']
+        self.address_fields: list = config['address_fields']
+        self.contact_fields: list = config['contact_fields']
 
-        self.datetime_masks:dict = config['datetime_masks']
-        self.home_address:dict = config['home_address']
-        self.dbay:dict = config['dbay']
-        self.import_mapping:dict = config['import_mapping']
+        self.datetime_masks: dict = config['datetime_masks']
+        self.home_address: dict = config['home_address']
+        self.dbay: dict = config['dbay']
+        self.import_mapping: dict = config['import_mapping']
         self.gui_map = config['gui_map']
+        self.logger = logger
 
     @classmethod
-    def from_toml2(cls, sandbox:bool):
-        config_dict = cls.dict_from_toml()
+    def from_toml2(cls, sandbox: bool, root_dir):
+        config_dict = cls.dict_from_toml(root_dir=root_dir)
         config_dict['dbay'] = config_dict['dbay']['sand'] if sandbox else config_dict['dbay']['prod']
+        config_dict['sandbox'] = sandbox
         return cls(config_dict=config_dict)
 
     @staticmethod
-    def dict_from_toml():
-        root_dir = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
+    def dict_from_toml(root_dir):
+
         config_path = root_dir / 'config.toml'
         with open(config_path, 'rb') as f:
             config = tomllib.load(f)
         config['root_dir'] = root_dir
         return config
 
-
     def log_config(self):
-        [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
+        [self.logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
 
-
-    def get_dbay_client_ag(self, dbay_dict:dict):
+    def get_dbay_client_ag(self, dbay_dict: dict):
         api_user = os.getenv(dbay_dict['api_user'])
         api_key = os.getenv(dbay_dict['api_key'])
         client = DespatchBaySDK(api_user=api_user, api_key=api_key)
         return client
+
+
+    def setup_commence(self):
+        """ looks for CmcLibNet in prog files, if absent attempts to install exe located at path defined in config.toml"""
+        try:
+            self.cmc_dll.exists()
+        except Exception as e:
+            logger.warning('Vovin cmc_lib_net is not installed')
+            try:
+                self.install_cmc_lib_net()
+            except Exception as e:
+                logger.error("Unable to find or install CmcLibNet - logging to commence is impossible"
+                             f"\n{e}")
+                # error message built into cmclibnet installer
 
     #
     def install_cmc_lib_net(self):
         """ install Vovin CmcLibNet from bundled exe"""
         subprocess.run([self.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        check=True)
-
 
 
 

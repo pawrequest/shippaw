@@ -957,3 +957,15 @@ def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config)
 #                     return address_from_user_loop(client=client, config=config, shipment=shipment,
 #                                                   address=shipment.bestmatch.address)
 #
+
+
+
+def get_service(client: DespatchBaySDK, config: Config, shipment: Shipment):
+    """ return the dbay service specified in toml or the first available"""
+    services = client.get_services()
+    # todo get AVAILABLE services needs a request
+    # services = client.get_available_services()
+    # shipment.service_menu_map.update({service.name: service for service in services})
+
+    return next((service for service in services if service.service_id == config.dbay['service']),
+                services[0])
