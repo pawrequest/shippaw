@@ -14,7 +14,6 @@ from amdesp.config import Config
 from amdesp.exceptions import *
 
 
-from bs4.dammit import UnicodeDammit
 
 def decode(input_data):
     t = type(input_data)
@@ -126,7 +125,8 @@ def shipdict_from_dbase(record, config: Config):
         try:
             if isinstance(v, str):
                 v = v.split('\x00')[0]
-                v = re.sub(r'[:/\\|?*<">]', "_", v)
+                # v = re.sub(r'[:/\\|?*<">]', "_", v)
+                # v = re.sub(r'[:/\\|?*<">]', "_", v)
             k = mapping[k]
             logger.info(f'SHIPDICT_FROM_DBASE - {k} : {v}')
             ship_dict_from_dbf.update({k: v})
@@ -148,6 +148,7 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     for field in fields:
         k = field[0].text
         k = to_snake_case(k)
+        k=config.import_mapping.get(k)
         v = field[1].text
         if v:
             k = unsanitise(k)
@@ -165,7 +166,6 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
                         # v = int(v.replace(',', ''))
             if k == 'name':
                 k = 'shipment_name'
-                v = "".join(ch if ch.isalnum() else '_' for ch in v)
             if k[:6] == "deliv ":
                 k = k.replace('deliv', 'delivery')
             k = k.replace('delivery_', '')

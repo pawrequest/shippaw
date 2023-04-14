@@ -2,6 +2,7 @@ import dataclasses
 import json
 import logging
 import os
+import re
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -57,7 +58,7 @@ class Shipper:
 
     def dispatch(self, client: DespatchBaySDK, mode: str, in_file: str):
         # loading = gui.loading()
-        sg.popup_quick_message('loading shipments')
+        sg.popup_quick_message('loading shipments', keep_on_top=True)
         try:
             if 'ship' in mode:
                 shipments = Shipment.get_shipments(config=self.config, in_file=in_file)
@@ -109,7 +110,7 @@ class Shipper:
             shipments = shipments[0:LIMITED_SHIPMENTS]
         for shipment in shipments:
             # for shipment in shipments[0:2]:
-            sg.popup_quick_message(f'Preparing {shipment.shipment_name} ')
+            sg.popup_quick_message(f'Preparing {shipment.shipment_name}', keep_on_top=True)
             try:
                 remote_address = self.get_remote_address(shipment=shipment, client=client)
                 logger.info(f'PREP SHIPMENT {shipment.shipment_name} - {remote_address=}')
@@ -306,18 +307,18 @@ class Shipper:
                 shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
                 shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
 
-                sg.popup_quick_message(f'Adding shipment {shipment.shipment_name}')
+                sg.popup_quick_message(f'Adding shipment {shipment.shipment_name}', keep_on_top=True)
                 shipment_id = client.add_shipment(shipment.shipment_request)
                 setattr(shipment, f'{"inbound_id" if shipment.is_return else "outbound_id"}', shipment_id)
 
-                sg.popup_quick_message(f'Booking shipment {shipment.shipment_name}')
+                sg.popup_quick_message(f'Booking shipment {shipment.shipment_name}', keep_on_top=True)
                 shipment_return = book_shipment(client=client, shipment=shipment, shipment_id=shipment_id)
                 shipment.shipment_return = shipment_return
 
-                sg.popup_quick_message(f'Downloading Label {shipment.shipment_name}')
+                sg.popup_quick_message(f'Downloading Label {shipment.shipment_name}', keep_on_top=True)
                 download_label(client=client, config=config, shipment=shipment)
 
-                sg.popup_quick_message(f'Printing Label {shipment.shipment_name}')
+                sg.popup_quick_message(f'Printing Label {shipment.shipment_name}', keep_on_top=True)
                 print_label(shipment=shipment)
 
                 update_commence(config=config, shipment=shipment, id_to_pass=shipment_id)
@@ -693,7 +694,9 @@ def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name}.pdf at location specified in config.toml"""
     try:
         label_pdf:Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id, label_layout='2A4')
-        label_string:str = shipment.shipment_name + '.pdf'
+
+        printable_shipment_name = re.sub(r'[:/\\|?*<">]', "_", shipment.shipment_name)
+        label_string:str = printable_shipment_name + '.pdf'
         shipment.label_location = config.labels / label_string
         label_pdf.download(shipment.label_location)
     except:
@@ -749,9 +752,8 @@ def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
 
     ps_script = str(config.cmc_logger)
     try:  # utility class static method runs powershell script bypassing execuction policy
-        commence_edit = Utility.powershell_runner(ps_script, shipment.category, shipment.shipment_name,
-                                                  id_to_pass,
-                                                  str(shipment.is_return), 'debug')
+        commence_edit = Utility.powershell_runner(ps_script,
+                                                  shipment.category, shipment.shipment_name, id_to_pass, str(shipment.is_return))
     except RuntimeError as e:
         sg.popup_scrolled(f'Unable to log to commence, Runtime error:\n{e}')
         shipment.logged_to_commence = False

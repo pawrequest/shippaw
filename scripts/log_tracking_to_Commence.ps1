@@ -8,11 +8,11 @@ $category = $args[0]
 $ref_name = $args[1]
 $shipment_id = $args[2]
 $is_return = $args[3]
-$debug = $args[4]
 
-foreach ($arg in $args) {
-    Write-Host $arg
-}
+Write-Host LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type
+Write-Host LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name
+Write-Host LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name
+Write-Host LOG TO COMMENCE SCRIPT -  ISARETURN - $is_return
 
 #cursor properties
 Add-Type -Path $commence_wrapper
@@ -34,7 +34,7 @@ Else {
 
     $shipment_type = "Outbound ID"
 }
-Write-Host $shipment_type
+
 
 If ($cursor.Filters.Apply() = 0){
     # edit and write to db
@@ -49,8 +49,13 @@ If ($cursor.Filters.Apply() = 0){
     $ed.Commit()
 
 }
+
 Else{
     "MULTIPLE RECORDS RETURNED"
+    "LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type"
+    "LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name"
+    "LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name"
+    "LOG TO COMMENCE SCRIPT -  ISARETURN - $is_return"
 }
 #goodbye
 $db.Close()
