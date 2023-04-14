@@ -127,7 +127,6 @@ cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
-dbase_import = 'c:\paul\shipments.dbf'
 stored_xml = 'data/AmShip.xml'
 
 

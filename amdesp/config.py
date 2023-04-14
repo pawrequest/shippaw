@@ -6,26 +6,31 @@ import sys
 import tomllib
 from dataclasses import dataclass
 
+import platformdirs
+
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from pathlib import Path
 
+ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
+LOG_FILE = ROOT_DIR.joinpath('data', 'AmDesp.log')
+...
+
+
 
 def get_amdesp_logger():
-    logger = logging.getLogger(name=__name__)
-    logfile = f'{__file__.replace("py", "log")}'
+    logger = logging.getLogger(name='AmDesp_logger')
+    # logfile = f'{__file__.replace("py", "log")}'
     logging.basicConfig(
         level=logging.INFO,
         format='{asctime} {levelname:<8} {message}',
         style='{',
         handlers=[
-            logging.FileHandler(logfile, mode='w'),
+            logging.FileHandler(str(LOG_FILE), mode='a'),
             logging.StreamHandler(sys.stdout)
         ])
     return logger
 
-
-logger= get_amdesp_logger()
-
+logger = get_amdesp_logger()
 
 @dataclass
 class Config:
@@ -39,11 +44,12 @@ class Config:
         self.cmc_installer: Path = Path()
         self.cmc_dll: Path = Path()
         self.labels: Path = Path()
+        self.amdesp_log: Path = Path()
 
         self.labels.mkdir(parents=True, exist_ok=True)
 
         for path in config['paths']:
-            setattr(self, path, config['root_dir'] / config['paths'][path])
+            setattr(self, path, ROOT_DIR / config['paths'][path])
 
         self.sandbox: bool = config['sandbox']
         self.home_sender_id: str = config['home_address']['address_id']
@@ -57,26 +63,29 @@ class Config:
         self.dbay: dict = config['dbay']
         self.import_mapping: dict = config['import_mapping']
         self.gui_map = config['gui_map']
-        self.logger = logger
+        # self.logger = get_amdesp_logger()
+        ...
 
     @classmethod
-    def from_toml2(cls, sandbox: bool, root_dir):
-        config_dict = cls.dict_from_toml(root_dir=root_dir)
+    def from_toml2(cls, sandbox: bool):
+        config_path = ROOT_DIR / 'config.toml'
+        with open(config_path, 'rb') as f:
+            config_dict = tomllib.load(f)
         config_dict['dbay'] = config_dict['dbay']['sand'] if sandbox else config_dict['dbay']['prod']
         config_dict['sandbox'] = sandbox
         return cls(config_dict=config_dict)
 
-    @staticmethod
-    def dict_from_toml(root_dir):
-
-        config_path = root_dir / 'config.toml'
-        with open(config_path, 'rb') as f:
-            config = tomllib.load(f)
-        config['root_dir'] = root_dir
-        return config
+    # @staticmethod
+    # def dict_from_toml():
+    #
+    #     config_path = ROOT_DIR / 'config.toml'
+    #     with open(config_path, 'rb') as f:
+    #         config = tomllib.load(f)
+    #     config['root_dir'] = ROOT_DIR
+    #     return config
 
     def log_config(self):
-        [self.logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
+        [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
 
     def get_dbay_client_ag(self, dbay_dict: dict):
         api_user = os.getenv(dbay_dict['api_user'])
@@ -84,18 +93,17 @@ class Config:
         client = DespatchBaySDK(api_user=api_user, api_key=api_key)
         return client
 
-
     def setup_commence(self):
         """ looks for CmcLibNet in prog files, if absent attempts to install exe located at path defined in config.toml"""
         try:
             self.cmc_dll.exists()
         except Exception as e:
-            logger.warning('Vovin cmc_lib_net is not installed')
+            logging.warning('Vovin cmc_lib_net is not installed')
             try:
                 self.install_cmc_lib_net()
             except Exception as e:
-                logger.error("Unable to find or install CmcLibNet - logging to commence is impossible"
-                             f"\n{e}")
+                logging.error("Unable to find or install CmcLibNet - logging to commence is impossible"
+                              f"\n{e}")
                 # error message built into cmclibnet installer
 
     #
@@ -103,8 +111,6 @@ class Config:
         """ install Vovin CmcLibNet from bundled exe"""
         subprocess.run([self.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        check=True)
-
-
 
     #####
 
@@ -146,30 +152,16 @@ def log_function(logger):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # logger.info(f"{func.__name__.upper()} with args={args}, kwargs={kwargs}")
-            # logger.info(f'{func.__name__.upper()} - arg = {arg}' for arg in args)
             for object_name, object in kwargs.items():
                 if isinstance(object, str):
-                    logger.info(f'{func.__name__.upper()} - {object_name} - {object}')
+                    logging.info(f'{func.__name__.upper()} - {object_name} - {object}')
 
                 else:
                     for var in vars(object):
-                        logger.info(f'{func.__name__.upper()} - {object_name} - {var} - {getattr(object, var)}')
-
-                ...
-
-                # # for y, z in v.items():
-                # #     ...
-                # logger.info(f'{func.__name__.upper()} - {k} - {y} - {z}' for y,z in vars(v))
-                # # logger.info(f'{func.__name__.upper()} - {k} - {var} - {getattr(v, var)}' for var in v)
-                #
-                # # for obj in vars(kwargs[kwarg]):
-                # #     [logger.info(f"{func.__name__.upper()} {kwarg} : {getattr(kwarg, obj)}" for var in vars(kwargs[kwarg]))]
-                # #     ...
-                # #     # logger.info(f"{func.__name__.upper()} {var} : {getattr(kwarg, var)}" for var in vars(kwargs[kwarg]))
+                        logging.info(f'{func.__name__.upper()} - {object_name} - {var} - {getattr(object, var)}')
 
             result = func(*args, **kwargs)
-            logger.info(f'Finished calling function {func.__name__}')
+            logging.info(f'Finished calling function {func.__name__}')
             return result
 
         return wrapper

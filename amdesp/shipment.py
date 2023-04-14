@@ -13,16 +13,11 @@ from amdesp.utils_pss.utils_pss import unsanitise
 from amdesp.config import Config
 from amdesp.exceptions import *
 
-
-
 def decode(input_data):
     t = type(input_data)
     detected_encoding = chardet.detect(input_data)
     return input_data.decode(detected_encoding)
 
-
-
-logger = logging.getLogger(__name__)
 
 class Shipment:
     def __init__(self, ship_dict: dict, is_return: bool = False):
@@ -72,7 +67,7 @@ class Shipment:
         self.bestmatch = None
         self.logged_to_commence = None
 
-        [logger.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+        [logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
 
     def get_sender_or_recip(self):
         return self.sender if self.is_return else self.recipient
@@ -97,7 +92,7 @@ class Shipment:
                     except Exception as e:
                         ...
             except UnicodeDecodeError as e:
-                logger.error((f'Error with Dbase record. Last shipment was {shipments[-1]}'))
+                logging.error(f'Error with Dbase record. Last shipment was {shipments[-1]}\n{e}')
 
             except Exception as e:
                 raise DbaseError(*e.args)
@@ -113,28 +108,26 @@ class Shipment:
         return result
 
 
-
-
-
 def shipdict_from_dbase(record, config: Config):
     # todo check thse
 
     mapping = config.import_mapping
-    ship_dict_from_dbf = {}
+    ship_dict_from_dbf = {'category': 'Hire'}
     for k, v in record.items():
-        try:
-            if isinstance(v, str):
-                v = v.split('\x00')[0]
-                # v = re.sub(r'[:/\\|?*<">]', "_", v)
-                # v = re.sub(r'[:/\\|?*<">]', "_", v)
-            k = mapping[k]
-            logger.info(f'SHIPDICT_FROM_DBASE - {k} : {v}')
-            ship_dict_from_dbf.update({k: v})
-        except:
-            raise ShipDictError(f'ShipDictError: {k=},\n{v=}')
-    ship_dict_from_dbf.update({'category': 'Hire'})
+        if v:
+            try:
+                if isinstance(v, str):
+                    v = v.split('\x00')[0]
+                    # v = re.sub(r'[:/\\|?*<">]', "_", v)
+                    # v = re.sub(r'[:/\\|?*<">]', "_", v)
+                k = mapping.get(k, k)
+                logging.info(f'SHIPDICT_FROM_DBASE - {k} : {v}')
+                ship_dict_from_dbf.update({k: v})
+            except:
+                raise ShipDictError(f'ShipDictError: {k=},\n{v=}')
 
     return ship_dict_from_dbf
+
 
 def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     """parse amherst shipment xml"""
@@ -148,7 +141,7 @@ def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     for field in fields:
         k = field[0].text
         k = to_snake_case(k)
-        k=config.import_mapping.get(k)
+        k = config.import_mapping.get(k)
         v = field[1].text
         if v:
             k = unsanitise(k)

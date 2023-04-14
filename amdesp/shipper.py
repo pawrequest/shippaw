@@ -1,11 +1,10 @@
 import dataclasses
 import json
-import logging
 import os
 import re
+import subprocess
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 
 import PySimpleGUI as sg
 import dotenv
@@ -24,13 +23,12 @@ from amdesp.gui_layouts import BestMatch, get_address_button_string, new_date_se
     address_chooser_popup, tracking_viewer_window, compare_addresses_window, get_contact_frame, bulk_shipper_window, \
     booked_shipments_frame, get_date_label
 from amdesp.shipment import Shipment
-from amdesp.utils_pss.utils_pss import Utility
 
 dotenv.load_dotenv()
 
-logger = logging.getLogger(__name__)
 LIMITED_SHIPMENTS = 1
-
+from amdesp.config import get_amdesp_logger
+logger = get_amdesp_logger()
 
 @dataclasses.dataclass
 class FuzzyScoresCls:
@@ -69,8 +67,13 @@ class Shipper:
                 post_cleanup = self.post_book(shipments=booked_shipments)
             elif 'track' in mode:
                 # loading.close()
-                # tracking_loop(mode=mode, shipment=)
-                ...
+                shipments = Shipment.get_shipments(config=self.config, in_file=in_file)
+                for shipment in shipments:
+                    if shipment.outbound_id or shipment.inbound_id:
+                        self.tracking_loop(mode=mode, shipment=shipment, client=client)
+                else:
+                    exit() if sg.popup_yes_no('No inbound or outbound shipment id, close?') == 'Yes' else None
+
             else:
                 # loading.close()
 
@@ -82,17 +85,20 @@ class Shipper:
             exit()
 
     def tracking_loop(self, mode: str, shipment: Shipment, client: DespatchBaySDK):
-        if 'in' in mode:
+        for shipment_id in [shipment.outbound_id, shipment.inbound_id]:
             try:
-                tracking_viewer_window(shipment_id=shipment.inbound_id, client=client)
+                tracking_viewer_window(shipment_id=shipment_id, client=client)
+            except ApiException as e:
+                if 'No Tracking Data' in e.args[0].args[0]:
+                    logger.warning(f'No Tracking Data for {shipment.shipment_name}')
+                    sg.popup_error(f'No Tracking data for {shipment.shipment_name}')
+
+                else:
+                    logger.warning(f'ERROR for {shipment.shipment_name}')
+                    sg.popup_error(f'ERROR for {shipment.shipment_name}')
             except Exception as e:
                 # todo handle better
-                logger.critical(f"Error while tracking inbound shipment {shipment.inbound_id}: {e}")
-        elif 'out' in mode:
-            try:
-                tracking_viewer_window(shipment_id=shipment.outbound_id, client=client)
-            except Exception as e:
-                logger.critical(f"Error while tracking outbound shipment {shipment.outbound_id}: {e}")
+                logger.critical(f"Error while tracking shipment {shipment.shipment_name}: {e}")
 
     def prep_shipments(self, client: DespatchBaySDK, mode: str, shipments: {Shipment}):
         """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
@@ -147,7 +153,7 @@ class Shipper:
             except Exception as e:
                 shipments.pop(shipment)
                 logger.error(f'Error with {shipment.shipment_name}:\n'
-                             f'{e}')
+                              f'{e}')
                 continue
 
         return prepped_shipments
@@ -292,7 +298,6 @@ class Shipper:
                 continue
             else:
                 return new_address
-
 
     def queue_and_book(self, client: DespatchBaySDK, shipments: [Shipment]):
         config = self.config
@@ -693,10 +698,11 @@ def book_shipment(client: DespatchBaySDK, shipment: Shipment, shipment_id: str):
 def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name}.pdf at location specified in config.toml"""
     try:
-        label_pdf:Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id, label_layout='2A4')
+        label_pdf: Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id,
+                                                label_layout='2A4')
 
         printable_shipment_name = re.sub(r'[:/\\|?*<">]', "_", shipment.shipment_name)
-        label_string:str = printable_shipment_name + '.pdf'
+        label_string: str = printable_shipment_name + '.pdf'
         shipment.label_location = config.labels / label_string
         label_pdf.download(shipment.label_location)
     except:
@@ -747,13 +753,29 @@ def update_contact_from_gui(config: Config, contact: Sender | Recipient, values:
             setattr(contact, field, value)
 
 
+def powershell_runner(script_path: str, *params: str):
+    POWERSHELL_PATH = "powershell.exe"
+
+    commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
+    for param in params:
+        commandline_options.append("'" + param + "'")
+    logger.info(f'POWERSHELL RUNNER - COMMANDS: {commandline_options}')
+    process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    logger.info(f'POWERSHELL RUNNER - PROCESS RESULT: {process_result}')
+    if process_result.stderr:
+        raise RuntimeError(f'Std Error = {process_result.stderr}')
+
+    return process_result.returncode
+
+
 def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
     ps_script = str(config.cmc_logger)
     try:  # utility class static method runs powershell script bypassing execuction policy
-        commence_edit = Utility.powershell_runner(ps_script,
-                                                  shipment.category, shipment.shipment_name, id_to_pass, str(shipment.is_return))
+        commence_edit = powershell_runner(ps_script, shipment.category, shipment.shipment_name, id_to_pass,
+                                          str(shipment.is_return))
     except RuntimeError as e:
         sg.popup_scrolled(f'Unable to log to commence, Runtime error:\n{e}')
         shipment.logged_to_commence = False

@@ -5,95 +5,17 @@ import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
 from amdesp.despatchbay.despatchbay_entities import Address, CollectionDate
-from amdesp.config import Config
+from amdesp.config import Config, get_amdesp_logger
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
+from amdesp.gui_params import default_params, address_head_params, head_params, date_head_params, boxes_head_params, \
+    shipment_params, address_fieldname_params, address_input_params, option_menu_params, boxes_params, address_params, \
+    date_params
 from amdesp.shipment import Shipment
 
+logger=get_amdesp_logger()
+
+
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
-
-default_params = {
-    'font': 'Rockwell 14',
-    'element_padding': (25, 5),
-    'border_width': 3,
-}
-
-shipment_params = {
-    'size': (22, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-    'border_width': 4,
-    'relief': sg.RELIEF_GROOVE,
-}
-
-head_params = {
-    'size': (22, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-}
-
-date_params = {
-    'size': (12, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-    'border_width': 4,
-    'relief': sg.RELIEF_GROOVE,
-}
-
-date_head_params = {
-    'size': (12, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-}
-
-address_params = {
-    'size': (30, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-    'border_width': 4,
-    'relief': sg.RELIEF_GROOVE,
-    'auto_size_text': True,
-}
-
-address_head_params = {
-    'size': (30, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-}
-
-boxes_head_params = {
-    'size': (5, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-    # 'auto_size_text': True,
-}
-
-boxes_params = {
-    'size': (5, 2),
-    'justification': 'center',
-    'pad': (5, 5),
-    'border_width': 4,
-    'relief': sg.RELIEF_GROOVE,
-    # 'auto_size_text': True,
-}
-
-address_input_params = {
-    'size': (18, 1),
-    'justification': 'left',
-    'expand_x': True,
-    'pad': (20, 8),
-}
-
-address_fieldname_params = {
-    'size': (15, 1),
-    'justification': 'center',
-    'pad': (20, 8),
-}
-
-option_menu_params = {
-    'pad': (10, 5),
-    'size': (30, 1),
-    'readonly': True,
-}
 
 
 def bulk_shipper_window(shipments: [Shipment], config: Config):
@@ -266,38 +188,35 @@ def shipment_ids_frame() -> sg.Frame:
 
 
 def tracking_viewer_window(shipment_id, client):
-    try:
-        shipment = client.get_shipment(shipment_id)
-        tracking_numbers = [parcel.tracking_number for parcel in shipment.parcels]
-        tracking_d = {}
-        sublayout = []
-        parcel_frame = None
-        signatory = None
-        params = {}
-        for tracked_parcel in tracking_numbers:
-            tracking = client.get_tracking(tracked_parcel)
-            # courier = tracking['CourierName'] # debug unused?
-            # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
-            history = tracking['TrackingHistory']
-            for event in history:
-                if 'delivered' in event.Description.lower():
-                    signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-                    params.update({'background_color': 'aquamarine', 'text_color': 'red'})
+    logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {shipment_id}')
+    shipment_return = client.get_shipment(shipment_id)
+    tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
+    tracking_d = {}
+    sublayout = []
+    parcel_frame = None
+    signatory = None
+    params = {}
+    for tracked_parcel in tracking_numbers:
+        tracking = client.get_tracking(tracked_parcel)
+        # courier = tracking['CourierName'] # debug unused?
+        # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
+        history = tracking['TrackingHistory']
+        for event in history:
+            if 'delivered' in event.Description.lower():
+                signatory = f"{chr(10)}Signed for by: {event.Signatory}"
+                params.update({'background_color': 'aquamarine', 'text_color': 'red'})
 
-                event_text = sg.T(
-                    f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
-                    **params)
-                sublayout.append([event_text])
+            event_text = sg.T(
+                f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
+                **params)
+            sublayout.append([event_text])
 
-            parcel_frame = [sg.Column(sublayout)]
-            tracking_d.update({tracked_parcel: tracking})
+        parcel_frame = [sg.Column(sublayout)]
+        tracking_d.update({tracked_parcel: tracking})
 
-    except Exception as e:
-        sg.popup_error(e)
-    else:
-        shipment.tracking_dict = tracking_d
-        tracking_window = sg.Window('', [parcel_frame])
-        tracking_window.read()
+    shipment_return.tracking_dict = tracking_d
+    tracking_window = sg.Window('', [parcel_frame])
+    tracking_window.read()
 
 
 def get_address_dict_frame(config: Config, address_dict):

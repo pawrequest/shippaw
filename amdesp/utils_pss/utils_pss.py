@@ -1,24 +1,7 @@
 # import sys
 import subprocess
 
-import logging
 import sys
-
-logger = logging.getLogger(name=__name__)
-logfile = f'{__file__.replace("py", "log")}'
-logging.basicConfig(
-    level=logging.INFO,
-    format='{asctime} {levelname:<8} {message}',
-    style='{',
-    handlers=[
-        logging.FileHandler(logfile, mode='w'),
-        logging.StreamHandler(sys.stdout)
-    ])
-
-
-# import win32gui
-# from pyexcel_ods3 import get_data
-
 class DictObj:
     def __init__(self, in_dict: dict):
         assert isinstance(in_dict, dict)
@@ -39,10 +22,8 @@ class Utility:
         for param in params:
             # todo type annotation is wrong
             commandline_options.append("'" + param + "'")
-        logger.info(f'POWERSHELL RUNNER - COMMANDS: {commandline_options}')
         process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         universal_newlines=True)
-        logger.info(f'POWERSHELL RUNNER - PROCESS RESULT: {process_result}')
         if process_result.stderr:
             raise RuntimeError(f'Std Error = {process_result.stderr}')
 
