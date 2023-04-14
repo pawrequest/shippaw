@@ -77,9 +77,7 @@ if __name__ == '__main__':
     # AmDesp called from commandline, i.e launched from Commence vbs script - parse args for mode
     logging.info(f'launched with arguments:{sys.argv}')
     if len(sys.argv) > 1:
-        sg.popup(f'AmDesp called from commandline'
-                 f'Arguments:'
-                 f'{[arg + os.linesep for arg in sys.argv]}')
+        [logger.info(f'CONFIG - {arg + os.linesep}') for arg in sys.argv]
         mode = sys.argv[1]
         in_file = sys.argv[2]
         sandbox = False
