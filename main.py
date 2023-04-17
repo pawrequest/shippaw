@@ -1,3 +1,20 @@
+import sys
+
+from amdesp.config import Config, ROOT_DIR, LOG_FILE, ShipMode
+from amdesp.shipper import Shipper
+import PySimpleGUI as sg
+import logging
+
+# STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
+# STORED_XML = r'c:\amdesp\data\amship.xml'
+# INPUT_FILE = STORED_XML
+
+STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
+INPUT_FILE = STORED_DBASE
+FAKE_MODE = 'ship_out'
+FAKE_SANDBOX = False
+
+
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
 modes = [ship_in, ship_out, track_in, track_out]
@@ -18,12 +35,6 @@ includes
 # todo better logging
 # todo async / multiproces
 
-import sys
-
-from amdesp.config import Config, ROOT_DIR, LOG_FILE, ShipMode
-from amdesp.shipper import Shipper
-import PySimpleGUI as sg
-import logging
 
 logger = logging.getLogger(name='AmDesp_logger')
 logging.basicConfig(
@@ -38,14 +49,6 @@ logger.info('logger')
 
 # get stored data files for non CLI
 
-# STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
-# STORED_XML = r'c:\amdesp\data\amship.xml'
-# INPUT_FILE = STORED_XML
-
-STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
-INPUT_FILE = STORED_DBASE
-FAKE_MODE = 'ship_in'
-FAKE_SANDBOX = False
 
 
 def main(main_mode: str, main_sandbox: bool, infile: str):
