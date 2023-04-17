@@ -193,11 +193,12 @@ def tracking_viewer_window(shipment_id, client):
     shipment_return = client.get_shipment(shipment_id)
     tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
     tracking_d = {}
-    sublayout = []
-    parcel_frame = None
-    signatory = None
-    params = {}
+    layout = []
     for tracked_parcel in tracking_numbers:
+        parcel_layout = []
+        parcel_col = None
+        signatory = None
+        params = {}
         tracking = client.get_tracking(tracked_parcel)
         # courier = tracking['CourierName'] # debug unused?
         # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
@@ -210,13 +211,15 @@ def tracking_viewer_window(shipment_id, client):
             event_text = sg.T(
                 f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
                 **params)
-            sublayout.append([event_text])
 
-        parcel_frame = [sg.Column(sublayout)]
+            parcel_layout.append([event_text])
+
+        parcel_col = sg.Column(parcel_layout)
+        layout.append(parcel_col)
         tracking_d.update({tracked_parcel: tracking})
 
     shipment_return.tracking_dict = tracking_d
-    tracking_window = sg.Window('', [parcel_frame])
+    tracking_window = sg.Window('', layout)
     tracking_window.read()
 
 

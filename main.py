@@ -11,8 +11,10 @@ import logging
 
 STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
 INPUT_FILE = STORED_DBASE
-FAKE_MODE = 'ship_out'
+# FAKE_MODE = 'ship_out'
+FAKE_MODE = 'track'
 FAKE_SANDBOX = True
+# FAKE_SANDBOX = False
 
 
 """
@@ -61,12 +63,6 @@ def main(main_mode: str, main_sandbox: bool, infile: str):
 		config.log_config()
 		client = config.get_dbay_client_ag(sandbox=sandbox)
 		# config.setup_amdesp(sandbox=sandbox, client=client)
-		if mode == 'ship_out':
-			outbound = True
-		elif mode == 'ship_in':
-			outbound = False
-		else:
-			logger.exception('MODE FAULT')
 
 		shipper = Shipper(config=config)
 		shipper.dispatch(client=client, in_file=infile, config=config)
@@ -82,7 +78,7 @@ if __name__ == '__main__':
 		# exe location = 0
 		mode = sys.argv[1].lower()
 		in_file = sys.argv[2].lower()
-		sandbox = False
+		sandbox = True
 
 	# AmDesp called from IDE - inject mode
 	else:

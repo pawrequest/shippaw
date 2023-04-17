@@ -184,7 +184,7 @@ class Config:
                 logger.info(f'Despatchbay account retrieved: {dbay_account}')
             except AuthorizationException as e:
                 first_try = False
-                api_user, api_key = self.creds_from_user(scope=scope)
+                api_user, api_key = self.creds_from_user(sandbox=sandbox)
                 client = DespatchBaySDK(api_user=api_user, api_key=api_key)
                 continue
             else:
