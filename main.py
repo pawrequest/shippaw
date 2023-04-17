@@ -12,7 +12,7 @@ import logging
 STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
 INPUT_FILE = STORED_DBASE
 FAKE_MODE = 'ship_out'
-FAKE_SANDBOX = False
+FAKE_SANDBOX = True
 
 
 """
@@ -60,6 +60,7 @@ def main(main_mode: str, main_sandbox: bool, infile: str):
 
 		config.log_config()
 		client = config.get_dbay_client_ag(sandbox=sandbox)
+		# config.setup_amdesp(sandbox=sandbox, client=client)
 		if mode == 'ship_out':
 			outbound = True
 		elif mode == 'ship_in':

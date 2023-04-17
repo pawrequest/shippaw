@@ -21,7 +21,7 @@ from amdesp.despatchbay.exceptions import ApiException
 from amdesp.exceptions import WindowClosedError
 
 from amdesp.gui_layouts import get_address_button_string, new_date_selector, new_service_selector, \
-    address_chooser_popup, tracking_viewer_window, compare_addresses_window, get_remote_contact_frame, \
+    address_chooser_popup, tracking_viewer_window, compare_addresses_window, get_contact_frame, \
     bulk_shipper_window, \
     booked_shipments_frame, get_date_label
 from amdesp.shipment import Shipment
@@ -80,19 +80,18 @@ class Shipper:
                 logger.info(f'{len(booked_shipments)} BOOKED SHIPMENTS')
 
                 post_cleanup = self.post_book(shipments=booked_shipments)
+
             elif 'track' in mode:
                 # loading.close()
                 shipments = Shipment.get_shipments(config=self.config, dbase_file=in_file)
                 for shipment in shipments:
                     if shipment.outbound_id or shipment.inbound_id:
-                        self.tracking_loop(mode=mode, shipment=shipment, client=client)
-                else:
-                    exit() if sg.popup_yes_no('No inbound or outbound shipment id, close?') == 'Yes' else None
+                        result = self.tracking_loop(shipment=shipment, client=client)
+                        ...
 
             else:
-                # loading.close()
+                raise ValueError('Ship Mode Fault')
 
-                ...
         except Exception as e:
             # loading.close()
             logger.exception('DISPATCH EXCEPTION')
@@ -101,21 +100,31 @@ class Shipper:
         if sg.popup_yes_no("Close?") == 'Yes':
             sys.exit()
 
-    def tracking_loop(self, mode: str, shipment: Shipment, client: DespatchBaySDK):
-        for shipment_id in [shipment.outbound_id, shipment.inbound_id]:
-            try:
-                tracking_viewer_window(shipment_id=shipment_id, client=client)
-            except ApiException as e:
-                if 'No Tracking Data' in e.args[0].args[0]:
-                    logger.warning(f'No Tracking Data for {shipment.shipment_name_printable}')
-                    sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
+    def tracking_loop(self, shipment: Shipment, client: DespatchBaySDK):
+        try:
+            for shipment_id in [shipment.outbound_id, shipment.inbound_id]:
+                if not shipment_id:
+                    continue
+                try:
+                    tracking_viewer_window(shipment_id=shipment_id, client=client)
+                except ApiException as e:
+                    if 'no tracking data' in e.args.__repr__().lower():
+                        logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
+                    if 'not found' in e.args.__repr__().lower():
+                        logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
+                        sg.popup_error(f'Shipment ({shipment.shipment_name_printable}) not found')
 
-                else:
-                    logger.warning(f'ERROR for {shipment.shipment_name_printable}')
-                    sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
-            except Exception as e:
-                # todo handle better
-                logger.critical(f"Error while tracking shipment {shipment.shipment_name_printable}: {e}")
+                    else:
+                        logger.warning(f'ERROR for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
+                except Exception as e:
+                    # todo handle better
+                    logger.critical(f"Error while tracking shipment {shipment.shipment_name_printable}: {e}")
+        except Exception as e:
+            ...
+        else:
+            return 0
 
     def prep_shipments(self, config: Config, client: DespatchBaySDK, shipments: {Shipment}):
         """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
@@ -268,8 +277,8 @@ class Shipper:
         config = self.config
         # contact = shipment.get_sender_or_recip()
 
-        address_frame = get_remote_contact_frame(contact=contact, address=address, config=config)
-        window = sg.Window('Address', layout=[[address_frame]])
+        contact_frame = get_contact_frame(contact=contact, address=address, config=config)
+        window = sg.Window('Address', layout=[[contact_frame]])
 
         while True:
             if not window:
@@ -330,7 +339,7 @@ class Shipper:
 
                 sg.popup_quick_message(f'Adding shipment {shipment.shipment_name_printable}', keep_on_top=True)
                 shipment_id = client.add_shipment(shipment.shipment_request)
-                setattr(shipment, f'{"inbound_id" if shipment.is_return else "outbound_id"}', shipment_id)
+                setattr(shipment, f'{"outbound_id" if config.outbound else "inbound_id"}', shipment_id)
 
                 sg.popup_quick_message(f'Booking shipment {shipment.shipment_name_printable}', keep_on_top=True)
                 shipment_return = book_shipment(client=client, shipment=shipment, shipment_id=shipment_id)
@@ -773,9 +782,12 @@ def powershell_runner(script_path: str, *params: str):
                                     universal_newlines=True)
     logger.info(f'POWERSHELL RUNNER - PROCESS RESULT: {process_result}')
     if process_result.stderr:
-        raise RuntimeError(f'Std Error = {process_result.stderr}')
-
-    return process_result.returncode
+        if "Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
+            raise RuntimeError('CmCLibNet is not installed')
+        else:
+            raise RuntimeError(f'Std Error = {process_result.stderr}')
+    else:
+        return process_result.returncode
 
 
 def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
@@ -784,9 +796,10 @@ def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
     ps_script = str(config.paths.cmc_logger)
     try:  # utility class static method runs powershell script bypassing execuction policy
         commence_edit = powershell_runner(ps_script, shipment.category, shipment.shipment_name, id_to_pass,
-                                          str(shipment.is_return))
+                                          str(not config.outbound))
     except RuntimeError as e:
-        sg.popup_scrolled(f'Unable to log to commence, Runtime error:\n{e}')
+        logger.exception('Error logging to commence')
+        sg.popup_scrolled(f'Error logging to commence - is it running?')
         shipment.logged_to_commence = False
     else:
         if commence_edit == 0:

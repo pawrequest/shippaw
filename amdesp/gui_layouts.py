@@ -357,7 +357,7 @@ def get_date_button(date_col, date_name, shipment):
     return collection_date_button
 
 
-def get_remote_contact_frame(config: Config, contact: Contact, address: Address):
+def get_contact_frame(config: Config, contact: Contact, address: Address):
     layout = [
         [sg.Text(f'Name:', **address_fieldname_params),
          sg.InputText(f'{contact.name}', key=f'-NAME-', **address_input_params)],

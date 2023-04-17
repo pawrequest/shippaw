@@ -26,7 +26,6 @@ class Shipment:
 	def __init__(self, ship_dict: dict):
 		"""
 		:param ship_dict: a dictionary of shipment details
-		:param is_return: recipient is user's own sender_address[0]
 		"""
 
 		self.address_as_str: str = ship_dict.get('address_as_str')
@@ -78,9 +77,6 @@ class Shipment:
 		[logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
 
 
-
-	def get_sender_or_recip(self):
-		return self.sender if self.is_return else self.recipient
 
 	@classmethod
 	def get_shipments(cls, config: Config, dbase_file: str) -> list:
