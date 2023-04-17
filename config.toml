@@ -1,4 +1,19 @@
-export_fields = [
+
+[paths]
+data = 'data/'
+scripts = 'scripts/'
+labels = 'data/Parcelforce Labels/'
+log_json = 'data/AmLog.json'
+cmc_checkin = 'scripts/cmc_checkin.ps1'
+cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
+cmc_installer = 'scripts/CmcLibNet_Setup.exe'
+stored_xml = 'data/AmShip.xml'
+user_data = 'data/user_data.pk'
+
+
+[fields]
+export = [
     'category',
     'collection_booked',
     'customer',
@@ -10,8 +25,7 @@ export_fields = [
     'outbound_id',
     'shipment_name',
     'timestamp']
-
-shipment_fields = [
+shipment = [
     'boxes',
     'category',
     'address_as_str',
@@ -25,9 +39,7 @@ shipment_fields = [
     'outbound_id',
     'shipment_name',
 ]
-
-
-address_fields = [
+address = [
     'company_name',
     'street',
     'locality',
@@ -35,8 +47,7 @@ address_fields = [
     'county',
     'postal_code',
 ]
-
-contact_fields = [
+contact = [
     'telephone',
     'name',
     'email',
@@ -62,11 +73,14 @@ FIELD17 = 'customer'
 NAME = 'shipment_name'
 FIELD10 = 'customer'
 
-
-[home_address]
-contact = 'Giles Toman'
+[home_contact]
+name = 'Giles Toman'
 email = 'radios@amherst.co.uk'
 telephone = "0207 3289792"
+
+[home_address]
+address_id = 5536 # remove from .env
+dbay_key = 'NW64TE1003'
 company_name = 'Amherst Radio Center'
 street = '70 Kingsgate Road'
 locality = 'Kilburn'
@@ -74,7 +88,6 @@ town_city = 'London'
 county = "London"
 postal_code = "NW6 4TE"
 country_code = "GB"
-address_id = 5536 # remove from .env
 search_term = 'amherst'
 parcel_contents = 'Radios'
 
@@ -116,18 +129,4 @@ postal_code = 'Postcode'
     service = 101  # parcelforce 24
     api_user = "DESPATCH_API_USER"
     api_key = "DESPATCH_API_KEY"
-
-
-[paths]
-data = 'data/'
-scripts = 'scripts/'
-labels = 'data/Parcelforce Labels/'
-log_json = 'data/AmLog.json'
-cmc_checkin = 'scripts/cmc_checkin.ps1'
-cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
-cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
-cmc_installer = 'scripts/CmcLibNet_Setup.exe'
-stored_xml = 'data/AmShip.xml'
-
-
 

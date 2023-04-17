@@ -1,24 +1,21 @@
-from collections import namedtuple
 from datetime import datetime
 
 import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
 from amdesp.despatchbay.despatchbay_entities import Address, CollectionDate
-from amdesp.config import Config, get_amdesp_logger
+from amdesp.config import Config, get_amdesp_logger, Contact
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.gui_params import default_params, address_head_params, head_params, date_head_params, boxes_head_params, \
     shipment_params, address_fieldname_params, address_input_params, option_menu_params, boxes_params, address_params, \
     date_params
 from amdesp.shipment import Shipment
 
-logger=get_amdesp_logger()
-
-
-BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
+logger = get_amdesp_logger()
 
 
 def bulk_shipper_window(shipments: [Shipment], config: Config):
+    logger.info('BULK SHIPPER WINDOW')
     if config.sandbox:
         sg.theme('Tan')
     else:
@@ -28,8 +25,8 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
     layout = []
     headers = [
         sg.Sizer(30, 0),
-        sg.T('Sender', **address_head_params),
         sg.T('Contact / Customer', **head_params),
+        sg.T('Sender', **address_head_params),
         sg.T('Recipient', **address_head_params),
         sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
@@ -50,19 +47,24 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
 
         num_parcels = len(shipment.parcels)
 
-        remove_button = sg.Button('remove', k=f'-{shipment.shipment_name}_REMOVE-')
-        customer_display = sg.T(f'{shipment.contact}\n{shipment.customer}', **shipment_params)
+        remove_button = sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-')
+        customer_display = sg.T(f'{shipment.contact_name}\n{shipment.customer}', **shipment_params)
         collection_date_button = get_date_button(date_col, date_name, shipment)
         sender_button = get_sender_button(sender_address_name, shipment)
         recipient_button = get_recip_button(recipient_address_name, shipment)
         parcels_button = get_parcels_button(num_parcels, shipment)
         service_name_button = get_service_button(num_parcels, service_col, shipment)
 
-        frame_lay = [
-            [sender_button, customer_display, recipient_button, collection_date_button,
-             parcels_button, service_name_button, remove_button]
-        ]
-        frame = sg.Frame('', layout=frame_lay, k=f'-SHIPMENT_{shipment.shipment_name}-'.upper())
+        frame_lay = [[
+            customer_display,
+            sender_button,
+            recipient_button,
+            collection_date_button,
+            parcels_button,
+            service_name_button,
+            remove_button
+        ]]
+        frame = sg.Frame('', layout=frame_lay, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
 
         layout.append([frame])
 
@@ -79,7 +81,6 @@ def booked_shipments_frame(shipments: [Shipment]):
         'expand_y': True,
         'size': (25, 2)
     }
-
 
     result_layout = []
     for shipment in shipments:
@@ -100,7 +101,7 @@ def booked_shipments_frame(shipments: [Shipment]):
 def get_address_frame(config: Config, address: Address, index: str = None) -> sg.Frame:
     layout = []
     params = address_fieldname_params.copy()
-    address_fields = config.address_fields
+    address_fields = config.fields.address
     input_text = ''
     for field in address_fields:
         if index:
@@ -221,7 +222,7 @@ def tracking_viewer_window(shipment_id, client):
 
 def get_address_dict_frame(config: Config, address_dict):
     layout = []
-    address_fields = config.address_fields
+    address_fields = config.fields.address
     for field in address_fields:
         upper_key = f'-ADDRESS_DICT_{field}-'.upper()
         lower_key = f'-ADDRESS_DICT_{field}-'.lower()
@@ -242,10 +243,10 @@ def get_address_dict_frame(config: Config, address_dict):
     return frame
 
 
-def shipment_name_element() -> sg.Text:
+def shipment_name_printable_element() -> sg.Text:
     element = sg.Text('', expand_x=True, expand_y=True, justification='center',
                       font='Rockwell 30',
-                      border_width=8, relief=sg.RELIEF_GROOVE, k='-SHIPMENT_NAME-')
+                      border_width=8, relief=sg.RELIEF_GROOVE, k='-shipment_name_printable-')
     return element
 
 
@@ -326,45 +327,46 @@ def new_service_selector(shipment: Shipment, location):
 def get_service_button(num_parcels, service_col, shipment):
     service_name_button = sg.Text(f'{shipment.service.name} \n£{num_parcels * shipment.service.cost}',
                                   background_color=service_col, enable_events=True,
-                                  k=f'-{shipment.shipment_name.upper()}_SERVICE-', **shipment_params)
+                                  k=f'-{shipment.shipment_name_printable.upper()}_SERVICE-', **shipment_params)
     return service_name_button
 
 
 def get_parcels_button(num_parcels, shipment):
-    parcels_button = sg.Text(f'{num_parcels}', k=f'-{shipment.shipment_name.upper()}_BOXES-', enable_events=True,
+    parcels_button = sg.Text(f'{num_parcels}', k=f'-{shipment.shipment_name_printable.upper()}_BOXES-',
+                             enable_events=True,
                              **boxes_params)
     return parcels_button
 
 
 def get_recip_button(recipient_address_name, shipment):
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
-                               k=f'-{shipment.shipment_name.upper()}_RECIPIENT-', **address_params)
+                               k=f'-{shipment.shipment_name_printable.upper()}_RECIPIENT-', **address_params)
     return recipient_button
 
 
 def get_sender_button(sender_address_name, shipment):
     sender_button = sg.Text(sender_address_name, enable_events=True,
-                            k=f'-{shipment.shipment_name.upper()}_SENDER-', **address_params)
+                            k=f'-{shipment.shipment_name_printable.upper()}_SENDER-', **address_params)
 
     return sender_button
 
 
 def get_date_button(date_col, date_name, shipment):
     collection_date_button = sg.Text(date_name, background_color=date_col, enable_events=True,
-                                     k=f'-{shipment.shipment_name.upper()}_DATE-', **date_params)
+                                     k=f'-{shipment.shipment_name_printable.upper()}_DATE-', **date_params)
     return collection_date_button
 
 
-def get_contact_frame(shipment: Shipment, config: Config, address: Address):
+def get_remote_contact_frame(config: Config, contact: Contact, address: Address):
     layout = [
         [sg.Text(f'Name:', **address_fieldname_params),
-         sg.InputText(f'{shipment.contact}', key=f'-NAME-', **address_input_params)],
+         sg.InputText(f'{contact.name}', key=f'-NAME-', **address_input_params)],
 
         [sg.Text(f'Email:', **address_fieldname_params),
-         sg.InputText(f'{shipment.email}', key=f'-EMAIL-', **address_input_params)],
+         sg.InputText(f'{contact.email}', key=f'-EMAIL-', **address_input_params)],
 
         [sg.Text(f'Telephone:', **address_fieldname_params),
-         sg.InputText(f'{shipment.telephone}', key=f'-TELEPHONE-', **address_input_params)],
+         sg.InputText(f'{contact.telephone}', key=f'-TELEPHONE-', **address_input_params)],
 
         [get_address_frame(address=address, config=config)],
 
@@ -372,7 +374,7 @@ def get_contact_frame(shipment: Shipment, config: Config, address: Address):
     ]
 
     # noinspection PyTypeChecker
-    frame = sg.Frame(f'Remote Address', layout=layout, k=f'-REMOTE_ADDRESS-', pad=20, font="Rockwell 30",
+    frame = sg.Frame(f'Address Finder', layout=layout, k=f'-REMOTE_ADDRESS-', pad=20, font="Rockwell 30",
                      border_width=5, relief=sg.RELIEF_GROOVE,
                      title_location=sg.TITLE_LOCATION_TOP)
     return frame

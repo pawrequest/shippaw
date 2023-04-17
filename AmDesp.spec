@@ -5,7 +5,6 @@ block_cipher = None
 
 added_files = [
                 ('config.toml', '.'),
-                ('.env', '.'),
                 ('scripts/', './scripts/'),
                 ('data/', './data/'),
                 ]

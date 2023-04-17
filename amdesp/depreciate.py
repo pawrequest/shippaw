@@ -5,7 +5,7 @@ from amdesp.shipment import parse_amherst_address_string
 
 def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
     """parse amherst shipment xml"""
-    shipment_fields = config.shipment_fields
+    shipment_fields = config.fields.shipment
     ship_dict = dict()
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -790,7 +790,7 @@ def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config)
 #
 # def update_address_from_gui(config: Config, shipment: Shipment, sender_or_recip: Sender | Recipient, values: dict):
 #     address_to_edit = sender_or_recip.sender_address if shipment.is_return else sender_or_recip.recipient_address
-#     address_fields = config.address_fields
+#     address_fields = config.fields.address
 #     for field in address_fields:
 #         value = values.get(f'-{type(sender_or_recip).__name__.upper()}_{field.upper()}-', None)
 #         setattr(address_to_edit, field, value)
@@ -801,7 +801,7 @@ def non_address_prep(shipment: Shipment, client: DespatchBaySDK, config: Config)
 #
 # def ship_dict_from_xml(config: Config, xml_file: str) -> dict:
 #     """parse amherst shipment xml"""
-#     shipment_fields = config.shipment_fields
+#     shipment_fields = config.fields.shipment
 #     ship_dict = dict()
 #     tree = ET.parse(xml_file)
 #     root = tree.getroot()
@@ -973,3 +973,63 @@ def get_service(client: DespatchBaySDK, config: Config, shipment: Shipment):
 
     return next((service for service in services if service.service_id == config.dbay['service']),
                 services[0])
+
+
+#
+#
+# def get_remote_sender(client: DespatchBaySDK, shipment: Shipment, remote_address: Address) -> Sender:
+#     return client.sender(
+#         name=shipment.contact,
+#         email=shipment.email,
+#         telephone=shipment.telephone,
+#         sender_address=remote_address)
+#
+#
+# def get_remote_recip(shipment: Shipment, client: DespatchBaySDK, remote_address: Address) -> Sender:
+#     recip = client.recipient(
+#         name=shipment.contact,
+#         email=shipment.email,
+#         telephone=shipment.telephone,
+#         recipient_address=remote_address)
+#     logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+#     return recip
+
+
+
+
+#
+# def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
+#     """ return a dbay sender object representing home address defined in toml / Shipper.config"""
+#     sender = client.sender(
+#         address_id=config.home_contact['address_id'],
+#         name=config.home_address['contact'],
+#         email=config.home_address['email'],
+#         telephone=config.home_address['telephone'],
+#         sender_address=client.get_sender_addresses()[0].sender_address
+#     )
+#     logger.info(f'PREP - GET HOME SENDER {sender}')
+#     return sender
+
+
+# def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
+#     """ return a dbay recipient object representing home address defined in toml / Shipper.config"""
+#     return client.recipient(
+#         name=config.home_address['contact'],
+#         email=config.home_address['email'],
+#         telephone=config.home_address['telephone'],
+#         recipient_address=client.find_address(config.home_address['postal_code'],
+#                                               config.home_address['search_term'])
+#     )
+
+
+
+def update_remote_address_from_gui(config: Config, values: dict):
+    contact_fields = config.fields.contact
+    for field in contact_fields:
+        ...
+
+
+# value = values.get(address_frame_key)
+# if all([value, field]):
+#     setattr(address, field, value)
+
