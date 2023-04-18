@@ -1,7 +1,0 @@
-README.md
-setup.py
-AmDesp.egg-info/PKG-INFO
-AmDesp.egg-info/SOURCES.txt
-AmDesp.egg-info/dependency_links.txt
-AmDesp.egg-info/requires.txt
-AmDesp.egg-info/top_level.txt
