@@ -1,0 +1,134 @@
+export_fields = [
+    'category',
+    'collection_booked',
+    'customer',
+    'is_return',
+    'boxes',
+    'recipient',
+    'sender',
+    'inbound_id',
+    'outbound_id',
+    'shipment_name',
+    'timestamp']
+
+shipment_fields = [
+    'boxes',
+    'category',
+    'address_as_str',
+    'cost',
+    'email',
+    'postcode',
+    'telephone',
+    'search_term',
+    'date',
+    'inbound_id',
+    'outbound_id',
+    'shipment_name',
+]
+
+
+address_fields = [
+    'company_name',
+    'street',
+    'locality',
+    'town_city',
+    'county',
+    'postal_code',
+]
+
+contact_fields = [
+    'telephone',
+    'name',
+    'email',
+]
+
+[import_mapping]
+DELIVERY_A = 'address_as_str'
+DELIVERY_C = 'contact'
+DELIVERY_E = 'email'
+DELIVERY_N = 'delivery_name'
+DELIVERY_P = 'postcode'
+DELIVERY_R = 'delivery_ref'
+DELIVERY_T = 'telephone'
+BOXES = 'boxes'
+DB_LABEL_P = 'label_printed'
+SEND___COL = 'send_collect'
+SEND_METHO = 'send_method'
+SEND_OUT_D = 'send_out_date'
+INBOUND_ID = 'inbound_id'
+OUTBOUND_I = 'outbound_id'
+STATUS = 'status'
+FIELD17 = 'customer'
+NAME = 'shipment_name'
+FIELD10 = 'customer'
+
+
+[home_address]
+contact = 'Giles Toman'
+email = 'radios@amherst.co.uk'
+telephone = "0207 3289792"
+company_name = 'Amherst Radio Center'
+street = '70 Kingsgate Road'
+locality = 'Kilburn'
+town_city = 'London'
+county = "London"
+postal_code = "NW6 4TE"
+country_code = "GB"
+address_id = 5536 # remove from .env
+search_term = 'amherst'
+parcel_contents = 'Radios'
+
+
+[datetime_masks]
+DT_DISPLAY = '%A - %B %#d'
+DT_HIRE = '%d/%m/%Y'
+DT_DB = '%Y-%m-%d'
+
+[gui_map]
+shipment_name = 'Shipment Name'
+boxes = 'Boxes'
+category = 'Category'
+delivery_address = 'Delivery Address'
+delivery_contact = 'Delivery Contact'
+delivery_email = 'Delivery Email'
+delivery_postcode = 'Delivery Postcode'
+delivery_tel = 'Delivery Tel'
+delivery_telephone = 'Delivery Telephone'
+search_term = 'Search Term'
+send_out_date = 'Send Out Date'
+inbound_id = 'Inbound ID'
+outbound_id = 'Outbound ID'
+county = 'County'
+town_city = 'Town / City'
+company_name = 'Company Name'
+postal_code = 'Postcode'
+
+
+[dbay]
+    [dbay.sand]
+    courier = 99
+    service = 9992
+    api_user = "DESPATCH_API_USER_SANDBOX"
+    api_key = "DESPATCH_API_KEY_SANDBOX"
+
+    [dbay.prod]
+    courier = 8  # parcelforce
+    service = 101  # parcelforce 24
+    api_user = "DESPATCH_API_USER"
+    api_key = "DESPATCH_API_KEY"
+
+
+[paths]
+data = 'data/'
+scripts = 'scripts/'
+labels = 'data/Parcelforce Labels/'
+log_json = 'data/AmLog.json'
+cmc_checkin = 'scripts/cmc_checkin.ps1'
+cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
+cmc_installer = 'scripts/CmcLibNet_Setup.exe'
+dbase_import = 'c:\paul\shipments.dbf'
+stored_xml = 'data/AmShip.xml'
+
+
+
