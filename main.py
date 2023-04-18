@@ -1,3 +1,9 @@
+# todo updates commence when shipment delivered
+# todo tests
+# todo better logging
+# todo async / multiproces
+# todo api rate limit avoidance
+
 import sys
 
 from amdesp.config import Config, ROOT_DIR, LOG_FILE, ShipMode, get_amdesp_logger
@@ -39,10 +45,6 @@ includes
 + Vovin CmcLibNet installer for interacting with commence
 """
 
-# todo updates commence when shipment delivered
-# todo tests
-# todo better logging
-# todo async / multiproces
 
 logger = get_amdesp_logger()
 
