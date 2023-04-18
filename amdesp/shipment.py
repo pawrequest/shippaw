@@ -102,8 +102,7 @@ class Shipment:
 			dbase_file = sg.popup_get_file('No Dbase File - select one now')
 			shipments = cls.get_shipments(config=config, dbase_file=dbase_file)
 		except Exception as e:
-			logger.error(e)
-			raise DbaseError(*e.args)
+			logger.exception(e)
 
 		return shipments
 

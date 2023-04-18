@@ -9,7 +9,8 @@ import logging
 # STORED_XML = r'c:\amdesp\data\amship.xml'
 # INPUT_FILE = STORED_XML
 
-STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
+# STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
+STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_sale.dbf')
 INPUT_FILE = STORED_DBASE
 
 FAKE_MODE = 'ship_out'
