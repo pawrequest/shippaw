@@ -9,15 +9,16 @@ DELIVERY_R = 'delivery_ref'     # delivery reference
 DELIVERY_T = 'telephone'        # telephone number for remote contact
 BOXES = 'boxes'                 # number of boxes in shipment
 #DB_LABEL_P = 'label_printed'    # has a label been printed? depric
-#SEND___COL = 'send_collect'     #
-SEND_METHO = 'send_method'
-SEND_OUT_D = 'send_out_date'
-INBOUND_ID = 'inbound_id'
-OUTBOUND_I = 'outbound_id'
+#SEND___COL = 'send_collect'     # any use?
+SEND_METHO = 'send_method'      # contains marcelforce?
+SEND_OUT_D = 'send_out_date'    # hire record send out date
+INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
+OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
 #STATUS = 'status'
-NAME = 'shipment_name'
-FIELD10 = 'customer'
-FIELD17 = 'customer'
+NAME = 'shipment_name'          # hire or sale name
+FIELD10 = 'customer'            # from hire
+FIELD17 = 'customer'            # customer from hire
+FIELD9 = 'customer'             # customer from sale category
 
 [home_contact]
 name = 'Giles Toman'

@@ -84,6 +84,7 @@ class Shipment:
 		shipments: [Shipment] = []
 		try:
 			for record in DBF(dbase_file):
+				[logger.info(f'DBASE RECORD - {k} : {v}') for k,v in record.items()]
 				shipment = None
 				try:
 					ship_dict = shipdict_from_dbase(record=record, config=config)

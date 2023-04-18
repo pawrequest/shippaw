@@ -21,7 +21,7 @@ from amdesp.despatchbay.exceptions import AuthorizationException
 config_env = dotenv_values(".env")
 load_dotenv()
 # ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
-ROOT_DIR = Path(platformdirs.site_data_dir(appname='AmDesp', appauthor='PSS'))
+ROOT_DIR = Path(r'r:\paul_notes\pss\amdesp')
 LOG_FILE = ROOT_DIR.joinpath('data', 'AmDesp.log')
 
 ...
