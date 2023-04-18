@@ -1,0 +1,55 @@
+
+# rename keys
+[import_mapping]
+DELIVERY_A = 'address_as_str'   # string representation of customer address
+DELIVERY_C = 'contact'          # contact name for the remote address
+DELIVERY_E = 'email'            # email for remote address
+DELIVERY_N = 'delivery_name'    # name of company at remote address
+DELIVERY_P = 'postcode'         # postcode of remote address
+DELIVERY_R = 'delivery_ref'     # delivery reference
+DELIVERY_T = 'telephone'        # telephone number for remote contact
+BOXES = 'boxes'                 # number of boxes in shipment
+#DB_LABEL_P = 'label_printed'    # has a label been printed? depric
+#SEND___COL = 'send_collect'     #
+SEND_METHO = 'send_method'
+SEND_OUT_D = 'send_out_date'
+INBOUND_ID = 'inbound_id'
+OUTBOUND_I = 'outbound_id'
+#STATUS = 'status'
+FIELD17 = 'customer'
+NAME = 'shipment_name'
+FIELD10 = 'customer'
+FIELD17 = 'customer'
+
+
+[home_contact]
+name = 'Giles Toman'
+email = 'radios@amherst.co.uk'
+telephone = "0207 3289792"
+
+[home_address]
+address_id = 5536 # remove from .env
+dbay_key = 'NW64TE1003'
+company_name = 'Amherst Radio Center'
+street = '70 Kingsgate Road'
+locality = 'Kilburn'
+town_city = 'London'
+county = "London"
+postal_code = "NW6 4TE"
+country_code = "GB"
+search_term = 'amherst'
+parcel_contents = 'Radios'
+
+[dbay]
+    [dbay.sand]
+    courier = 99
+    service = 9992
+    api_user = "DESPATCH_API_USER_SANDBOX"
+    api_key = "DESPATCH_API_KEY_SANDBOX"
+
+    [dbay.prod]
+    courier = 8  # parcelforce
+    service = 101  # parcelforce 24
+    api_user = "DESPATCH_API_USER"
+    api_key = "DESPATCH_API_KEY"
+
