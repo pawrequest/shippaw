@@ -1,5 +1,0 @@
-suds-py3
-requests
-pywinauto
-pyexcel_ods3
-psutil
