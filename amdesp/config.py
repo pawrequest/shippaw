@@ -100,9 +100,13 @@ class Config:
 
     @classmethod
     def from_toml2(cls, sandbox: bool, mode: str):
-        config_path = ROOT_DIR / 'config.toml'
+        config_path = ROOT_DIR / 'data' / 'config.toml'
+        user_config = ROOT_DIR / 'data' / 'user_config.toml'
         with open(config_path, 'rb') as f:
             config_dict = tomllib.load(f)
+        with open(user_config, 'rb') as g:
+            user_dict= tomllib.load(g)
+        config_dict.update(**user_dict)
 
         config_dict['sandbox'] = sandbox
         config_dict['mode'] = mode
