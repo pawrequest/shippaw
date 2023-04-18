@@ -2,7 +2,8 @@
 # todo tests
 # todo better logging
 # todo async / multiproces
-# todo api rate limit avoidance
+# todo api rate limit avoidance?
+# todo move from r drive to platform agnostic
 
 import sys
 
