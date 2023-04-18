@@ -4,9 +4,9 @@
 block_cipher = None
 
 added_files = [
-                ('config.toml', '.'),
                 ('scripts/', './scripts/'),
                 ('data/', './data/'),
+                ('.env', '.')
                 ]
 
 a = Analysis(

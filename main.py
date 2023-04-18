@@ -18,7 +18,7 @@ FAKE_MODE = 'ship_out'
 FAKE_SANDBOX = False
 # FAKE_SANDBOX = False
 
-REAL_SANDBOX = True
+REAL_SANDBOX = False
 
 
 
