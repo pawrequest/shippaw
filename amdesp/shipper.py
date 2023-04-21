@@ -15,9 +15,10 @@ import win32com.client
 from fuzzywuzzy import fuzz
 from dateutil.parser import parse
 
+from dataclasses import dataclass
 from amdesp.config import Config, BestMatch, Contact
 from amdesp.despatchbay.despatchbay_entities import Address, Sender, Recipient, Parcel, AddressKey, Service, \
-    CollectionDate
+    CollectionDate, ShipmentRequest
 from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from amdesp.despatchbay.documents_client import Document
 from amdesp.despatchbay.exceptions import ApiException
@@ -36,6 +37,14 @@ from amdesp.config import get_amdesp_logger
 
 logger = get_amdesp_logger()
 
+
+@dataclass
+class Job:
+    shipment_request:ShipmentRequest
+    shipment_id: str
+    add:bool
+    book:bool
+    print_or_email:bool
 
 @dataclasses.dataclass
 class FuzzyScoresCls:
@@ -158,19 +167,20 @@ class Shipper:
         stores all in shipment attrs"""
         logger.info('PREP SHIPMENTS')
         shipments = shipments[0:LIMITED_SHIPMENTS] if LIMITED_SHIPMENTS else shipments
-        outbound = True if config.mode == 'ship_out' else False
         prepped_shipments = []
 
-        home_sender_recip = get_home_sender(client=client, config=config) if outbound \
+        # home_sender_recip = get_home_sender(client=client, config=config) if config.outbound
+
+        home_sender_recip = get_home_sender(client=client, config=config) if config.outbound \
             else get_home_recipient(client=client, config=config)
+
         logger.info(f'PREP SHIPMENT -  {home_sender_recip=}')
 
         for shipment in shipments:
-            sg.popup_quick_message(f'Preparing {shipment.shipment_name_printable}', keep_on_top=True)
             try:
                 remote_address = self.get_remote_address(shipment=shipment, client=client)
 
-                if outbound:
+                if config.outbound:
                     shipment.sender = home_sender_recip
                     shipment.recipient = get_remote_recipient(client=client, remote_address=remote_address,
                                                               contact=shipment.remote_contact)
@@ -244,7 +254,9 @@ class Shipper:
                 window.close()
                 sys.exit()
             shipment_to_edit: Shipment = next((shipment for shipment in shipments
-                                               if shipment.shipment_name_printable.lower() in e.lower()), None)
+                                               if shipment.shipment_name.lower() in e.lower()), None)
+            # shipment_to_edit: Shipment = next((shipment for shipment in shipments
+            #                                                if shipment.shipment_name_printable.lower() in e.lower()), None)
 
             if 'boxes' in e.lower():
                 if new_boxes := get_new_parcels(client=client, config=config, location=window.mouse_location()):
@@ -358,10 +370,6 @@ class Shipper:
         booked_shipments = []
 
         for shipment in shipments:
-
-            if not config.sandbox:
-                if not sg.popup_yes_no('NOT SANDBOX - PAYING FOR MANY!!') == 'Yes':
-                    return None
             try:
                 shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
                 shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
@@ -461,11 +469,9 @@ def get_actual_service(config: Config, client: DespatchBaySDK, shipment: Shipmen
 
 
 ## Dbay sender / recipient object getters
-def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
+def get_home_sender(client: DespatchBaySDK, config:Config) -> Sender:
     """ return a dbay sender object representing home address defined in toml / Shipper.config"""
-    return client.sender(
-        sender_address=client.get_sender_addresses()[0].sender_address, **config.home_contact._asdict()
-    )
+    return client.sender(address_id=config.home_address.get('address_id'))
 
 
 def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:

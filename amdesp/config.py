@@ -75,8 +75,10 @@ class FieldsList:
         self.shipment = [str()]
         for field_type, fields in vars(self).items():
             if not field_type in fields_list_dict.keys():
-                field_type = sg.popup_get_text(
+                fields = sg.popup_get_text(
                     f'{field_type.title()} Field list not found, please enter a comma separated list')
+                fields = [fields.split(',')]
+                fields_list_dict[field_type] = fields
             setattr(self, field_type, fields_list_dict.get(field_type))
 
 
@@ -90,16 +92,19 @@ class Config:
         self.fields = FieldsList(config['fields'])
 
         self.sandbox: bool = config.get('sandbox')
+        self.fake_sandbox: bool = config.get('fake_sandbox')
         self.home_sender_id = str()
 
         self.datetime_masks: dict = config.get('datetime_masks')
         self.dbay: dict = config.get('dbay')
         self.import_mapping: dict = config.get('import_mapping')
-        self.gui_map: dict = config.get('gui_map')
+        # self.gui_map: dict = config.get('gui_map')
 
         self.home_address: dict = config.get('home_address')
         self.home_contact = Contact(**config.get('home_contact'))
-        self.outbound = True if 'out' in config['mode'] else False
+        self.outbound = True if 'out' in config['mode'] \
+            else False if 'in' in config['mode'] \
+            else sg.popup_yes_no('Is the shipment outbound?') == 'Yes'
         self.return_label_email_body = config.get('return_label_email_body')
 
     @classmethod

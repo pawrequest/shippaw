@@ -1,3 +1,4 @@
+# todo use protocol classes for mode
 # todo updates commence when shipment delivered
 # todo tests
 # todo better logging
@@ -12,7 +13,7 @@ from amdesp.shipper import Shipper
 import PySimpleGUI as sg
 import logging
 
-FAKE_MODE = 'ship_in'
+FAKE_MODE = 'ship_out'
 # FAKE_MODE = 'track'
 
 """
@@ -41,7 +42,6 @@ def main(main_mode: str):
 
 		config.log_config()
 		client = config.get_dbay_client_ag(sandbox=config.sandbox)
-		# config.setup_amdesp(sandbox=sandbox, client=client)
 
 		shipper = Shipper(config=config)
 		shipper.dispatch(client=client, in_file=config.paths.dbase_export, config=config)

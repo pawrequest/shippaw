@@ -48,7 +48,7 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
         date_col = 'green' if shipment.send_out_date == collection_date else 'maroon4'
         service_col = 'green' if shipment.default_service_matched else 'maroon4'
 
-        sender_address_name = get_address_button_string(shipment.sender.sender_address)
+        sender_address_name = get_address_button_string(address=shipment.sender.sender_address)
         recipient_address_name = get_address_button_string(shipment.recipient.recipient_address)
 
         num_parcels = len(shipment.parcels)
@@ -56,7 +56,8 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
         remove_button = sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-')
         customer_display = sg.T(f'{shipment.contact_name}\n{shipment.customer}', **shipment_params)
         collection_date_button = get_date_button(date_col, date_name, shipment)
-        sender_button = get_sender_button(sender_address_name, shipment)
+        sender_button = get_sender_button(sender_address_name=sender_address_name, shipment_name=shipment.shipment_name)
+        # todo get home sender button when use address_id
         recipient_button = get_recip_button(recipient_address_name, shipment)
         parcels_button = get_parcels_button(num_parcels, shipment)
         service_name_button = get_service_button(num_parcels, service_col, shipment)
@@ -138,7 +139,7 @@ def get_address_frame(config: Config, address: Address, index: str = None) -> sg
     return frame
 
 
-def get_address_button_string(address):
+def get_address_button_string(address:Address):
     # return f'{address.company_name}\n{address.street}' if address.company_name else address.street
     return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}'
 
@@ -357,9 +358,9 @@ def get_recip_button(recipient_address_name, shipment):
     return recipient_button
 
 
-def get_sender_button(sender_address_name, shipment):
+def get_sender_button(sender_address_name, shipment_name:str)->sg.Text:
     sender_button = sg.Text(sender_address_name, enable_events=True,
-                            k=f'-{shipment.shipment_name_printable.upper()}_SENDER-', **address_params)
+                            k=f'-{shipment_name}_SENDER-'.upper(), **address_params)
 
     return sender_button
 

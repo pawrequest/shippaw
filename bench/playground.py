@@ -1,11 +1,11 @@
 # import ctypes
 # import subprocess
 #
-# DESPATCH_API_KEY = '2DE45B0B5EDEB688841F'
-# DESPATCH_API_KEY_SANDBOX = 'AAD2F91ED25CAE38B4D1'
-# DESPATCH_API_USER = '25RM-EB372013'
-# DESPATCH_API_USER_SANDBOX = 'D25RM-E1305A31'
-# DESPATCH_SENDER_ID = 5536
+DESPATCH_API_KEY = '2DE45B0B5EDEB688841F'
+DESPATCH_API_KEY_SANDBOX = 'AAD2F91ED25CAE38B4D1'
+DESPATCH_API_USER = '25RM-EB372013'
+DESPATCH_API_USER_SANDBOX = 'D25RM-E1305A31'
+DESPATCH_SENDER_ID = 5536
 #
 # # set_despatch_api_env(api_user=DESPATCH_API_USER_SANDBOX, api_key=DESPATCH_API_KEY_SANDBOX, sandbox=True)
 #
@@ -117,18 +117,56 @@ from amdesp.config import get_amdesp_logger
 # tracking_window = sg.Window('', layout=layout)
 # tracking_window.read()
 
-import win32com.client
+# import win32com.client
+#
+# ol = win32com.client.Dispatch('Outlook.Application')
+# newmail = ol.CreateItem(0)
+#
+# newmail.Subject = 'Testing Mail'
+# newmail.To = 'prosodyspeaks@gmail.com'
+# # newmail.CC = 'xyz@gmail.com'
+# newmail.Subject = 'Testing Mail'
+# newmail.Body = 'Hello, this is a test email to showcase how to send emails from Python and Outlook.'
+# # attach = 'C:\\Users\\admin\\Desktop\\Python\\Sample.xlsx'
+# # newmail.Attachments.Add(attach)
+# newmail.Display()  # preview
+# newmail.Send()
+# ...
 
-ol = win32com.client.Dispatch('Outlook.Application')
-newmail = ol.CreateItem(0)
 
-newmail.Subject = 'Testing Mail'
-newmail.To = 'prosodyspeaks@gmail.com'
-# newmail.CC = 'xyz@gmail.com'
-newmail.Subject = 'Testing Mail'
-newmail.Body = 'Hello, this is a test email to showcase how to send emails from Python and Outlook.'
-# attach = 'C:\\Users\\admin\\Desktop\\Python\\Sample.xlsx'
-# newmail.Attachments.Add(attach)
-newmail.Display()  # preview
-newmail.Send()
-...
+
+from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
+
+
+def get_dbay_client_ag(api_user, api_key):
+    # get a client, which may be bunk so attempt to use it, if fail, get new api creds from user and try again.
+    # if succed at second or later attempt, write successful values to system environment for future reference
+    client = DespatchBaySDK(api_user=api_user, api_key=api_key)
+    first_try = True
+    dbay_account = client.get_account()
+    ...
+
+get_dbay_client_ag(api_user=DESPATCH_API_USER, api_key=DESPATCH_API_KEY)
+
+
+def setup_amdesp(self, sandbox: bool, client: DespatchBaySDK):
+    # candidates = client.get_address_keys_by_postcode
+    """
+    check system environ variables
+    home address details - get dbay key
+    cmclibnet
+
+    """
+    #
+
+
+
+    if not self.check_system_env(dbay_dict=self.dbay, sandbox=sandbox):
+        logging.exception('Unable to set Environment variables')
+    if not self.home_address.get('dbay_key'):
+        postcode = self.home_address.get('postal_code')
+        if not postcode:
+            postcode = sg.popup_get_text('No Home Postcode - enter now')
+        candidates = client.get_address_keys_by_postcode(postcode)
+    #     address = address_chooser_popup(candidate_dict=candidates, client=client)
+    # self.setup_commence()
