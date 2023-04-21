@@ -21,16 +21,22 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
     else:
         sg.theme('Dark Blue')
 
+    print_or_email = 'print' if config.outbound else 'email'
+
     sg.set_options(**default_params)
     layout = []
     headers = [
-        sg.Sizer(30, 0),
+        # sg.Sizer(30, 0),
         sg.T('Contact / Customer', **head_params),
         sg.T('Sender', **address_head_params),
         sg.T('Recipient', **address_head_params),
         sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
         sg.T('Service', **head_params),
+        # sg.T('Add Shipment', **head_params),
+        # sg.T('Book Collection', **head_params),
+        # sg.T(print_or_email.title(), **head_params),
+        sg.Push(),
         sg.Push(),
     ]
     layout.append(headers)
@@ -55,6 +61,7 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
         parcels_button = get_parcels_button(num_parcels, shipment)
         service_name_button = get_service_button(num_parcels, service_col, shipment)
 
+
         frame_lay = [[
             customer_display,
             sender_button,
@@ -62,6 +69,9 @@ def bulk_shipper_window(shipments: [Shipment], config: Config):
             collection_date_button,
             parcels_button,
             service_name_button,
+            sg.Checkbox('Add', default=True),
+            sg.Checkbox('Book', default=True),
+            sg.Checkbox(f'{print_or_email}', default=True, ),
             remove_button
         ]]
         frame = sg.Frame('', layout=frame_lay, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())

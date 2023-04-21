@@ -1,16 +1,16 @@
 import PySimpleGUI as sg
 
 default_params = {
-    'font': 'Rockwell 14',
-    'element_padding': (25, 5),
-    'border_width': 3,
+    'font': 'Rockwell 12',
+    'element_padding': (5, 5),
+    'border_width': 4,
 }
 
 shipment_params = {
     'size': (22, 2),
     'justification': 'center',
     'pad': (5, 5),
-    'border_width': 4,
+    # 'border_width': 4,
     'relief': sg.RELIEF_GROOVE,
 }
 

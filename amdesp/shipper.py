@@ -6,9 +6,12 @@ import subprocess
 import sys
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
 import PySimpleGUI as sg
 import dotenv
+import win32com.client
+
 from fuzzywuzzy import fuzz
 from dateutil.parser import parse
 
@@ -312,12 +315,14 @@ class Shipper:
                 return address
 
             if 'postal' in event.lower():
+                # 'postcode' clicked - choose address from those at postcode from gui
                 candidates = client.get_address_keys_by_postcode(values[event.upper()])
                 new_address = self.postcode_click(client=client, candidates=candidates)
                 address_gui_from_address(address=new_address, window=window)
                 continue
 
             if 'company_name' in event.lower():
+                # copy customer name into address comany name field
                 address = update_address_from_gui(address=address, config=config, values=values)
                 setattr(address, 'company_name', shipment.customer)
                 # window[event.upper()].update(shipment.customer)
@@ -372,8 +377,13 @@ class Shipper:
                 sg.popup_quick_message(f'Downloading Label {shipment.shipment_name_printable}', keep_on_top=True)
                 download_label(client=client, config=config, shipment=shipment)
 
-                sg.popup_quick_message(f'Printing Label {shipment.shipment_name_printable}', keep_on_top=True)
-                print_label(shipment=shipment)
+                if config.outbound:
+                    sg.popup_quick_message(f'Printing Label {shipment.shipment_name_printable}', keep_on_top=True)
+                    print_label(shipment=shipment)
+                else:
+                    # sg.popup_quick_message(f'Emailing Label to {shipment.email}', keep_on_top=True)
+                    email_label(recipient=shipment.email, body=config.return_label_email_body, attachment=shipment.label_location)
+
 
                 update_commence(config=config, shipment=shipment, id_to_pass=shipment_id)
                 booked_shipments.append(shipment)
@@ -388,6 +398,9 @@ class Shipper:
                                f"How about this?:\n"
                                f"Available balance = £{client.get_account_balance().available}\n")
                 continue
+            except Exception as e:
+                logger.exception(e)
+
 
         return booked_shipments if booked_shipments else None
 
@@ -708,10 +721,33 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScoresCls]) -> BestMatch:
     return best_match
 
 
-def email_label():
-    # todo this
-    ...
+def email_label(recipient:str, body:str, attachment:Path):
+    ol = win32com.client.Dispatch('Outlook.Application')
+    newmail = ol.CreateItem(0)
 
+    newmail.Subject = 'Radio Return - Shipping Label Attached'
+    newmail.To = recipient
+    newmail.Body = body
+    attach = str(attachment)
+
+    newmail.Attachments.Add(attach)
+    newmail.Display()  # preview
+    # newmail.Send()
+
+#
+# def email_label(shipment:Shipment):
+#     ol = win32com.client.Dispatch('Outlook.Application')
+#     newmail = ol.CreateItem(0)
+#
+#     newmail.Subject = 'Radio Return - Shipping Label Attached'
+#     newmail.To = shipment.email
+#     newmail.Body = 'Thanks for hiring from Amherst. Please find a pdf shipment label attached'
+#     attach = str(shipment.label_location)
+#
+#     newmail.Attachments.Add(attach)
+#     # newmail.Display()  # preview
+#     newmail.Send()
+#
 
 def get_parcels(num_parcels: int, client: DespatchBaySDK, config: Config) -> list[Parcel]:
     """ return an array of dbay parcel objects equal to the number of boxes provided
@@ -788,13 +824,6 @@ def update_address_from_gui(config: Config, address: Address, values: dict):
     return address
 
 
-def update_contact_from_gui(config: Config, contact: Sender | Recipient, values: dict):
-    contact_fields = config.fields.contact
-    contact_type = type(contact).__name__
-    for field in contact_fields:
-        value = values.get(f'-{contact_type}_{field}-'.upper())
-        if all([value, field]):
-            setattr(contact, field, value)
 
 
 def powershell_runner(script_path: str, *params: str):
@@ -842,6 +871,8 @@ def print_label(shipment):
     else:
         shipment.printed = True
         return True
+
+
 
 
 def log_shipment(config: Config, shipment: Shipment):

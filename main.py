@@ -12,24 +12,8 @@ from amdesp.shipper import Shipper
 import PySimpleGUI as sg
 import logging
 
-# STORED_XML = str(ROOT_DIR / 'data' / 'amship.xml')
-# STORED_XML = r'c:\amdesp\data\amship.xml'
-# INPUT_FILE = STORED_XML
-
-# STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_export.dbf')
-STORED_DBASE = str(ROOT_DIR / 'data' / 'amherst_sale.dbf')
-INPUT_FILE = STORED_DBASE
-
-FAKE_MODE = 'ship_out'
+FAKE_MODE = 'ship_in'
 # FAKE_MODE = 'track'
-
-FAKE_SANDBOX = False
-# FAKE_SANDBOX = False
-
-REAL_SANDBOX = False
-
-
-
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -49,19 +33,18 @@ includes
 
 logger = get_amdesp_logger()
 
-def main(main_mode: str, main_sandbox: bool, infile: str):
+def main(main_mode: str):
 	""" sandbox = fake shipping client, no money for labels!"""
 	sg.popup_quick_message('Config', keep_on_top=True)
-	outbound = None
 	try:
-		config = Config.from_toml2(sandbox=main_sandbox, mode=main_mode)
+		config = Config.from_toml2(mode=main_mode)
 
 		config.log_config()
-		client = config.get_dbay_client_ag(sandbox=sandbox)
+		client = config.get_dbay_client_ag(sandbox=config.sandbox)
 		# config.setup_amdesp(sandbox=sandbox, client=client)
 
 		shipper = Shipper(config=config)
-		shipper.dispatch(client=client, in_file=infile, config=config)
+		shipper.dispatch(client=client, in_file=config.paths.dbase_export, config=config)
 
 	except Exception as e:
 		logger.exception(f'MAINLOOP ERROR: {e}')
@@ -73,16 +56,11 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		# exe location = 0
 		mode = sys.argv[1].lower()
-		in_file = sys.argv[2].lower()
-		sandbox = REAL_SANDBOX
+		# in_file = sys.argv[2].lower()
 
 	# AmDesp called from IDE - inject mode
 	else:
-		in_file = INPUT_FILE
-		sandbox = FAKE_SANDBOX
+		# in_file = INPUT_FILE
 		mode = FAKE_MODE
-	# mode = 'track_out'
 	logger.info(f'{mode=}')
-	logger.info(f'{in_file=}')
-	logger.info(f'{sandbox=}')
-	main(main_mode=mode, infile=in_file, main_sandbox=sandbox)
+	main(main_mode=mode)

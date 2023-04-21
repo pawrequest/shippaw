@@ -60,6 +60,8 @@ class PathsList:
         self.cmc_dll: Path = Path()
         self.labels: Path = Path()
         self.user_data = Path()
+        self.dbase_export = Path()
+
         for name, path in paths_dict.items():
             setattr(self, name, ROOT_DIR / path)
         self.labels.mkdir(parents=True, exist_ok=True)
@@ -98,9 +100,10 @@ class Config:
         self.home_address: dict = config.get('home_address')
         self.home_contact = Contact(**config.get('home_contact'))
         self.outbound = True if 'out' in config['mode'] else False
+        self.return_label_email_body = config.get('return_label_email_body')
 
     @classmethod
-    def from_toml2(cls, sandbox: bool, mode: str):
+    def from_toml2(cls, mode: str):
         config_path = ROOT_DIR / 'data' / 'config.toml'
         user_config = ROOT_DIR / 'data' / 'user_config.toml'
         with open(config_path, 'rb') as f:
@@ -109,9 +112,8 @@ class Config:
             user_dict= tomllib.load(g)
         config_dict.update(**user_dict)
 
-        config_dict['sandbox'] = sandbox
+        # config_dict['sandbox'] = sandbox
         config_dict['mode'] = mode
-        logger.info(f'FROM TOML - {[(k, v) for k, v in os.environ.items() if "despatch" in k.lower()]}')
 
         return cls(config_dict=config_dict)
 

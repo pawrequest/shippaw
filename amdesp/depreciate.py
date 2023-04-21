@@ -1033,3 +1033,11 @@ def update_remote_address_from_gui(config: Config, values: dict):
 # if all([value, field]):
 #     setattr(address, field, value)
 
+
+def update_contact_from_gui(config: Config, contact: Sender | Recipient, values: dict):
+    contact_fields = config.fields.contact
+    contact_type = type(contact).__name__
+    for field in contact_fields:
+        value = values.get(f'-{contact_type}_{field}-'.upper())
+        if all([value, field]):
+            setattr(contact, field, value)

@@ -48,50 +48,50 @@ import logging
 import sys
 
 from amdesp.config import get_amdesp_logger
-
-DESPATCH_API_USER = '25RM-EB372013'
-DESPATCH_API_KEY = '2DE45B0B5EDEB688841F'
-DESPATCH_API_USER_SANDBOX = 'D25RM-E1305A31'
-DESPATCH_API_KEY_SANDBOX = 'AAD2F91ED25CAE38B4D1'
-DESPATCH_SENDER_ID = 5536
-
-import PySimpleGUI as sg
-from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
-
-logger = get_amdesp_logger()
-
-ship_id = '100786-6099'
-client = DespatchBaySDK(api_user=DESPATCH_API_USER_SANDBOX, api_key=DESPATCH_API_KEY_SANDBOX)
-
-logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {ship_id}')
-shipment_return = client.get_shipment(ship_id)
-tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
-tracking_d = {}
-for tracked_parcel in tracking_numbers:
-    params = {}
-    signatory = None
-    parcel_layout = []
-    tracking = client.get_tracking(tracked_parcel)
-    # courier = tracking['CourierName'] # debug unused?
-    # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
-    history = tracking['TrackingHistory']
-
-    for event in history:
-        if 'delivered' in event.Description.lower():
-            signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-            params.update({'background_color': 'aquamarine', 'text_color': 'red'})
-
-        event_text = sg.T(
-            f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
-            **params)
-        parcel_layout.append([event_text])
-
-    parcel_frame = [sg.Column(parcel_layout)]
-    tracking_d.update({tracked_parcel: tracking})
-
-shipment_return.tracking_dict = tracking_d
-tracking_window = sg.Window('', [parcel_frame])
-tracking_window.read()
+#
+# DESPATCH_API_USER = '25RM-EB372013'
+# DESPATCH_API_KEY = '2DE45B0B5EDEB688841F'
+# DESPATCH_API_USER_SANDBOX = 'D25RM-E1305A31'
+# DESPATCH_API_KEY_SANDBOX = 'AAD2F91ED25CAE38B4D1'
+# DESPATCH_SENDER_ID = 5536
+#
+# import PySimpleGUI as sg
+# from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
+#
+# logger = get_amdesp_logger()
+#
+# ship_id = '100786-6099'
+# client = DespatchBaySDK(api_user=DESPATCH_API_USER_SANDBOX, api_key=DESPATCH_API_KEY_SANDBOX)
+#
+# logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {ship_id}')
+# shipment_return = client.get_shipment(ship_id)
+# tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
+# tracking_d = {}
+# for tracked_parcel in tracking_numbers:
+#     params = {}
+#     signatory = None
+#     parcel_layout = []
+#     tracking = client.get_tracking(tracked_parcel)
+#     # courier = tracking['CourierName'] # debug unused?
+#     # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
+#     history = tracking['TrackingHistory']
+#
+#     for event in history:
+#         if 'delivered' in event.Description.lower():
+#             signatory = f"{chr(10)}Signed for by: {event.Signatory}"
+#             params.update({'background_color': 'aquamarine', 'text_color': 'red'})
+#
+#         event_text = sg.T(
+#             f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
+#             **params)
+#         parcel_layout.append([event_text])
+#
+#     parcel_frame = [sg.Column(parcel_layout)]
+#     tracking_d.update({tracked_parcel: tracking})
+#
+# shipment_return.tracking_dict = tracking_d
+# tracking_window = sg.Window('', [parcel_frame])
+# tracking_window.read()
 
 #
 #
@@ -116,3 +116,19 @@ tracking_window.read()
 #
 # tracking_window = sg.Window('', layout=layout)
 # tracking_window.read()
+
+import win32com.client
+
+ol = win32com.client.Dispatch('Outlook.Application')
+newmail = ol.CreateItem(0)
+
+newmail.Subject = 'Testing Mail'
+newmail.To = 'prosodyspeaks@gmail.com'
+# newmail.CC = 'xyz@gmail.com'
+newmail.Subject = 'Testing Mail'
+newmail.Body = 'Hello, this is a test email to showcase how to send emails from Python and Outlook.'
+# attach = 'C:\\Users\\admin\\Desktop\\Python\\Sample.xlsx'
+# newmail.Attachments.Add(attach)
+newmail.Display()  # preview
+newmail.Send()
+...
