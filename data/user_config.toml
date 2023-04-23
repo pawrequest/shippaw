@@ -1,5 +1,6 @@
 sandbox = true
 return_label_email_body = 'Thanks for hiring from Amherst, please find your return shipping label attached'
+fake_mode = 'ship_out'
 
 # rename keys
 [import_mapping]
@@ -42,13 +43,13 @@ search_term = 'amherst'
 parcel_contents = 'Radios'
 
 [dbay]
-    [dbay.sand]
+    [dbay.sandbox]
     courier = 99
     service = 9992
     api_user = "DESPATCH_API_USER_SANDBOX"
     api_key = "DESPATCH_API_KEY_SANDBOX"
 
-    [dbay.prod]
+    [dbay.production]
     courier = 8  # parcelforce
     service = 101  # parcelforce 24
     api_user = "DESPATCH_API_USER"
