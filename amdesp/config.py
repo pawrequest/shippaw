@@ -6,12 +6,14 @@ import sys
 import tomllib
 
 import PySimpleGUI as sg
-from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
 from pathlib import Path
 from dotenv import load_dotenv, dotenv_values
 
-from amdesp.despatchbay.exceptions import AuthorizationException
-from amdesp.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, FieldsList, PathsList
+from despatchbay.despatchbay_sdk import DespatchBaySDK
+from despatchbay.exceptions import AuthorizationException
+
+from amdesp.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, HomeAddress, \
+    PathsList
 
 config_env = dotenv_values(".env")
 load_dotenv()
@@ -45,26 +47,22 @@ class Config:
     def __init__(self, config_dict: dict):
         config = config_dict
         self.mode = config['mode']
-        self.service_id: str = ''
-        self.courier_id: str = ''
         self.paths = PathsList.from_dict(paths_dict=config['paths'], root_dir=ROOT_DIR)
-        self.fields = FieldsList.from_dict(fields_list_dict=config['fields'])
+        self.parcel_contents = config.get('parcel_contents')
 
         self.sandbox: bool = config.get('sandbox')
         self.fake_sandbox: bool = config.get('fake_sandbox')
         self.home_sender_id = str()
 
-        # self.datetime_masks: dict = config.get('datetime_masks')
-        self.datetime_masks: DateTimeMasks = DateTimeMasks.from_dict(config.get('datetime_masks'))
-        self.dbay: dict = config.get('dbay')
+        self.dbay: dict = config['dbay']
+        self.dbay_creds = self.get_dbay_creds()
         self.import_mapping: dict = config.get('import_mapping')
-        # self.gui_map: dict = config.get('gui_map')
 
-        self.home_address: dict = config.get('home_address')
+        self.home_address = HomeAddress(**config.get('home_address'))
         self.home_contact = Contact(**config.get('home_contact'))
         self.outbound = True if 'out' in config['mode'] \
             else False if 'in' in config['mode'] \
-            else sg.popup_yes_no('Is the shipment outbound?') == 'Yes'
+            else sg.popup_yes_no('Are we sending from home address?') == 'Yes'
         self.return_label_email_body = config.get('return_label_email_body')
 
     @classmethod
@@ -125,33 +123,32 @@ class Config:
 
                 return True
 
-    def creds_from_user(self) -> DbayCreds:
-        scope = ApiScope.SAND.value if self.sandbox \
-            else ApiScope.PRODUCTION.value
-        api_user = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API User')
-        api_key = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API Key')
-        creds = DbayCreds(scope=scope, api_user=api_user, api_key=api_key)
-        return creds
+    # def creds_from_user(self) -> DbayCreds:
+    #     scope = ApiScope.SAND.value if self.sandbox \
+    #         else ApiScope.PRODUCTION.value
+    #     api_user = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API User')
+    #     api_key = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API Key')
+    #     creds = DbayCreds(scope=scope, api_user=api_user, api_key=api_key)
+    #     return creds
 
     def log_config(self):
         [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
 
     def get_dbay_creds(self):
-        scope = ApiScope.SAND.value if self.sandbox \
-            else ApiScope.PRODUCTION.value
-
-        # overwrite self.dbay with just the scope we are working in
-        self.dbay = self.dbay[scope]
+        scope = ApiScope.SAND.value if self.sandbox else ApiScope.PRODUCTION.value
+        dbay = self.dbay.get(scope)
+        courier = dbay.get('courier')
+        service = dbay.get('service')
 
         # get the name of the system environment variable for api user
-        api_name_user = self.dbay.get('api_user')
-        api_name_key = self.dbay.get('api_key')
+        api_name_user = dbay.get('api_user')
+        api_name_key = dbay.get('api_key')
 
         # overwrite with actual values from environment
         api_user = os.environ.get(api_name_user)
         api_key = os.environ.get(api_name_key)
 
-        creds = DbayCreds(scope=scope, api_user=api_user, api_key=api_key)
+        creds = DbayCreds(api_user=api_user, api_key=api_key, courier=courier, service_id=service, scope=scope)
         return creds
 
     def get_dbay_client(self, creds: DbayCreds):

@@ -1,11 +1,12 @@
 from collections import namedtuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Any, List, Optional
 
 import PySimpleGUI as sg
 
-from amdesp.despatchbay.despatchbay_entities import Address, ShipmentRequest
+from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
 
 
 @dataclass
@@ -15,6 +16,7 @@ class Job:
     add: bool
     book: bool
     print_or_email: bool
+    result: Optional[str] = None
 
 
 class FuzzyScoresEnum(Enum):
@@ -46,37 +48,24 @@ class ShipMode(Enum):
 
 @dataclass
 class DbayCreds:
-    scope: str  # get from enum
-    api_user: str = None
-    api_key: str = None
+    api_user: str
+    api_key: str
+    courier: str
+    service_id: str
+    scope: Optional[str] = None  # get from enum
 
 
-@dataclass
-class DateTimeMasks:
-    display = str()
-    hire = str()
-    db = str()
-    button_label = str()
-
-    @classmethod
-    def from_dict(cls, mask_dict):
-        masks = cls()
-        for maskname, mask in mask_dict.items():
-            setattr(masks, maskname, mask)
-        return masks
+class DateTimeMasks(Enum):
+    DISPLAY = '%A - %B %#d'
+    hire = '%d/%m/%Y'
+    DB = '%Y-%m-%d'
+    button_label = '%A \n%B %#d'
 
 
 @dataclass
 class DefaultShippingService:
-    courier = int()
-    service = int()
-
-    @classmethod
-    def from_dict(cls, courier_dict):
-        dss = cls()
-        for key, name in courier_dict.items():
-            setattr(dss, key, name)
-        return dss
+    courier: int
+    service: int
 
 
 class ApiScope(Enum):
@@ -84,25 +73,13 @@ class ApiScope(Enum):
     PRODUCTION = 'production'
 
 
-@dataclass
-class FieldsList:
-    def __init__(self):
-        self.address = [str()]
-        self.contact = [str()]
-        self.export = [str()]
-        self.shipment = [str()]
-
-    @classmethod
-    def from_dict(cls, fields_list_dict):
-        fields_list = cls()
-        for field_type, field_list in fields_list_dict.items():
-            if not field_list:
-                field_list = sg.popup_get_text(
-                    f'{field_type.title()} Field list not found, please enter a comma separated list')
-                field_list = [field_list.split(',')]
-                fields_list_dict[field_type] = field_list
-            setattr(fields_list, field_type, field_list)
-        return fields_list
+class FieldsList(Enum):
+    contact = ['telephone', 'name', 'email']
+    address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
+    export = ['category', 'collection_booked', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
+              'outbound_id', 'shipment_name', 'timestamp']
+    shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
+                'date', 'inbound_id', 'outbound_id', 'shipment_name']
 
 
 @dataclass
@@ -127,3 +104,63 @@ class PathsList:
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
 Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
+
+
+class GuiMap(Enum):
+    shipment_name = 'Shipment Name'
+    boxes = 'Boxes'
+    category = 'Category'
+    delivery_address = 'Delivery Address'
+    delivery_contact = 'Delivery Contact'
+    delivery_email = 'Delivery Email'
+    delivery_postcode = 'Delivery Postcode'
+    delivery_tel = 'Delivery Tel'
+    delivery_telephone = 'Delivery Telephone'
+    search_term = 'Search Term'
+    send_out_date = 'Send Out Date'
+    inbound_id = 'Inbound ID'
+    outbound_id = 'Outbound ID'
+    county = 'County'
+    town_city = 'Town / City'
+    company_name = 'Company Name'
+    postal_code = 'Postcode'
+
+
+@dataclass
+class DespatchObjects:
+    # collection_date: Optional[CollectionDate] = None
+    collection_date: Optional[CollectionDate] = None
+    available_dates: Optional[List[CollectionDate]] = None
+    shipment_request: Optional[ShipmentRequest] = None
+    shipment_return: Optional[ShipmentReturn] = None
+    service: Optional[Service] = None
+    available_services: Optional[List[Service]] = None
+
+    #
+    # available_dates: Optional[List[CollectionDate]] = None
+    # shipment_request: Optional[ShipmentRequest] = None
+    # shipment_return: Optional[ShipmentReturn] = None
+    # service: Optional[Service] = None
+    # available_services: Optional[List[Service]] = None
+
+
+@dataclass
+class Email:
+    from_address: str
+    to_address: str
+    body: str
+    attachments: Any
+    subject: str
+
+
+@dataclass
+class HomeAddress():
+    address_id: int
+    dbay_key: str
+    company_name: str
+    street: str
+    locality: Optional[str]
+    town_city: Optional[str]
+    county: Optional[str]
+    postal_code: str
+    country_code: str

@@ -3,14 +3,14 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from dbfread.dbf import DBF, DBFNotFound
 
 from amdesp.config import Config, get_amdesp_logger
-from amdesp.despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
+from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from amdesp.enums import Contact
+from amdesp.enums import BestMatch, Contact, DespatchObjects
 from amdesp.exceptions import *
 
 logger = get_amdesp_logger()
@@ -40,19 +40,17 @@ class Shipment:
         self.shipment_name_printable = re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
         self.delivery_name = ship_dict.get('delivery_name')
 
-        self.inbound_id: str | None = ship_dict.get('inbound_id')
-        self.outbound_id: str | None = ship_dict.get('outbound_id')
+        self.inbound_id: Optional[str] = ship_dict.get('inbound_id')
+        self.outbound_id: Optional[str] = ship_dict.get('outbound_id')
 
         self.collection_booked = False
         self.printed = False
-        # self.company_name = str()
         self.date_menu_map = dict()
         self.service_menu_map: dict = dict()
         self.label_location: Path = Path()
         self.candidate_key_dict = {}
         self.parcels: [Parcel] = []
 
-        self.remote_contact = Contact(email=self.email, telephone=self.telephone, name=self.contact_name)
         self.remote_address: Address | None = None
         self.sender_contact = None
         self.sender = Sender
@@ -61,16 +59,26 @@ class Shipment:
 
         self.date_matched = False
 
-        self.collection_date: CollectionDate | None = None
-        self.shipment_request: ShipmentRequest | None = None
-        self.shipment_return: ShipmentReturn | None = None
+        self.despatch_objects = DespatchObjects()
+
+        self.collection_date: Optional[CollectionDate] = None
+
+
+        self.shipment_request: Optional[ShipmentRequest] = None
+        self.shipment_return: Optional[ShipmentReturn] = None
         self.service: Optional[Service] = None
-        self.available_services = None
-        self.default_service_matched = False
-        self.bestmatch = None
-        self.logged_to_commence = None
+        self.available_services:Optional[List[Service]] = None
+
+
+        self.default_service_matched:bool = False
+        self.bestmatch:Optional[BestMatch] = None
+        self.logged_to_commence:bool = False
+
 
         [logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+
+    def get_remote_contact(self):
+        return Contact(email=self.email, telephone=self.telephone, name=self.contact_name)
 
     @classmethod
     def get_shipments(cls, config: Config) -> list:
@@ -105,6 +113,19 @@ class Shipment:
                 result[attr_name] = attr_value
         return result
 
+    def parse_amherst_address_string(self, str_address: str):
+        str_address = str_address.lower()
+        if 'unit' in ' '.join(str_address.split(" ")[0:2]):
+            first_block = ' '.join(str_address.split(" ")[0:2])
+            return first_block
+        else:
+            first_block = str_address.split(" ")[0].split(",")[0]
+        first_char = first_block[0]
+        # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
+        firstline = str_address.split("\n")[0].strip()
+
+        return first_block if first_char.isnumeric() else firstline
+
 
 def shipdict_from_dbase(record, config: Config):
     # todo check thse
@@ -134,17 +155,3 @@ def to_snake_case(input_string: str) -> str:
     input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
     input_string = input_string.lower()
     return input_string
-
-
-def parse_amherst_address_string(str_address: str):
-    str_address = str_address.lower()
-    if 'unit' in ' '.join(str_address.split(" ")[0:2]):
-        first_block = ' '.join(str_address.split(" ")[0:2])
-        return first_block
-    else:
-        first_block = str_address.split(" ")[0].split(",")[0]
-    first_char = first_block[0]
-    # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
-    firstline = str_address.split("\n")[0].strip()
-
-    return first_block if first_char.isnumeric() else firstline

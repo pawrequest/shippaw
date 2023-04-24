@@ -14,8 +14,6 @@ from amdesp.gui import MainGui
 from amdesp.shipment import Shipment
 from amdesp.shipper import Shipper
 
-FAKE_MODE = 'ship_out'
-# FAKE_MODE = 'track'
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -44,7 +42,7 @@ def main(main_mode: str):
         client = config.setup_dbay()
         shipments = Shipment.get_shipments(config=config)
         gui = MainGui(config=config, client=client)
-        shipper = Shipper(config=config, client=client, gui=gui)
+        shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
         shipper.dispatch()
 
     except Exception as e:
@@ -56,7 +54,6 @@ if __name__ == '__main__':
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     if len(sys.argv) > 1:
         mode = sys.argv[1].lower()
-    # AmDesp called from IDE - inject mode
     else:
         mode = 'fake'
     main(main_mode=mode)

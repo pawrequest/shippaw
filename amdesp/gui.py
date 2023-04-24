@@ -5,9 +5,9 @@ from PySimpleGUI import Window
 from dateutil.parser import parse
 
 from amdesp.config import Config, get_amdesp_logger
-from amdesp.despatchbay.despatchbay_entities import Address, CollectionDate, Service
-from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
-from amdesp.enums import DateTimeMasks
+from despatchbay.despatchbay_entities import Address, CollectionDate, Service
+from despatchbay.despatchbay_sdk import DespatchBaySDK
+from amdesp.enums import DateTimeMasks, FieldsList
 from amdesp.gui_params import address_fieldname_params, address_head_params, address_input_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
@@ -17,12 +17,12 @@ logger = get_amdesp_logger()
 
 
 class Gui:
-    def __init__(self, config: Config, client:DespatchBaySDK):
+    def __init__(self, config: Config, client: DespatchBaySDK):
         self.window = None
         self.event = None
         self.values = None
         self.config = config
-        self.client=client
+        self.client = client
 
 
 class MainGui(Gui):
@@ -84,7 +84,7 @@ class MainGui(Gui):
         ]
         return headers
 
-    def get_service_string(self, num_boxes:int, service:Service):
+    def get_service_string(self, num_boxes: int, service: Service):
         return f'{service.name}\n{num_boxes * service.cost}'
 
     @staticmethod
@@ -100,7 +100,8 @@ class MainGui(Gui):
             num_boxes = len(shipment.parcels)
             ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
                         sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
-                        sg.Text(f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}:.2')]
+                        sg.Text(
+                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}.:2')]
 
             if shipment.printed:
                 ship_res.append(sg.Text('Shipment Printed'))
@@ -112,11 +113,11 @@ class MainGui(Gui):
         return sg.Frame('', layout=result_layout)
 
     @staticmethod
-    def new_date_selector(shipment: Shipment,masks:DateTimeMasks, location):
+    def new_date_selector(shipment: Shipment, location):
         location = location
         menu_map = shipment.date_menu_map
         men_def = [k for k in menu_map.keys()]
-        datetime_mask = masks.display
+        datetime_mask = DateTimeMasks.DISPLAY.value
         default_date = f'{parse(shipment.collection_date.date).date():{datetime_mask}}'
 
         layout = [
@@ -133,7 +134,6 @@ class MainGui(Gui):
                 window.close()
                 return menu_map.get(v['-DATE-'])
 
-
     def post_book(self, shipments: [Shipment]):
         headers = []
         frame = self.booked_shipments_frame(shipments=shipments)
@@ -146,8 +146,8 @@ class MainGui(Gui):
             window2.close()
             break
 
-    @staticmethod
-    def tracking_viewer_window(shipment_id, client):
+    def tracking_viewer_window(self, shipment_id):
+        client = self.client
         logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {shipment_id}')
         shipment_return = client.get_shipment(shipment_id)
         tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
@@ -206,9 +206,12 @@ class MainGui(Gui):
                 window.close()
                 return menu_map.get(v['-SERVICE-'])
 
+
+    # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
+
     def get_date_label(self, collection_date: CollectionDate):
-        masks = self.config.datetime_masks
-        return f'{datetime.strptime(collection_date.date, masks.db):{masks.button_label}}'
+        return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
+        # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
 
     @staticmethod
     def get_address_button_string(address: Address):
@@ -251,7 +254,7 @@ def shipment_ids_frame() -> sg.Frame:
 
 def get_address_dict_frame(config: Config, address_dict):
     layout = []
-    address_fields = config.fields.address
+    address_fields = FieldsList.address.value
     for field in address_fields:
         upper_key = f'-ADDRESS_DICT_{field}-'.upper()
         lower_key = f'-ADDRESS_DICT_{field}-'.lower()

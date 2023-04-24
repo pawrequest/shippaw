@@ -6,6 +6,16 @@ DESPATCH_API_KEY_SANDBOX = 'AAD2F91ED25CAE38B4D1'
 DESPATCH_API_USER = '25RM-EB372013'
 DESPATCH_API_USER_SANDBOX = 'D25RM-E1305A31'
 DESPATCH_SENDER_ID = 5536
+
+from despatchbay.despatchbay_sdk import DespatchBaySDK
+
+
+client = DespatchBaySDK(api_user=DESPATCH_API_USER_SANDBOX, api_key=DESPATCH_API_KEY_SANDBOX)
+dbay_account = client.get_account()
+address = client.get_sender_addresses()[0]
+available_dates = client.get_available_collection_dates(address, 99)
+...
+
 #
 # # set_despatch_api_env(api_user=DESPATCH_API_USER_SANDBOX, api_key=DESPATCH_API_KEY_SANDBOX, sandbox=True)
 #

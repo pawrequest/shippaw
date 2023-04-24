@@ -1,11 +1,11 @@
 # event, values = sg.Window('Window Title', [[sg.Text('Enter Something')], [sg.Input(key='-IN-'),],[sg.Button('OK'), sg.Button('Cancel')]]).read(close=True)
 
 import PySimpleGUI as sg
+from despatchbay.despatchbay_entities import Address
+from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from amdesp.config import Config
-from amdesp.despatchbay.despatchbay_entities import Address
-from amdesp.despatchbay.despatchbay_sdk import DespatchBaySDK
-from amdesp.enums import Contact
+from amdesp.enums import Contact, FieldsList
 from amdesp.gui import Gui
 from amdesp.gui_params import address_fieldname_params, address_input_params
 from amdesp.shipment import Shipment
@@ -82,7 +82,7 @@ class AddressGui(Gui):
             [sg.Text(f'Telephone:', **address_fieldname_params),
              sg.InputText(f'{contact.telephone}', key=f'-TELEPHONE-', **address_input_params)],
 
-            [self.get_address_frame(address=address, address_fields=self.config.fields.address)],
+            [self.get_address_frame(address=address)],
 
             [sg.B('Submit', k=f'-SUBMIT-')]
         ]
@@ -96,17 +96,16 @@ class AddressGui(Gui):
                 self.window[f'-ADDRESS_{k.upper()}-'].update(v or '')
 
     def update_address_from_gui(self):
-        address_fields = self.config.fields.address
-        for field in address_fields:
+        for field in FieldsList.address.value:
             value = self.values.get(f'-ADDRESS_{field.upper()}-', None)
             setattr(self.address, field, value)
         return self.address
 
-    def get_address_frame(self, address_fields: list, address: Address, index: str = None) -> sg.Frame:
+    def get_address_frame(self, address: Address, index: str = None) -> sg.Frame:
         layout = []
         params = address_fieldname_params.copy()
         input_text = ''
-        for field in address_fields:
+        for field in FieldsList.address.value:
             if index:
                 key = f'-{index}_ADDRESS_{field}-'.upper()
             else:
