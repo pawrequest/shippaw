@@ -11,7 +11,7 @@ import dotenv
 import win32com.client
 from fuzzywuzzy import fuzz
 
-from amdesp.address_window import AddressGui
+from amdesp.address_gui import AddressGui
 from amdesp.config import Config
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
@@ -19,7 +19,7 @@ from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
 from amdesp.enums import BestMatch, Contact, DateTimeMasks, FieldsList, FuzzyScores
-from amdesp.gui import MainGui
+from amdesp.main_gui import MainGui
 from amdesp.shipment import Shipment
 from amdesp.config import get_amdesp_logger
 from amdesp.tracking_gui import tracking_loop
@@ -76,7 +76,8 @@ class Shipper:
 
         for shipment in self.shipments:
             try:
-                shipment.get_remote_contact()
+                shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                                  name=shipment.contact_name)
                 self.get_sender_recip(home_sender_recip=home_sender_recip, shipment=shipment)
                 shipment.service = self.get_arbitrary_service()  # needed to get dates
                 shipment = check_today_ship(shipment)  # no bookings after 1pm
@@ -95,6 +96,7 @@ class Shipper:
                 continue
 
         return prepped_shipments
+
 
     def main_gui_loop(self, shipments: [Shipment]):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
@@ -341,7 +343,7 @@ class Shipper:
         parcels = []
         for x in range(num_parcels):
             parcel = self.client.parcel(
-                contents=self.config.home_address['parcel_contents'],
+                contents=self.config.parcel_contents,
                 value=500,
                 weight=6,
                 length=60,
@@ -362,7 +364,8 @@ def get_actual_service(config: Config, client: DespatchBaySDK, shipment: Shipmen
     """
     available_services = client.get_available_services(shipment.shipment_request)
     shipment.service_menu_map = ({service.name: service for service in available_services})
-    available_service_match = next((a for a in available_services if a.service_id == config.dbay_creds.service_id), None)
+    available_service_match = next((a for a in available_services if a.service_id == config.dbay_creds.service_id),
+                                   None)
     shipment.default_service_matched = True if available_service_match else False
     shipment.available_services = available_services
 

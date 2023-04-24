@@ -10,7 +10,7 @@ import sys
 import PySimpleGUI as sg
 
 from amdesp.config import Config, get_amdesp_logger
-from amdesp.gui import MainGui
+from amdesp.main_gui import MainGui
 from amdesp.shipment import Shipment
 from amdesp.shipper import Shipper
 

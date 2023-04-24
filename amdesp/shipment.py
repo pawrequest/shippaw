@@ -63,22 +63,19 @@ class Shipment:
 
         self.collection_date: Optional[CollectionDate] = None
 
-
         self.shipment_request: Optional[ShipmentRequest] = None
         self.shipment_return: Optional[ShipmentReturn] = None
         self.service: Optional[Service] = None
-        self.available_services:Optional[List[Service]] = None
+        self.available_services: Optional[List[Service]] = None
 
-
-        self.default_service_matched:bool = False
-        self.bestmatch:Optional[BestMatch] = None
-        self.logged_to_commence:bool = False
-
+        self.default_service_matched: bool = False
+        self.bestmatch: Optional[BestMatch] = None
+        self.logged_to_commence: bool = False
+        self.remote_contact: Optional[Contact] = None
 
         [logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
 
-    def get_remote_contact(self):
-        return Contact(email=self.email, telephone=self.telephone, name=self.contact_name)
+
 
     @classmethod
     def get_shipments(cls, config: Config) -> list:

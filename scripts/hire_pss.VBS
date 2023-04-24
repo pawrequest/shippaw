@@ -1089,6 +1089,7 @@ Sub EmailSendOut()
                            "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
                            vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
                            Form.Field("Delivery Contact").Value & vbNewLine & _
+                           Form.Field("Delivery Name").Value & vbNewLine & _
                            Form.Field("Delivery Address").Value & vbNewLine & _
                            Form.Field("Delivery Postcode").Value & vbNewLine & _
                            vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _

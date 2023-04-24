@@ -7,7 +7,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from amdesp.address_window import AddressGui
+from amdesp.address_gui import AddressGui
 from amdesp.config import Config, get_amdesp_logger
 from amdesp.enums import BestMatch, Contact, DateTimeMasks, FuzzyScores, Job
 from amdesp.shipment import Shipment

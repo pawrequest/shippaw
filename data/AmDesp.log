@@ -30517,3 +30517,937 @@ Traceback (most recent call last):
 TypeError: 'HomeAddress' object is not subscriptable
 2023-04-24 01:50:42,449 INFO     GUI LOOP
 2023-04-24 01:50:42,450 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:08:20,750 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:08:21,015 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:08:22,584 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 1000.0
+         AvailableBalance = 1000.0
+      }
+ }
+2023-04-24 13:08:22,584 ERROR    .Dbf or Dbt are probably missing 
+could not find file 'C:\\paul\\AmDesp\\data\\amherst_export.dbf'
+Traceback (most recent call last):
+  File "C:\paul\AmDesp\amdesp\shipment.py", line 86, in get_shipments
+    for record in DBF(dbase_file):
+                  ^^^^^^^^^^^^^^^
+  File "C:\paul\AmDesp\venv\Lib\site-packages\dbfread\dbf.py", line 110, in __init__
+    raise DBFNotFound('could not find file {!r}'.format(filename))
+dbfread.exceptions.DBFNotFound: could not find file 'C:\\paul\\AmDesp\\data\\amherst_export.dbf'
+2023-04-24 13:08:22,600 INFO     PREP SHIPMENTS
+2023-04-24 13:08:27,027 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 13:08:27,027 INFO     GUI LOOP
+2023-04-24 13:08:27,027 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:10:39,325 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:10:39,512 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:10:41,090 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 1000.0
+         AvailableBalance = 1000.0
+      }
+ }
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - NAME : MOD - 25/04/2023 ref 19818
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_A : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London        
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_C : Briony Humphreys        
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_E : Briony.Humphreys103@mod.gov.uk        
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_P : SE16 3LL        
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_T : 020 7218 6249
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DELIVERY_N : G-M, HOCS, C/O Amey        
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - FIELD10 : MOD 
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - CUSTOMER_N : None
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - REPROGRAMM : False
+2023-04-24 13:10:41,106 INFO     DBASE RECORD - SENDING_ST : Fine no problem
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - contact : Briony Humphreys
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - postcode : SE16 3LL
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - telephone : 020 7218 6249
+2023-04-24 13:10:41,106 INFO     SHIPDICT FROM DBASE - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:10:41,121 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 13:10:41,121 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 13:10:41,121 INFO     SHIPDICT FROM DBASE - customer : MOD
+2023-04-24 13:10:41,121 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 13:10:41,121 INFO     SHIPDICT FROM DBASE - SENDING_ST : Fine no problem
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - str_to_match : Unit 11 Bermondsey Trading Estate
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - boxes : 2
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - category : Hire
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - customer : MOD
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - contact_name : Briony Humphreys
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - postcode : SE16 3LL
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - send_out_date : 2023-04-25
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - status : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - telephone : 020 7218 6249
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name_printable : MOD - 25_04_2023 ref 19818
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - inbound_id : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - outbound_id : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_booked : False
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - printed : False
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_menu_map : {}
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service_menu_map : {}
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - label_location : .
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - candidate_key_dict : {}
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - parcels : []
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_address : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender_contact : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_matched : False
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_date : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_request : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_return : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - available_services : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - default_service_matched : False
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - bestmatch : None
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - logged_to_commence : False
+2023-04-24 13:10:41,121 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_contact : None
+2023-04-24 13:10:41,121 INFO     PREP SHIPMENTS
+2023-04-24 13:10:41,137 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 13:10:41,332 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = None
+   Street = "99 Cuiken Terrace"
+   Locality = None
+   TownCity = "Penicuik"
+   County = "Midlothian"
+   PostalCode = "EH26 0AJ"
+   CountryCode = "GB"
+ }
+2023-04-24 13:10:41,332 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = None
+   Street = "99 Cuiken Terrace"
+   Locality = None
+   TownCity = "Penicuik"
+   County = "Midlothian"
+   PostalCode = "EH26 0AJ"
+   CountryCode = "GB"
+ }
+2023-04-24 13:10:41,332 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Briony Humphreys"
+   RecipientTelephone = "020 7218 6249"
+   RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = None
+         Street = "99 Cuiken Terrace"
+         Locality = None
+         TownCity = "Penicuik"
+         County = "Midlothian"
+         PostalCode = "EH26 0AJ"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 13:10:41,520 INFO     PREP SHIPMENT - ARBITRARY SERVICE Demo Economy
+2023-04-24 13:10:41,520 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 13:10:42,114 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-24"
+ }
+2023-04-24 13:10:42,114 ERROR    Error with MOD - 25_04_2023 ref 19818:
+ 'HomeAddress' object is not subscriptable
+Traceback (most recent call last):
+  File "C:\paul\AmDesp\amdesp\shipper.py", line 87, in prep_shipments
+    shipment.parcels = self.get_parcels(num_parcels=shipment.boxes)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\paul\AmDesp\amdesp\shipper.py", line 346, in get_parcels
+    contents=self.config.home_address['parcel_contents'],
+             ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: 'HomeAddress' object is not subscriptable
+2023-04-24 13:10:42,130 INFO     GUI LOOP
+2023-04-24 13:10:42,130 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:11:21,132 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:11:21,320 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:11:22,922 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 1000.0
+         AvailableBalance = 1000.0
+      }
+ }
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - NAME : MOD - 25/04/2023 ref 19818
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_A : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London        
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_C : Briony Humphreys        
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_E : Briony.Humphreys103@mod.gov.uk        
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_P : SE16 3LL        
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_T : 020 7218 6249
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DELIVERY_N : G-M, HOCS, C/O Amey        
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - FIELD10 : MOD 
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - CUSTOMER_N : None
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - REPROGRAMM : False
+2023-04-24 13:11:22,938 INFO     DBASE RECORD - SENDING_ST : Fine no problem
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - contact : Briony Humphreys
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - postcode : SE16 3LL
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - telephone : 020 7218 6249
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - customer : MOD
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 13:11:22,938 INFO     SHIPDICT FROM DBASE - SENDING_ST : Fine no problem
+2023-04-24 13:11:22,938 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - str_to_match : Unit 11 Bermondsey Trading Estate
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - boxes : 2
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - category : Hire
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - customer : MOD
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - contact_name : Briony Humphreys
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - postcode : SE16 3LL
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - send_out_date : 2023-04-25
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - status : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - telephone : 020 7218 6249
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name_printable : MOD - 25_04_2023 ref 19818
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - inbound_id : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - outbound_id : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_booked : False
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - printed : False
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_menu_map : {}
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service_menu_map : {}
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - label_location : .
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - candidate_key_dict : {}
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - parcels : []
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_address : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender_contact : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_matched : False
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_date : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_request : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_return : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - available_services : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - default_service_matched : False
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - bestmatch : None
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - logged_to_commence : False
+2023-04-24 13:11:22,953 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_contact : None
+2023-04-24 13:11:22,953 INFO     PREP SHIPMENTS
+2023-04-24 13:11:22,969 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 13:11:23,172 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = None
+   Street = "5 Primrose Street"
+   Locality = None
+   TownCity = "Chorley"
+   County = "Lancashire"
+   PostalCode = "PR6 0AE"
+   CountryCode = "GB"
+ }
+2023-04-24 13:11:23,172 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = None
+   Street = "5 Primrose Street"
+   Locality = None
+   TownCity = "Chorley"
+   County = "Lancashire"
+   PostalCode = "PR6 0AE"
+   CountryCode = "GB"
+ }
+2023-04-24 13:11:23,172 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Briony Humphreys"
+   RecipientTelephone = "020 7218 6249"
+   RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = None
+         Street = "5 Primrose Street"
+         Locality = None
+         TownCity = "Chorley"
+         County = "Lancashire"
+         PostalCode = "PR6 0AE"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 13:11:23,356 INFO     PREP SHIPMENT - ARBITRARY SERVICE Demo Economy
+2023-04-24 13:11:23,357 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 13:11:23,574 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-24"
+ }
+2023-04-24 13:11:23,574 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 13:11:23,590 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 9992
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "MOD"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-24"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Briony Humphreys"
+         RecipientTelephone = "020 7218 6249"
+         RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = None
+               Street = "5 Primrose Street"
+               Locality = None
+               TownCity = "Chorley"
+               County = "Lancashire"
+               PostalCode = "PR6 0AE"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 13:11:23,949 INFO     GUI LOOP
+2023-04-24 13:11:23,949 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:11:50,129 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:11:50,346 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:11:50,865 ERROR    MAINLOOP ERROR: Invalid value (at line 1, column 11)
+Traceback (most recent call last):
+  File "C:\paul\AmDesp\main.py", line 41, in main
+    config = Config.from_toml2(mode=main_mode)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\paul\AmDesp\amdesp\config.py", line 75, in from_toml2
+    user_dict= tomllib.load(g)
+               ^^^^^^^^^^^^^^^
+  File "C:\Users\giles\AppData\Local\Programs\Python\Python311\Lib\tomllib\_parser.py", line 66, in load
+    return loads(s, parse_float=parse_float)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\giles\AppData\Local\Programs\Python\Python311\Lib\tomllib\_parser.py", line 102, in loads
+    pos = key_value_rule(src, pos, out, header, parse_float)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\giles\AppData\Local\Programs\Python\Python311\Lib\tomllib\_parser.py", line 326, in key_value_rule
+    pos, key, value = parse_key_value_pair(src, pos, parse_float)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\giles\AppData\Local\Programs\Python\Python311\Lib\tomllib\_parser.py", line 369, in parse_key_value_pair
+    pos, value = parse_value(src, pos, parse_float)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\giles\AppData\Local\Programs\Python\Python311\Lib\tomllib\_parser.py", line 649, in parse_value
+    raise suffixed_err(src, pos, "Invalid value")
+tomllib.TOMLDecodeError: Invalid value (at line 1, column 11)
+2023-04-24 13:12:12,046 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:12:12,234 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:12:13,834 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 52.16
+         AvailableBalance = 52.16
+      }
+ }
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - NAME : MOD - 25/04/2023 ref 19818
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_A : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London        
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_C : Briony Humphreys        
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_E : Briony.Humphreys103@mod.gov.uk        
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_P : SE16 3LL        
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_T : 020 7218 6249
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DELIVERY_N : G-M, HOCS, C/O Amey        
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - FIELD10 : MOD 
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - CUSTOMER_N : None
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - REPROGRAMM : False
+2023-04-24 13:12:13,849 INFO     DBASE RECORD - SENDING_ST : Fine no problem
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - contact : Briony Humphreys
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - postcode : SE16 3LL
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - telephone : 020 7218 6249
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - customer : MOD
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 13:12:13,849 INFO     SHIPDICT FROM DBASE - SENDING_ST : Fine no problem
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - str_to_match : Unit 11 Bermondsey Trading Estate
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - boxes : 2
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - category : Hire
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - customer : MOD
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - contact_name : Briony Humphreys
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - postcode : SE16 3LL
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - send_out_date : 2023-04-25
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - status : None
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - telephone : 020 7218 6249
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name_printable : MOD - 25_04_2023 ref 19818
+2023-04-24 13:12:13,849 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - inbound_id : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - outbound_id : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_booked : False
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - printed : False
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_menu_map : {}
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service_menu_map : {}
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - label_location : .
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - candidate_key_dict : {}
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - parcels : []
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_address : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender_contact : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_matched : False
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_date : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_request : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_return : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - available_services : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - default_service_matched : False
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - bestmatch : None
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - logged_to_commence : False
+2023-04-24 13:12:13,865 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_contact : None
+2023-04-24 13:12:13,865 INFO     PREP SHIPMENTS
+2023-04-24 13:12:13,865 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 13:12:14,052 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://www.w3.org/2001/XMLSchema" xmlns:ns3="http://schemas.xmlsoap.org/soap/envelope/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns3:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns2:string">SE16 3LL</postcode>
+         <property xsi:type="ns2:string">MOD</property>
+      </ns0:FindAddress>
+   </ns3:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 13:12:14,240 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://www.w3.org/2001/XMLSchema" xmlns:ns3="http://schemas.xmlsoap.org/soap/envelope/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns3:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns2:string">SE16 3LL</postcode>
+         <property xsi:type="ns2:string">G-M, HOCS, C/O Amey</property>
+      </ns0:FindAddress>
+   </ns3:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 13:12:14,443 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = None
+   Street = "Unit 11, Bermondsey Trading Estate"
+   Locality = "Rotherhithe New Road"
+   TownCity = "London"
+   County = None
+   PostalCode = "SE16 3LL"
+   CountryCode = "GB"
+ }
+2023-04-24 13:12:14,443 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "G-M, HOCS, C/O Amey"
+   Street = "Unit 11, Bermondsey Trading Estate"
+   Locality = "Rotherhithe New Road"
+   TownCity = "London"
+   County = None
+   PostalCode = "SE16 3LL"
+   CountryCode = "GB"
+ }
+2023-04-24 13:12:14,443 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Briony Humphreys"
+   RecipientTelephone = "020 7218 6249"
+   RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "G-M, HOCS, C/O Amey"
+         Street = "Unit 11, Bermondsey Trading Estate"
+         Locality = "Rotherhithe New Road"
+         TownCity = "London"
+         County = None
+         PostalCode = "SE16 3LL"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 13:12:14,771 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 13:12:14,771 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 13:12:14,974 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 13:12:14,990 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 13:12:15,006 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "MOD"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Briony Humphreys"
+         RecipientTelephone = "020 7218 6249"
+         RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "G-M, HOCS, C/O Amey"
+               Street = "Unit 11, Bermondsey Trading Estate"
+               Locality = "Rotherhithe New Road"
+               TownCity = "London"
+               County = None
+               PostalCode = "SE16 3LL"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 13:12:15,552 INFO     GUI LOOP
+2023-04-24 13:12:15,552 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:13:02,989 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1'), ('DESPATCH_SENDER_ID', '5536')])
+ROOT_DIR=WindowsPath('C:/paul/AmDesp')
+LOG_FILE=WindowsPath('C:/paul/AmDesp/data/AmDesp.log')
+2023-04-24 13:13:03,255 INFO     launched with 1 arguments:['C:\\paul\\AmDesp\\main.py']
+2023-04-24 13:13:04,829 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 52.16
+         AvailableBalance = 52.16
+      }
+ }
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - NAME : MOD - 25/04/2023 ref 19818
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_A : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London        
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_C : Briony Humphreys        
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_E : Briony.Humphreys103@mod.gov.uk        
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_P : SE16 3LL        
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_T : 020 7218 6249
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - DELIVERY_N : G-M, HOCS, C/O Amey        
+2023-04-24 13:13:04,829 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - FIELD10 : MOD 
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - CUSTOMER_N : None
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - REPROGRAMM : False
+2023-04-24 13:13:04,845 INFO     DBASE RECORD - SENDING_ST : Fine no problem
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - contact : Briony Humphreys
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - postcode : SE16 3LL
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - telephone : 020 7218 6249
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - customer : MOD
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 13:13:04,845 INFO     SHIPDICT FROM DBASE - SENDING_ST : Fine no problem
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - address_as_str : Unit 11 Bermondsey Trading Estate
+Rotherhithe New Road
+London
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - str_to_match : Unit 11 Bermondsey Trading Estate
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - boxes : 2
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - category : Hire
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - customer : MOD
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - contact_name : Briony Humphreys
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - email : Briony.Humphreys103@mod.gov.uk
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - postcode : SE16 3LL
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - send_out_date : 2023-04-25
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name : MOD - 25/04/2023 ref 19818
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - status : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - telephone : 020 7218 6249
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_name_printable : MOD - 25_04_2023 ref 19818
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - delivery_name : G-M, HOCS, C/O Amey
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - inbound_id : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - outbound_id : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_booked : False
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - printed : False
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_menu_map : {}
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service_menu_map : {}
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - label_location : .
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - candidate_key_dict : {}
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - parcels : []
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_address : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender_contact : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - date_matched : False
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - collection_date : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_request : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - shipment_return : None
+2023-04-24 13:13:04,845 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - service : None
+2023-04-24 13:13:04,861 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - available_services : None
+2023-04-24 13:13:04,861 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - default_service_matched : False
+2023-04-24 13:13:04,861 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - bestmatch : None
+2023-04-24 13:13:04,861 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - logged_to_commence : False
+2023-04-24 13:13:04,861 INFO     SHIPMENT - MOD - 25/04/2023 REF 19818 - remote_contact : None
+2023-04-24 13:13:04,861 INFO     PREP SHIPMENTS
+2023-04-24 13:13:04,861 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 13:13:05,032 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns2="urn:despatchbay" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns2:FindAddress>
+         <postcode xsi:type="ns3:string">SE16 3LL</postcode>
+         <property xsi:type="ns3:string">MOD</property>
+      </ns2:FindAddress>
+   </ns1:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 13:13:05,204 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns2="urn:despatchbay" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns2:FindAddress>
+         <postcode xsi:type="ns3:string">SE16 3LL</postcode>
+         <property xsi:type="ns3:string">G-M, HOCS, C/O Amey</property>
+      </ns2:FindAddress>
+   </ns1:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 13:13:05,407 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = None
+   Street = "Unit 11, Bermondsey Trading Estate"
+   Locality = "Rotherhithe New Road"
+   TownCity = "London"
+   County = None
+   PostalCode = "SE16 3LL"
+   CountryCode = "GB"
+ }
+2023-04-24 13:13:05,407 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "G-M, HOCS, C/O Amey"
+   Street = "Unit 11, Bermondsey Trading Estate"
+   Locality = "Rotherhithe New Road"
+   TownCity = "London"
+   County = None
+   PostalCode = "SE16 3LL"
+   CountryCode = "GB"
+ }
+2023-04-24 13:13:05,423 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Briony Humphreys"
+   RecipientTelephone = "020 7218 6249"
+   RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "G-M, HOCS, C/O Amey"
+         Street = "Unit 11, Bermondsey Trading Estate"
+         Locality = "Rotherhithe New Road"
+         TownCity = "London"
+         County = None
+         PostalCode = "SE16 3LL"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 13:13:05,751 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 13:13:05,751 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 13:13:05,954 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 13:13:05,954 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 13:13:05,986 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "MOD"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Briony Humphreys"
+         RecipientTelephone = "020 7218 6249"
+         RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "G-M, HOCS, C/O Amey"
+               Street = "Unit 11, Bermondsey Trading Estate"
+               Locality = "Rotherhithe New Road"
+               TownCity = "London"
+               County = None
+               PostalCode = "SE16 3LL"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 13:13:06,548 INFO     GUI LOOP
+2023-04-24 13:13:06,548 INFO     BULK SHIPPER WINDOW
+2023-04-24 13:13:17,446 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "MOD"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Briony Humphreys"
+         RecipientTelephone = "020 7218 6249"
+         RecipientEmail = "Briony.Humphreys103@mod.gov.uk"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "G-M, HOCS, C/O Amey"
+               Street = "Unit 11, Bermondsey Trading Estate"
+               Locality = "Rotherhithe New Road"
+               TownCity = "London"
+               County = None
+               PostalCode = "SE16 3LL"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 13:14:23,637 INFO     POWERSHELL RUNNER - COMMANDS: ['powershell.exe', '-ExecutionPolicy', 'Unrestricted', 'C:\\paul\\AmDesp\\scripts\\log_tracking_to_Commence.ps1', "'Hire'", "'MOD - 25/04/2023 ref 19818'", "'100786-21008606'", "'False'"]
+2023-04-24 13:14:24,215 INFO     POWERSHELL RUNNER - PROCESS RESULT: CompletedProcess(args=['powershell.exe', '-ExecutionPolicy', 'Unrestricted', 'C:\\paul\\AmDesp\\scripts\\log_tracking_to_Commence.ps1', "'Hire'", "'MOD - 25/04/2023 ref 19818'", "'100786-21008606'", "'False'"], returncode=0, stdout='LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - \nLOG TO COMMENCE SCRIPT - REF NAME - MOD - 25/04/2023 ref 19818\nLOG TO COMMENCE SCRIPT - SHIP ID - MOD - 25/04/2023 ref 19818\nLOG TO COMMENCE SCRIPT - ISARETURN - False\nIS RETURN IS FALSE\n0\n\nOverloadDefinitions                                                                                                    \n-------------------                                                                                                    \nint Commit(Vovin.CmcLibNet.Database.CmcOptionFlags flags)                                                              \nint ICommenceEditRowSet.Commit(Vovin.CmcLibNet.Database.CmcOptionFlags flags)                                          \n                                                                                                                       \n0\n0\n\n\n', stderr='')
