@@ -34,14 +34,14 @@ class MainGui(Gui):
             sg.theme('Dark Blue')
 
         sg.set_options(**default_params)
-        layout = [
-            [self.get_headers()],
-            [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
-            [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
-        ]
 
-        window = sg.Window('Bulk Shipper', layout=layout, finalize=True)
-        return window
+        return sg.Window('Bulk Shipper',
+                         layout=[
+                             [self.get_headers()],
+                             [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+                             [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
+                         ],
+                         finalize=True)
 
     def get_shipment_frame(self, shipment: Shipment):
         print_or_email = 'print' if self.config.outbound else 'email'
@@ -50,9 +50,9 @@ class MainGui(Gui):
         sender_address_name = self.get_address_button_string(address=shipment.sender.sender_address)
         recipient_address_name = self.get_address_button_string(shipment.recipient.recipient_address)
         num_parcels = len(shipment.parcels)
-        frame_lay = [[
+
+        row = [
             sg.T(f'{shipment.contact_name}\n{shipment.customer}', **shipment_params),
-            get_sender_button(sender_address_name=sender_address_name, shipment_name=shipment.shipment_name_printable),
             get_recip_button(recipient_address_name=recipient_address_name, shipment=shipment),
             get_date_button(date_name=date_name, shipment=shipment),
             get_parcels_button(num_parcels=num_parcels, shipment=shipment),
@@ -62,16 +62,21 @@ class MainGui(Gui):
             sg.Checkbox(f'{print_or_email}', default=True,
                         k=f'-{shipment.shipment_name_printable}_PRINT_EMAIL-'.upper()),
             sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-'.upper())
-        ]]
-        ship_frame = sg.Frame('', layout=frame_lay, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
-        return ship_frame
+        ]
 
-    @staticmethod
-    def get_headers():
+        if not self.config.outbound:
+            row.insert(1, get_sender_button(sender_address_name=sender_address_name,
+                                         shipment_name=shipment.shipment_name_printable))
+
+
+        layout = [row]
+
+        return sg.Frame('', layout=layout, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
+
+    def get_headers(self):
         headers = [
             # sg.Sizer(30, 0),
             sg.T('Contact / Customer', **head_params),
-            sg.T('Sender', **address_head_params),
             sg.T('Recipient', **address_head_params),
             sg.Text('Collection Date', **date_head_params),
             sg.T('Boxes', **boxes_head_params),
@@ -82,6 +87,11 @@ class MainGui(Gui):
             sg.Push(),
             sg.Push(),
         ]
+
+        if not self.config.outbound:
+            headers.insert(1, sg.T('Sender', **address_head_params))
+
+
         return headers
 
     def get_service_string(self, num_boxes: int, service: Service):
@@ -205,7 +215,6 @@ class MainGui(Gui):
             if 'service' in e.lower():
                 window.close()
                 return menu_map.get(v['-SERVICE-'])
-
 
     # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
 

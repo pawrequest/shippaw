@@ -1,6 +1,6 @@
 sandbox = false
 return_label_email_body = 'Thanks for hiring from Amherst, please find your return shipping label attached'
-fake_mode = 'ship_out'
+fake_mode = 'ship_in'
 parcel_contents = 'Radios'
 
 # rename keys

@@ -1,12 +1,22 @@
 from collections import namedtuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional
 
-import PySimpleGUI as sg
-
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
+
+
+class GuiColIndex(Enum):
+    CONTACT = 0
+    SENDER = 1
+    RECIPIENT = 2
+    DATE = 3
+    BOXES = 4
+    SERVICE = 5
+    ADD = 6
+    BOOK = 7
+    PRINT_EMAIL = 8
 
 
 @dataclass
@@ -154,7 +164,7 @@ class Email:
 
 
 @dataclass
-class HomeAddress():
+class HomeAddress:
     address_id: int
     dbay_key: str
     company_name: str

@@ -31451,3 +31451,1816 @@ London
  }
 2023-04-24 13:14:23,637 INFO     POWERSHELL RUNNER - COMMANDS: ['powershell.exe', '-ExecutionPolicy', 'Unrestricted', 'C:\\paul\\AmDesp\\scripts\\log_tracking_to_Commence.ps1', "'Hire'", "'MOD - 25/04/2023 ref 19818'", "'100786-21008606'", "'False'"]
 2023-04-24 13:14:24,215 INFO     POWERSHELL RUNNER - PROCESS RESULT: CompletedProcess(args=['powershell.exe', '-ExecutionPolicy', 'Unrestricted', 'C:\\paul\\AmDesp\\scripts\\log_tracking_to_Commence.ps1', "'Hire'", "'MOD - 25/04/2023 ref 19818'", "'100786-21008606'", "'False'"], returncode=0, stdout='LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - \nLOG TO COMMENCE SCRIPT - REF NAME - MOD - 25/04/2023 ref 19818\nLOG TO COMMENCE SCRIPT - SHIP ID - MOD - 25/04/2023 ref 19818\nLOG TO COMMENCE SCRIPT - ISARETURN - False\nIS RETURN IS FALSE\n0\n\nOverloadDefinitions                                                                                                    \n-------------------                                                                                                    \nint Commit(Vovin.CmcLibNet.Database.CmcOptionFlags flags)                                                              \nint ICommenceEditRowSet.Commit(Vovin.CmcLibNet.Database.CmcOptionFlags flags)                                          \n                                                                                                                       \n0\n0\n\n\n', stderr='')
+2023-04-24 23:54:16,229 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-24 23:54:16,390 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-24 23:54:17,873 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-24 23:54:17,879 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 23:54:17,880 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-24 23:54:17,881 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-24 23:54:17,881 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 23:54:17,881 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 23:54:17,881 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 23:54:17,881 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-24 23:54:17,881 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-24 23:54:17,882 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 23:54:17,883 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-24 23:54:17,884 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:54:17,884 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-24 23:54:17,884 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-24 23:54:17,884 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:17,885 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-24 23:54:17,886 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-24 23:54:17,887 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-24 23:54:17,888 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-24 23:54:17,889 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-24 23:54:17,890 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-24 23:54:17,890 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-24 23:54:17,890 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-24 23:54:17,890 INFO     PREP SHIPMENTS
+2023-04-24 23:54:17,895 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 23:54:18,073 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns2="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns3:string">BH20 6JA</postcode>
+         <property xsi:type="ns3:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns1:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:54:18,244 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns2="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns3:string">BH20 6JA</postcode>
+         <property xsi:type="ns3:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns1:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:54:18,427 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:54:21,462 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:54:21,466 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 23:54:21,725 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 23:54:21,726 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 23:54:21,906 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 23:54:21,909 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 23:54:21,924 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 23:54:22,417 INFO     GUI LOOP
+2023-04-24 23:54:22,417 INFO     BULK SHIPPER WINDOW
+2023-04-24 23:54:35,404 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-24 23:54:35,512 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-24 23:54:36,706 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-24 23:54:36,711 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-24 23:54:36,712 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-24 23:54:36,713 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-24 23:54:36,714 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 23:54:36,714 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 23:54:36,714 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 23:54:36,714 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-24 23:54:36,714 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:36,714 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-24 23:54:36,715 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-24 23:54:36,716 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 23:54:36,716 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-24 23:54:36,716 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-24 23:54:36,716 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 23:54:36,716 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-24 23:54:36,717 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:54:36,717 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-24 23:54:36,717 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-24 23:54:36,717 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-24 23:54:36,717 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-24 23:54:36,718 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-24 23:54:36,719 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-24 23:54:36,720 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-24 23:54:36,720 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-24 23:54:36,720 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-24 23:54:36,720 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-24 23:54:36,720 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-24 23:54:36,721 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-24 23:54:36,722 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-24 23:54:36,723 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-24 23:54:36,723 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-24 23:54:36,723 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-24 23:54:36,723 INFO     PREP SHIPMENTS
+2023-04-24 23:54:36,728 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 23:54:36,892 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:54:37,071 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:54:37,255 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:54:38,779 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:54:38,783 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 23:54:39,060 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 23:54:39,060 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 23:54:39,236 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 23:54:39,239 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 23:54:39,254 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 23:54:39,808 INFO     GUI LOOP
+2023-04-24 23:54:39,809 INFO     BULK SHIPPER WINDOW
+2023-04-24 23:55:09,504 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-24 23:55:09,622 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-24 23:55:10,775 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-24 23:55:10,781 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:55:10,781 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 23:55:10,781 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-24 23:55:10,781 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-24 23:55:10,782 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 23:55:10,783 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-24 23:55:10,784 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:55:10,784 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 23:55:10,784 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:55:10,784 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-24 23:55:10,784 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-24 23:55:10,785 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-24 23:55:10,786 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 23:55:10,786 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-24 23:55:10,786 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:55:10,786 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-24 23:55:10,786 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-24 23:55:10,787 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-24 23:55:10,787 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-24 23:55:10,787 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-24 23:55:10,787 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-24 23:55:10,787 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-24 23:55:10,788 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-24 23:55:10,789 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-24 23:55:10,790 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-24 23:55:10,790 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-24 23:55:10,790 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-24 23:55:10,790 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-24 23:55:10,790 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-24 23:55:10,791 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-24 23:55:10,792 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-24 23:55:10,793 INFO     PREP SHIPMENTS
+2023-04-24 23:55:10,797 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 23:55:10,963 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns3="http://schemas.xmlsoap.org/soap/envelope/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns3:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns3:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:55:11,125 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns3="http://schemas.xmlsoap.org/soap/envelope/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns3:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns3:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:55:11,295 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:55:12,697 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:55:12,701 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 23:55:12,953 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 23:55:12,953 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 23:55:13,120 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 23:55:13,123 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 23:55:13,138 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 23:55:13,703 INFO     GUI LOOP
+2023-04-24 23:55:13,703 INFO     BULK SHIPPER WINDOW
+2023-04-24 23:55:17,378 ERROR    DISPATCH EXCEPTION 
+'NoneType' object has no attribute 'ParentContainer'
+Traceback (most recent call last):
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 45, in dispatch
+    booked_shipments = self.main_gui_loop(prepped_shipments)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 107, in main_gui_loop
+    self.gui.window = self.gui.bulk_shipper_window(shipments=shipments)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 41, in bulk_shipper_window
+    [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 41, in <listcomp>
+    [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 54, in get_shipment_frame
+    return sg.Frame('',
+           ^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6610, in __init__
+    self.Layout(layout)
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6696, in layout
+    self.AddRow(*row)
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6653, in add_row
+    if element.ParentContainer is not None:
+       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'ParentContainer'
+2023-04-24 23:58:13,025 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-24 23:58:13,139 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-24 23:58:14,292 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-24 23:58:14,298 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - BOXES : 2
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-24 23:58:14,299 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-24 23:58:14,300 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-24 23:58:14,300 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-24 23:58:14,300 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-24 23:58:14,300 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-24 23:58:14,300 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-24 23:58:14,300 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-24 23:58:14,301 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-24 23:58:14,302 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-24 23:58:14,303 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-24 23:58:14,303 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-24 23:58:14,303 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-24 23:58:14,303 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-24 23:58:14,303 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-24 23:58:14,304 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-24 23:58:14,305 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-24 23:58:14,306 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-24 23:58:14,307 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-24 23:58:14,308 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-24 23:58:14,309 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-24 23:58:14,309 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-24 23:58:14,309 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-24 23:58:14,309 INFO     PREP SHIPMENTS
+2023-04-24 23:58:14,314 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-24 23:58:14,525 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="urn:despatchbay" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns3:FindAddress>
+         <postcode xsi:type="ns1:string">BH20 6JA</postcode>
+         <property xsi:type="ns1:string">RAC Saddle Club Office</property>
+      </ns3:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:58:14,682 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="urn:despatchbay" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns3:FindAddress>
+         <postcode xsi:type="ns1:string">BH20 6JA</postcode>
+         <property xsi:type="ns1:string">RAC Saddle Club Office</property>
+      </ns3:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-24 23:58:14,859 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:58:16,195 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-24 23:58:16,199 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-24 23:58:16,456 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-24 23:58:16,457 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-24 23:58:16,792 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-24 23:58:16,795 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-24 23:58:16,810 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-24 23:58:17,315 INFO     GUI LOOP
+2023-04-24 23:58:17,315 INFO     BULK SHIPPER WINDOW
+2023-04-24 23:58:20,902 ERROR    DISPATCH EXCEPTION 
+'NoneType' object has no attribute 'ParentContainer'
+Traceback (most recent call last):
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 45, in dispatch
+    booked_shipments = self.main_gui_loop(prepped_shipments)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 107, in main_gui_loop
+    self.gui.window = self.gui.bulk_shipper_window(shipments=shipments)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 41, in bulk_shipper_window
+    [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 41, in <listcomp>
+    [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\main_gui.py", line 71, in get_shipment_frame
+    return sg.Frame('', layout=layout, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6610, in __init__
+    self.Layout(layout)
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6696, in layout
+    self.AddRow(*row)
+  File "E:\Dev\AmDesp\venv\Lib\site-packages\PySimpleGUI\PySimpleGUI.py", line 6653, in add_row
+    if element.ParentContainer is not None:
+       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'ParentContainer'
+2023-04-25 00:02:37,963 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-25 00:02:38,076 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-25 00:02:39,259 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-25 00:02:39,265 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - BOXES : 2
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-25 00:02:39,266 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-25 00:02:39,267 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-25 00:02:39,267 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-25 00:02:39,267 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-25 00:02:39,267 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-25 00:02:39,267 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-25 00:02:39,267 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-25 00:02:39,268 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-25 00:02:39,269 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-25 00:02:39,270 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:02:39,270 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-25 00:02:39,270 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-25 00:02:39,270 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-25 00:02:39,270 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:02:39,271 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-25 00:02:39,272 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-25 00:02:39,273 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-25 00:02:39,274 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-25 00:02:39,275 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-25 00:02:39,276 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-25 00:02:39,276 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-25 00:02:39,276 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-25 00:02:39,276 INFO     PREP SHIPMENTS
+2023-04-25 00:02:39,281 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-25 00:02:39,456 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:02:39,633 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:despatchbay" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns1:FindAddress>
+         <postcode xsi:type="ns0:string">BH20 6JA</postcode>
+         <property xsi:type="ns0:string">RAC Saddle Club Office</property>
+      </ns1:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:02:39,808 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:02:42,407 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:02:42,411 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-25 00:02:42,672 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-25 00:02:42,673 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-25 00:02:42,845 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-25 00:02:42,848 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-25 00:02:42,862 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-25 00:02:43,434 INFO     GUI LOOP
+2023-04-25 00:02:43,434 INFO     BULK SHIPPER WINDOW
+2023-04-25 00:21:52,958 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-25 00:21:53,082 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-25 00:21:54,245 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-25 00:21:54,251 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:21:54,251 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-25 00:21:54,252 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - BOXES : 2
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-25 00:21:54,253 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-25 00:21:54,254 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-25 00:21:54,254 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-25 00:21:54,254 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-25 00:21:54,254 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:21:54,254 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-25 00:21:54,254 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-25 00:21:54,255 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-25 00:21:54,256 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-25 00:21:54,256 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-25 00:21:54,256 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-25 00:21:54,256 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-25 00:21:54,257 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-25 00:21:54,258 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-25 00:21:54,258 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-25 00:21:54,258 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-25 00:21:54,258 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:21:54,258 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-25 00:21:54,259 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-25 00:21:54,260 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-25 00:21:54,260 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-25 00:21:54,260 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-25 00:21:54,260 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-25 00:21:54,260 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-25 00:21:54,261 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-25 00:21:54,262 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-25 00:21:54,263 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-25 00:21:54,263 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-25 00:21:54,263 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-25 00:21:54,263 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-25 00:21:54,263 INFO     PREP SHIPMENTS
+2023-04-25 00:21:54,268 INFO     PREP SHIPMENT -  home_sender_recip=(SenderAddressType){
+   SenderName = None
+   SenderTelephone = None
+   SenderEmail = None
+   SenderAddress = None
+   SenderAddressID = 5536
+ }
+2023-04-25 00:21:54,425 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns3:string">BH20 6JA</postcode>
+         <property xsi:type="ns3:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:21:54,585 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://www.w3.org/2001/XMLSchema" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns3:string">BH20 6JA</postcode>
+         <property xsi:type="ns3:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:21:54,761 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:22:01,089 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:22:01,092 INFO     PREP SHIPMENT - REMOTE RECIPIENT (RecipientAddressType){
+   RecipientName = "Kristal Bowdler"
+   RecipientTelephone = "01929 403580"
+   RecipientEmail = "kristalbowdler@gmail.com"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+         Street = "Allenby Barracks"
+         Locality = "Bovington"
+         TownCity = "Wareham"
+         County = "Dorset"
+         PostalCode = "BH20 6JA"
+         CountryCode = "GB"
+      }
+ }
+2023-04-25 00:22:01,357 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-25 00:22:01,357 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-25 00:22:01,801 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-25"
+ }
+2023-04-25 00:22:01,804 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-25 00:22:01,824 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-25"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = None
+         SenderTelephone = None
+         SenderEmail = None
+         SenderAddress = None
+         SenderAddressID = 5536
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Kristal Bowdler"
+         RecipientTelephone = "01929 403580"
+         RecipientEmail = "kristalbowdler@gmail.com"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-25 00:22:02,395 INFO     GUI LOOP
+2023-04-25 00:22:02,395 INFO     BULK SHIPPER WINDOW
+2023-04-25 00:22:30,141 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-25 00:22:30,255 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-25 00:22:31,398 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-25 00:22:31,404 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - BOXES : 2
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-25 00:22:31,405 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-25 00:22:31,406 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-25 00:22:31,406 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-25 00:22:31,406 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-25 00:22:31,406 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-25 00:22:31,406 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-25 00:22:31,406 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:22:31,407 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-25 00:22:31,407 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:22:31,407 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-25 00:22:31,407 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-25 00:22:31,407 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-25 00:22:31,408 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-25 00:22:31,409 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-25 00:22:31,409 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:22:31,409 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-25 00:22:31,409 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-25 00:22:31,410 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-25 00:22:31,411 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:22:31,411 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-25 00:22:31,411 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-25 00:22:31,411 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-25 00:22:31,411 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-25 00:22:31,412 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-25 00:22:31,413 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-25 00:22:31,413 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-25 00:22:31,413 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-25 00:22:31,413 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-25 00:22:31,413 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-25 00:22:31,414 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-25 00:22:31,415 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-25 00:22:31,415 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-25 00:22:31,415 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-25 00:22:31,415 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-25 00:22:31,415 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-25 00:22:31,416 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-25 00:22:31,416 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-25 00:22:31,416 INFO     PREP SHIPMENTS
+2023-04-25 00:22:31,416 ERROR    DISPATCH EXCEPTION 
+'HomeAddress' object is not subscriptable
+Traceback (most recent call last):
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 44, in dispatch
+    prepped_shipments = self.prep_shipments()
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 74, in prep_shipments
+    else get_home_recipient(client=client, config=config))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Dev\AmDesp\amdesp\shipper.py", line 383, in get_home_recipient
+    address = client.get_address_by_key(config.home_address['dbay_key'])
+                                        ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: 'HomeAddress' object is not subscriptable
+2023-04-25 00:23:02,867 INFO     config_env=OrderedDict([('DESPATCH_API_USER', '25RM-EB372013'), ('DESPATCH_API_KEY', '2DE45B0B5EDEB688841F'), ('DESPATCH_SENDER_ID', '5536'), ('GOOGLE_CLIENT', '1060467252218-r71enjg7qpmce20sop7p1v77o4i20baf.apps.googleusercontent.com'), ('GOOGLE_KEY', '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'), ('DESPATCH_API_USER_SANDBOX', 'D25RM-E1305A31'), ('DESPATCH_API_KEY_SANDBOX', 'AAD2F91ED25CAE38B4D1')])
+ROOT_DIR=WindowsPath('E:/Dev/AmDesp')
+LOG_FILE=WindowsPath('E:/Dev/AmDesp/data/AmDesp.log')
+2023-04-25 00:23:02,986 INFO     launched with 1 arguments:['E:\\Dev\\AmDesp\\main.py']
+2023-04-25 00:23:04,131 INFO     Despatchbay account retrieved: (AccountType){
+   AccountID = 100786
+   AccountName = "Amherst Enterprises Ltd"
+   AccountBalance = 
+      (AccountBalanceType){
+         Balance = 18.45
+         AvailableBalance = 18.45
+      }
+ }
+2023-04-25 00:23:04,137 INFO     DBASE RECORD - NAME : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:23:04,137 INFO     DBASE RECORD - SEND_OUT_D : 2023-04-25
+2023-04-25 00:23:04,137 INFO     DBASE RECORD - DELIVERY_A : Allenby Barracks
+Bovington
+Wareham
+Dorset        
+2023-04-25 00:23:04,137 INFO     DBASE RECORD - DELIVERY_C : Kristal Bowdler        
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - DELIVERY_E : kristalbowdler@gmail.com        
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - DELIVERY_N : RAC Saddle Club Office        
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - DELIVERY_P : BH20 6JA        
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - DELIVERY_R : None
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - DELIVERY_T : 01929 403580
+2023-04-25 00:23:04,138 INFO     DBASE RECORD - BOXES : 2
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - DB_LABEL_P : False
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - SEND___COL : We send and pick up
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - SEND_METHO : Parcelforce/DB and we collect        
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - INBOUND_ID : None
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - OUTBOUND_I : None
+2023-04-25 00:23:04,139 INFO     DBASE RECORD - STATUS : Booked in
+2023-04-25 00:23:04,140 INFO     DBASE RECORD - FIELD17 : RAC Saddle Club Office 
+2023-04-25 00:23:04,140 INFO     SHIPDICT FROM DBASE - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:23:04,140 INFO     SHIPDICT FROM DBASE - send_out_date : 2023-04-25
+2023-04-25 00:23:04,140 INFO     SHIPDICT FROM DBASE - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:23:04,140 INFO     SHIPDICT FROM DBASE - contact : Kristal Bowdler
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - email : kristalbowdler@gmail.com
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - delivery_name : RAC Saddle Club Office
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - postcode : BH20 6JA
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - telephone : 01929 403580
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - boxes : 2
+2023-04-25 00:23:04,141 INFO     SHIPDICT FROM DBASE - SEND___COL : We send and pick up
+2023-04-25 00:23:04,142 INFO     SHIPDICT FROM DBASE - send_method : Parcelforce/DB and we collect
+2023-04-25 00:23:04,142 INFO     SHIPDICT FROM DBASE - STATUS : Booked in
+2023-04-25 00:23:04,142 INFO     SHIPDICT FROM DBASE - customer : RAC Saddle Club Office
+2023-04-25 00:23:04,142 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - address_as_str : Allenby Barracks
+Bovington
+Wareham
+Dorset
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - str_to_match : Allenby Barracks
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - boxes : 2
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - category : Hire
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - customer : RAC Saddle Club Office
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - contact_name : Kristal Bowdler
+2023-04-25 00:23:04,143 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - email : kristalbowdler@gmail.com
+2023-04-25 00:23:04,144 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - postcode : BH20 6JA
+2023-04-25 00:23:04,144 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - send_out_date : 2023-04-25
+2023-04-25 00:23:04,144 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name : RAC Saddle Club Office - 25/04/2023 ref 19712
+2023-04-25 00:23:04,144 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - status : None
+2023-04-25 00:23:04,144 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - telephone : 01929 403580
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_name_printable : RAC Saddle Club Office - 25_04_2023 ref 19712
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - delivery_name : RAC Saddle Club Office
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - inbound_id : None
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - outbound_id : None
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_booked : False
+2023-04-25 00:23:04,145 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - printed : False
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_menu_map : {}
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service_menu_map : {}
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - label_location : .
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - candidate_key_dict : {}
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - parcels : []
+2023-04-25 00:23:04,146 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_address : None
+2023-04-25 00:23:04,147 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender_contact : None
+2023-04-25 00:23:04,147 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - sender : <class 'despatchbay.despatchbay_entities.Sender'>
+2023-04-25 00:23:04,147 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - recipient : <class 'despatchbay.despatchbay_entities.Recipient'>
+2023-04-25 00:23:04,147 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - date_matched : False
+2023-04-25 00:23:04,147 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - despatch_objects : DespatchObjects(collection_date=None, available_dates=None, shipment_request=None, shipment_return=None, service=None, available_services=None)
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - collection_date : None
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_request : None
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - shipment_return : None
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - service : None
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - available_services : None
+2023-04-25 00:23:04,148 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - default_service_matched : False
+2023-04-25 00:23:04,149 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - bestmatch : None
+2023-04-25 00:23:04,149 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - logged_to_commence : False
+2023-04-25 00:23:04,149 INFO     SHIPMENT - RAC SADDLE CLUB OFFICE - 25/04/2023 REF 19712 - remote_contact : None
+2023-04-25 00:23:04,149 INFO     PREP SHIPMENTS
+2023-04-25 00:23:04,325 INFO     PREP SHIPMENT -  home_sender_recip=(RecipientAddressType){
+   RecipientName = "Giles Toman"
+   RecipientTelephone = "0207 3289792"
+   RecipientEmail = "radios@amherst.co.uk"
+   RecipientAddress = 
+      (AddressType){
+         CompanyName = "Amherst Radio Centre"
+         Street = "70 Kingsgate Road"
+         Locality = None
+         TownCity = "London"
+         County = None
+         PostalCode = "NW6 4TE"
+         CountryCode = "GB"
+      }
+ }
+2023-04-25 00:23:04,475 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns1:string">BH20 6JA</postcode>
+         <property xsi:type="ns1:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:23:04,627 ERROR    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns0="urn:despatchbay" xmlns:ns1="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns3="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns2:Body>
+      <ns0:FindAddress>
+         <postcode xsi:type="ns1:string">BH20 6JA</postcode>
+         <property xsi:type="ns1:string">RAC Saddle Club Office</property>
+      </ns0:FindAddress>
+   </ns2:Body>
+</SOAP-ENV:Envelope>
+2023-04-25 00:23:04,792 INFO     SEARCH MATCHED ADDRESS : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:23:07,290 INFO     CHECK ADDRESS COMPANY : (AddressType){
+   CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+   Street = "Allenby Barracks"
+   Locality = "Bovington"
+   TownCity = "Wareham"
+   County = "Dorset"
+   PostalCode = "BH20 6JA"
+   CountryCode = "GB"
+ }
+2023-04-25 00:23:07,540 INFO     PREP SHIPMENT - ARBITRARY SERVICE Express 24
+2023-04-25 00:23:07,540 INFO     PREP SHIPMENT - CHECK TODAY SHIP 2023-04-25
+2023-04-25 00:23:07,712 INFO     PREPPING SHIPMENT - COLLECTION DATE (CollectionDateType){
+   CollectionDate = "2023-04-26"
+ }
+2023-04-25 00:23:07,715 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
+2023-04-25 00:23:07,730 INFO     PREPPING SHIPMENT - SHIPMENT REQUEST (ShipmentRequestType){
+   ServiceID = 101
+   Parcels = 
+      (ArrayOfParcelType){
+         _arrayType = "urn:ArrayType[]"
+         _offset = ""
+         _id = ""
+         _href = ""
+         item[] = 
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+            (ParcelType){
+               Weight = 6
+               Length = 60
+               Width = 40
+               Height = 40
+               Contents = "Radios"
+               Value = 500
+               TrackingNumber = None
+            },
+      }
+   ClientReference = "RAC Saddle Club Office"
+   CollectionDate = 
+      (CollectionDateType){
+         CollectionDate = "2023-04-26"
+      }
+   SenderAddress = 
+      (SenderAddressType){
+         SenderName = "Kristal Bowdler"
+         SenderTelephone = "01929 403580"
+         SenderEmail = "kristalbowdler@gmail.com"
+         SenderAddress = 
+            (AddressType){
+               CompanyName = "Ministry of Defence, Headquarters Royal Armoured Corps"
+               Street = "Allenby Barracks"
+               Locality = "Bovington"
+               TownCity = "Wareham"
+               County = "Dorset"
+               PostalCode = "BH20 6JA"
+               CountryCode = "GB"
+            }
+         SenderAddressID = None
+      }
+   RecipientAddress = 
+      (RecipientAddressType){
+         RecipientName = "Giles Toman"
+         RecipientTelephone = "0207 3289792"
+         RecipientEmail = "radios@amherst.co.uk"
+         RecipientAddress = 
+            (AddressType){
+               CompanyName = "Amherst Radio Centre"
+               Street = "70 Kingsgate Road"
+               Locality = None
+               TownCity = "London"
+               County = None
+               PostalCode = "NW6 4TE"
+               CountryCode = "GB"
+            }
+      }
+   FollowShipment = True
+ }
+2023-04-25 00:23:08,232 INFO     GUI LOOP
+2023-04-25 00:23:08,232 INFO     BULK SHIPPER WINDOW
+2023-04-25 00:24:14,915 INFO     PREPPING SHIPMENT - PARCELS [(ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }, (ParcelType){
+   Weight = 6
+   Length = 60
+   Width = 40
+   Height = 40
+   Contents = "Radios"
+   Value = 500
+   TrackingNumber = None
+ }]
