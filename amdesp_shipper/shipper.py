@@ -18,7 +18,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
-from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FieldsList, FuzzyScores
+from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FieldsList, FuzzyScores, Job
 from amdesp_shipper.main_gui import MainGui
 from amdesp_shipper.shipment import Shipment
 from amdesp_shipper.config import get_amdesp_logger
@@ -115,11 +115,15 @@ class Shipper:
             elif self.gui.event == '-GO_SHIP-':
                 if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                     sg.popup_quick_message('Please Wait')
+                    # if booked := self.do_jobs():
+
                     if booked_ship := self.queue_and_book():
                         self.gui.window.close()
                         return booked_ship
             else:
                 self.edit_shipment(shipments=shipments)
+    # def do_jobs(self):
+    #     job = Job()
 
     def edit_shipment(self, shipments):
         self.shipment_to_edit: Shipment = next((shipment for shipment in shipments

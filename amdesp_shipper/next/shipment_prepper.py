@@ -57,7 +57,7 @@ class JobProcessor:
 
 
 class ShipmentListPrepper:
-    def __init__(self, shipments: List[Shipment], client: DespatchBaySDK, config: Config):
+    def __init__(self, client: DespatchBaySDK, config: Config):
         self.client = client
         self.config = config
         self.outbound: bool = config.outbound
@@ -70,9 +70,12 @@ class ShipmentListPrepper:
         processed_shipments = [Shipment]
 
         while shipments:
-            ship_in_play = shipments.pop()
+            ship_in_play:Shipment = shipments.pop()
             processor = SingleProcessor(config=self.config, client=self.client)
             processed = processor.process_a_shipment(shipment=ship_in_play)
+            job = Job(
+                shipment_request=ship_in_play
+            )
             # processed_shipment = self.process_a_shipment(ship_in_play)
             processed_shipments.append(processed)
         return processed_shipments
@@ -89,44 +92,48 @@ class SingleProcessor:
         self.sandbox = config.sandbox
 
     def process_a_shipment(self, shipment):
-        # todo actually use the .despatchbay_objects
         try:
-
-            remote_contact = shipment.get_remote_contact()
+            remote_contact = self.get_remote_contact(shipment)
             remote_address = self.get_remote_address(shipment=shipment)
-            if remote_address:
-                if not self.sandbox:
-                    remote_address = self.check_address_company(address=remote_address, shipment=shipment)
+            if not self.sandbox:  # nothing matches in sandbox land
+                remote_address = self.check_address_company(address=remote_address, shipment=shipment)
+                # remote_address = self.bestmatch_to_address_from_gui(bestmatch=remote_address, remote_contact=remote_address, shipment=shipment)
 
-            if isinstance(remote_address, BestMatch):
-                address_gui = AddressGui(config=self.config, client=self.client, shipment=shipment, address=bestmatch.address,
-                                         contact=shipment.remote_contact)
-                address = address_gui.address_gui_loop()
-            if self.outbound:
-                shipment.despatch_objects.sender = self.client.sender(address_id=self.home_address_id)
-                shipment.despatch_objects.recipient = self.get_remote_recipient(contact=remote_contact, remote_address=remote_address)
-            else:
-                shipment.despatch_objects.sender = self.get_remote_sender(contact=remote_contact, remote_address=remote_address)
-                shipment.despatch_objects.recipient = self.get_home_recipient()
-
-
+            self.get_sender_recip(remote_address, remote_contact, shipment)
             shipment.service = self.get_arbitrary_service()  # needed to get dates
             shipment.despatch_objects.collection_date = self.get_collection_date(shipment=shipment)
-
             check = self.check_today_ship(shipment)  # no bookings after 1pm
             if check is None:
                 return None
-
             shipment.despatch_objects.parcels = self.get_parcels(num_parcels=shipment.boxes)
             shipment.despatch_objects.shipment_request = self.get_shipment_request(shipment=shipment)
             shipment.despatch_objects.service = self.get_actual_service(service_id=self.config.dbay_creds.service_id,
                                                                         shipment=shipment)
-
-
         except Exception as e:
             logger.exception(f'Error with {shipment.shipment_name_printable}:\n {e}')
         else:
             return shipment
+
+    def get_sender_recip(self, remote_address, remote_contact, shipment):
+        if self.outbound:
+            shipment.despatch_objects.sender = self.client.sender(address_id=self.home_address_id)
+            shipment.despatch_objects.recipient = self.get_remote_recipient(contact=remote_contact,
+                                                                            remote_address=remote_address)
+        else:
+            shipment.despatch_objects.sender = self.get_remote_sender(contact=remote_contact,
+                                                                      remote_address=remote_address)
+            shipment.despatch_objects.recipient = self.get_home_recipient()
+
+    def bestmatch_to_address_from_gui(self, bestmatch:BestMatch, remote_contact, shipment):
+        address_gui = AddressGui(config=self.config, client=self.client, shipment=shipment, address=bestmatch.address,
+                                 contact=remote_contact)
+        bestmatch = address_gui.address_gui_loop()
+        return bestmatch
+
+    def get_remote_contact(self, shipment):
+        remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                 name=shipment.contact_name)
+        return remote_contact
 
     def get_remote_address(self,shipment: Shipment) -> Address | BestMatch:
         """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
@@ -147,12 +154,12 @@ class SingleProcessor:
             logger.info(f"BESTMATCH : {bestmatch}") if bestmatch else None
             address = bestmatch.address
 
-
-        if not address:
-            candidate_keys = candidate_keys or self.get_candidate_keys_dict(client=client, shipment=shipment)
-            bestmatch = self.get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
-            logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
-            return bestmatch
+        #
+        # if not address:
+        #     candidate_keys = candidate_keys or self.get_candidate_keys_dict(client=client, shipment=shipment)
+        #     bestmatch = self.get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
+        #     logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
+        #     return bestmatch
 
         return address
 

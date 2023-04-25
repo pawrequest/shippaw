@@ -22,10 +22,10 @@ class GuiColIndex(Enum):
 @dataclass
 class Job:
     shipment_request: ShipmentRequest
-    shipment_id: str
     add: bool
     book: bool
     print_or_email: bool
+    shipment_id: Optional[str] = None
     result: Optional[str] = None
 
 
