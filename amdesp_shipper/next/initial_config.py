@@ -12,8 +12,8 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
-from amdesp.config import set_despatch_env
-from amdesp.config import get_amdesp_logger
+from amdesp_shipper.config import set_despatch_env
+from amdesp_shipper.config import get_amdesp_logger
 
 logger = get_amdesp_logger()
 

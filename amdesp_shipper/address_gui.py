@@ -4,11 +4,11 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp.config import Config
-from amdesp.enums import Contact, FieldsList
-from amdesp.main_gui import Gui
-from amdesp.gui_params import address_fieldname_params, address_input_params
-from amdesp.shipment import Shipment
+from amdesp_shipper.config import Config
+from amdesp_shipper.enums import Contact, FieldsList
+from amdesp_shipper.main_gui import Gui
+from amdesp_shipper.gui_params import address_fieldname_params, address_input_params
+from amdesp_shipper.shipment import Shipment
 
 
 class AddressGui(Gui):

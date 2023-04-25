@@ -4,14 +4,14 @@ import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
 
-from amdesp.config import Config, get_amdesp_logger
+from amdesp_shipper.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-from amdesp.enums import DateTimeMasks, FieldsList
-from amdesp.gui_params import address_fieldname_params, address_head_params, address_input_params, address_params, \
+from amdesp_shipper.enums import DateTimeMasks, FieldsList
+from amdesp_shipper.gui_params import address_fieldname_params, address_head_params, address_input_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
-from amdesp.shipment import Shipment
+from amdesp_shipper.shipment import Shipment
 
 logger = get_amdesp_logger()
 

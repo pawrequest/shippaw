@@ -11,18 +11,18 @@ import dotenv
 import win32com.client
 from fuzzywuzzy import fuzz
 
-from amdesp.address_gui import AddressGui
-from amdesp.config import Config
+from amdesp_shipper.address_gui import AddressGui
+from amdesp_shipper.config import Config
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
-from amdesp.enums import BestMatch, Contact, DateTimeMasks, FieldsList, FuzzyScores
-from amdesp.main_gui import MainGui
-from amdesp.shipment import Shipment
-from amdesp.config import get_amdesp_logger
-from amdesp.tracking_gui import tracking_loop
+from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FieldsList, FuzzyScores
+from amdesp_shipper.main_gui import MainGui
+from amdesp_shipper.shipment import Shipment
+from amdesp_shipper.config import get_amdesp_logger
+from amdesp_shipper.tracking_gui import tracking_loop
 
 dotenv.load_dotenv()
 logger = get_amdesp_logger()

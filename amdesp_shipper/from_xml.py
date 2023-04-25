@@ -1,4 +1,4 @@
-from amdesp.config import Config
+from amdesp_shipper.config import Config
 
 
 def ship_dict_from_xml(config: Config, xml_file: str) -> dict:

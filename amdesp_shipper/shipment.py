@@ -7,11 +7,11 @@ from typing import List, Optional
 
 from dbfread.dbf import DBF, DBFNotFound
 
-from amdesp.config import Config, get_amdesp_logger
+from amdesp_shipper.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from amdesp.enums import BestMatch, Contact, DespatchObjects
-from amdesp.exceptions import *
+from amdesp_shipper.enums import BestMatch, Contact, DespatchObjects
+from amdesp_shipper.exceptions import *
 
 logger = get_amdesp_logger()
 
