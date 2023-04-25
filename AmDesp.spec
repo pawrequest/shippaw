@@ -6,7 +6,6 @@ block_cipher = None
 added_files = [
                 ('scripts/', './scripts/'),
                 ('data/', './data/'),
-                ('.env', '.')
                 ]
 
 a = Analysis(
