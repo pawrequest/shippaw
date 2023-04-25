@@ -9,10 +9,26 @@ from fuzzywuzzy import fuzz
 
 from amdesp_shipper.address_gui import AddressGui
 from amdesp_shipper.config import Config, get_amdesp_logger
-from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FuzzyScores, Job
+from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FuzzyScores, BookingJob, DespatchObjects
 from amdesp_shipper.shipment import Shipment
-
+import abc as ABC
 logger = get_amdesp_logger()
+
+class Job(ABC):
+    ...
+
+
+class Processor(Protocol):
+    def get_manifest(self):
+        'in child'
+    def handle_manifest(self):
+        'in child'
+    def do_job(self):
+        'in child'
+    def log_job(self):
+        'in child'
+    def return_something(self):
+        'in child'
 
 
 class Prepper(Protocol):
@@ -23,14 +39,29 @@ class Prepper(Protocol):
         """in child"""
 
 
-class JobProcessor:
-    def __init__(self, jobs: List[Job]):
-        self.jobs = jobs
+class Booker(Processor):
+    def __init__(self, manifest: List[BookingJob]):
+        self.manifest = manifest
 
-    def list_processor(self):
-        while self.jobs:
-            this_job = self.jobs.pop()
-            self.process_job(this_job)
+    def get_manifest(self):
+        ...
+
+    def handle_manifest(self):
+        while self.manifest:
+            this_job = self.manifest.pop()
+            self.do_job(this_job)
+
+    def do_job(self, job):
+        'in child'
+
+    def log_job(self):
+        'in child'
+
+    def return_something(self):
+        'in child'
+
+
+
 
     def process_job(self, job):
         if job.add:
@@ -73,7 +104,7 @@ class ShipmentListPrepper:
             ship_in_play:Shipment = shipments.pop()
             processor = SingleProcessor(config=self.config, client=self.client)
             processed = processor.process_a_shipment(shipment=ship_in_play)
-            job = Job(
+            job = BookingJob(
                 shipment_request=ship_in_play
             )
             # processed_shipment = self.process_a_shipment(ship_in_play)
@@ -90,6 +121,31 @@ class SingleProcessor:
         self.home_address_id: str = config.home_address.address_id
         self.home_contact = config.home_contact
         self.sandbox = config.sandbox
+        self.default_service_id = config.dbay_creds.service_id
+
+    def get_dbay_objects(self, shipment):
+        service = self.get_arbitrary_service()  # needed to get dates
+        sender = self.get_sender()
+        recipient = self.get_recipient()
+        collection_date = ...
+        service = ...
+        parcels = ...
+        shipment_request = ...
+        dbay_objects = DespatchObjects(
+            collection_date=self.get_collection_date(shipment=shipment),
+            service=...,
+            shipment_request=...,
+
+
+
+
+        )
+
+    def get_sender(self):
+        ...
+    def get_recipient(self):
+        ...
+
 
     def process_a_shipment(self, shipment):
         try:
@@ -185,11 +241,9 @@ class SingleProcessor:
 
     def get_arbitrary_service(self) -> Service:
         """ needed to get available dates, swapped out for real service later """
-        client = self.client
-        config = self.config
-        all_services: [Service] = client.get_services()
+        all_services: [Service] = self.client.get_services()
         arbitrary_service: Service = next(
-            (service for service in all_services if service.service_id == config.dbay_creds.service_id),
+            (service for service in all_services if service.service_id == self.default_service_id),
             all_services[0])
         logger.info(f'PREP SHIPMENT - ARBITRARY SERVICE {arbitrary_service.name}')
 

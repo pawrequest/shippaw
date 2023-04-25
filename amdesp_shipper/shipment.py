@@ -82,6 +82,7 @@ class Shipment:
         """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
         shipments: [Shipment] = []
         dbase_file = str(config.paths.dbase_export)
+        logger.info(f'DBase file = {dbase_file}')
         try:
             for record in DBF(dbase_file):
                 [logger.info(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]

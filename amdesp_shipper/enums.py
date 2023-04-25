@@ -20,7 +20,7 @@ class GuiColIndex(Enum):
 
 
 @dataclass
-class Job:
+class BookingJob:
     shipment_request: ShipmentRequest
     add: bool
     book: bool
