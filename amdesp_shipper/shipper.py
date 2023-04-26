@@ -4,7 +4,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
@@ -13,7 +13,8 @@ from fuzzywuzzy import fuzz
 
 from amdesp_shipper.address_gui import AddressGui
 from amdesp_shipper.config import Config
-from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service
+from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
+    ShipmentRequest
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
@@ -64,7 +65,6 @@ class Shipper:
         stores all in shipment attrs
         uses an arbitrary service to get collection dates, then gets real service from eventual shipment_return dbay object"""
         logger.info('PREP SHIPMENTS')
-        # shipments = shipments[0:LIMITED_SHIPMENTS] if LIMITED_SHIPMENTS else shipments
         prepped_shipments = []
         config = self.config
         client = self.client
@@ -79,14 +79,15 @@ class Shipper:
                 shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
                                                   name=shipment.contact_name)
                 self.get_sender_recip(home_sender_recip=home_sender_recip, shipment=shipment)
-                shipment.service = self.get_arbitrary_service()  # needed to get dates
-                shipment = check_today_ship(shipment)  # no bookings after 1pm
-                if shipment is None:
+                shipment.service = client.get_services()[0]  # needed to get dates
+                if check_today_ship(shipment) is None:  # no bookings after 1pm
                     continue
                 shipment.collection_date = self.get_collection_date(shipment=shipment)
-                shipment.parcels = self.get_parcels(num_parcels=shipment.boxes)
+                shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
                 shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-                shipment.service = get_actual_service(client=client, config=config, shipment=shipment)
+                shipment.available_services = client.get_available_services(shipment.shipment_request)
+                shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
+                                                      available_services=shipment.available_services)
 
                 prepped_shipments.append(shipment)
 
@@ -96,7 +97,6 @@ class Shipper:
                 continue
 
         return prepped_shipments
-
 
     def main_gui_loop(self, shipments: [Shipment]):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
@@ -111,17 +111,14 @@ class Shipper:
             if self.gui.event == sg.WIN_CLOSED:
                 self.gui.window.close()
                 sys.exit()
-
             elif self.gui.event == '-GO_SHIP-':
                 if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                     sg.popup_quick_message('Please Wait')
-                    # if booked := self.do_jobs():
-
-                    if booked_ship := self.queue_and_book():
-                        self.gui.window.close()
-                        return booked_ship
+                    self.gui.window.close()
+                    return self.queue_and_book()
             else:
                 self.edit_shipment(shipments=shipments)
+
     # def do_jobs(self):
     #     job = Job()
 
@@ -130,7 +127,7 @@ class Shipper:
                                                 if shipment.shipment_name_printable.lower() in self.gui.event.lower()))
         if 'boxes' in self.gui.event.lower():
             self.boxes_click()
-        if 'service' in self.gui.event.lower():
+        elif 'service' in self.gui.event.lower():
             self.service_click()
         elif 'date' in self.gui.event.lower():
             self.date_click()
@@ -187,23 +184,36 @@ class Shipper:
 
     def service_click(self):
         shipment_to_edit = self.shipment_to_edit
-        new_service = self.gui.new_service_selector(default_service=shipment_to_edit.service.name,
-                                                    menu_map=shipment_to_edit.service_menu_map,
-                                                    location=self.gui.window.mouse_location())
-        shipment_to_edit.service = new_service
-        self.gui.window[self.gui.event].update(
-            self.gui.get_service_string(service=new_service, num_boxes=len(shipment_to_edit.parcels)))
+        if new_service := self.gui.new_service_selector(default_service=shipment_to_edit.service.name,
+                                                        menu_map=get_service_menu_map(
+                                                            shipment_to_edit.available_services),
+                                                        location=self.gui.window.mouse_location()):
+            shipment_to_edit.service = new_service
+            self.gui.window[self.gui.event].update(self.gui.get_service_string(service=new_service,
+                                                                               num_boxes=len(shipment_to_edit.parcels)))
 
-    def get_new_parcels(self, location):
+    def get_new_parcels(self, location) -> List[Parcel] | None:
         window = self.gui.get_new_parcels_window(location=location)
         e, v = window.read()
         if e == sg.WIN_CLOSED:
             window.close()
+            return None
         if e == 'BOX':
             new_boxes = v[e]
             window.close()
-            if parcels := self.get_parcels(int(new_boxes)):
-                return parcels
+            return self.get_parcels(int(new_boxes), contents=self.config.parcel_contents)
+
+    #
+    # def get_new_parcels(self, location) -> :
+    #     window = self.gui.get_new_parcels_window(location=location)
+    #     e, v = window.read()
+    #     if e == sg.WIN_CLOSED:
+    #         window.close()
+    #         return None
+    #     if e == 'BOX':
+    #         new_boxes = v[e]
+    #         window.close()
+    #         return self.get_parcels(int(new_boxes), contents = self.config.parcel_contents)
 
     def queue_and_book(self):
         config = self.config
@@ -307,8 +317,7 @@ class Shipper:
             shipment.recipient = get_remote_recipient(client=client, remote_address=remote_address,
                                                       contact=shipment.remote_contact)
         else:
-            shipment.sender = get_remote_sender(client=client,
-                                                remote_address=remote_address,
+            shipment.sender = get_remote_sender(client=client, remote_address=remote_address,
                                                 contact=shipment.remote_contact)
             shipment.recipient = home_sender_recip
 
@@ -316,7 +325,7 @@ class Shipper:
         """ return despatchbay CollecitonDate Entity
         make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
         available_dates = self.client.get_available_collection_dates(sender_address=shipment.sender,
-                                                                     courier_id=self.config.dbay_creds.courier)
+                                                                     courier_id=self.config.default_shipping_service.courier)
         collection_date = None
 
         for potential_collection_date in available_dates:
@@ -332,25 +341,25 @@ class Shipper:
         logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date}')
         return collection_date
 
-    def get_arbitrary_service(self) -> Service:
-        """ needed to get available dates, swapped out for real service later """
-        client = self.client
-        config = self.config
-        all_services: [Service] = client.get_services()
-        arbitrary_service: Service = next(
-            (service for service in all_services if service.service_id == config.dbay_creds.service_id),
-            all_services[0])
-        logger.info(f'PREP SHIPMENT - ARBITRARY SERVICE {arbitrary_service.name}')
+    # def get_arbitrary_service(self) -> Service:
+    #     """ needed to get available dates, swapped out for real service later """
+    #     client = self.client
+    #     config = self.config
+    #     all_services: [Service] = client.get_services()
+    #     arbitrary_service: Service = next(
+    #         (service for service in all_services if service.service_id == config.dbay_creds.service_id),
+    #         all_services[0])
+    #     logger.info(f'PREP SHIPMENT - ARBITRARY SERVICE {arbitrary_service.name}')
+    #
+    #     return arbitrary_service
 
-        return arbitrary_service
-
-    def get_parcels(self, num_parcels: int) -> list[Parcel]:
+    def get_parcels(self, num_parcels: int, contents: str) -> list[Parcel]:
         """ return an array of dbay parcel objects equal to the number of boxes provided
             uses arbitrary sizes because dbay api wont allow skipping even though website does"""
         parcels = []
         for x in range(num_parcels):
             parcel = self.client.parcel(
-                contents=self.config.parcel_contents,
+                contents=contents,
                 value=500,
                 weight=6,
                 length=60,
@@ -363,20 +372,13 @@ class Shipper:
         return parcels
 
 
-def get_actual_service(config: Config, client: DespatchBaySDK, shipment: Shipment) -> Service:
-    """
-    requires a shipment request object to exist in given shipment,
-    flag shipment.default_service_matched
-    return the service specified in config.toml or first available,
-    """
-    available_services = client.get_available_services(shipment.shipment_request)
-    shipment.service_menu_map = ({service.name: service for service in available_services})
-    available_service_match = next((a for a in available_services if a.service_id == config.dbay_creds.service_id),
-                                   None)
-    shipment.default_service_matched = True if available_service_match else False
-    shipment.available_services = available_services
+def get_service_menu_map(available_services: List[Service]):
+    return ({service.name: service for service in available_services})
 
-    return available_service_match if available_service_match else available_services[0]
+
+def get_actual_service(default_service_id: str, available_services: [Service]) -> Service:
+    return next((service for service in available_services if service.service_id == default_service_id),
+                available_services[0])
 
 
 # Dbay sender / recipient object getters
@@ -600,40 +602,6 @@ def email_label(recipient: str, body: str, attachment: Path):
     newmail.Display()  # preview
     # newmail.Send()
 
-
-#
-# def email_label(shipment:Shipment):
-#     ol = win32com.client.Dispatch('Outlook.Application')
-#     newmail = ol.CreateItem(0)
-#
-#     newmail.Subject = 'Radio Return - Shipping Label Attached'
-#     newmail.To = shipment.email
-#     newmail.Body = 'Thanks for hiring from Amherst. Please find a pdf shipment label attached'
-#     attach = str(shipment.label_location)
-#
-#     newmail.Attachments.Add(attach)
-#     # newmail.Display()  # preview
-#     newmail.Send()
-#
-
-# def get_parcels(num_parcels: int, client: DespatchBaySDK, config: Config) -> list[Parcel]:
-#     """ return an array of dbay parcel objects equal to the number of boxes provided
-#         uses arbitrary sizes because dbay api wont allow skipping even though website does"""
-#     parcels = []
-#     for x in range(num_parcels):
-#         parcel = client.parcel(
-#             contents=config.home_address['parcel_contents'],
-#             value=500,
-#             weight=6,
-#             length=60,
-#             width=40,
-#             height=40,
-#         )
-#         parcels.append(parcel)
-#     logger.info(f'PREPPING SHIPMENT - PARCELS {parcels}')
-#
-#     return parcels
-#
 
 def book_shipment(client: DespatchBaySDK, shipment_id: str):
     shipment_return = client.book_shipments(shipment_id)[0]

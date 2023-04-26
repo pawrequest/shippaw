@@ -211,10 +211,12 @@ class MainGui(Gui):
         while True:
             e, v = window.read()
             if e in [sg.WIN_CLOSED, "Cancel"]:
-                window.close()
+                break
             if 'service' in e.lower():
                 window.close()
                 return menu_map.get(v['-SERVICE-'])
+            window.close()
+            return None
 
     # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
 
@@ -236,7 +238,7 @@ def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment)
     # todo get AVAILABLE services needs a request
     # services = client.get_available_services()
     shipment.service_menu_map.update({service.name: service for service in services})
-    chosen_service = next((service for service in services if service.service_id == config.dbay['service_id']),
+    chosen_service = next((service for service in services if service.service_id == config.default_shipping_service.service),
                           services[0])
     shipment.service = chosen_service
     return {'values': [service.name for service in services], 'default_value': chosen_service.name}
@@ -297,20 +299,6 @@ def loading():
     ]
 
     return sg.Window('Loading', layout, modal=True, disable_close=True, finalize=True)
-
-
-# def compare_addresses_window(address: Address, address_dict: dict, config: Config):
-#     layout = [[get_address_frame(config=config, address=address),
-#                get_address_dict_frame(address_dict=address_dict, config=config)],
-#               [sg.Submit(k='-COMPARE_SUBMIT-')]
-#               ]
-#
-#     frame = sg.Frame(f'Compare Addresses', layout=layout, k=f'-COMPARE_ADDRESS-', pad=20, font="Rockwell 30",
-#                      border_width=5, relief=sg.RELIEF_GROOVE, title_location=sg.TITLE_LOCATION_TOP)
-#
-#     window = sg.Window('Compare Addresses', layout=[[frame]])
-#
-#     return window
 
 
 def get_service_button(num_parcels, shipment):

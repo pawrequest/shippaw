@@ -12,7 +12,9 @@ from amdesp_shipper.config import Config, get_amdesp_logger
 from amdesp_shipper.enums import BestMatch, Contact, DateTimeMasks, FuzzyScores, BookingJob, DespatchObjects
 from amdesp_shipper.shipment import Shipment
 import abc as ABC
+
 logger = get_amdesp_logger()
+
 
 class Job(ABC):
     ...
@@ -21,12 +23,16 @@ class Job(ABC):
 class Processor(Protocol):
     def get_manifest(self):
         'in child'
+
     def handle_manifest(self):
         'in child'
+
     def do_job(self):
         'in child'
+
     def log_job(self):
         'in child'
+
     def return_something(self):
         'in child'
 
@@ -39,7 +45,7 @@ class Prepper(Protocol):
         """in child"""
 
 
-class Booker(Processor):
+class Booker():
     def __init__(self, manifest: List[BookingJob]):
         self.manifest = manifest
 
@@ -59,9 +65,6 @@ class Booker(Processor):
 
     def return_something(self):
         'in child'
-
-
-
 
     def process_job(self, job):
         if job.add:
@@ -97,11 +100,11 @@ class ShipmentListPrepper:
         self.home_contact = config.home_contact
         self.sandbox = config.sandbox
 
-    def shipment_processor(self, shipments:[Shipment]):
+    def shipment_processor(self, shipments: [Shipment]):
         processed_shipments = [Shipment]
 
         while shipments:
-            ship_in_play:Shipment = shipments.pop()
+            ship_in_play: Shipment = shipments.pop()
             processor = SingleProcessor(config=self.config, client=self.client)
             processed = processor.process_a_shipment(shipment=ship_in_play)
             job = BookingJob(
@@ -123,46 +126,38 @@ class SingleProcessor:
         self.sandbox = config.sandbox
         self.default_service_id = config.dbay_creds.service_id
 
-    def get_dbay_objects(self, shipment):
-        service = self.get_arbitrary_service()  # needed to get dates
-        sender = self.get_sender()
-        recipient = self.get_recipient()
-        collection_date = ...
-        service = ...
-        parcels = ...
-        shipment_request = ...
-        dbay_objects = DespatchObjects(
-            collection_date=self.get_collection_date(shipment=shipment),
-            service=...,
-            shipment_request=...,
-
-
-
-
-        )
+    # def get_dbay_objects(self, shipment):
+    #     service = self.get_arbitrary_service()  # needed to get dates
+    #     sender = self.get_sender()
+    #     recipient = self.get_recipient()
+    #     collection_date = ...
+    #     service = ...
+    #     parcels = ...
+    #     shipment_request = ...
+    #     dbay_objects = DespatchObjects(
+    #         collection_date=self.get_collection_date(shipment=shipment),
+    #         service=...,
+    #         shipment_request=...,
+    #
+    #     )
 
     def get_sender(self):
         ...
+
     def get_recipient(self):
         ...
 
-
     def process_a_shipment(self, shipment):
         try:
-            remote_contact = self.get_remote_contact(shipment)
-            remote_address = self.get_remote_address(shipment=shipment)
-            if not self.sandbox:  # nothing matches in sandbox land
-                remote_address = self.check_address_company(address=remote_address, shipment=shipment)
-                # remote_address = self.bestmatch_to_address_from_gui(bestmatch=remote_address, remote_contact=remote_address, shipment=shipment)
-
-            self.get_sender_recip(remote_address, remote_contact, shipment)
-            shipment.service = self.get_arbitrary_service()  # needed to get dates
-            shipment.despatch_objects.collection_date = self.get_collection_date(shipment=shipment)
+            remote_contact, remote_address = self.set_an_address(shipment)
+            sender, recipient = self.get_sender_recip(remote_address, remote_contact, shipment)
+            arbitrary_service = self.client.get_services()[0]  # needed to get dates
+            collection_date = self.get_collection_date(sender = sender, send_out_date=shipment.send_out_date)
             check = self.check_today_ship(shipment)  # no bookings after 1pm
             if check is None:
                 return None
-            shipment.despatch_objects.parcels = self.get_parcels(num_parcels=shipment.boxes)
-            shipment.despatch_objects.shipment_request = self.get_shipment_request(shipment=shipment)
+            parcels = self.get_parcels(num_parcels=shipment.boxes)
+            shipment_request = self.get_shipment_request(shipment=shipment)
             shipment.despatch_objects.service = self.get_actual_service(service_id=self.config.dbay_creds.service_id,
                                                                         shipment=shipment)
         except Exception as e:
@@ -170,17 +165,22 @@ class SingleProcessor:
         else:
             return shipment
 
+    def set_an_address(self, shipment) -> (Contact, Address):
+        remote_contact = self.get_remote_contact(shipment)
+        remote_address = self.get_remote_address(shipment=shipment)
+        remote_address = self.check_address_company(address=remote_address, shipment=shipment)
+        return remote_contact, remote_address
+
     def get_sender_recip(self, remote_address, remote_contact, shipment):
         if self.outbound:
-            shipment.despatch_objects.sender = self.client.sender(address_id=self.home_address_id)
-            shipment.despatch_objects.recipient = self.get_remote_recipient(contact=remote_contact,
-                                                                            remote_address=remote_address)
+            sender = self.client.sender(address_id=self.home_address_id)
+            recipient = self.get_remote_recipient(contact=remote_contact, remote_address=remote_address)
         else:
-            shipment.despatch_objects.sender = self.get_remote_sender(contact=remote_contact,
-                                                                      remote_address=remote_address)
-            shipment.despatch_objects.recipient = self.get_home_recipient()
+            sender = self.get_remote_sender(contact=remote_contact, remote_address=remote_address)
+            recipient = self.get_home_recipient()
+        return sender, recipient
 
-    def bestmatch_to_address_from_gui(self, bestmatch:BestMatch, remote_contact, shipment):
+    def bestmatch_to_address_from_gui(self, bestmatch: BestMatch, remote_contact, shipment):
         address_gui = AddressGui(config=self.config, client=self.client, shipment=shipment, address=bestmatch.address,
                                  contact=remote_contact)
         bestmatch = address_gui.address_gui_loop()
@@ -191,7 +191,7 @@ class SingleProcessor:
                                  name=shipment.contact_name)
         return remote_contact
 
-    def get_remote_address(self,shipment: Shipment) -> Address | BestMatch:
+    def get_remote_address(self, shipment: Shipment) -> Address | BestMatch:
         """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
         config = self.config
         client = self.client
@@ -219,25 +219,48 @@ class SingleProcessor:
 
         return address
 
-    def get_collection_date(self, shipment: Shipment) -> CollectionDate:
+    def get_collection_date(self, sender:Sender, send_out_date:datetime.date) -> (CollectionDate, dict):
         """ return despatchbay CollecitonDate Entity
         make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
-        available_dates = self.client.get_available_collection_dates(sender_address=shipment.sender,
-                                                                     courier_id=self.config.dbay_creds.courier)
         collection_date = None
-
+        menu_map = {}
+        available_dates: [CollectionDate] = self.client.get_available_collection_dates(
+            sender_address=sender, courier_id=self.config.dbay_creds.courier)
         for potential_collection_date in available_dates:
             real_date = datetime.strptime(potential_collection_date.date, DateTimeMasks.DB.value)
             display_date = real_date.strftime(DateTimeMasks.DISPLAY.value)
-            shipment.date_menu_map.update({display_date: potential_collection_date})
-            if real_date == shipment.send_out_date:
-                collection_date = potential_collection_date
-                shipment.date_matched = True
+            menu_map.update({display_date: potential_collection_date})
 
-        collection_date = collection_date or available_dates[0]
+            if real_date == send_out_date:
+                collection_date = potential_collection_date
+
+        if collection_date is None: collection_date = available_dates[0]
 
         logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date}')
-        return collection_date
+        return collection_date, menu_map
+
+    #
+    # def get_collection_date(self, shipment: Shipment) -> (CollectionDate, dict):
+    #     """ return despatchbay CollecitonDate Entity
+    #     make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
+    #     collection_date = None
+    #     menu_map = None
+    #     available_dates:[CollectionDate] = self.client.get_available_collection_dates(sender_address=shipment.sender,
+    #                                                                  courier_id=self.config.dbay_creds.courier)
+    #
+    #     for potential_collection_date in available_dates:
+    #         real_date = datetime.strptime(potential_collection_date.date, DateTimeMasks.DB.value)
+    #         display_date = real_date.strftime(DateTimeMasks.DISPLAY.value)
+    #         shipment.date_menu_map.update({display_date: potential_collection_date})
+    #
+    #         if real_date == shipment.send_out_date:
+    #             collection_date = potential_collection_date
+    #             shipment.date_matched = True
+    #
+    #     collection_date = collection_date or available_dates[0]
+    #
+    #     logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date}')
+    #     return collection_date
 
     def get_arbitrary_service(self) -> Service:
         """ needed to get available dates, swapped out for real service later """
@@ -269,7 +292,7 @@ class SingleProcessor:
 
     ...
 
-    def get_actual_service(self, service_id:str, shipment: Shipment) -> Service:
+    def get_actual_service(self, service_id: str, shipment: Shipment) -> Service:
         """
         requires a shipment request object to exist in given shipment,
         flag shipment.default_service_matched
@@ -317,7 +340,7 @@ class SingleProcessor:
                     return None
         return address or None
 
-    def address_from_quickmatch(self,shipment: Shipment, candidate_key_dict: dict) -> Address | None:
+    def address_from_quickmatch(self, shipment: Shipment, candidate_key_dict: dict) -> Address | None:
         """ takes a compares Dbay address strings to shipment.customer and shipment.str_to_match"""
         for add, key in candidate_key_dict.items():
             add = add.split(',')[0]
@@ -361,18 +384,12 @@ class SingleProcessor:
 
         if not address.company_name:
             return address
-        elif address.company_name:
-            if address.company_name == shipment.customer \
-                    or address.company_name in shipment.address_as_str \
-                    or address.company_name in shipment.delivery_name:
-                return address
-            else:
-                pop_msg = f'Address Company name and Shipment Customer do not match:\n' \
-                          f'\nCustomer: {shipment.customer}\n' \
-                          f'Address Company Name: {address.company_name})\n' \
-                          f'{shipment.address_as_str}\n' \
-                          f'\n[Yes] to accept matched address or [No] to edit or replace it'
-
+        if address.company_name == shipment.customer \
+                or address.company_name in shipment.address_as_str \
+                or address.company_name in shipment.delivery_name:
+            return address
+        else:
+            pop_msg = f'Match?\n{shipment.customer} - {shipment.address_as_str}\n\n {address.company_name} - {address.street}'
             answer = sg.popup_yes_no(pop_msg, line_width=100)
             return address if answer == 'Yes' else None
 

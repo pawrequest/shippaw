@@ -8,6 +8,7 @@
 import sys
 
 import PySimpleGUI as sg
+from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from amdesp_shipper.config import Config, get_amdesp_logger
 from amdesp_shipper.main_gui import MainGui
@@ -34,12 +35,10 @@ logger = get_amdesp_logger()
 
 
 def main(main_mode: str):
-    """ sandbox = fake shipping client, no money for labels!"""
-    sg.popup_quick_message('Config', keep_on_top=True)
     try:
-
         config = Config.from_toml2(mode=main_mode)
-        client = config.setup_dbay()
+        creds = config.dbay_creds
+        client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
         shipments = Shipment.get_shipments(config=config)
         gui = MainGui(config=config, client=client)
         shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
@@ -53,7 +52,7 @@ if __name__ == '__main__':
     # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     if len(sys.argv) > 1:
-        mode = sys.argv[1].lower()
+        shipping_mode = sys.argv[1].lower()
     else:
-        mode = 'fake'
-    main(main_mode=mode)
+        shipping_mode = 'fake'
+    main(main_mode=shipping_mode)

@@ -12,17 +12,17 @@ from dotenv import load_dotenv, dotenv_values
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
-from amdesp_shipper.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, HomeAddress, \
+from amdesp_shipper.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, \
+    HomeAddress, \
     PathsList
 
 config_env = dotenv_values(".env")
-load_dotenv()
+# load_dotenv()
 # ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 # ROOT_DIR = Path(r'r:\paul_notes\pss\amdesp')
 ROOT_DIR = Path(__file__).parent.parent
 LOG_FILE = ROOT_DIR.joinpath('data', 'AmDesp.log')
-
-...
+CONFIG_TOML = ROOT_DIR / 'data' / 'user_config.toml'
 
 
 def get_amdesp_logger():
@@ -40,42 +40,31 @@ def get_amdesp_logger():
 
 
 logger = get_amdesp_logger()
-logger.info(f'{config_env=}\n{ROOT_DIR=}\n{LOG_FILE=}')
 
 
 class Config:
     def __init__(self, config_dict: dict):
         config = config_dict
         self.mode = config['mode']
+        self.outbound = 'out' in config['mode']
         self.paths = PathsList.from_dict(paths_dict=config['paths'], root_dir=ROOT_DIR)
-        self.parcel_contents = config.get('parcel_contents')
-
+        self.parcel_contents: str = config.get('parcel_contents')
         self.sandbox: bool = config.get('sandbox')
-        self.fake_sandbox: bool = config.get('fake_sandbox')
-        self.home_sender_id = str()
-
-        self.dbay: dict = config['dbay']
-        self.dbay_creds = self.get_dbay_creds()
         self.import_mapping: dict = config.get('import_mapping')
 
         self.home_address = HomeAddress(**config.get('home_address'))
         self.home_contact = Contact(**config.get('home_contact'))
-        self.outbound = True if 'out' in config['mode'] \
-            else False if 'in' in config['mode'] \
-            else sg.popup_yes_no('Are we sending from home address?') == 'Yes'
         self.return_label_email_body = config.get('return_label_email_body')
+        self.home_sender_id = str()
+
+        dbay = config.get('dbay')[self.scope_from_sandbox()]
+        self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
+        self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
     @classmethod
     def from_toml2(cls, mode: str):
-        config_path = ROOT_DIR / 'data' / 'config.toml'
-        user_config = ROOT_DIR / 'data' / 'user_config.toml'
-        with open(config_path, 'rb') as f:
-            config_dict = tomllib.load(f)
-        with open(user_config, 'rb') as g:
-            user_dict= tomllib.load(g)
-        config_dict.update(**user_dict)
-
-        # config_dict['sandbox'] = sandbox
+        with open(CONFIG_TOML, 'rb') as g:
+            config_dict = tomllib.load(g)
         if mode == 'fake':
             mode = config_dict.get('fake_mode')
         config_dict['mode'] = mode
@@ -100,56 +89,18 @@ class Config:
         #     address = address_chooser_popup(candidate_dict=candidates, client=client)
         # self.setup_commence()
 
-    def check_system_env(self, dbay_dict: dict, sandbox: bool):
-        api_user = os.environ.get(dbay_dict.get('api_user'))
-        api_key = os.environ.get(dbay_dict.get('api_key'))
-        client = DespatchBaySDK(api_user=api_user, api_key=api_key)
-        first_try = True
-        while True:
-            try:
-                dbay_account = client.get_account()
-                logger.info(f'Despatchbay account retrieved: {dbay_account}')
-            except AuthorizationException as e:
-                logger.exception(f'Client ERROR: {e}')
-                first_try = False
-                api_user, api_key = self.creds_from_user()
-                client = DespatchBaySDK(api_user=api_user, api_key=api_key)
-                continue
-            else:
-                if not first_try:
-                    # we have a working client after input so set successful keys in system environment
-                    set_despatch_env(sandbox=sandbox, api_user=api_user, api_key=api_key)
-                    sg.popup_notify('System environment variables updated, restart to take effect')
-
-                return True
-
-    # def creds_from_user(self) -> DbayCreds:
-    #     scope = ApiScope.SAND.value if self.sandbox \
-    #         else ApiScope.PRODUCTION.value
-    #     api_user = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API User')
-    #     api_key = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API Key')
-    #     creds = DbayCreds(scope=scope, api_user=api_user, api_key=api_key)
-    #     return creds
+    def creds_from_user(self) -> DbayCreds:
+        scope = self.scope_from_sandbox()
+        api_user = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API User')
+        api_key = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API Key')
+        creds = DbayCreds(api_user=api_user, api_key=api_key)
+        return creds
 
     def log_config(self):
         [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
 
-    def get_dbay_creds(self):
-        scope = ApiScope.SAND.value if self.sandbox else ApiScope.PRODUCTION.value
-        dbay = self.dbay.get(scope)
-        courier = dbay.get('courier')
-        service = dbay.get('service')
-
-        # get the name of the system environment variable for api user
-        api_name_user = dbay.get('api_user')
-        api_name_key = dbay.get('api_key')
-
-        # overwrite with actual values from environment
-        api_user = os.environ.get(api_name_user)
-        api_key = os.environ.get(api_name_key)
-
-        creds = DbayCreds(api_user=api_user, api_key=api_key, courier=courier, service_id=service, scope=scope)
-        return creds
+    def scope_from_sandbox(self):
+        return ApiScope.SAND.value if self.sandbox else ApiScope.PRODUCTION.value
 
     def get_dbay_client(self, creds: DbayCreds):
         while True:
@@ -163,11 +114,6 @@ class Config:
                 continue
             else:
                 return client
-
-
-    def setup_dbay(self):
-        creds = self.get_dbay_creds()
-        return self.get_dbay_client(creds)
 
     def setup_commence(self):
         """
@@ -188,6 +134,7 @@ class Config:
         """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
         subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        check=True)
+
 
 #####
 
@@ -235,5 +182,3 @@ def set_despatch_env(api_user, api_key, sandbox):
         logger.error("Error:", result2.stderr)
     else:
         logger.info(f"Environment variable set: {api_key_str} : {api_key}")
-
-

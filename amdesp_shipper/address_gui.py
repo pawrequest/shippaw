@@ -70,19 +70,17 @@ class AddressGui(Gui):
                 return new_address
 
     def get_contact_window(self):
-        contact = self.contact
-        address = self.address
         layout = [
             [sg.Text(f'Name:', **address_fieldname_params),
-             sg.InputText(f'{contact.name}', key=f'-NAME-', **address_input_params)],
+             sg.InputText(f'{self.contact.name}', key=f'-NAME-', **address_input_params)],
 
             [sg.Text(f'Email:', **address_fieldname_params),
-             sg.InputText(f'{contact.email}', key=f'-EMAIL-', **address_input_params)],
+             sg.InputText(f'{self.contact.email}', key=f'-EMAIL-', **address_input_params)],
 
             [sg.Text(f'Telephone:', **address_fieldname_params),
-             sg.InputText(f'{contact.telephone}', key=f'-TELEPHONE-', **address_input_params)],
+             sg.InputText(f'{self.contact.telephone}', key=f'-TELEPHONE-', **address_input_params)],
 
-            [self.get_address_frame(address=address)],
+            [self.get_address_frame(address=self.address)],
 
             [sg.B('Submit', k=f'-SUBMIT-')]
         ]
@@ -117,12 +115,12 @@ class AddressGui(Gui):
             if field in ('company_name', 'postal_code'):
                 # is a button
                 params.pop('justification', None)
-                label_text = sg.B(key_for_humans, k=key.lower(), **params)
+                legend = sg.B(key_for_humans, k=key.lower(), **params)
             else:
-                label_text = sg.Text(key_for_humans, k=key.lower(), **address_fieldname_params)
+                legend = sg.Text(key_for_humans, k=key.lower(), **address_fieldname_params)
 
             input_box = sg.InputText(input_text, k=key.upper(), **address_input_params)
-            layout.append([label_text, input_box])
+            layout.append([legend, input_box])
 
         frame = sg.Frame('Address', layout, pad=20)
         return frame

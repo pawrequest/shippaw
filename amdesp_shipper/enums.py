@@ -1,3 +1,4 @@
+import os
 from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum
@@ -5,6 +6,8 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
+from despatchbay.despatchbay_sdk import DespatchBaySDK
+from despatchbay.exceptions import AuthorizationException
 
 
 class GuiColIndex(Enum):
@@ -17,6 +20,11 @@ class GuiColIndex(Enum):
     ADD = 6
     BOOK = 7
     PRINT_EMAIL = 8
+
+
+@dataclass
+class DateMenuMap:
+    ...
 
 
 @dataclass
@@ -60,9 +68,23 @@ class ShipMode(Enum):
 class DbayCreds:
     api_user: str
     api_key: str
-    courier: str
-    service_id: str
-    scope: Optional[str] = None  # get from enum
+
+    @classmethod
+    def from_dict(cls, api_name_user, api_name_key):
+        return cls(api_user=os.environ.get(api_name_user),
+                   api_key=os.environ.get(api_name_key))
+
+    def validate(self):
+        try:
+            return DespatchBaySDK(api_user=self.api_user, api_key=self.api_key).get_account()
+        except AuthorizationException as e:
+            return None
+
+
+@dataclass
+class DefaultShippingService:
+    courier: int
+    service: int
 
 
 class DateTimeMasks(Enum):
@@ -70,12 +92,6 @@ class DateTimeMasks(Enum):
     hire = '%d/%m/%Y'
     DB = '%Y-%m-%d'
     button_label = '%A \n%B %#d'
-
-
-@dataclass
-class DefaultShippingService:
-    courier: int
-    service: int
 
 
 class ApiScope(Enum):
@@ -173,4 +189,4 @@ class HomeAddress:
     town_city: Optional[str]
     county: Optional[str]
     postal_code: str
-    country_code: str
+    country_code: Optional[str] = 'GB'
