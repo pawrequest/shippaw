@@ -111,7 +111,7 @@ class MainGui(Gui):
             ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
                         sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
                         sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}.:2')]
+                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}:.2')]
 
             if shipment.printed:
                 ship_res.append(sg.Text('Shipment Printed'))

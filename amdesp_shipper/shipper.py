@@ -649,7 +649,7 @@ def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
     ps_script = str(config.paths.cmc_logger)
     try:  # utility class static method runs powershell script bypassing execuction policy
         commence_edit = powershell_runner(ps_script, shipment.category, shipment.shipment_name, id_to_pass,
-                                          str(not config.outbound))
+                                          str(config.outbound))
     except RuntimeError as e:
         logger.exception('Error logging to commence')
         sg.popup_scrolled(f'Error logging to commence - is it running?')

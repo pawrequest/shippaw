@@ -7,12 +7,12 @@ $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 $category = $args[0]
 $ref_name = $args[1]
 $shipment_id = $args[2]
-$is_return = $args[3]
+$outbound = $args[3]
 
 Write-Host LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type
 Write-Host LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name
 Write-Host LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name
-Write-Host LOG TO COMMENCE SCRIPT -  ISARETURN - $is_return
+Write-Host LOG TO COMMENCE SCRIPT -  OUTBOUND - $outbound
 
 #cursor properties
 Add-Type -Path $commence_wrapper
@@ -25,14 +25,13 @@ $filter.FieldName = "Name"
 $filter.FieldValue = $ref_name
 $filter.Qualifier = "EqualTo"
 
-if ($is_return -eq 'True'){
-    Write-Host "IS RETURN IS TRUE"
-    $shipment_type = "Inbound ID"
+if ($outbound -eq 'True'){
+    Write-Host "SHIPMENT IS OUTBOUND"
+    $shipment_type = "Outbound ID"
 }
 Else {
-    Write-Host "IS RETURN IS FALSE"
-
-    $shipment_type = "Outbound ID"
+    Write-Host "SHIPMENT IS INBOUND"
+    $shipment_type = "Inbound ID"
 }
 
 
@@ -51,11 +50,12 @@ If ($cursor.Filters.Apply() = 0){
 }
 
 Else{
-    "MULTIPLE RECORDS RETURNED"
+    "ERROR IN POWERSHELL SCRIPT"
+    "MULTIPLE RECORDS RETURNED?"
     "LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type"
     "LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name"
     "LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name"
-    "LOG TO COMMENCE SCRIPT -  ISARETURN - $is_return"
+    "LOG TO COMMENCE SCRIPT -  ISARETURN - $outbound"
 }
 #goodbye
 $db.Close()
