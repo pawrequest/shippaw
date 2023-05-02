@@ -3,15 +3,17 @@ from datetime import datetime
 import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
-
-from amdesp_shipper.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-from amdesp_shipper.enums import DateTimeMasks, FieldsList
-from amdesp_shipper.gui_params import address_fieldname_params, address_head_params, address_input_params, address_params, \
+
+from amdesp_shipper.core.config import Config, get_amdesp_logger
+from amdesp_shipper.core.enums import DateTimeMasks, FieldsList
+from amdesp_shipper.gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
+    address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
 from amdesp_shipper.shipment import Shipment
+from amdesp_shipper.core.funcs import print_label
 
 logger = get_amdesp_logger()
 
@@ -66,8 +68,7 @@ class MainGui(Gui):
 
         if not self.config.outbound:
             row.insert(1, get_sender_button(sender_address_name=sender_address_name,
-                                         shipment_name=shipment.shipment_name_printable))
-
+                                            shipment_name=shipment.shipment_name_printable))
 
         layout = [row]
 
@@ -91,7 +92,6 @@ class MainGui(Gui):
         if not self.config.outbound:
             headers.insert(1, sg.T('Sender', **address_head_params))
 
-
         return headers
 
     def get_service_string(self, num_boxes: int, service: Service):
@@ -111,10 +111,12 @@ class MainGui(Gui):
             ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
                         sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
                         sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}:.2')]
+                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}:.2'),
+                        ]
 
             if shipment.printed:
-                ship_res.append(sg.Text('Shipment Printed'))
+                ship_res.extend([sg.Text('Shipment Printed'), sg.Button('Reprint Label',
+                                                                        key=f'-{shipment.shipment_name_printable.upper()}_REPRINT-')])
             if shipment.logged_to_commence:
                 ship_res.append(sg.Text('Shipment ID Logged to Commence'))
             # result_layout.append([sg.Frame('', layout=[ship_res])])
@@ -151,10 +153,13 @@ class MainGui(Gui):
         while True:
             e2, v2 = window2.read()
             if e2 in [sg.WIN_CLOSED, 'Exit']:
-                window2.close()
+                break
+            if 'reprint' in e2.lower():
+                ship_in_play: Shipment = next((shipment for shipment in shipments if
+                                               shipment.shipment_name_printable.lower() in e2.lower()))
+                print_label(ship_in_play)
 
-            window2.close()
-            break
+        window2.close()
 
     def tracking_viewer_window(self, shipment_id):
         client = self.client
@@ -238,8 +243,9 @@ def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment)
     # todo get AVAILABLE services needs a request
     # services = client.get_available_services()
     shipment.service_menu_map.update({service.name: service for service in services})
-    chosen_service = next((service for service in services if service.service_id == config.default_shipping_service.service),
-                          services[0])
+    chosen_service = next(
+        (service for service in services if service.service_id == config.default_shipping_service.service),
+        services[0])
     shipment.service = chosen_service
     return {'values': [service.name for service in services], 'default_value': chosen_service.name}
 

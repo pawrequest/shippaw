@@ -12,7 +12,7 @@ from dotenv import load_dotenv, dotenv_values
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
-from amdesp_shipper.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, \
+from amdesp_shipper.core.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, \
     HomeAddress, \
     PathsList
 

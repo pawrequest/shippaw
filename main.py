@@ -7,11 +7,10 @@
 
 import sys
 
-import PySimpleGUI as sg
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp_shipper.config import Config, get_amdesp_logger
-from amdesp_shipper.main_gui import MainGui
+from amdesp_shipper.core.config import Config, get_amdesp_logger
+from amdesp_shipper.gui.main_gui import MainGui
 from amdesp_shipper.shipment import Shipment
 from amdesp_shipper.shipper import Shipper
 
