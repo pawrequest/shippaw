@@ -23,6 +23,7 @@ class Shipment:
         :param ship_dict: a dictionary of shipment details
         """
 
+        self._shipment_name: str = ship_dict.get('shipment_name')
         self.address_as_str: str = ship_dict.get('address_as_str')
         self.str_to_match = ''.join(self.address_as_str.split('\r')[0:1]) \
             .replace('Units', 'Unit').replace('c/o ', '').replace('C/O ', '')
@@ -34,10 +35,9 @@ class Shipment:
         self.email: str = ship_dict.get('email')
         self.postcode: str = ship_dict.get('postcode')
         self.send_out_date: datetime.date = ship_dict.get('send_out_date', datetime.today())
-        self.shipment_name: str = ship_dict.get('shipment_name')
         self.status: str = ship_dict.get('status')
         self.telephone: str = ship_dict.get('telephone')
-        self.shipment_name_printable = re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
+        self.shipment_name_printable = re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
         self.delivery_name = ship_dict.get('delivery_name')
 
         self.inbound_id: Optional[str] = ship_dict.get('inbound_id')
@@ -73,7 +73,7 @@ class Shipment:
         self.logged_to_commence: bool = False
         self.remote_contact: Optional[Contact] = None
 
-        [logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+        [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
 
 
 
