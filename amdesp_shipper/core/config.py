@@ -21,8 +21,8 @@ config_env = dotenv_values(".env")
 # ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 # ROOT_DIR = Path(r'r:\paul_notes\pss\amdesp')
 ROOT_DIR = Path(__file__).parent.parent
-LOG_FILE = ROOT_DIR.joinpath('data', 'AmDesp.log')
-CONFIG_TOML = ROOT_DIR / 'data' / 'user_config.toml'
+LOG_FILE = ROOT_DIR.joinpath('amdesp_shipper/data/AmDesp.log')
+CONFIG_TOML = ROOT_DIR / 'amdesp_shipper/data/user_config.toml'
 
 
 def get_amdesp_logger():
