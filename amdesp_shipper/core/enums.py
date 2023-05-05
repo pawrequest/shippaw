@@ -1,13 +1,20 @@
 import os
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum, auto
 from pathlib import Path
 from typing import Any, List, Optional
 
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
+
+
+
+class ShipmentCategory(StrEnum):
+    HIRE = auto()
+    SALE = auto()
+    FAKE = auto()
 
 
 class GuiColIndex(Enum):
@@ -60,8 +67,11 @@ class FuzzyScores:
         }
 
 
-class ShipMode(Enum):
-    ship_out, ship_in, track_in, track_out = range(1, 5)
+class ShipMode(StrEnum):
+    SHIP_OUT = auto()
+    SHIP_IN = auto()
+    TRACK = auto()
+    FAKE = auto()
 
 
 @dataclass

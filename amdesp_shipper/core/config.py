@@ -14,7 +14,7 @@ from despatchbay.exceptions import AuthorizationException
 
 from amdesp_shipper.core.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, \
     HomeAddress, \
-    PathsList
+    PathsList, ShipmentCategory
 
 config_env = dotenv_values(".env")
 # load_dotenv()

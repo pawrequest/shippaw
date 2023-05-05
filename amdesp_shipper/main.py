@@ -10,6 +10,7 @@ import sys
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from amdesp_shipper.core.config import Config, get_amdesp_logger
+from amdesp_shipper.core.enums import ShipmentCategory, ShipMode
 from amdesp_shipper.gui.main_gui import MainGui
 from amdesp_shipper.shipment import Shipment
 from amdesp_shipper.shipper import Shipper
@@ -38,7 +39,7 @@ def main(main_mode: str):
         config = Config.from_toml2(mode=main_mode)
         creds = config.dbay_creds
         client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-        shipments = Shipment.get_shipments(config=config)
+        shipments = Shipment.get_shipments(config=config, category=category)
         gui = MainGui(config=config, client=client)
         shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
         shipper.dispatch()
@@ -51,7 +52,23 @@ if __name__ == '__main__':
     # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     if len(sys.argv) > 1:
-        shipping_mode = sys.argv[1].lower()
+        shipping_mode_arg = sys.argv[1].lower()
+        category_arg = sys.argv[2].lower()
+
+        try:
+            category = ShipmentCategory[category_arg]
+        except KeyError:
+            logger.exception(f'invalid category argument: {category_arg}')
+            raise
+        try:
+            shipping_mode = ShipMode[shipping_mode_arg]
+        except KeyError:
+            logger.exception(f'invalid mode argument: {shipping_mode_arg}')
+            raise
+
     else:
-        shipping_mode = 'fake'
+        # shipping_mode_arg = 'fake'
+        shipping_mode = ShipMode['FAKE']
+        category = ShipmentCategory['FAKE']
+
     main(main_mode=shipping_mode)

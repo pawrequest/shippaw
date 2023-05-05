@@ -35,12 +35,12 @@ class Shipper:
     def dispatch(self):
         mode = self.config.mode
         try:
-            if 'ship' in mode:
+            if 'ship' in mode.lower():
                 prepped_shipments = self.prep_shipments()
                 booked_shipments = self.main_gui_loop(prepped_shipments)
                 self.gui.post_book(shipments=booked_shipments)
 
-            elif 'track' in mode:
+            elif 'track' in mode.lower():
                 for shipment in self.shipments:
                     if any([shipment.outbound_id, shipment.inbound_id]):
                         result = tracking_loop(self.gui, shipment=shipment)

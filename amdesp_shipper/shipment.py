@@ -10,7 +10,7 @@ from dbfread.dbf import DBF, DBFNotFound
 from amdesp_shipper.core.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from amdesp_shipper.core.enums import BestMatch, Contact, DespatchObjects
+from amdesp_shipper.core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
 from amdesp_shipper.core.exceptions import *
 
 logger = get_amdesp_logger()
@@ -18,17 +18,17 @@ logger = get_amdesp_logger()
 
 @dataclass
 class Shipment:
-    def __init__(self, ship_dict: dict):
+    def __init__(self, ship_dict: dict, category:ShipmentCategory):
         """
         :param ship_dict: a dictionary of shipment details
         """
 
+        self.category: category
         self._shipment_name: str = ship_dict.get('shipment_name')
         self.address_as_str: str = ship_dict.get('address_as_str')
         self.str_to_match = ''.join(self.address_as_str.split('\r')[0:1]) \
             .replace('Units', 'Unit').replace('c/o ', '').replace('C/O ', '')
         self.boxes: int = int(ship_dict.get('boxes', 1))
-        self.category: str = ship_dict.get('category')
         self.customer: str = ship_dict.get('customer')
         self.contact_name: str = ship_dict.get('contact')
         # self.contact_name: str = next((ship_dict.get(key) for key in ['contact', 'contact_name'] if key in ship_dict), None)
@@ -78,7 +78,7 @@ class Shipment:
 
 
     @classmethod
-    def get_shipments(cls, config: Config) -> list:
+    def get_shipments(cls, config: Config, category:ShipmentCategory) -> list:
         """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
         shipments: [Shipment] = []
         dbase_file = str(config.paths.dbase_export)
@@ -88,7 +88,7 @@ class Shipment:
                 [logger.info(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     ship_dict = shipdict_from_dbase(record=record, config=config)
-                    shipment = Shipment(ship_dict=ship_dict)
+                    shipment = Shipment(ship_dict=ship_dict, category=category)
                     shipments.append(shipment)
                 except Exception as e:
                     raise ImportError(f'{record.__repr__()} - {e}')
@@ -129,7 +129,6 @@ def shipdict_from_dbase(record, config: Config):
     # todo check thse
 
     mapping = config.import_mapping
-    # ship_dict_from_dbf = {'category': 'Hire'}
     ship_dict_from_dbf = {}
     for k, v in record.items():
         if v:
