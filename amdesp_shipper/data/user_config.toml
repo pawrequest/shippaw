@@ -58,14 +58,14 @@ country_code = "GB"
 
 
 [paths]
-data = 'amdesp_shipper/data/'
+data = 'data/'
 scripts = 'scripts/'
-labels = 'amdesp_shipper/data/Parcelforce Labels/'
-log_json = 'amdesp_shipper/data/AmLog.json'
+labels = 'data/Parcelforce Labels/'
+log_json = 'data/AmLog.json'
 cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
-stored_xml = 'amdesp_shipper/data/AmShip.xml'
-user_data = 'amdesp_shipper/data/user_data.pk'
-dbase_export = 'amdesp_shipper/data/amherst_export.dbf'
+stored_xml = 'data/AmShip.xml'
+user_data = 'data/user_data.pk'
+dbase_export = 'data/amherst_export.dbf'

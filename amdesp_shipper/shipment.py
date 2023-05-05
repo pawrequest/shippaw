@@ -129,7 +129,8 @@ def shipdict_from_dbase(record, config: Config):
     # todo check thse
 
     mapping = config.import_mapping
-    ship_dict_from_dbf = {'category': 'Hire'}
+    # ship_dict_from_dbf = {'category': 'Hire'}
+    ship_dict_from_dbf = {}
     for k, v in record.items():
         if v:
             try:

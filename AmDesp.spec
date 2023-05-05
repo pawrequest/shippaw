@@ -4,8 +4,7 @@
 block_cipher = None
 
 added_files = [
-                ('scripts/', './scripts/'),
-                ('amdesp_shipper/', '.amdesp_shipper/'),
+                ('amdesp_shipper/', '.'),
                 ]
 
 a = Analysis(
