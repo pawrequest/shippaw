@@ -8,7 +8,7 @@ added_files = [
                 ]
 
 a = Analysis(
-    ['Main.py'],
+    ['amdesp_shipper/Main.py'],
     pathex=['E:\\dev\\AmDesp', 'C:\\Paul\\Amdesp'],
     binaries=[],
     datas=added_files,
