@@ -95,7 +95,7 @@ class MainGui(Gui):
         return headers
 
     def get_service_string(self, num_boxes: int, service: Service):
-        return f'{service.name}\n{num_boxes * service.cost}'
+        return f'{service.name}\n{num_boxes * service.cost:.2}'
 
     @staticmethod
     def booked_shipments_frame(shipments: [Shipment]):
@@ -111,7 +111,7 @@ class MainGui(Gui):
             ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
                         sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
                         sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost}:.2'),
+                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2}'),
                         ]
 
             if shipment.printed:
