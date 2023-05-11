@@ -185,7 +185,8 @@ def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> A
         logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
         address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
                                  contact=shipment.remote_contact)
-        address = address_gui.address_gui_loop()
+        address_gui.address_gui_loop()
+        address, contact = address_gui.address, address_gui.contact
 
         logger.info(f'PREP GET REMOTE ADDRESS - {shipment.shipment_name_printable} - {address=}')
 

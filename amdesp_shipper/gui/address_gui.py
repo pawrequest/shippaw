@@ -19,9 +19,9 @@ class AddressGui(Gui):
         self.shipment = shipment
         self.window = self.get_contact_window()
 
-    def address_gui_loop(self) -> Address:
+    def address_gui_loop(self):
         """ Gui loop, takes an address and shipment for contact details,
-        allows editing / replacing before returning address"""
+        allows editing / replacing address and contact """
         client = self.client
         # contact = shipment.get_sender_or_recip()
 
@@ -30,7 +30,6 @@ class AddressGui(Gui):
             if self.event in (sg.WINDOW_CLOSED, '-SUBMIT-', 'Exit'):
                 address = self.update_address_from_gui()
                 self.window.close()
-                return address
 
             if 'postal' in self.event.lower():
                 postcode = self.values.get(self.event.upper())
@@ -99,6 +98,11 @@ class AddressGui(Gui):
             setattr(self.address, field, value)
         return self.address
 
+    def update_contact_from_gui(self):
+        for field in FieldsList.contact.value:
+            value = self.values.get(f'-{field.upper()}-', None)
+            setattr(self.contact, field, value)
+        return self.contact
     def get_address_frame(self, address: Address, index: str = None) -> sg.Frame:
         layout = []
         params = address_fieldname_params.copy()
