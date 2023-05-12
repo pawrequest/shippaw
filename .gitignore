@@ -1,0 +1,9 @@
+/.env
+/venv/
+/build/
+/.idea
+/data/AmDesp.log
+/data/AmLog.json
+/data/Parcelforce Labels/
+/dist/
+/builds/
