@@ -52,9 +52,9 @@ if __name__ == '__main__':
     # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     if len(sys.argv) > 1:
-        shipping_mode_arg = sys.argv[1].lower()
-        category_arg = sys.argv[2].lower()
-        input_file_arg = sys.argv[3].lower()
+        shipping_mode_arg = sys.argv[1]
+        category_arg = sys.argv[2]
+        input_file_arg = sys.argv[3]
 
         try:
             category = ShipmentCategory[category_arg]
@@ -68,7 +68,6 @@ if __name__ == '__main__':
             raise
 
     else:
-        # shipping_mode_arg = 'fake'
         shipping_mode = ShipMode['FAKE']
         category = ShipmentCategory['FAKE']
         input_file_arg = 'fake'

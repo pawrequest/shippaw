@@ -20,7 +20,7 @@ config_env = dotenv_values(".env")
 # load_dotenv()
 # ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
 # ROOT_DIR = Path(r'r:\paul_notes\pss\amdesp')
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 LOG_FILE = ROOT_DIR / 'data/AmDesp.log'
 CONFIG_TOML = ROOT_DIR / 'data/user_config.toml'
 

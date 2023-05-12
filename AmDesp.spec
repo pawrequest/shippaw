@@ -4,11 +4,12 @@
 block_cipher = None
 
 added_files = [
-                ('amdesp_shipper/', '.'),
+                ['./amdesp_shipper/data/', './data/'],
+                ['./amdesp_shipper/scripts/', './scripts/'],
                 ]
 
 a = Analysis(
-    ['amdesp_shipper/Main.py'],
+    ['Main.py'],
     pathex=['E:\\dev\\AmDesp', 'C:\\Paul\\Amdesp'],
     binaries=[],
     datas=added_files,
