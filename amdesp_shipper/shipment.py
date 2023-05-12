@@ -78,10 +78,12 @@ class Shipment:
 
 
     @classmethod
-    def get_shipments(cls, config: Config, category:ShipmentCategory) -> list:
+    def get_shipments(cls, config: Config, category:ShipmentCategory, dbase_file:str) -> list:
         """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
         shipments: [Shipment] = []
-        dbase_file = str(config.paths.dbase_export)
+        if dbase_file == 'fake':
+            logger.info('FAKE SHIPMENTS')
+            dbase_file = str(config.paths.dbase_export)
         logger.info(f'DBase file = {dbase_file}')
         try:
             for record in DBF(dbase_file):

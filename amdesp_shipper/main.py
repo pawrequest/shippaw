@@ -39,7 +39,7 @@ def main(main_mode: str):
         config = Config.from_toml2(mode=main_mode)
         creds = config.dbay_creds
         client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-        shipments = Shipment.get_shipments(config=config, category=category)
+        shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
         gui = MainGui(config=config, client=client)
         shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
         shipper.dispatch()
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         shipping_mode_arg = sys.argv[1].lower()
         category_arg = sys.argv[2].lower()
+        input_file_arg = sys.argv[3].lower()
 
         try:
             category = ShipmentCategory[category_arg]
@@ -70,5 +71,6 @@ if __name__ == '__main__':
         # shipping_mode_arg = 'fake'
         shipping_mode = ShipMode['FAKE']
         category = ShipmentCategory['FAKE']
+        input_file_arg = 'fake'
 
     main(main_mode=shipping_mode)
