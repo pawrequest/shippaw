@@ -237,7 +237,7 @@ class MainGui(Gui):
 
 def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
     """ gets available shipping services for shipment sender and recipient
-    builds menu_def of potential services and if any matches service_id specified in config.toml then select it by default
+    builds menu_def of potential services and if any matches service_id specified in user_config.toml then select it by default
      return a dict of menu_def and default_value"""
     services = client.get_services()
     # todo get AVAILABLE services needs a request

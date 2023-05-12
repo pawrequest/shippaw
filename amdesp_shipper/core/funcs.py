@@ -66,7 +66,7 @@ def email_label(recipient: str, body: str, attachment: Path):
 
 
 def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
-    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in config.toml"""
+    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
         label_pdf: Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id,
                                                 label_layout='2A4')
