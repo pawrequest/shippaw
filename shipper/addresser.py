@@ -4,10 +4,10 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from amdesp_shipper.gui.address_gui import AddressGui
-from amdesp_shipper.core.enums import BestMatch, FuzzyScores
-from amdesp_shipper.shipment import Shipment
-from amdesp_shipper.core.config import get_amdesp_logger
+from gui.address_gui import AddressGui
+from core.enums import BestMatch, FuzzyScores
+from shipper.shipment import Shipment
+from core.config import get_amdesp_logger
 
 logger = get_amdesp_logger()
 
@@ -99,8 +99,8 @@ def get_candidate_keys_dict(shipment: Shipment, client: DespatchBaySDK, postcode
     """ return a dict of dbay addresses and keys, from postcode or shipment.postcode,
         popup if postcode no good """
     postcode = postcode or shipment.postcode
-    candidate_keys = None
-    while not candidate_keys:
+    candidate_keys_dict = None
+    while not candidate_keys_dict:
         try:
             candidate_keys_dict = {candidate.address: candidate.key for candidate in
                                    client.get_address_keys_by_postcode(postcode)}
@@ -164,12 +164,12 @@ def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> A
     address = address_from_search(client=client, shipment=shipment)
     logger.info(f"SEARCH MATCHED ADDRESS : {address}") if address else None
 
-    if not address:
-        candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)
-        address = address_from_quickmatch(shipment=shipment, client=client, candidate_key_dict=candidate_keys)
-        logger.info(f"QUICKMATCH ADDRESS : {address}") if address else None
+    # if not address:
+    #     address = address_from_quickmatch(shipment=shipment, client=client, candidate_key_dict=candidate_keys)
+    #     logger.info(f"QUICKMATCH ADDRESS : {address}") if address else None
 
     if not address:
+        candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)
         bestmatch = get_bestmatch(client=client, candidate_key_dict=candidate_keys, shipment=shipment)
         logger.info(f"BESTMATCH : {bestmatch}") if bestmatch else None
         address = bestmatch.address
@@ -179,13 +179,14 @@ def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> A
             address = check_address_company(address=address, shipment=shipment)
         logger.info(f'CHECK ADDRESS COMPANY : {address if address else ""}')
 
+
     if not address:
         candidate_keys = candidate_keys or get_candidate_keys_dict(client=client, shipment=shipment)
         bestmatch = get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
         logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
         address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
                                  contact=shipment.remote_contact)
-        address_gui.address_gui_loop()
+        address_gui.get_address()
         address, contact = address_gui.address, address_gui.contact
 
         logger.info(f'PREP GET REMOTE ADDRESS - {shipment.shipment_name_printable} - {address=}')

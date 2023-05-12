@@ -8,16 +8,16 @@ from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from amdesp_shipper.core.config import Config, get_amdesp_logger
-from amdesp_shipper.core.enums import Contact, DateTimeMasks
-from amdesp_shipper.core.funcs import print_label, log_shipment, email_label, download_label, update_commence, \
+from core.config import Config, get_amdesp_logger
+from core.enums import Contact, DateTimeMasks
+from core.funcs import print_label, log_shipment, email_label, download_label, update_commence, \
     check_today_ship
-from amdesp_shipper.shipment import Shipment
+from shipper.shipment import Shipment
 
-from amdesp_shipper.addressing.sender_receiver import get_sender_recip, get_home_sender, get_home_recipient
-from amdesp_shipper.gui.address_gui import AddressGui
-from amdesp_shipper.gui.main_gui import MainGui
-from amdesp_shipper.gui.tracking_gui import tracking_loop
+from shipper.sender_receiver import get_sender_recip, get_home_sender, get_home_recipient
+from gui.address_gui import AddressGui
+from gui.main_gui import MainGui
+from gui.tracking_gui import tracking_loop
 
 dotenv.load_dotenv()
 logger = get_amdesp_logger()
@@ -136,11 +136,11 @@ class Shipper:
         shipment_to_edit = self.shipment_to_edit
         event = self.gui.event
         window = self.gui.window
-        if new_boxes := self.get_new_parcels(location=window.mouse_location()):
-            shipment_to_edit.parcels = new_boxes
-            window[event].update(f'{len(shipment_to_edit.parcels)}')
+        if new_parcels := self.get_new_parcels(location=window.mouse_location()):
+            shipment_to_edit.parcels = new_parcels
+            window[event].update(len(shipment_to_edit.parcels))
             window[f'-{shipment_to_edit.shipment_name_printable}_SERVICE-'.upper()].update(
-                f'{shipment_to_edit.service.name} \n£{len(new_boxes) * shipment_to_edit.service.cost}')
+                f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
 
     def remove_click(self, shipments: [Shipment]):
         shipments = [s for s in shipments if s != self.shipment_to_edit]
@@ -153,10 +153,9 @@ class Shipper:
         old_address = self.shipment_to_edit.recipient.recipient_address
         address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
                                     address=old_address, contact=contact)
-        new_address = address_window.address_gui_loop()
-        self.shipment_to_edit.recipient.recipient_address = new_address
-        self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
-        ...
+        if new_address := address_window.get_address():
+            self.shipment_to_edit.recipient.recipient_address = new_address
+            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
 
     def date_click(self):
         new_collection_date = self.gui.new_date_selector(shipment=self.shipment_to_edit,
@@ -170,11 +169,9 @@ class Shipper:
 
         address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
                                     contact=contact, address=old_address)
-        new_address = address_window.address_gui_loop()
-        if not new_address:
-            return
-        self.shipment_to_edit.sender.sender_address = new_address
-        self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
+        if new_address := address_window.get_address():
+            self.shipment_to_edit.sender.sender_address = new_address
+            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
 
     def service_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -193,9 +190,9 @@ class Shipper:
             window.close()
             return None
         if e == 'BOX':
-            new_boxes = v[e]
+            new_boxes = int(v[e])
             window.close()
-            return self.get_parcels(int(new_boxes), contents=self.config.parcel_contents)
+            return self.get_parcels(new_boxes, contents=self.config.parcel_contents)
 
     #
     # def get_new_parcels(self, location) -> :
@@ -350,7 +347,6 @@ def book_shipment(client: DespatchBaySDK, shipment_id: str):
     # shipment.collection_booked = True
     return shipment_return
 
-
 # def get_dates_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
 #     """ get available collection dates as dbay collection date objects for shipment.sender.address
 #         construct a menu_def for a combo-box
@@ -371,6 +367,3 @@ def book_shipment(client: DespatchBaySDK, shipment_id: str):
 #     shipment.date = chosen_collection_date_dbay
 #     return {'default_value': chosen_date_hr, 'values': men_def}
 #
-
-
-

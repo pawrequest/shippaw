@@ -1,26 +1,21 @@
 import ctypes
 import logging
-import os
 import subprocess
 import sys
 import tomllib
 
 import PySimpleGUI as sg
 from pathlib import Path
-from dotenv import load_dotenv, dotenv_values
+from dotenv import dotenv_values
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
-from amdesp_shipper.core.enums import ApiScope, Contact, DateTimeMasks, DbayCreds, DefaultShippingService, FieldsList, \
-    HomeAddress, \
-    PathsList, ShipmentCategory
+from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
+    PathsList
 
 config_env = dotenv_values(".env")
-# load_dotenv()
-# ROOT_DIR = Path(platformdirs.user_data_dir(appname='AmDesp', appauthor='PSS'))
-# ROOT_DIR = Path(r'r:\paul_notes\pss\amdesp')
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 LOG_FILE = ROOT_DIR / 'data/AmDesp.log'
 CONFIG_TOML = ROOT_DIR / 'data/user_config.toml'
 
@@ -70,24 +65,24 @@ class Config:
         config_dict['mode'] = mode
 
         return cls(config_dict=config_dict)
-
-    def setup_amdesp(self, sandbox: bool, client: DespatchBaySDK):
-        # candidates = client.get_address_keys_by_postcode
-        """
-        check system environ variables
-        home address details - get dbay key
-        cmclibnet
-
-        """
-        if not self.check_system_env(dbay_dict=self.dbay, sandbox=sandbox):
-            logging.exception('Unable to set Environment variables')
-        if not self.home_address.get('dbay_key'):
-            postcode = self.home_address.get('postal_code')
-            if not postcode:
-                postcode = sg.popup_get_text('No Home Postcode - enter now')
-            candidates = client.get_address_keys_by_postcode(postcode)
-        #     address = address_chooser_popup(candidate_dict=candidates, client=client)
-        # self.setup_commence()
+    #
+    # def setup_amdesp(self, sandbox: bool, client: DespatchBaySDK):
+    #     # candidates = client.get_address_keys_by_postcode
+    #     """
+    #     check system environ variables
+    #     home address details - get dbay key
+    #     cmclibnet
+    #
+    #     """
+    #     if not self.check_system_env(dbay_dict=self.dbay, sandbox=sandbox):
+    #         logging.exception('Unable to set Environment variables')
+    #     if not self.home_address.get('dbay_key'):
+    #         postcode = self.home_address.get('postal_code')
+    #         if not postcode:
+    #             postcode = sg.popup_get_text('No Home Postcode - enter now')
+    #         candidates = client.get_address_keys_by_postcode(postcode)
+    #     #     address = address_chooser_popup(candidate_dict=candidates, client=client)
+    #     # self.setup_commence()
 
     def creds_from_user(self) -> DbayCreds:
         scope = self.scope_from_sandbox()

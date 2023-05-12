@@ -1,10 +1,10 @@
 from despatchbay.despatchbay_entities import Sender, Recipient, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp_shipper.addressing.addresser import get_remote_address
-from amdesp_shipper.core.config import Config, get_amdesp_logger
-from amdesp_shipper.core.enums import Contact
-from amdesp_shipper.shipment import Shipment
+from shipper.addresser import get_remote_address
+from core.config import Config, get_amdesp_logger
+from core.enums import Contact
+from shipper.shipment import Shipment
 
 logger = get_amdesp_logger()
 def get_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
@@ -37,12 +37,13 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
 def get_remote_sender(client: DespatchBaySDK, contact: Contact,
                       remote_address: Address) -> Sender:
     sender = client.sender(
-        sender_address=remote_address, **contact._asdict())
+        sender_address=remote_address, **contact.__dict__)
     return sender
 
 
 def get_remote_recipient(contact: Contact, client: DespatchBaySDK, remote_address: Address) -> Sender:
     recip = client.recipient(
-        recipient_address=remote_address, **contact._asdict())
+        # recipient_address=remote_address, **contact._asdict())
+        recipient_address=remote_address, **contact.__dict__)
     logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip

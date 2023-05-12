@@ -9,9 +9,9 @@ import win32com.client
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 
-from amdesp_shipper.core.config import Config
-from amdesp_shipper.core.enums import FieldsList, DateTimeMasks
-from amdesp_shipper.shipment import Shipment, logger
+from core.config import Config
+from core.enums import FieldsList, DateTimeMasks
+from shipper.shipment import Shipment, logger
 
 
 def print_label(shipment):

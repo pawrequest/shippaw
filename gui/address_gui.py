@@ -4,11 +4,11 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp_shipper.core.config import Config
-from amdesp_shipper.core.enums import Contact, FieldsList
-from amdesp_shipper.gui.main_gui import Gui
-from amdesp_shipper.gui.gui_params import address_fieldname_params, address_input_params
-from amdesp_shipper.shipment import Shipment
+from core.config import Config
+from core.enums import Contact, FieldsList
+from gui.main_gui import Gui
+from gui.gui_params import address_fieldname_params, address_input_params
+from shipper.shipment import Shipment
 
 
 class AddressGui(Gui):
@@ -19,7 +19,7 @@ class AddressGui(Gui):
         self.shipment = shipment
         self.window = self.get_contact_window()
 
-    def address_gui_loop(self):
+    def get_address(self):
         """ Gui loop, takes an address and shipment for contact details,
         allows editing / replacing address and contact """
         client = self.client
@@ -27,9 +27,8 @@ class AddressGui(Gui):
 
         while True:
             self.event, self.values = self.window.read()
-            if self.event in (sg.WINDOW_CLOSED, '-SUBMIT-', 'Exit'):
-                address = self.update_address_from_gui()
-                self.window.close()
+            if self.event == sg.WINDOW_CLOSED:
+                return None
 
             if 'postal' in self.event.lower():
                 postcode = self.values.get(self.event.upper())
@@ -39,19 +38,18 @@ class AddressGui(Gui):
 
             if 'company_name' in self.event.lower():
                 # copy customer name into address comany name field
-                address = self.company_name_click()
-                self.update_gui_from_address(address=address)
+                self.company_name_click()
+                self.update_gui_from_address(address=self.address)
 
-            # if 'submit' in self.event.lower():
-            #     address = self.update_address_from_gui()
-            #     self.window.close()
-            #     return address
+            if 'submit' in self.event.lower():
+                self.update_address_from_gui()
+                self.update_contact_from_gui()
+                self.window.close()
+                return self.address
 
     def company_name_click(self):
-        address = self.update_address_from_gui()
-        setattr(address, 'company_name', self.shipment.customer)
-        # window[event.upper()].update(shipment.customer)
-        return address
+        self.update_address_from_gui()
+        setattr(self.address, 'company_name', self.shipment.customer)
 
     def address_postcode_click(self, client: DespatchBaySDK, postcode: str) -> Address|None:
 
@@ -96,13 +94,11 @@ class AddressGui(Gui):
         for field in FieldsList.address.value:
             value = self.values.get(f'-ADDRESS_{field.upper()}-', None)
             setattr(self.address, field, value)
-        return self.address
 
     def update_contact_from_gui(self):
         for field in FieldsList.contact.value:
             value = self.values.get(f'-{field.upper()}-', None)
             setattr(self.contact, field, value)
-        return self.contact
     def get_address_frame(self, address: Address, index: str = None) -> sg.Frame:
         layout = []
         params = address_fieldname_params.copy()

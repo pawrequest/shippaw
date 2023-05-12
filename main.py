@@ -9,11 +9,11 @@ import sys
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp_shipper.core.config import Config, get_amdesp_logger
-from amdesp_shipper.core.enums import ShipmentCategory, ShipMode
-from amdesp_shipper.gui.main_gui import MainGui
-from amdesp_shipper.shipment import Shipment
-from amdesp_shipper.shipper import Shipper
+from core.config import Config, get_amdesp_logger
+from core.enums import ShipmentCategory, ShipMode
+from gui.main_gui import MainGui
+from shipper.shipment import Shipment
+from shipper.shipper import Shipper
 
 
 """

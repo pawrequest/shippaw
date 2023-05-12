@@ -6,14 +6,14 @@ from dateutil.parser import parse
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from amdesp_shipper.core.config import Config, get_amdesp_logger
-from amdesp_shipper.core.enums import DateTimeMasks, FieldsList
-from amdesp_shipper.gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
+from core.config import Config, get_amdesp_logger
+from core.enums import DateTimeMasks, FieldsList
+from gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
     address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
-from amdesp_shipper.shipment import Shipment
-from amdesp_shipper.core.funcs import print_label
+from shipper.shipment import Shipment
+from core.funcs import print_label
 
 logger = get_amdesp_logger()
 
@@ -95,7 +95,7 @@ class MainGui(Gui):
         return headers
 
     def get_service_string(self, num_boxes: int, service: Service):
-        return f'{service.name}\n{num_boxes * service.cost:.2}'
+        return f'{service.name}\n{num_boxes * service.cost:.2f}'
 
     @staticmethod
     def booked_shipments_frame(shipments: [Shipment]):
@@ -111,7 +111,7 @@ class MainGui(Gui):
             ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
                         sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
                         sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2}'),
+                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2f}'),
                         ]
 
             if shipment.printed:
@@ -309,7 +309,7 @@ def loading():
 
 def get_service_button(num_parcels, shipment):
     service_col = 'green' if shipment.default_service_matched else 'maroon4'
-    service_name_button = sg.Text(f'{shipment.service.name} \n£{num_parcels * shipment.service.cost}',
+    service_name_button = sg.Text(f'{shipment.service.name} \n£{(num_parcels * shipment.service.cost):.2f}',
                                   background_color=service_col, enable_events=True,
                                   k=f'-{shipment.shipment_name_printable.upper()}_SERVICE-', **shipment_params)
     return service_name_button

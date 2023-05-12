@@ -1,8 +1,8 @@
 import PySimpleGUI as sg
 
 from despatchbay.exceptions import ApiException
-from amdesp_shipper.shipment import Shipment
-from amdesp_shipper.core.config import get_amdesp_logger
+from shipper.shipment import Shipment
+from core.config import get_amdesp_logger
 
 logger= get_amdesp_logger()
 def tracking_loop(gui, shipment: Shipment):

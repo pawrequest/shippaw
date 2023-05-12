@@ -139,8 +139,12 @@ class PathsList:
 
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
-Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
-
+# Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
+@dataclass
+class Contact:
+    email: str
+    telephone: str
+    name: str
 
 class GuiMap(Enum):
     shipment_name = 'Shipment Name'
