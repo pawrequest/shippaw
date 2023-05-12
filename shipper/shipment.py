@@ -22,7 +22,7 @@ class Shipment:
         :param ship_dict: a dictionary of shipment details
         """
 
-        self.category: category
+        self.category= category.title()
         self._shipment_name: str = ship_dict.get('shipment_name')
         self.address_as_str: str = ship_dict.get('address_as_str')
         self.str_to_match = ''.join(self.address_as_str.split('\r')[0:1]) \

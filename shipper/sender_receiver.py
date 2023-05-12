@@ -31,7 +31,7 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
     """ return a dbay recipient object representing home address defined in toml / Shipper.config"""
     address = client.get_address_by_key(config.home_address.dbay_key)
     return client.recipient(
-        recipient_address=address, **config.home_contact._asdict())
+        recipient_address=address, **config.home_contact.__dict__)
 
 
 def get_remote_sender(client: DespatchBaySDK, contact: Contact,

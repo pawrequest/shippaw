@@ -209,27 +209,32 @@ class Shipper:
     def queue_and_book(self):
         config = self.config
         client = self.client
+        added_shipments = []
         booked_shipments = []
+
 
         for shipment in self.shipments:
             try:
                 shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
                 shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-                add = True
-                book = True
+                add = self.gui.values.get(f'-{shipment.shipment_name_printable}_add-'.upper())
+                book = self.gui.values.get(f'-{shipment.shipment_name_printable}_book-'.upper())
+                print_email = self.gui.values.get(f'-{shipment.shipment_name_printable}_print_email-'.upper())
 
                 if add:
                     shipment_id = client.add_shipment(shipment.shipment_request)
+                    added_shipments.append(shipment)
                     setattr(shipment, f'{"outbound_id" if config.outbound else "inbound_id"}', shipment_id)
+
 
                     if book:
                         shipment.shipment_return = book_shipment(client=client, shipment_id=shipment_id)
                         download_label(client=client, config=config, shipment=shipment)
 
-                        if config.outbound:
+                        if config.outbound and print_email:
                             print_label(shipment=shipment)
                         else:
-                            if sg.popup_yes_no(f'Email Label to {shipment.email}?') == 'Yes':
+                            if not config.outbound and print_email:
                                 email_label(recipient=shipment.email, body=config.return_label_email_body,
                                             attachment=shipment.label_location)
 

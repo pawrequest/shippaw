@@ -51,25 +51,11 @@ def main(main_mode: str):
 if __name__ == '__main__':
     # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
-    if len(sys.argv) > 1:
-        shipping_mode_arg = sys.argv[1]
-        category_arg = sys.argv[2]
-        input_file_arg = sys.argv[3]
+    shipping_mode_arg = sys.argv[1]
+    category_arg = sys.argv[2]
+    input_file_arg = sys.argv[3]
 
-        try:
-            category = ShipmentCategory[category_arg]
-        except KeyError:
-            logger.exception(f'invalid category argument: {category_arg}')
-            raise
-        try:
-            shipping_mode = ShipMode[shipping_mode_arg]
-        except KeyError:
-            logger.exception(f'invalid mode argument: {shipping_mode_arg}')
-            raise
-
-    else:
-        shipping_mode = ShipMode['FAKE']
-        category = ShipmentCategory['FAKE']
-        input_file_arg = 'fake'
+    category = ShipmentCategory[category_arg]
+    shipping_mode = ShipMode[shipping_mode_arg]
 
     main(main_mode=shipping_mode)
