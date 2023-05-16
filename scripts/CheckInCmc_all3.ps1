@@ -20,6 +20,5 @@ foreach ($category in $categories)
 }
 ### Goodbye
 $db.Close()
-Read-Host -Prompt "Press Enter to exit"
 exit
 
