@@ -982,28 +982,26 @@ Sub PackHire()
         End if
 End Sub
 
-
 Sub UnpackHire()
         Dim unpackedBy, missing, newReturn
 
 ' set who unpacked and when unpacked'
         unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
-        Form.Field("Unpacked Date").Value = "today"
-        Form.Field("Unpacked Time").Value = "now"
-        Form.Field("Actual Return Date").Value = "today"
-        Form.Field("Unpacked By").Value = unpackedBy
 
 ' all ok? if so set returned ok and offer to save/close'
         if MsgBox("all ok?",4) = 6 Then
-            Form.Field("Status").Value = "Returned all OK"
-            if MsgBox("Close Hire and exit?",4) = 6 Then
+            if MsgBox("Close Hire save and exit?",4) = 6 Then
+                Form.Field("Status").Value = "Returned all OK"
+                Form.Field("Unpacked Date").Value = "today"
+                Form.Field("Unpacked Time").Value = "now"
+                Form.Field("Actual Return Date").Value = "today"
+                Form.Field("Unpacked By").Value = unpackedBy
                 Form.Field("Closed").Value = 1
                 Form.Save
             End if
 
 ' if not ok then offer to manually enter missing kit, else use missing-kit field on form'
         Else
-            Form.Field("Status").Value = "Returned with problems"
             missing = InputBox("What was missing?" & vbNewLine & "(cancel to use existing 'Missing Kit' field)", "What's Missing?")
             if missing <> "" Then
                 if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
@@ -1016,7 +1014,12 @@ Sub UnpackHire()
 
 ' offer to save and exit'
             if MsgBox("Set status to returned with problems, save, and exit?",4) = 6 Then
-                    Form.Save
+                Form.Field("Status").Value = "Returned with problems"
+                Form.Field("Unpacked By").Value = unpackedBy
+                Form.Field("Actual Return Date").Value = "today"
+                Form.Field("Unpacked Date").Value = "today"
+                Form.Field("Unpacked Time").Value = "now"
+                Form.Save
             End if
 
         End if
