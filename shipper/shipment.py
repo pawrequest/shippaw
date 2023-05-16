@@ -47,14 +47,17 @@ class Shipment:
         self.date_menu_map = dict()
         self.service_menu_map: dict = dict()
         self.label_location: Path = Path()
-        self.candidate_key_dict = {}
+        self.candidate_keys = {}
         self.parcels: [Parcel] = []
 
         self.remote_address: Address | None = None
         self.sender_contact = None
+        self.remote_contact: Optional[Contact] = None
+        self.remote_sender_recip: Optional[Sender | Recipient] = None
         self.sender = Sender
         # self.recipient_contact = None
         self.recipient = Recipient
+
 
         self.date_matched = False
 

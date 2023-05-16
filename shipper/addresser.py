@@ -38,8 +38,9 @@ def address_from_quickmatch(client: DespatchBaySDK, shipment: Shipment, candidat
             return client.get_address_by_key(key)
 
 
-def get_bestmatch(client: DespatchBaySDK, candidate_key_dict: dict, shipment: Shipment) -> BestMatch:
+def get_bestmatch(client: DespatchBaySDK, shipment: Shipment) -> BestMatch:
     """
+    requires shipment.candidate_keys dict
     Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
     search by customer name, then shipment search_term
     call explicit_matches to compare strings,
@@ -48,7 +49,7 @@ def get_bestmatch(client: DespatchBaySDK, candidate_key_dict: dict, shipment: Sh
     If still no valid address, call get_new_address.
     """
     fuzzyscores = []
-    for address_str, key in candidate_key_dict.items():
+    for address_str, key in shipment.candidate_keys.items():
         candidate_address = client.get_address_by_key(key)
         if explicit_match := get_explicit_bestmatch(candidate_address=candidate_address, shipment=shipment):
             return explicit_match
@@ -159,34 +160,41 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> Address:
     """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
     config = config1
-    candidate_keys = None
-
     # 3x api call
+
+    # get address from direct searches
     if address := address_from_search(client=client, shipment=shipment):
         logger.info(f"Address Matched fom search: {address}")
         if checked_address := check_address_company(address=address, shipment=shipment):
             logger.info(f"Address Passed Company Name Check")
             return checked_address
 
+    # if no matches build a dict of candidates at shipment.postcode
+    shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
+    logger.info(f"CANDIDATE KEYS : {shipment.candidate_keys}")
 
-    candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment) # 1x api call
-    logger.info(f"CANDIDATE KEYS : {candidate_keys}")
-    bestmatch = get_bestmatch(client=client, candidate_key_dict=candidate_keys, shipment=shipment) # candidate key x api call
-    logger.info(f"BESTMATCH : {bestmatch}")
-    address = bestmatch.address
+    shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
+    logger.info(f"BESTMATCH : {shipment.bestmatch}")
+
+    address = shipment.bestmatch.address
 
     if address := check_address_company(address=address, shipment=shipment):
         return address
 
+
+
     else:
-        candidate_keys = candidate_keys or get_candidate_keys_dict(client=client, shipment=shipment)
-        bestmatch = get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
-        logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
-        address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
-                                 contact=shipment.remote_contact)
-        address_gui.get_address()
-        address, contact = address_gui.address, address_gui.contact
+        address = refactored_from_gui(address, candidate_keys, client, config, shipment)
 
-        logger.info(f'PREP GET REMOTE ADDRESS - {shipment.shipment_name_printable} - {address=}')
+    return address
 
+
+def refactored_from_gui(address, candidate_keys, client, config, shipment):
+    bestmatch = get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
+    logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
+    address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
+                             contact=shipment.remote_contact)
+    address_gui.get_address()
+    address, contact = address_gui.address, address_gui.contact
+    logger.info(f'PREP GET REMOTE ADDRESS - {shipment.shipment_name_printable} - {address=}')
     return address

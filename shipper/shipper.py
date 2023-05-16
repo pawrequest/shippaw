@@ -12,9 +12,11 @@ from core.config import Config, get_amdesp_logger
 from core.enums import Contact, DateTimeMasks
 from core.funcs import print_label, log_shipment, email_label, download_label, update_commence, \
     check_today_ship
+from shipper.addresser import get_remote_address
 from shipper.shipment import Shipment
 
-from shipper.sender_receiver import get_remote_sender_recip, get_home_sender, get_home_recipient
+from shipper.sender_receiver import get_remote_sender_recip, get_home_sender, get_home_recipient, get_remote_recipient, \
+    get_remote_sender
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui
 from gui.tracking_gui import tracking_loop
@@ -64,7 +66,6 @@ class Shipper:
         config = self.config
         client = self.client
 
-
         # get a dbay object representing home base for either sender or receiver as per config.outbound
         # only needs to be done once per batch unless add ability to mix outbound and inbound shipments
         home_sender_recip = (get_home_sender(client=client, config=config) if config.outbound
@@ -73,10 +74,8 @@ class Shipper:
 
         for shipment in self.shipments:
             try:
-                shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                                  name=shipment.contact_name)
-                # shipment.remote_address =
-                get_remote_sender_recip(self.client, self.config, home_sender_recip=home_sender_recip, shipment=shipment)
+                self.refactored_sender_recip(client, config, home_sender_recip, shipment)
+
                 shipment.service = client.get_services()[0]  # needed to get dates
                 if check_today_ship(shipment) is None:  # no bookings after 1pm
                     continue
@@ -95,6 +94,19 @@ class Shipper:
                 continue
 
         return prepped_shipments
+
+    def refactored_sender_recip(self, client, config, home_sender_recip, shipment):
+        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                          name=shipment.contact_name)
+        shipment.remote_address = get_remote_address(config1=config, client=client, shipment=shipment)
+        if config.outbound:
+            shipment.sender = home_sender_recip
+            shipment.recipient = get_remote_recipient(client=client, remote_address=shipment.remote_address,
+                                                      contact=shipment.remote_contact)
+        else:
+            shipment.sender = get_remote_sender(client=client, contact=shipment.remote_contact,
+                                                remote_address=shipment.remote_address)
+            shipment.recipient = home_sender_recip
 
     def main_gui_loop(self, shipments: [Shipment]):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,

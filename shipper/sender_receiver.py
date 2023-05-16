@@ -7,21 +7,28 @@ from core.enums import Contact
 from shipper.shipment import Shipment
 
 logger = get_amdesp_logger()
-def get_remote_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
-    client = client1
-    config = config1
-    remote_address = None
-    while not remote_address:
-        remote_address = get_remote_address(config1, shipment=shipment, client=client)
-
-    if config.outbound:
-        shipment.sender = home_sender_recip
-        shipment.recipient = get_remote_recipient(client=client, remote_address=remote_address,
-                                                  contact=shipment.remote_contact)
+def get_remote_sender_recip(client, outbound:bool, remote_address:Address, remote_contact:Contact):
+    if outbound:
+        return get_remote_recipient(client=client, remote_address=remote_address, contact=remote_contact)
     else:
-        shipment.sender = get_remote_sender(client=client, remote_address=remote_address,
-                                            contact=shipment.remote_contact)
-        shipment.recipient = home_sender_recip
+        return get_remote_sender(client=client, remote_address=remote_address, contact=remote_contact)
+
+
+# def get_remote_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
+#     client = client1
+#     config = config1
+#     remote_address = None
+#     while not remote_address:
+#         remote_address = get_remote_address(config1, shipment=shipment, client=client)
+#
+#     if config.outbound:
+#         shipment.sender = home_sender_recip
+#         shipment.recipient = get_remote_recipient(client=client, remote_address=remote_address,
+#                                                   contact=shipment.remote_contact)
+#     else:
+#         shipment.sender = get_remote_sender(client=client, remote_address=remote_address,
+#                                             contact=shipment.remote_contact)
+#         shipment.recipient = home_sender_recip
 
 
 def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
