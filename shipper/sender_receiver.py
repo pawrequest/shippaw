@@ -7,11 +7,11 @@ from core.enums import Contact
 from shipper.shipment import Shipment
 
 logger = get_amdesp_logger()
-def get_remote_sender_recip(client, outbound:bool, remote_address:Address, remote_contact:Contact):
-    if outbound:
-        return get_remote_recipient(client=client, remote_address=remote_address, contact=remote_contact)
-    else:
-        return get_remote_sender(client=client, remote_address=remote_address, contact=remote_contact)
+# def get_remote_sender_recip(client, outbound:bool, remote_address:Address, remote_contact:Contact):
+#     if outbound:
+#         return get_remote_recipient(client=client, remote_address=remote_address, contact=remote_contact)
+#     else:
+#         return get_remote_sender(client=client, remote_address=remote_address, contact=remote_contact)
 
 
 # def get_remote_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
@@ -42,6 +42,10 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
     return client.recipient(
         recipient_address=address, **config.home_contact.__dict__)
 
+def recip_from_contact_and_key(client: DespatchBaySDK, dbay_key:str, contact:Contact) -> Recipient:
+    """ return a dbay recipient object"""
+    return client.recipient(recipient_address=client.get_address_by_key(dbay_key), **contact.__dict__)
+
 
 def get_remote_sender(client: DespatchBaySDK, contact: Contact,
                       remote_address: Address) -> Sender:
@@ -54,5 +58,12 @@ def get_remote_recipient(contact: Contact, client: DespatchBaySDK, remote_addres
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=remote_address, **contact.__dict__)
+    logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+    return recip
+
+def recip_from_contact_address( client: DespatchBaySDK, contact: Contact, address: Address) -> Sender:
+    recip = client.recipient(
+        # recipient_address=remote_address, **contact._asdict())
+        recipient_address=address, **contact.__dict__)
     logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip

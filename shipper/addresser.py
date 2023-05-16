@@ -184,13 +184,14 @@ def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> A
 
 
     else:
-        address = refactored_from_gui(address, candidate_keys, client, config, shipment)
+        address = address_from_gui(client=client, config=config, shipment=shipment)
 
     return address
 
 
-def refactored_from_gui(address, candidate_keys, client, config, shipment):
-    bestmatch = get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
+def address_from_gui(client, config, shipment):
+
+    bestmatch = get_bestmatch(shipment=shipment, client=client)
     logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
     address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
                              contact=shipment.remote_contact)
