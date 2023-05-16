@@ -161,26 +161,24 @@ def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> A
     config = config1
     candidate_keys = None
 
-    address = address_from_search(client=client, shipment=shipment)
-    logger.info(f"SEARCH MATCHED ADDRESS : {address}") if address else None
-
-    # if not address:
-    #     address = address_from_quickmatch(shipment=shipment, client=client, candidate_key_dict=candidate_keys)
-    #     logger.info(f"QUICKMATCH ADDRESS : {address}") if address else None
-
-    if not address:
-        candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)
-        bestmatch = get_bestmatch(client=client, candidate_key_dict=candidate_keys, shipment=shipment)
-        logger.info(f"BESTMATCH : {bestmatch}") if bestmatch else None
-        address = bestmatch.address
-
-    if address:
-        if not config.sandbox:
-            address = check_address_company(address=address, shipment=shipment)
-        logger.info(f'CHECK ADDRESS COMPANY : {address if address else ""}')
+    # 3x api call
+    if address := address_from_search(client=client, shipment=shipment):
+        logger.info(f"Address Matched fom search: {address}")
+        if checked_address := check_address_company(address=address, shipment=shipment):
+            logger.info(f"Address Passed Company Name Check")
+            return checked_address
 
 
-    if not address:
+    candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment) # 1x api call
+    logger.info(f"CANDIDATE KEYS : {candidate_keys}")
+    bestmatch = get_bestmatch(client=client, candidate_key_dict=candidate_keys, shipment=shipment) # candidate key x api call
+    logger.info(f"BESTMATCH : {bestmatch}")
+    address = bestmatch.address
+
+    if address := check_address_company(address=address, shipment=shipment):
+        return address
+
+    else:
         candidate_keys = candidate_keys or get_candidate_keys_dict(client=client, shipment=shipment)
         bestmatch = get_bestmatch(candidate_key_dict=candidate_keys, shipment=shipment, client=client)
         logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None

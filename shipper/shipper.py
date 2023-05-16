@@ -14,7 +14,7 @@ from core.funcs import print_label, log_shipment, email_label, download_label, u
     check_today_ship
 from shipper.shipment import Shipment
 
-from shipper.sender_receiver import get_sender_recip, get_home_sender, get_home_recipient
+from shipper.sender_receiver import get_remote_sender_recip, get_home_sender, get_home_recipient
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui
 from gui.tracking_gui import tracking_loop
@@ -55,6 +55,7 @@ class Shipper:
             sys.exit()
 
     def prep_shipments(self):
+        # use strategy pattern to select prep method
         """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
         stores all in shipment attrs
         uses an arbitrary service to get collection dates, then gets real service from eventual shipment_return dbay object"""
@@ -63,7 +64,9 @@ class Shipper:
         config = self.config
         client = self.client
 
+
         # get a dbay object representing home base for either sender or receiver as per config.outbound
+        # only needs to be done once per batch unless add ability to mix outbound and inbound shipments
         home_sender_recip = (get_home_sender(client=client, config=config) if config.outbound
                              else get_home_recipient(client=client, config=config))
         logger.info(f'PREP SHIPMENT -  {home_sender_recip=}')
@@ -72,7 +75,8 @@ class Shipper:
             try:
                 shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
                                                   name=shipment.contact_name)
-                get_sender_recip(self.client, self.config, home_sender_recip=home_sender_recip, shipment=shipment)
+                # shipment.remote_address =
+                get_remote_sender_recip(self.client, self.config, home_sender_recip=home_sender_recip, shipment=shipment)
                 shipment.service = client.get_services()[0]  # needed to get dates
                 if check_today_ship(shipment) is None:  # no bookings after 1pm
                     continue
@@ -212,7 +216,6 @@ class Shipper:
         added_shipments = []
         booked_shipments = []
 
-
         for shipment in self.shipments:
             try:
                 shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
@@ -225,7 +228,6 @@ class Shipper:
                     shipment_id = client.add_shipment(shipment.shipment_request)
                     added_shipments.append(shipment)
                     setattr(shipment, f'{"outbound_id" if config.outbound else "inbound_id"}', shipment_id)
-
 
                     if book:
                         shipment.shipment_return = book_shipment(client=client, shipment_id=shipment_id)

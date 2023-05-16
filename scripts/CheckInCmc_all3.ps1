@@ -9,17 +9,14 @@ $categories = "hire", "sale", "customer"
 foreach ($category in $categories)
 {
     $formname = $category + '_pss'
-    write-Host Form Name = $formname
-
-#    $vbsfile = 'E:\Dev\AmDesp\scripts\' + $formname + '.vbs' #switch for unbuilt changes
     $vbsfile = 'C:\paul\AmDesp\scripts\' + $formname + '.vbs'
-    write-Host VBS = $vbsfile
-#    $vbsfile = $env:LOCALAPPDATA + '\pss\AmDesp\scripts\' + $formname + '.vbs'
-#    $vbsfile = 'r:\paul_notes\pss\AmDesp\scripts\' + $formname + '.vbs'
-#    $vbsfile = 'r:\paul_notes\pss\AmDesp\scripts\' + $formname + '.vbs'
-#    write-Host $vbsfile
     $formchecked = $db.CheckInFormScript($category, $formname, $vbsfile)
-    Write-Host $category " form checked in" is $formchecked
+
+    Write-Host $category "form checked in" is $formchecked
+    write-Host Form Name = $formname
+    write-Host VBS = $vbsfile
+    Write-Host
+
 }
 ### Goodbye
 $db.Close()

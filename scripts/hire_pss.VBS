@@ -929,7 +929,7 @@ Sub Form_OnClick(ControlId)
         Case "CommandButton21"
             if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
 '                 ShipHire("C:\AmDesp\data\AmShip.xml")
-            ShipHireDbase()
+                ShipHireDbase()
             End if
 
         Case "CommandButton22"
@@ -1141,16 +1141,44 @@ End Sub
 
 
 Sub ShipHireDbase()
-    Dim ddeApp, ddeTopic, ddeItem
-    Set ddeApp = CreateObject("dde.application")
-    ddeTopic = "MyDDEServer"
-    ddeItem = "Topic|Item"
-    ddeApp.RegisterService(ddeTopic)
-    ddeApp.Connect ddeTopic, ddeItem
+'     Dim ddeApp, ddeTopic, ddeItem
+'     Set ddeApp = CreateObject("dde.application")
+'     ddeTopic = "MyDDEServer"
+'     ddeItem = "Topic|Item"
+'     ddeApp.RegisterService(ddeTopic)
+'     ddeApp.Connect ddeTopic, ddeItem
+'
+'     ' Get the hire name from the detail form
+'     Dim hireName
+'     hireName = ddeApp.Request("Value[Field:Name]")
+'
+'     ' Define the export template and export filepath
+'     Dim exportTemplate
+'     exportTemplate = "dbase"
+'     Dim exportFilePath
+'     exportFilePath = "C:\paul\AmDesp\data\dde_hire.dbf"
+'
+'     ' Execute the export command
+'     Dim exportCommand
+'     exportCommand = "[Export][" & exportTemplate & "][Name=" & hireName & "][" & exportFilePath & "]"
+'     ddeApp.Exec exportCommand
+'
+'     ddeApp.Disconnect
+'     Set ddeApp = Nothing
+    Dim commenceApp, commenceDB, hireRecord
 
-    ' Get the hire name from the detail form
+    ' Create an instance of the Commence application
+    Set commenceApp = CreateObject("Commence.Application")
+
+    ' Connect to the Commence database
+    Set commenceDB = commenceApp.Database
+
+    ' Get the hire record associated with the detail form
+    Set hireRecord = commenceDB.GetRecordByID("Hire", CStr(commenceApp.CurrentRecordID))
+
+    ' Get the hire name from the record
     Dim hireName
-    hireName = ddeApp.Request("Value[Field:Name]")
+    hireName = hireRecord.GetField("name").Value
 
     ' Define the export template and export filepath
     Dim exportTemplate
@@ -1161,11 +1189,14 @@ Sub ShipHireDbase()
     ' Execute the export command
     Dim exportCommand
     exportCommand = "[Export][" & exportTemplate & "][Name=" & hireName & "][" & exportFilePath & "]"
-    ddeApp.Exec exportCommand
+    commenceApp.ExecuteMacro exportCommand
 
-    ddeApp.Disconnect
-    Set ddeApp = Nothing
+    ' Clean up resources
+    Set hireRecord = Nothing
+    Set commenceDB = Nothing
+    Set commenceApp = Nothing
 End Sub
+
 
 
 Sub ShipHire(xmlfile)

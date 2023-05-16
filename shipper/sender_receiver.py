@@ -7,10 +7,12 @@ from core.enums import Contact
 from shipper.shipment import Shipment
 
 logger = get_amdesp_logger()
-def get_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
+def get_remote_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
     client = client1
     config = config1
-    remote_address = get_remote_address(config1, shipment=shipment, client=client)
+    remote_address = None
+    while not remote_address:
+        remote_address = get_remote_address(config1, shipment=shipment, client=client)
 
     if config.outbound:
         shipment.sender = home_sender_recip
