@@ -49,10 +49,7 @@ class Shipper:
         except Exception as e:
             logger.exception(f'DISPATCH EXCEPTION \n{e}')
 
-        if sg.popup_yes_no("Restart? No to close") == 'Yes':
-            self.dispatch()
-        else:
-            sys.exit()
+        sys.exit()
 
     def prep_shipments(self):
         # use strategy pattern to select prep method
