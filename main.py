@@ -49,7 +49,6 @@ def main(main_mode: str):
 
 
 if __name__ == '__main__':
-    # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     shipping_mode_arg = sys.argv[1]
     category_arg = sys.argv[2]
