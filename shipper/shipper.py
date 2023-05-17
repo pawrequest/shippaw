@@ -9,14 +9,14 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
 from core.config import Config, get_amdesp_logger
-from core.enums import Contact, DateTimeMasks
+from core.enums import Contact, DateTimeMasks, ShipMode
 from core.funcs import print_label, log_shipment, email_label, download_label, update_commence
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui
 from gui.tracking_gui import tracking_loop
-from shipper.addresser import get_remote_address
+from shipper.addresser import address_from_gui, address_from_logic, address_from_search
 from shipper.sender_receiver import get_remote_recipient, \
-    get_remote_sender, recip_from_contact_and_key, recip_from_contact_address
+    sender_from_contact_address, recip_from_contact_and_key, recip_from_contact_address
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -32,32 +32,15 @@ class Shipper:
         self.shipments: [Shipment] = shipments
         self.client = client
 
+
     def dispatch(self):
         mode = self.config.mode
         if 'ship' in mode.lower():
-            home_recip = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
-                                                    contact=self.config.home_contact)
-            home_sender = self.client.sender(address_id=self.config.home_address.address_id)
-
-            for shipment in self.shipments:
-                shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                                  name=shipment.contact_name)
-                shipment.remote_address = get_remote_address(config1=self.config, client=self.client, shipment=shipment)
-
-                if mode == 'ship_out':
-                    shipment.sender = home_sender
-                    shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
-                                                                    address=shipment.remote_address)
-
-                elif mode == 'ship_in':
-                    shipment.recipient = home_recip
-                    shipment.sender = get_remote_sender(contact=shipment.remote_contact, client=self.client,
-                                                        remote_address=shipment.remote_address)
-
-                self.prep_part_2(shipment)
-
-            booked_shipments = self.main_gui_loop(shipments=self.shipments)
+            self.prepare_shipments()
+            self.gather_dbay_objs()
+            booked_shipments = self.main_gui_loop()
             self.gui.post_book(shipments=booked_shipments)
+
 
         elif 'track' in mode.lower():
             for shipment in self.shipments:
@@ -69,23 +52,58 @@ class Shipper:
 
         sys.exit()
 
-    def prep_part_2(self, shipment):
-        config = self.config
-        shipment.service = self.client.get_services()[0]  # needed to get dates
-        shipment.collection_date = self.get_collection_date(shipment=shipment)
-        shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
-        shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
-        shipment.available_services = self.client.get_available_services(shipment.shipment_request)
-        shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
-                                              available_services=shipment.available_services)
 
-    def main_gui_loop(self, shipments: [Shipment]):
+    def prepare_shipments(self):
+        mode = self.config.mode
+
+        home_recip = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+                                                contact=self.config.home_contact)
+        home_sender = self.client.sender(address_id=self.config.home_address.address_id)
+
+        for shipment in self.shipments:
+            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                              name=shipment.contact_name)
+            shipment.remote_address = self.remote_address_script(shipment=shipment)
+
+            if mode == ShipMode.SHIP_OUT:
+                shipment.sender = home_sender
+                shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+                                                                address=shipment.remote_address)
+
+            elif mode == ShipMode.SHIP_IN:
+                shipment.recipient = home_recip
+                shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
+                                                              remote_address=shipment.remote_address)
+
+
+
+
+    def remote_address_script(self, shipment):
+        address = address_from_search(client=self.client, shipment=shipment)
+        if address is None:
+            address = address_from_logic(client=self.client, shipment=shipment)
+            if address is None:
+                address = address_from_gui(client=self.client, config=self.config, shipment=shipment)
+        return address
+
+    def gather_dbay_objs(self):
+        config = self.config
+        for shipment in self.shipments:
+            shipment.service = self.client.get_services()[0]  # needed to get dates
+            shipment.collection_date = self.get_collection_date(shipment=shipment)
+            shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
+            shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+            shipment.available_services = self.client.get_available_services(shipment.shipment_request)
+            shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
+                                                  available_services=shipment.available_services)
+
+    def main_gui_loop(self):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
         listens for user input and updates shipments
         listens for go_ship  button to start booking"""
         logger.info('GUI LOOP')
 
-        self.gui.window = self.gui.bulk_shipper_window(shipments=shipments)
+        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
 
         while True:
             self.gui.event, self.gui.values = self.gui.window.read()
@@ -98,7 +116,7 @@ class Shipper:
                     self.gui.window.close()
                     return self.queue_and_book()
             else:
-                self.edit_shipment(shipments=shipments)
+                self.edit_shipment(shipments=self.shipments)
 
     def edit_shipment(self, shipments):
         self.shipment_to_edit: Shipment = next((shipment for shipment in shipments
@@ -211,7 +229,7 @@ class Shipper:
 
                         booked_shipments.append(shipment)
                     update_commence(config=config, shipment=shipment, id_to_pass=shipment_id)
-                    log_shipment(config=config, shipment=shipment)
+                    log_shipment(log_path=config.paths.log_json, shipment=shipment)
                     continue
 
             except ApiException as e:

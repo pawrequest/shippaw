@@ -15,27 +15,18 @@ logger = get_amdesp_logger()
 def address_from_search(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
     """ Return an address if found by simple search on postcode and building number or company name """
     try:
-        address = client.find_address(shipment.postcode, shipment.customer)
+        return client.find_address(shipment.postcode, shipment.customer)
     except ApiException as e1:
         try:
-            address = client.find_address(shipment.postcode, shipment.delivery_name)
+            return client.find_address(shipment.postcode, shipment.delivery_name)
         except ApiException as e2:
             try:
                 search_term = shipment.parse_amherst_address_string(str_address=shipment.str_to_match)
-                address = client.find_address(shipment.postcode, search_term)
+                return client.find_address(shipment.postcode, search_term)
             except ApiException as e3:
                 return None
-    return address or None
 
 
-def address_from_quickmatch(client: DespatchBaySDK, shipment: Shipment, candidate_key_dict: dict):
-    for add, key in candidate_key_dict.items():
-        add = add.split(',')[0]
-
-        if add == shipment.customer:
-            return client.get_address_by_key(key)
-        if add == shipment.str_to_match:
-            return client.get_address_by_key(key)
 
 
 def get_bestmatch(client: DespatchBaySDK, shipment: Shipment) -> BestMatch:
@@ -56,21 +47,23 @@ def get_bestmatch(client: DespatchBaySDK, shipment: Shipment) -> BestMatch:
         else:
             fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     else:
-        # finished loop, no explicitmatch so get a bestmatch from fuzzyscores
+        # finished loop, no explicitmatch from candidates so get a bestmatch from fuzzyscores
         bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
         return bestmatch
 
 
 def get_explicit_bestmatch(shipment: Shipment, candidate_address) -> BestMatch | None:
     """ compares shipment details to address, return a bestmatch if an explicit match is found  else None"""
-    address_str_to_match = shipment.str_to_match
-    if shipment.customer == candidate_address.company_name or \
-            address_str_to_match == candidate_address.street:
-        best_match = BestMatch(address=candidate_address, category='explicit', score=100,
-                               str_matched=address_str_to_match)
-        return best_match
+
+    if shipment.customer == candidate_address.company_name \
+            or shipment.str_to_match == candidate_address.street \
+            or shipment.delivery_name == candidate_address.company_name:
+        return BestMatch(address=candidate_address, category='explicit', score=100,
+                               str_matched=shipment.str_to_match)
     else:
         return None
+
+
 
 
 def check_address_company(address: Address, shipment: Shipment) -> Address | None:
@@ -78,7 +71,7 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
     if no address.company_name insert shipment.delivery_name"""
 
     if not address.company_name:
-        address.company_name = shipment.delivery_name
+        # address.company_name = shipment.delivery_name
         return address
     elif address.company_name:
         if address.company_name == shipment.customer \
@@ -131,15 +124,13 @@ def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
 
 
 def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
-    """ return BestMatch named tuple from a list of FuzzyScores named tuples"""
+    """ return BestMatch from a list of FuzzyScores"""
     best_address = None
     best_score = 0
     best_category = ""
     str_matched = ''
 
     for f in fuzzyscores:
-        # score_names = f.scores.keys()
-        # scores = f.scores.values()
         max_category = max(f.scores, key=lambda x: f.scores[x])
         max_score = f.scores[max_category]
 
@@ -152,50 +143,32 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
             # well we won't beat that?
             break
 
-    best_match = BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
-
-    return best_match
+    return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
 
-def get_remote_address(config1, client: DespatchBaySDK, shipment: Shipment) -> Address:
+
+def address_from_logic(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
     """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
-    config = config1
-    # 3x api call
-
-    # get address from direct searches
     if address := address_from_search(client=client, shipment=shipment):
         logger.info(f"Address Matched fom search: {address}")
         if checked_address := check_address_company(address=address, shipment=shipment):
             logger.info(f"Address Passed Company Name Check")
             return checked_address
+    return None
 
-    # if no matches build a dict of candidates at shipment.postcode
+
+def address_from_bestmatch(client, shipment):
     shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
-    logger.info(f"CANDIDATE KEYS : {shipment.candidate_keys}")
-
     shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
+    logger.info(f"CANDIDATE KEYS : {shipment.candidate_keys}")
     logger.info(f"BESTMATCH : {shipment.bestmatch}")
-
-    address = shipment.bestmatch.address
-
-    if address := check_address_company(address=address, shipment=shipment):
-        return address
-
-
-
-    else:
-        address = address_from_gui(client=client, config=config, shipment=shipment)
-
-    return address
+    return shipment.bestmatch.address
 
 
 def address_from_gui(client, config, shipment):
-
-    bestmatch = get_bestmatch(shipment=shipment, client=client)
-    logger.info(f"BESTMATCH FROM KEYS : {bestmatch}") if bestmatch else None
-    address_gui = AddressGui(config=config, client=client, shipment=shipment, address=bestmatch.address,
+    address_gui = AddressGui(config=config, client=client, shipment=shipment, address=shipment.bestmatch.address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
     address, contact = address_gui.address, address_gui.contact
-    logger.info(f'PREP GET REMOTE ADDRESS - {shipment.shipment_name_printable} - {address=}')
-    return address
+    logger.info(f'ADDRESS FROM GUI - {shipment.shipment_name_printable} - {address=}')
+    return address, contact

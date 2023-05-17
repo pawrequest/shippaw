@@ -1119,3 +1119,15 @@ def update_contact_from_gui(config: Config, contact: Sender | Recipient, values:
                                                 remote_address=shipment.remote_address)
             shipment.recipient = home_sender_recip
 
+
+
+
+def address_from_quickmatch(client: DespatchBaySDK, shipment: Shipment, candidate_key_dict: dict):
+    for add, key in candidate_key_dict.items():
+        add = add.split(',')[0]
+
+        if add == shipment.customer:
+            return client.get_address_by_key(key)
+        if add == shipment.str_to_match:
+            return client.get_address_by_key(key)
+

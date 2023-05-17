@@ -25,7 +25,7 @@ def print_label(shipment):
         return True
 
 
-def log_shipment(config: Config, shipment: Shipment):
+def log_shipment(log_path, shipment: Shipment):
     # export from object attrs
     shipment.boxes = len(shipment.parcels)
     export_dict = {}
@@ -45,7 +45,7 @@ def log_shipment(config: Config, shipment: Shipment):
         except Exception as e:
             print(f"{field} not found in shipment \n{e}")
 
-    with open(config.paths.log_json, 'a') as f:
+    with open(log_path, 'a') as f:
         # todo better loggging.... sqlite?
         json.dump(export_dict, f, sort_keys=True)
         f.write(",\n")

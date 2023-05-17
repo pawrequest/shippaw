@@ -1,7 +1,7 @@
 from despatchbay.despatchbay_entities import Sender, Recipient, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from shipper.addresser import get_remote_address
+from shipper.addresser import address_from_logic
 from core.config import Config, get_amdesp_logger
 from core.enums import Contact
 from shipper.shipment import Shipment
@@ -47,8 +47,8 @@ def recip_from_contact_and_key(client: DespatchBaySDK, dbay_key:str, contact:Con
     return client.recipient(recipient_address=client.get_address_by_key(dbay_key), **contact.__dict__)
 
 
-def get_remote_sender(client: DespatchBaySDK, contact: Contact,
-                      remote_address: Address) -> Sender:
+def sender_from_contact_address(client: DespatchBaySDK, contact: Contact,
+                                remote_address: Address) -> Sender:
     sender = client.sender(
         sender_address=remote_address, **contact.__dict__)
     return sender

@@ -44,6 +44,7 @@ def main(main_mode: str):
         shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
         shipper.dispatch()
 
+
     except Exception as e:
         logger.exception(f'MAINLOOP ERROR: {e}')
 

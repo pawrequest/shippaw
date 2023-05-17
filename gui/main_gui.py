@@ -102,7 +102,7 @@ class MainGui(Gui):
         params = {
             'expand_x': True,
             'expand_y': True,
-            'size': (25, 2)
+            'size': (25, 2),
         }
 
         result_layout = []
