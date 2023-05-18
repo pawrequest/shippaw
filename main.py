@@ -35,18 +35,16 @@ logger = get_amdesp_logger()
 
 
 def main(main_mode: str):
-    try:
-        config = Config.from_toml2(mode=main_mode)
-        creds = config.dbay_creds
-        client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-        shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
-        gui = MainGui(config=config, client=client)
-        shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
+    config = Config.from_toml2(mode=main_mode)
+    client = DespatchBaySDK(api_user=config.dbay_creds.creds.api_user, api_key=config.dbay_creds.creds.api_key)
+    shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
+    gui = MainGui(config=config, client=client)
+    shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
+    if 'ship' in main_mode:
         shipper.dispatch()
-
-
-    except Exception as e:
-        logger.exception(f'MAINLOOP ERROR: {e}')
+    elif 'track' in main_mode:
+        shipper.track()
+    sys.exit()
 
 
 if __name__ == '__main__':

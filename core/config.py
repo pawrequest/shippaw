@@ -39,20 +39,19 @@ logger = get_amdesp_logger()
 
 class Config:
     def __init__(self, config_dict: dict):
-        config = config_dict
-        self.mode = config['mode']
-        self.outbound = 'out' in config['mode']
-        self.paths = PathsList.from_dict(paths_dict=config['paths'], root_dir=ROOT_DIR)
-        self.parcel_contents: str = config.get('parcel_contents')
-        self.sandbox: bool = config.get('sandbox')
-        self.import_mapping: dict = config.get('import_mapping')
+        self.mode = config_dict['mode']
+        self.outbound = 'out' in config_dict['mode']
+        self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
+        self.parcel_contents: str = config_dict.get('parcel_contents')
+        self.sandbox: bool = config_dict.get('sandbox')
+        self.import_mapping: dict = config_dict.get('import_mapping')
 
-        self.home_address = HomeAddress(**config.get('home_address'))
-        self.home_contact = Contact(**config.get('home_contact'))
-        self.return_label_email_body = config.get('return_label_email_body')
+        self.home_address = HomeAddress(**config_dict.get('home_address'))
+        self.home_contact = Contact(**config_dict.get('home_contact'))
+        self.return_label_email_body = config_dict.get('return_label_email_body')
         self.home_sender_id = str()
 
-        dbay = config.get('dbay')[self.scope_from_sandbox()]
+        dbay = config_dict.get('dbay')[self.scope_from_sandbox()]
         self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
         self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
@@ -60,8 +59,6 @@ class Config:
     def from_toml2(cls, mode: str):
         with open(CONFIG_TOML, 'rb') as g:
             config_dict = tomllib.load(g)
-        if mode == 'fake':
-            mode = config_dict.get('fake_mode')
         config_dict['mode'] = mode
 
         return cls(config_dict=config_dict)
