@@ -119,6 +119,27 @@ def get_candidate_keys_dict(shipment: Shipment, client: DespatchBaySDK, postcode
                                    client.get_address_keys_by_postcode(postcode)}
         except ApiException as e:
             postcode = sg.popup_get_text(f'Bad postcode for {shipment.customer} - Please Enter')
+            if postcode is None:
+                break
+            continue
+        else:
+            return candidate_keys_dict
+
+
+
+def get_candidate_keys_new(client: DespatchBaySDK, postcode) -> dict:
+    """ return a dict of dbay addresses and keys, from postcode or shipment.postcode,
+        popup if postcode no good """
+    candidate_keys_dict = None
+    while not candidate_keys_dict:
+        try:
+            candidate_keys_dict = {candidate.address: candidate.key for candidate in
+                                   client.get_address_keys_by_postcode(postcode)}
+        except ApiException as e:
+            if "postcode" in str(e).lower():
+                postcode = sg.popup_get_text(f'Bad postcode - Try Again')
+                if postcode is None:
+                    break
             continue
         else:
             return candidate_keys_dict
@@ -177,7 +198,8 @@ def address_from_logic(client: DespatchBaySDK, shipment: Shipment) -> Address | 
 
 
 def address_from_bestmatch(client, shipment):
-    shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
+    # shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
+    shipment.candidate_keys = get_candidate_keys_new(client=client, postcode=shipment.postcode)
     shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
     logger.info(f"CANDIDATE KEYS : {shipment.candidate_keys}")
     logger.info(f"BESTMATCH : {shipment.bestmatch}")
