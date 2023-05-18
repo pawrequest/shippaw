@@ -10,13 +10,12 @@ from despatchbay.exceptions import ApiException
 
 from core.config import Config, get_amdesp_logger
 from core.enums import Contact, DateTimeMasks, ShipMode
-from core.funcs import print_label, log_shipment, email_label, download_label, update_commence
+from core.funcs import print_label, log_shipment, email_label, update_commence, download_label_2
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui
 from gui.tracking_gui import tracking_loop
-from shipper.addresser import address_from_gui, address_from_logic, address_from_search, address_from_bestmatch
-from shipper.sender_receiver import get_remote_recipient, \
-    sender_from_contact_address, recip_from_contact_and_key, recip_from_contact_address
+from shipper.addresser import address_from_gui, address_from_logic, address_from_bestmatch
+from shipper.sender_receiver import sender_from_contact_address, recip_from_contact_and_key, recip_from_contact_address
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -31,7 +30,6 @@ class Shipper:
         self.config = config
         self.shipments: [Shipment] = shipments
         self.client = client
-
 
     def dispatch(self):
         mode = self.config.mode
@@ -52,12 +50,11 @@ class Shipper:
 
         sys.exit()
 
-
     def prepare_shipments(self):
         mode = self.config.mode
 
         self_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
-                                                contact=self.config.home_contact)
+                                                    contact=self.config.home_contact)
         self_sender = self.client.sender(address_id=self.config.home_address.address_id)
 
         for shipment in self.shipments:
@@ -75,11 +72,9 @@ class Shipper:
                 shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
                                                               remote_address=shipment.remote_address)
 
-
-
-
     def remote_address_script(self, shipment):
-        address = address_from_logic(client=self.client, shipment=shipment)
+
+        address = address_from_logic(client=self.client, shipment=shipment, sandbox=self.config.sandbox)
         if address is None:
             address = address_from_bestmatch(client=self.client, shipment=shipment)
         if address is None:
@@ -196,6 +191,27 @@ class Shipper:
             window.close()
             return self.get_parcels(new_boxes, contents=self.config.parcel_contents)
 
+    def book_a_shipment(self, shipment: Shipment, shipment_id):
+        outbound = self.config.outbound
+        shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+
+        print_email = self.gui.values.get(f'-{shipment.shipment_name_printable}_print_email-'.upper())
+
+        setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
+
+        shipment.shipment_return = self.client.book_shipments(shipment_id)[0]
+        shipment.label_location = download_label_2(client=self.client, label_folder_path=self.config.paths.labels,
+                                                   label_text=shipment.shipment_name_printable,
+                                                   shipment_return=shipment.shipment_return)
+
+        if outbound and print_email:
+            print_label(shipment=shipment)
+        else:
+            if not outbound and print_email:
+                email_label(recipient=shipment.email, body=self.config.return_label_email_body,
+                            attachment=shipment.label_location)
+        update_commence(config=self.config, shipment=shipment, id_to_pass=shipment_id)
+        return shipment
 
     def queue_and_book(self):
         config = self.config
@@ -204,44 +220,25 @@ class Shipper:
         booked_shipments = []
 
         for shipment in self.shipments:
-            try:
-                shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
-                shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-                add = self.gui.values.get(f'-{shipment.shipment_name_printable}_add-'.upper())
-                book = self.gui.values.get(f'-{shipment.shipment_name_printable}_book-'.upper())
-                print_email = self.gui.values.get(f'-{shipment.shipment_name_printable}_print_email-'.upper())
+            book = self.gui.values.get(f'-{shipment.shipment_name_printable}_book-'.upper())
+            shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+            shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+            shipment_id = self.client.add_shipment(shipment.shipment_request)
 
-                if add:
-                    shipment_id = client.add_shipment(shipment.shipment_request)
-                    added_shipments.append(shipment)
-                    setattr(shipment, f'{"outbound_id" if config.outbound else "inbound_id"}', shipment_id)
+            if book:
+                try:
+                    booked_shipments.append(
+                        self.book_a_shipment(shipment=shipment, shipment_id=shipment_id))
 
-                    if book:
-                        shipment.shipment_return = client.book_shipments(shipment_id)[0]
-                        download_label(client=client, config=config, shipment=shipment)
-
-                        if config.outbound and print_email:
-                            print_label(shipment=shipment)
-                        else:
-                            if not config.outbound and print_email:
-                                email_label(recipient=shipment.email, body=config.return_label_email_body,
-                                            attachment=shipment.label_location)
-
-                        booked_shipments.append(shipment)
-                    update_commence(config=config, shipment=shipment, id_to_pass=shipment_id)
-                    log_shipment(log_path=config.paths.log_json, shipment=shipment)
+                except ApiException as e:
+                    sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\nAvailable balance = "
+                                   f"£{client.get_account_balance().available}\n{e}\n")
+                    continue
+                except Exception as e:
+                    logger.exception(e)
                     continue
 
-            except ApiException as e:
-                sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\n"
-                               f"\nServer returned the following error:\n"
-                               f"{e}\n"
-                               f"\nThat probably didn't help?\n"
-                               f"How about this?:\n"
-                               f"Available balance = £{client.get_account_balance().available}\n")
-                continue
-            except Exception as e:
-                logger.exception(e)
+            log_shipment(log_path=config.paths.log_json, shipment=shipment)
 
         return booked_shipments if booked_shipments else None
 
@@ -274,9 +271,9 @@ class Shipper:
 
         collection_date = collection_date or available_dates[0]
 
-        logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else ""}')
+        logger.info(
+            f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else ""}')
         return collection_date
-
 
     def get_parcels(self, num_parcels: int, contents: str) -> list[Parcel]:
         """ return an array of dbay parcel objects equal to the number of boxes provided

@@ -173,13 +173,16 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
 
 
-def address_from_logic(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
+def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool) -> Address | None:
     """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
     # if address := address_from_search(client=client, shipment=shipment):
     terms = {shipment.customer, shipment.delivery_name,
                      parse_amherst_address_string(str_address=shipment.address_as_str)}
 
     if address := address_from_single_search(client=client, postcode=shipment.postcode, search_terms=terms):
+        if sandbox:
+            # then nothing will match so give up now
+            return address
         if checked_address := check_address_company(address=address, shipment=shipment):
             logger.info(f"Address Passed Company Name Check")
             return checked_address

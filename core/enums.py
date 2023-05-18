@@ -10,7 +10,6 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
 
-
 class ShipmentCategory(StrEnum):
     HIRE = auto()
     SALE = auto()
@@ -33,15 +32,28 @@ class GuiColIndex(Enum):
 class DateMenuMap:
     ...
 
+#
+# @dataclass
+# class BookingJob:
+#     shipment_request: ShipmentRequest
+#     book: bool
+#     outbound: bool
+#     print_or_email: bool
+#     label_str:str
+#     result: Optional[str] = None
+#     timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+#
+#     @classmethod
+#     def from_shipment(cls, shipment:Shipment, book:bool, print_or_email:bool):
+#         return cls(
+#             shipment_request=shipment.shipment_request,
+#             book=book,
+#             print_or_email=print_or_email,
+#             label_str=shipment.shipment_name_printable,
+#             la
+#
+#         )
 
-@dataclass
-class BookingJob:
-    shipment_request: ShipmentRequest
-    add: bool
-    book: bool
-    print_or_email: bool
-    shipment_id: Optional[str] = None
-    result: Optional[str] = None
 
 
 class FuzzyScoresEnum(Enum):

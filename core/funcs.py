@@ -6,6 +6,7 @@ from pathlib import Path
 
 import PySimpleGUI as sg
 import win32com.client
+from despatchbay.despatchbay_entities import ShipmentReturn
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 
@@ -65,19 +66,34 @@ def email_label(recipient: str, body: str, attachment: Path):
     # newmail.Send()
 
 
-def download_label(client: DespatchBaySDK, config: Config, shipment: Shipment):
+def download_label_2(client: DespatchBaySDK, label_folder_path:Path, label_text:str, shipment_return:ShipmentReturn):
+    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
+    try:
+        label_pdf: Document = client.get_labels(document_ids=shipment_return.shipment_document_id,
+                                                label_layout='2A4')
+
+        label_string: str = label_text + '.pdf'
+        label_location = label_folder_path / label_string
+        label_pdf.download(label_location)
+    except:
+        return False
+    else:
+        return label_location
+
+
+def download_label(client: DespatchBaySDK, label_folder_path:Path, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
         label_pdf: Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id,
                                                 label_layout='2A4')
 
         label_string: str = shipment.shipment_name_printable + '.pdf'
-        shipment.label_location = config.paths.labels / label_string
-        label_pdf.download(shipment.label_location)
+        label_location = label_folder_path / label_string
+        label_pdf.download(label_location)
     except:
         return False
     else:
-        return True
+        return label_location
 
 
 def powershell_runner(script_path: str, *params: str):

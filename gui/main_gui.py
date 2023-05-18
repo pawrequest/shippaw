@@ -40,7 +40,7 @@ class MainGui(Gui):
         return sg.Window('Bulk Shipper',
                          layout=[
                              [self.get_headers()],
-                             [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+                             [[self.get_shipment_frame(shipment=shipment)] for shipment in shipments],
                              [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
                          ],
                          finalize=True)
