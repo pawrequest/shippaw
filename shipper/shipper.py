@@ -9,13 +9,13 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
 from core.config import Config, get_amdesp_logger
-from core.enums import Contact, DateTimeMasks, ShipMode
-from core.funcs import print_label, log_shipment, email_label, update_commence, download_label_2
+from core.enums import Contact, DateTimeMasks
+from core.funcs import download_label_2, email_label, log_shipment, print_label, update_commence
 from gui.address_gui import AddressGui
-from gui.main_gui import MainGui
+from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import tracking_loop
-from shipper.addresser import address_from_gui, address_from_logic, address_from_bestmatch
-from shipper.sender_receiver import sender_from_contact_address, recip_from_contact_and_key, recip_from_contact_address
+from shipper.addresser import address_from_bestmatch, address_from_gui, address_from_logic
+from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -24,13 +24,14 @@ LIMITED_SHIPMENTS = 1
 
 
 class Shipper:
-    def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment]):
+    def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment],
+                 shipments_dict: dict[str | Shipment]):
+        self.shipments_dict = shipments_dict
         self.shipment_to_edit: Optional[Shipment] = None
         self.gui = gui
         self.config = config
         self.shipments: [Shipment] = shipments
         self.client = client
-
 
     def dispatch(self):
         self.address_shipments(outbound=self.config.outbound)
@@ -43,7 +44,7 @@ class Shipper:
             if any([shipment.outbound_id, shipment.inbound_id]):
                 result = tracking_loop(self.gui, shipment=shipment)
 
-    def address_shipments(self, outbound:bool):
+    def address_shipments(self, outbound: bool):
         home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
                                                     contact=self.config.home_contact)
         home_sender = self.client.sender(address_id=self.config.home_address.address_id)
@@ -69,7 +70,8 @@ class Shipper:
         if address is None:
             address = address_from_bestmatch(client=self.client, shipment=shipment)
         if address is None:
-            address = address_from_gui(client=self.client, config=self.config, shipment=shipment)
+            address = address_from_gui(client=self.client, outbound=self.config.outbound, sandbox=self.config.sandbox,
+                                       shipment=shipment)
         return address
 
     def gather_dbay_objs(self):
@@ -109,7 +111,7 @@ class Shipper:
                 if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                     sg.popup_quick_message('Please Wait')
                     self.gui.window.close()
-                    return self.queue_and_book()
+                    return self.process_shipments()
             else:
                 self.edit_shipment(shipments=self.shipments)
 
@@ -145,30 +147,33 @@ class Shipper:
         window = self.gui.bulk_shipper_window(shipments=shipments)
         return shipments, window
 
-    def recipient_click(self):
-        contact = self.shipment_to_edit.remote_contact if self.config.outbound else self.config.home_contact
-        old_address = self.shipment_to_edit.recipient.recipient_address
-        address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
-                                    address=old_address, contact=contact)
-        if new_address := address_window.get_address():
-            self.shipment_to_edit.recipient.recipient_address = new_address
-            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
-
     def date_click(self):
         new_collection_date = self.gui.new_date_selector(shipment=self.shipment_to_edit,
                                                          location=self.gui.window.mouse_location())
-        self.gui.window[self.gui.event].update(self.gui.get_date_label(collection_date=new_collection_date))
+        self.gui.window[self.gui.event].update(get_date_label(collection_date=new_collection_date))
         self.shipment_to_edit.collection_date = new_collection_date
 
     def sender_click(self):
-        contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
-        old_address = self.shipment_to_edit.sender.sender_address
+        self.sr_click(s_or_r='sender')
 
-        address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
-                                    contact=contact, address=old_address)
+    def recipient_click(self):
+        self.sr_click(s_or_r='recipient')
+
+    def sr_click(self, s_or_r):
+        contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
+        if s_or_r == 'sender':
+            address_to_edit = self.shipment_to_edit.sender.sender_address
+        elif s_or_r == 'recipient':
+            address_to_edit = self.shipment_to_edit.recipient.recipient_address
+        else:
+            raise ValueError('s_or_r must be sender or recipient')
+
+        address_window = AddressGui(outbound=self.config.outbound, sandbox=self.config.sandbox, client=self.client,
+                                    shipment=self.shipment_to_edit,
+                                    contact=contact, address=address_to_edit)
         if new_address := address_window.get_address():
-            self.shipment_to_edit.sender.sender_address = new_address
-            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
+            address_to_edit = new_address
+            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=address_to_edit))
 
     def service_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -177,8 +182,8 @@ class Shipper:
                                                             shipment_to_edit.available_services),
                                                         location=self.gui.window.mouse_location()):
             shipment_to_edit.service = new_service
-            self.gui.window[self.gui.event].update(self.gui.get_service_string(service=new_service,
-                                                                               num_boxes=len(shipment_to_edit.parcels)))
+            self.gui.window[self.gui.event].update(get_service_string(service=new_service,
+                                                                      num_boxes=len(shipment_to_edit.parcels)))
 
     def get_new_parcels(self, location) -> List[Parcel] | None:
         window = self.gui.get_new_parcels_window(location=location)
@@ -213,7 +218,7 @@ class Shipper:
         update_commence(config=self.config, shipment=shipment, id_to_pass=shipment_id)
         return shipment
 
-    def queue_and_book(self):
+    def process_shipments(self):
         config = self.config
         client = self.client
         added_shipments = []

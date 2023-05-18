@@ -97,22 +97,70 @@ class Shipment:
 
 
     @classmethod
-    def from_dbase_record(cls, record, import_mapping, category):
+    def get_shipments(cls, config: Config, category: ShipmentCategory, dbase_file: str) -> list:
+        logger.info(f'DBase file = {dbase_file}')
+        shipments: [Shipment] = []
+        try:
+            for record in DBF(dbase_file):
+                [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
+                try:
+                    ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
+                    shipment = Shipment(ship_dict=ship_dict, category=category)
+                    shipments.append(shipment)
+                except Exception as e:
+                    logger.exception(f'{record.__repr__()} - {e}')
+                    continue
+
+        except UnicodeDecodeError as e:
+            logging.exception(f'DBASE import error with {dbase_file} \n {e}')
+        except DBFNotFound as e:
+            logger.exception(f'.Dbf or Dbt are missing \n{e}')
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        return shipments
+
+
+    @classmethod
+    def from_dbase_record(cls, record, ship_dict, category):
         [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-        ship_dict = shipdict_from_dbase(record=record, import_mapping=import_mapping)
         return cls(ship_dict=ship_dict, category=category)
 
 
+#
+# def get_shipments_new(import_mapping:dict, category: ShipmentCategory, dbase_file: str):
+#     logger.info(f'DBase file = {dbase_file}')
+#     shipments_dict = {}
+#     try:
+#         for record in DBF(dbase_file):
+#             [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
+#             try:
+#                 shipment = Shipment.from_dbase_record(record=record, import_mapping=import_mapping, category=category)
+#                 shipments_dict.update({shipment.shipment_name_printable: shipment})
+#             except Exception as e:
+#                 logger.exception(f'{record.__repr__()} - {e}')
+#                 continue
+#
+#     except UnicodeDecodeError as e:
+#         logging.exception(f'DBASE import error with {dbase_file} \n {e}')
+#     except DBFNotFound as e:
+#         logger.exception(f'.Dbf or Dbt are missing \n{e}')
+#     except Exception as e:
+#         logger.exception(e)
+#         raise e
+#     return shipments_dict
 
-def get_shipments(config: Config, category: ShipmentCategory, dbase_file: str):
+
+
+def get_dbay_shipments(import_mapping:dict, category: ShipmentCategory, dbase_file: str):
     logger.info(f'DBase file = {dbase_file}')
     shipments_dict = {}
-    shipments: [Shipment] = []
     try:
         for record in DBF(dbase_file):
             [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
             try:
-                shipment = Shipment.from_dbase_record(record=record, import_mapping=config.import_mapping, category=category)
+                ship_dict = shipdict_from_dbase(record=record, import_mapping=import_mapping)
+                shipment = DbayShipment.from_dbase_record(record=record, ship_dict=ship_dict, category=category)
                 shipments_dict.update({shipment.shipment_name_printable: shipment})
             except Exception as e:
                 logger.exception(f'{record.__repr__()} - {e}')
@@ -125,31 +173,8 @@ def get_shipments(config: Config, category: ShipmentCategory, dbase_file: str):
     except Exception as e:
         logger.exception(e)
         raise e
-    return shipments
-    #
-    # @classmethod
-    # def get_shipments(cls, config: Config, category: ShipmentCategory, dbase_file: str) -> list:
-    #     logger.info(f'DBase file = {dbase_file}')
-    #     shipments: [Shipment] = []
-    #     try:
-    #         for record in DBF(dbase_file):
-    #             [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-    #             try:
-    #                 ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
-    #                 shipment = Shipment(ship_dict=ship_dict, category=category)
-    #                 shipments.append(shipment)
-    #             except Exception as e:
-    #                 logger.exception(f'{record.__repr__()} - {e}')
-    #                 continue
-    #
-    #     except UnicodeDecodeError as e:
-    #         logging.exception(f'DBASE import error with {dbase_file} \n {e}')
-    #     except DBFNotFound as e:
-    #         logger.exception(f'.Dbf or Dbt are missing \n{e}')
-    #     except Exception as e:
-    #         logger.exception(e)
-    #         raise e
-    #     return shipments
+    return shipments_dict
+
 
 @dataclass
 class ShipmentABC(ABC):
@@ -192,48 +217,49 @@ class ShipmentABC(ABC):
         self.bestmatch: Optional[BestMatch] = None
         self.remote_contact: Optional[Contact] = None
 
-        [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+        # [logging.info(f'SHIPMENT - {self.shipment_name_printable} - {var} : {getattr(self, var)}') for var in vars(self)]
+        logging.info(f'SHIPMENT - {self.shipment_name_printable} - {self.__dict__.items()}')
         logging.info('\n')
 
     @property
     def str_to_match(self):
         return parse_amherst_address_string(self.address_as_str)
 
+    #
+    #
+    # @classmethod
+    # def get_shipments(cls, config: Config, category:ShipmentCategory, dbase_file:str) -> list:
+    #     """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
+    #     logger.info(f'DBase file = {dbase_file}')
+    #     shipments: [Shipment] = []
+    #     try:
+    #         for record in DBF(dbase_file):
+    #             [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
+    #             try:
+    #                 ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
+    #                 shipment = Shipment(ship_dict=ship_dict, category=category)
+    #                 shipments.append(shipment)
+    #             except Exception as e:
+    #                 logger.exception(f'{record.__repr__()} - {e}')
+    #                 continue
+    #
+    #     except UnicodeDecodeError as e:
+    #         logging.exception(f'DBASE import error with {dbase_file} \n {e}')
+    #     except DBFNotFound as e:
+    #         logger.exception(f'.Dbf or Dbt are missing \n{e}')
+    #     except Exception as e:
+    #         logger.exception(e)
+    #         raise e
+    #     return shipments
 
-
-    @classmethod
-    def get_shipments(cls, config: Config, category:ShipmentCategory, dbase_file:str) -> list:
-        """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
-        logger.info(f'DBase file = {dbase_file}')
-        shipments: [Shipment] = []
-        try:
-            for record in DBF(dbase_file):
-                [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-                try:
-                    ship_dict = shipdict_from_dbase(record=record, config=config)
-                    shipment = Shipment(ship_dict=ship_dict, category=category)
-                    shipments.append(shipment)
-                except Exception as e:
-                    logger.exception(f'{record.__repr__()} - {e}')
-                    continue
-
-        except UnicodeDecodeError as e:
-            logging.exception(f'DBASE import error with {dbase_file} \n {e}')
-        except DBFNotFound as e:
-            logger.exception(f'.Dbf or Dbt are missing \n{e}')
-        except Exception as e:
-            logger.exception(e)
-            raise e
-        return shipments
-
-    def to_dict(self):
-        allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
-        result = {}
-        for attr_name in dir(self):
-            attr_value = getattr(self, attr_name)
-            if type(attr_value) in allowed_types:
-                result[attr_name] = attr_value
-        return result
+    # def to_dict(self):
+    #     allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
+    #     result = {}
+    #     for attr_name in dir(self):
+    #         attr_value = getattr(self, attr_name)
+    #         if type(attr_value) in allowed_types:
+    #             result[attr_name] = attr_value
+    #     return result
 
 class DbayShipment(Shipment):
     def __init__(self, ship_dict, category):

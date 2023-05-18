@@ -198,8 +198,8 @@ def address_from_bestmatch(client, shipment):
     return shipment.bestmatch.address
 
 
-def address_from_gui(client, config, shipment):
-    address_gui = AddressGui(config=config, client=client, shipment=shipment, address=shipment.bestmatch.address,
+def address_from_gui(client, sandbox:bool, outbound:bool, shipment):
+    address_gui = AddressGui(outbound=outbound, sandbox=sandbox, client=client, shipment=shipment, address=shipment.bestmatch.address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
     address = address_gui.address

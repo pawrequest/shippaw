@@ -8,29 +8,39 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from core.config import Config, get_amdesp_logger
 from core.enums import DateTimeMasks, FieldsList
+from core.funcs import print_label
 from gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
     address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
 from shipper.shipment import Shipment
-from core.funcs import print_label
 
 logger = get_amdesp_logger()
 
 
 class Gui:
-    def __init__(self, config: Config, client: DespatchBaySDK):
+    def __init__(self, outbound: bool, client: DespatchBaySDK, sandbox):
         self.window = None
         self.event = None
         self.values = None
-        self.config = config
+        self.outbound = outbound
+        self.sandbox = sandbox
         self.client = client
+
+
+def get_service_string(num_boxes: int, service: Service):
+    return f'{service.name}\n{num_boxes * service.cost:.2f}'
+
+
+def get_date_label(collection_date: CollectionDate):
+    return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
+    # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
 
 
 class MainGui(Gui):
     def bulk_shipper_window(self, shipments: [Shipment]):
         logger.info('BULK SHIPPER WINDOW')
-        if self.config.sandbox:
+        if self.sandbox:
             sg.theme('Tan')
         else:
             sg.theme('Dark Blue')
@@ -46,9 +56,9 @@ class MainGui(Gui):
                          finalize=True)
 
     def get_shipment_frame(self, shipment: Shipment):
-        print_or_email = 'print' if self.config.outbound else 'email'
+        print_or_email = 'print' if self.outbound else 'email'
 
-        date_name = self.get_date_label(collection_date=shipment.collection_date)
+        date_name = get_date_label(collection_date=shipment.collection_date)
         sender_address_name = self.get_address_button_string(address=shipment.sender.sender_address)
         recipient_address_name = self.get_address_button_string(shipment.recipient.recipient_address)
         num_parcels = len(shipment.parcels)
@@ -59,14 +69,13 @@ class MainGui(Gui):
             get_date_button(date_name=date_name, shipment=shipment),
             get_parcels_button(num_parcels=num_parcels, shipment=shipment),
             get_service_button(num_parcels=num_parcels, shipment=shipment),
-            sg.Checkbox('Add', default=True, k=f'-{shipment.shipment_name_printable}_ADD-'.upper()),
             sg.Checkbox('Book', default=True, k=f'-{shipment.shipment_name_printable}_BOOK-'.upper()),
             sg.Checkbox(f'{print_or_email}', default=True,
                         k=f'-{shipment.shipment_name_printable}_PRINT_EMAIL-'.upper()),
             sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-'.upper())
         ]
 
-        if not self.config.outbound:
+        if not self.outbound:
             row.insert(1, get_sender_button(sender_address_name=sender_address_name,
                                             shipment_name=shipment.shipment_name_printable))
 
@@ -89,13 +98,10 @@ class MainGui(Gui):
             sg.Push(),
         ]
 
-        if not self.config.outbound:
+        if not self.outbound:
             headers.insert(1, sg.T('Sender', **address_head_params))
 
         return headers
-
-    def get_service_string(self, num_boxes: int, service: Service):
-        return f'{service.name}\n{num_boxes * service.cost:.2f}'
 
     @staticmethod
     def booked_shipments_frame(shipments: [Shipment]):
@@ -227,10 +233,6 @@ class MainGui(Gui):
 
     # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
 
-    def get_date_label(self, collection_date: CollectionDate):
-        return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
-        # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
-
     @staticmethod
     def get_address_button_string(address: Address):
         # return f'{address.company_name}\n{address.street}' if address.company_name else address.street
@@ -271,7 +273,7 @@ def shipment_ids_frame() -> sg.Frame:
     return frame
 
 
-def get_address_dict_frame(config: Config, address_dict):
+def get_address_dict_frame(address_dict):
     layout = []
     address_fields = FieldsList.address.value
     for field in address_fields:

@@ -12,8 +12,8 @@ from shipper.shipment import Shipment
 
 
 class AddressGui(Gui):
-    def __init__(self, config: Config, client: DespatchBaySDK, shipment: Shipment, contact: Contact, address: Address):
-        super().__init__(config, client)
+    def __init__(self, outbound:bool, sandbox:bool, client: DespatchBaySDK, shipment: Shipment, contact: Contact, address: Address):
+        super().__init__(outbound=outbound, client=client, sandbox=sandbox)
         self.contact = contact
         self.address = address
         self.shipment = shipment
