@@ -56,9 +56,9 @@ class Shipper:
     def prepare_shipments(self):
         mode = self.config.mode
 
-        home_recip = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+        self_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
                                                 contact=self.config.home_contact)
-        home_sender = self.client.sender(address_id=self.config.home_address.address_id)
+        self_sender = self.client.sender(address_id=self.config.home_address.address_id)
 
         for shipment in self.shipments:
             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
@@ -66,12 +66,12 @@ class Shipper:
             shipment.remote_address = self.remote_address_script(shipment=shipment)
 
             if mode == ShipMode.SHIP_OUT:
-                shipment.sender = home_sender
+                shipment.sender = self_sender
                 shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
                                                                 address=shipment.remote_address)
 
             elif mode == ShipMode.SHIP_IN:
-                shipment.recipient = home_recip
+                shipment.recipient = self_recipient
                 shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
                                                               remote_address=shipment.remote_address)
 
@@ -274,7 +274,7 @@ class Shipper:
 
         collection_date = collection_date or available_dates[0]
 
-        logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date}')
+        logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else ""}')
         return collection_date
 
 
@@ -292,7 +292,7 @@ class Shipper:
                 height=40,
             )
             parcels.append(parcel)
-        logger.info(f'PREPPING SHIPMENT - PARCELS {parcels}')
+        logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
 
         return parcels
 

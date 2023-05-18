@@ -76,6 +76,7 @@ class Shipment:
         self.remote_contact: Optional[Contact] = None
 
         [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+        logging.info('\n')
 
 
 

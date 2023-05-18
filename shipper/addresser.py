@@ -14,17 +14,36 @@ logger = get_amdesp_logger()
 
 def address_from_search(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
     """ Return an address if found by simple search on postcode and building number or company name """
+
+
     try:
-        return client.find_address(shipment.postcode, shipment.customer)
+        logger.info(f"ADDRESS SEARCH by Postcode ({shipment.postcode}) and Customer Name ({shipment.customer})")
+        address =  client.find_address(shipment.postcode, shipment.customer)
+        logger.info(f"ADDRESS FOUND: {address}\n")
+        return address
     except ApiException as e1:
+        logger.info(f"ADDRESS SEARCH FAIL\n")
+
+    if shipment.delivery_name != shipment.customer:
+        logger.info(f"ADDRESS SEARCH by postcode ({shipment.postcode}) and delivery name ({shipment.delivery_name}):")
         try:
-            return client.find_address(shipment.postcode, shipment.delivery_name)
+            address =  client.find_address(shipment.postcode, shipment.delivery_name)
+            logger.info(f"ADDRESS FOUND: {address}\n")
+            return address
+
         except ApiException as e2:
-            try:
-                search_term = shipment.parse_amherst_address_string(str_address=shipment.str_to_match)
-                return client.find_address(shipment.postcode, search_term)
-            except ApiException as e3:
-                return None
+            logger.info(f"ADDRESS SEARCH FAIL\n")
+
+    search_term = shipment.parse_amherst_address_string(str_address=shipment.str_to_match)
+    if search_term != shipment.customer:
+        try:
+            logger.info(f"ADDRESS SEARCH by postcode ({shipment.postcode}) and parsed string ({search_term})")
+            address = client.find_address(shipment.postcode, search_term)
+            logger.info(f"ADDRESS FOUND {address}\n")
+            return address
+        except ApiException as e3:
+            logger.info(f"ADDRESS SEARCH FAIL\n")
+            return None
 
 
 
@@ -169,6 +188,7 @@ def address_from_gui(client, config, shipment):
     address_gui = AddressGui(config=config, client=client, shipment=shipment, address=shipment.bestmatch.address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
-    address, contact = address_gui.address, address_gui.contact
+    address = address_gui.address
     logger.info(f'ADDRESS FROM GUI - {shipment.shipment_name_printable} - {address=}')
-    return address, contact
+    return address
+""" GET CONTACT?"""
