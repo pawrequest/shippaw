@@ -11,6 +11,7 @@ from core.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
 from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
+from core.exceptions import ShipDictError
 
 logger = get_amdesp_logger()
 
@@ -25,8 +26,6 @@ class Shipment:
         self.category= category.title()
         self._shipment_name: str = ship_dict.get('shipment_name')
         self.address_as_str: str = ship_dict.get('address_as_str')
-        self.str_to_match = ''.join(self.address_as_str.split('\r')[0:1]) \
-            .replace('Units', 'Unit').replace('c/o ', '').replace('C/O ', '')
         self.boxes: int = int(ship_dict.get('boxes', 1))
         self.customer: str = ship_dict.get('customer')
         self.contact_name: str = ship_dict.get('contact')
@@ -78,16 +77,17 @@ class Shipment:
         [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
         logging.info('\n')
 
+    @property
+    def str_to_match(self):
+        return parse_amherst_address_string(self.address_as_str)
+
 
 
     @classmethod
     def get_shipments(cls, config: Config, category:ShipmentCategory, dbase_file:str) -> list:
         """ parses input filetype and calls appropriate function to construct and return a list of shipment objects"""
-        shipments: [Shipment] = []
-        if dbase_file == 'fake':
-            logger.info('FAKE SHIPMENTS')
-            dbase_file = str(config.paths.dbase_export)
         logger.info(f'DBase file = {dbase_file}')
+        shipments: [Shipment] = []
         try:
             for record in DBF(dbase_file):
                 [logger.info(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
@@ -116,18 +116,19 @@ class Shipment:
                 result[attr_name] = attr_value
         return result
 
-    def parse_amherst_address_string(self, str_address: str):
-        str_address = str_address.lower()
-        if 'unit' in ' '.join(str_address.split(" ")[0:2]):
-            first_block = ' '.join(str_address.split(" ")[0:2])
-            return first_block
-        else:
-            first_block = str_address.split(" ")[0].split(",")[0]
-        first_char = first_block[0]
-        # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
-        firstline = str_address.split("\n")[0].strip()
 
-        return first_block if first_char.isnumeric() else firstline
+def parse_amherst_address_string(str_address: str):
+    str_address = str_address.lower()
+    if 'unit' in ' '.join(str_address.split(" ")[0:2]):
+        first_block = ' '.join(str_address.split(" ")[0:2])
+        return first_block
+    else:
+        first_block = str_address.split(" ")[0].split(",")[0]
+    first_char = first_block[0]
+    # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
+    firstline = str_address.split("\n")[0].strip()
+
+    return first_block if first_char.isnumeric() else firstline
 
 
 def shipdict_from_dbase(record, config: Config):

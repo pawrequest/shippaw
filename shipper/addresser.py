@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
@@ -6,44 +8,28 @@ from fuzzywuzzy import fuzz
 
 from gui.address_gui import AddressGui
 from core.enums import BestMatch, FuzzyScores
-from shipper.shipment import Shipment
+from shipper.shipment import Shipment, parse_amherst_address_string
 from core.config import get_amdesp_logger
 
 logger = get_amdesp_logger()
 
 
-def address_from_search(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
+
+def address_from_single_search(client: DespatchBaySDK, postcode:str, search_terms:Iterable) -> Address | None:
     """ Return an address if found by simple search on postcode and building number or company name """
 
-
-    try:
-        logger.info(f"ADDRESS SEARCH by Postcode ({shipment.postcode}) and Customer Name ({shipment.customer})")
-        address =  client.find_address(shipment.postcode, shipment.customer)
-        logger.info(f"ADDRESS FOUND: {address}\n")
-        return address
-    except ApiException as e1:
-        logger.info(f"ADDRESS SEARCH FAIL\n")
-
-    if shipment.delivery_name != shipment.customer:
-        logger.info(f"ADDRESS SEARCH by postcode ({shipment.postcode}) and delivery name ({shipment.delivery_name}):")
+    check_set = set(search_terms)
+    for term in check_set:
         try:
-            address =  client.find_address(shipment.postcode, shipment.delivery_name)
-            logger.info(f"ADDRESS FOUND: {address}\n")
+            logger.info(f"ADDRESS SEARCH: {postcode} & {term}")
+            address = client.find_address(postcode, term)
             return address
-
-        except ApiException as e2:
-            logger.info(f"ADDRESS SEARCH FAIL\n")
-
-    search_term = shipment.parse_amherst_address_string(str_address=shipment.str_to_match)
-    if search_term != shipment.customer:
-        try:
-            logger.info(f"ADDRESS SEARCH by postcode ({shipment.postcode}) and parsed string ({search_term})")
-            address = client.find_address(shipment.postcode, search_term)
-            logger.info(f"ADDRESS FOUND {address}\n")
-            return address
-        except ApiException as e3:
-            logger.info(f"ADDRESS SEARCH FAIL\n")
-            return None
+        except ApiException as e1:
+            logger.info(f"ADDRESS SEARCH FAIL - {str(e1)}")
+            continue
+    else:
+        logger.info(f"ALL ADDRESS SEARCHES FAIL")
+        return None
 
 
 
@@ -98,11 +84,11 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
                 or address.company_name in shipment.delivery_name:
             return address
         else:
-            pop_msg = f'Address Company name and Shipment Customer do not match:\n' \
+            pop_msg = f'Address Company name and Shipment Customer do not exactly match:\n' \
                       f'\nCustomer: {shipment.customer}\n' \
-                      f'Address Company Name: {address.company_name})\n' \
-                      f'{shipment.address_as_str}\n' \
-                      f'\n[Yes] to accept matched address or [No] to edit or replace it'
+                      f'Address Company Name: {address.company_name}\n' \
+                      f'\nShipment Delivery Details:\n{shipment.delivery_name} \n{shipment.address_as_str}\n' \
+                      f'\n[Yes] to accept matched address or [No] to edit / replace'
 
         answer = sg.popup_yes_no(pop_msg, line_width=100)
         return address if answer == 'Yes' else None
@@ -189,8 +175,11 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
 def address_from_logic(client: DespatchBaySDK, shipment: Shipment) -> Address | None:
     """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
-    if address := address_from_search(client=client, shipment=shipment):
-        logger.info(f"Address Matched fom search: {address}")
+    # if address := address_from_search(client=client, shipment=shipment):
+    terms = {shipment.customer, shipment.delivery_name,
+                     parse_amherst_address_string(str_address=shipment.address_as_str)}
+
+    if address := address_from_single_search(client=client, postcode=shipment.postcode, search_terms=terms):
         if checked_address := check_address_company(address=address, shipment=shipment):
             logger.info(f"Address Passed Company Name Check")
             return checked_address
