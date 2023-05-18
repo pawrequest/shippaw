@@ -14,7 +14,7 @@ from core.funcs import print_label, log_shipment, email_label, download_label, u
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui
 from gui.tracking_gui import tracking_loop
-from shipper.addresser import address_from_gui, address_from_logic, address_from_search
+from shipper.addresser import address_from_gui, address_from_logic, address_from_search, address_from_bestmatch
 from shipper.sender_receiver import get_remote_recipient, \
     sender_from_contact_address, recip_from_contact_and_key, recip_from_contact_address
 from shipper.shipment import Shipment
@@ -79,11 +79,11 @@ class Shipper:
 
 
     def remote_address_script(self, shipment):
-        address = address_from_search(client=self.client, shipment=shipment)
+        address = address_from_logic(client=self.client, shipment=shipment)
         if address is None:
-            address = address_from_logic(client=self.client, shipment=shipment)
-            if address is None:
-                address = address_from_gui(client=self.client, config=self.config, shipment=shipment)
+            address = address_from_bestmatch(client=self.client, shipment=shipment)
+        if address is None:
+            address = address_from_gui(client=self.client, config=self.config, shipment=shipment)
         return address
 
     def gather_dbay_objs(self):

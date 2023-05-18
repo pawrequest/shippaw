@@ -108,21 +108,23 @@ class MainGui(Gui):
         result_layout = []
         for shipment in shipments:
             num_boxes = len(shipment.parcels)
-            ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
-                        sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
-                        sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2f}'),
-                        ]
+            ship_res = [
+                sg.Text(shipment.shipment_request.client_reference, **params),
+                sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
+                sg.Text(f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2f}',
+                        **params),
+            ]
 
             if shipment.printed:
-                ship_res.extend([sg.Text('Shipment Printed'), sg.Button('Reprint Label',
-                                                                        key=f'-{shipment.shipment_name_printable.upper()}_REPRINT-')])
+                ship_res.extend([sg.Text('Shipment Printed', **params),
+                                 sg.Button('Reprint Label',
+                                           key=f'-{shipment.shipment_name_printable.upper()}_REPRINT-', **params)])
             if shipment.logged_to_commence:
-                ship_res.append(sg.Text('Shipment ID Logged to Commence'))
+                ship_res.append(sg.Text('Shipment ID Logged to Commence', **params))
             # result_layout.append([sg.Frame('', layout=[ship_res])])
             result_layout.append(ship_res)
             # result_layout.append([sg.Text('')])
-        return sg.Frame('', layout=result_layout)
+        return sg.Frame('', vertical_alignment="c", layout=result_layout, element_justification='center')
 
     @staticmethod
     def new_date_selector(shipment: Shipment, location):
