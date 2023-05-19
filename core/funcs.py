@@ -6,7 +6,7 @@ from pathlib import Path
 
 import PySimpleGUI as sg
 import win32com.client
-from despatchbay.despatchbay_entities import ShipmentReturn
+from despatchbay.despatchbay_entities import ShipmentReturn, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 
@@ -52,21 +52,29 @@ def log_shipment(log_path, shipment: Shipment):
         f.write(",\n")
 
 
-def email_label(recipient: str, body: str, attachment: Path):
+def email_label(shipment: Shipment, body: str, collection_date: datetime.date, collection_address: Address):
+    collection_date = collection_date
+    collection_address = collection_address
     ol = win32com.client.Dispatch('Outlook.Application')
     newmail = ol.CreateItem(0)
 
-    newmail.Subject = 'Radio Return - Shipping Label Attached'
-    newmail.To = recipient
+    col_address = f'{collection_address.company_name if collection_address.company_name else ""}'
+    col_address += f'{collection_address.street}'
+
+    body = body.replace("ADDRESSREPLACE", f'{col_address}')
+    body = body.replace("DATEREPLACE", f'{collection_date}')
+
+    newmail.To = shipment.email
+    newmail.Subject = "Radio Hire Return - Shipping Label Attached"
     newmail.Body = body
-    attach = str(attachment)
+    attach = str(shipment.label_location)
 
     newmail.Attachments.Add(attach)
     newmail.Display()  # preview
     # newmail.Send()
 
 
-def download_label_2(client: DespatchBaySDK, label_folder_path:Path, label_text:str, shipment_return:ShipmentReturn):
+def download_label_2(client: DespatchBaySDK, label_folder_path: Path, label_text: str, shipment_return: ShipmentReturn):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
         label_pdf: Document = client.get_labels(document_ids=shipment_return.shipment_document_id,
@@ -81,7 +89,7 @@ def download_label_2(client: DespatchBaySDK, label_folder_path:Path, label_text:
         return label_location
 
 
-def download_label(client: DespatchBaySDK, label_folder_path:Path, shipment: Shipment):
+def download_label(client: DespatchBaySDK, label_folder_path: Path, shipment: Shipment):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
         label_pdf: Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id,

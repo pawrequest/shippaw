@@ -10,7 +10,7 @@ from dbfread.dbf import DBF, DBFNotFound
 
 from core.config import Config, get_amdesp_logger
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
-    ShipmentRequest, ShipmentReturn
+    ShipmentRequest, ShipmentReturn, Collection
 from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
 from core.exceptions import ShipDictError
 
@@ -280,6 +280,7 @@ class DbayShipment(Shipment):
         self.shipment_return: Optional[ShipmentReturn] = None
         self.service: Optional[Service] = None
         self.available_services: Optional[List[Service]] = None
+        self.collection: Optional[Collection] = None
 
 
 def parse_amherst_address_string(str_address: str):

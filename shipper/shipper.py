@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
+from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Collection
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
@@ -208,13 +208,17 @@ class Shipper:
         shipment.label_location = download_label_2(client=self.client, label_folder_path=self.config.paths.labels,
                                                    label_text=shipment.shipment_name_printable,
                                                    shipment_return=shipment.shipment_return)
+        shipment.collection = self.client.get_collection(shipment.shipment_return.collection_id)
 
         if outbound and print_email:
             print_label(shipment=shipment)
         else:
             if not outbound and print_email:
-                email_label(recipient=shipment.email, body=self.config.return_label_email_body,
-                            attachment=shipment.label_location)
+                email_label(shipment=shipment,
+                            body=self.config.return_label_email_body,
+                            collection_date=shipment.collection.date.date,
+                            collection_address=shipment.collection.sender_address.sender_address
+                            )
         update_commence(config=self.config, shipment=shipment, id_to_pass=shipment_id)
         return shipment
 
