@@ -3,7 +3,7 @@ from datetime import datetime
 import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
-from despatchbay.despatchbay_entities import Address, CollectionDate, Service
+from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentReturn
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from core.config import Config, get_amdesp_logger
@@ -19,13 +19,12 @@ logger = get_amdesp_logger()
 
 
 class Gui:
-    def __init__(self, outbound: bool, client: DespatchBaySDK, sandbox):
+    def __init__(self, outbound: bool, sandbox):
         self.window = None
         self.event = None
         self.values = None
-        self.outbound = outbound
         self.sandbox = sandbox
-        self.client = client
+        self.outbound = outbound
 
 
 def get_service_string(num_boxes: int, service: Service):
@@ -169,39 +168,6 @@ class MainGui(Gui):
 
         window2.close()
 
-    def tracking_viewer_window(self, shipment_id):
-        client = self.client
-        logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {shipment_id}')
-        shipment_return = client.get_shipment(shipment_id)
-        tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
-        tracking_d = {}
-        layout = []
-        for tracked_parcel in tracking_numbers:
-            parcel_layout = []
-            signatory = None
-            params = {}
-            tracking = client.get_tracking(tracked_parcel)
-            # courier = tracking['CourierName'] # debug unused?
-            # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
-            history = tracking['TrackingHistory']
-            for event in history:
-                if 'delivered' in event.Description.lower():
-                    signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-                    params.update({'background_color': 'aquamarine', 'text_color': 'red'})
-
-                event_text = sg.T(
-                    f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
-                    **params)
-
-                parcel_layout.append([event_text])
-
-            parcel_col = sg.Column(parcel_layout)
-            layout.append(parcel_col)
-            tracking_d.update({tracked_parcel: tracking})
-
-        shipment_return.tracking_dict = tracking_d
-        tracking_window = sg.Window('', [layout])
-        tracking_window.read()
 
     @staticmethod
     def get_new_parcels_window(location):

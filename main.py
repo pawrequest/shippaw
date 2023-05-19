@@ -12,9 +12,8 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from core.config import Config, get_amdesp_logger
 from core.enums import ShipmentCategory, ShipMode
 from gui.main_gui import MainGui
-from shipper.shipment import Shipment, get_dbay_shipments
+from shipper.shipment import Shipment, get_dbay_shipments, DbayShipment
 from shipper.shipper import Shipper
-
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -38,8 +37,9 @@ def main(main_mode: str):
     config = Config.from_toml2(mode=main_mode)
     client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
     shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
-    shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category, dbase_file=input_file_arg)
-    gui = MainGui(outbound=config.outbound, sandbox=config.sandbox, client=client)
+    shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category,
+                                        dbase_file=input_file_arg)
+    gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
     shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments, shipments_dict=shipments_dict)
     if 'ship' in main_mode:
         shipper.dispatch()

@@ -1,10 +1,17 @@
+"""
+rules of thumb
+shipper has the client, if you dont need the client, you are not shipper
+guis dont have clients
+
+"""
+
 import sys
 from datetime import datetime
 from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Collection
+from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
@@ -13,7 +20,7 @@ from core.enums import Contact, DateTimeMasks
 from core.funcs import download_label_2, email_label, log_shipment, print_label, update_commence
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui, get_date_label, get_service_string
-from gui.tracking_gui import tracking_loop
+from gui.tracking_gui import TrackingGui
 from shipper.addresser import address_from_bestmatch, address_from_gui, address_from_logic
 from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address
 from shipper.shipment import Shipment
@@ -36,13 +43,53 @@ class Shipper:
     def dispatch(self):
         self.address_shipments(outbound=self.config.outbound)
         self.gather_dbay_objs()
-        booked_shipments = self.main_gui_loop()
+        booked_shipments = self.dispatch_loop()
         self.gui.post_book(shipments=booked_shipments)
 
     def track(self):
         for shipment in self.shipments:
-            if any([shipment.outbound_id, shipment.inbound_id]):
-                result = tracking_loop(self.gui, shipment=shipment)
+            if ship_ids := [shipment.outbound_id, shipment.inbound_id]:
+                try:
+                    self.tracking_loop(ship_ids=ship_ids)
+                except ApiException as e:
+                    if 'no tracking data' in e.args.__repr__().lower():
+                        logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
+                    if 'not found' in e.args.__repr__().lower():
+                        logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
+                        sg.popup_error(f'Shipment ({shipment.shipment_name_printable}) not found')
+
+                    else:
+                        logger.exception(f'ERROR for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
+
+
+
+    def dispatch_loop(self):
+        """ pysimplegui main_loop, takes a prebuilt window and shipment list,
+        listens for user input and updates shipments
+        listens for go_ship  button to start booking"""
+        logger.info('GUI LOOP')
+
+        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
+
+        while True:
+            self.gui.event, self.gui.values = self.gui.window.read()
+            if self.gui.event == sg.WIN_CLOSED:
+                self.gui.window.close()
+                sys.exit()
+            elif self.gui.event == '-GO_SHIP-':
+                if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
+                    sg.popup_quick_message('Please Wait')
+                    self.gui.window.close()
+                    return self.process_shipments()
+            else:
+                self.edit_shipment(shipments=self.shipments)
+
+    def tracking_loop(self, ship_ids):
+        for shipment_id in ship_ids:
+            shipment_return = self.client.get_shipment(shipment_id).is_delivered
+            tracking_gui = TrackingGui(shipment_return=shipment_return)
 
     def address_shipments(self, outbound: bool):
         home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
@@ -93,27 +140,6 @@ class Shipper:
         shipment.available_services = self.client.get_available_services(shipment.shipment_request)
         shipment.service = get_actual_service(default_service_id=default_service_id,
                                               available_services=shipment.available_services)
-
-    def main_gui_loop(self):
-        """ pysimplegui main_loop, takes a prebuilt window and shipment list,
-        listens for user input and updates shipments
-        listens for go_ship  button to start booking"""
-        logger.info('GUI LOOP')
-
-        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
-
-        while True:
-            self.gui.event, self.gui.values = self.gui.window.read()
-            if self.gui.event == sg.WIN_CLOSED:
-                self.gui.window.close()
-                sys.exit()
-            elif self.gui.event == '-GO_SHIP-':
-                if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
-                    sg.popup_quick_message('Please Wait')
-                    self.gui.window.close()
-                    return self.process_shipments()
-            else:
-                self.edit_shipment(shipments=self.shipments)
 
     def edit_shipment(self, shipments):
         self.shipment_to_edit: Shipment = next((shipment for shipment in shipments

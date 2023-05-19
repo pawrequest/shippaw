@@ -17,7 +17,7 @@ config.sandbox = True
 creds = config.dbay_creds
 client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
 shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file)
-gui = MainGui(config=config, client=client)
+gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
 shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
 shipper.address_shipments()
 [log_shipment(shipment=shipment, log_path=log_path) for shipment in shipper.shipments]
