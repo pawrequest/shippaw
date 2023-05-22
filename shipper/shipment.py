@@ -27,7 +27,7 @@ class Shipment:
         # input paramaters
         self.category= category.title()
         self._shipment_name: str = ship_dict.get('shipment_name')
-        self.address_as_str: str = ship_dict.get('address_as_str')
+        self._address_as_str: str = ship_dict.get('address_as_str')
         self.boxes: int = int(ship_dict.get('boxes', 1))
         self.customer: str = ship_dict.get('customer')
         self.contact_name: str = ship_dict.get('contact')
@@ -103,7 +103,7 @@ class Shipment:
 
     @property
     def str_to_match(self):
-        return parse_amherst_address_string(self.address_as_str)
+        return parse_amherst_address_string(self._address_as_str)
 
 
     @classmethod

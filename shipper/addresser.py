@@ -80,14 +80,14 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
         return address
     elif address.company_name:
         if address.company_name == shipment.customer \
-                or address.company_name in shipment.address_as_str \
+                or address.company_name in shipment._address_as_str \
                 or address.company_name in shipment.delivery_name:
             return address
         else:
             pop_msg = f'Address Company name and Shipment Customer do not exactly match:\n' \
                       f'\nCustomer: {shipment.customer}\n' \
                       f'Address Company Name: {address.company_name}\n' \
-                      f'\nShipment Delivery Details:\n{shipment.delivery_name} \n{shipment.address_as_str}\n' \
+                      f'\nShipment Delivery Details:\n{shipment.delivery_name} \n{shipment._address_as_str}\n' \
                       f'\n[Yes] to accept matched address or [No] to edit / replace'
 
         answer = sg.popup_yes_no(pop_msg, line_width=100)
@@ -177,7 +177,7 @@ def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool)
     """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
     # if address := address_from_search(client=client, shipment=shipment):
     terms = {shipment.customer, shipment.delivery_name,
-                     parse_amherst_address_string(str_address=shipment.address_as_str)}
+             parse_amherst_address_string(str_address=shipment._address_as_str)}
 
     if address := address_from_single_search(client=client, postcode=shipment.postcode, search_terms=terms):
         if sandbox:
@@ -193,7 +193,8 @@ def address_from_bestmatch(client, shipment):
     # shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
     shipment.candidate_keys = get_candidate_keys_new(client=client, postcode=shipment.postcode)
     shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
-    logger.info(f"CANDIDATE KEYS : {shipment.candidate_keys}")
+    log_str = "\n".join(f"{key} : {value}" for key, value in shipment.candidate_keys.items())
+    logger.info(f"CANDIDATE KEYS :\n{log_str}")
     logger.info(f"BESTMATCH : {shipment.bestmatch}")
     return shipment.bestmatch.address
 
