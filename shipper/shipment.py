@@ -31,7 +31,6 @@ class Shipment:
         self.boxes: int = int(ship_dict.get('boxes', 1))
         self.customer: str = ship_dict.get('customer')
         self.contact_name: str = ship_dict.get('contact')
-        # self.contact_name: str = next((ship_dict.get(key) for key in ['contact', 'contact_name'] if key in ship_dict), None)
         self.email: str = ship_dict.get('email')
         self.postcode: str = ship_dict.get('postcode')
         self.send_out_date: datetime.date = ship_dict.get('send_out_date', datetime.today())
@@ -42,7 +41,6 @@ class Shipment:
         self.outbound_id: Optional[str] = ship_dict.get('outbound_id')
 
 
-        self.shipment_name_printable = re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
 
         self.collection_booked = False
         self.printed = False
@@ -81,6 +79,15 @@ class Shipment:
         logging.info('\n')
 
 
+    @property
+    def shipment_name_printable(self):
+        return re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
+
+
+    @property
+    def customer_safe_print(self):
+        return self.customer.replace("&", '"&"').replace("'", "''")
+
     def to_dict(self):
         allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
         result = {}
@@ -101,7 +108,7 @@ class Shipment:
         logger.info(f'DBase file = {dbase_file}')
         shipments: [Shipment] = []
         try:
-            for record in DBF(dbase_file):
+            for record in DBF(dbase_file, encoding='cp1252'):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)

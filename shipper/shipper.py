@@ -89,7 +89,7 @@ class Shipper:
     def tracking_loop(self, ship_ids):
         for shipment_id in ship_ids:
             shipment_return = self.client.get_shipment(shipment_id).is_delivered
-            tracking_gui = TrackingGui(shipment_return=shipment_return)
+            tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
     def address_shipments(self, outbound: bool):
         home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
@@ -180,13 +180,17 @@ class Shipper:
         self.shipment_to_edit.collection_date = new_collection_date
 
     def sender_click(self):
-        self.sr_click(s_or_r='sender')
+        send = self.shipment_to_edit.sender
+        contact = Contact(name=send.name, email=send.email, telephone=send.telephone)
+        self.sr_click(s_or_r='sender', contact=contact)
 
     def recipient_click(self):
-        self.sr_click(s_or_r='recipient')
+        rec = self.shipment_to_edit.recipient
+        contact = Contact(name=rec.name, email=rec.email, telephone=rec.telephone)
+        self.sr_click(s_or_r='recipient', contact=contact)
 
-    def sr_click(self, s_or_r):
-        contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
+    def sr_click(self, s_or_r, contact):
+        # contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
         if s_or_r == 'sender':
             address_to_edit = self.shipment_to_edit.sender.sender_address
         elif s_or_r == 'recipient':
@@ -245,7 +249,7 @@ class Shipper:
                             collection_date=shipment.collection.date.date,
                             collection_address=shipment.collection.sender_address.sender_address
                             )
-        update_commence(config=self.config, shipment=shipment, id_to_pass=shipment_id)
+        update_commence(shipment=shipment, id_to_pass=shipment_id, outbound=self.config.outbound, ps_script=self.config.paths.cmc_logger)
         return shipment
 
     def process_shipments(self):
@@ -346,7 +350,7 @@ def get_shipment_request(client: DespatchBaySDK, shipment: Shipment):
     request = client.shipment_request(
         service_id=shipment.service.service_id,
         parcels=shipment.parcels,
-        client_reference=shipment.customer,
+        client_reference=shipment.customer_safe_print,
         collection_date=shipment.collection_date,
         sender_address=shipment.sender,
         recipient_address=shipment.recipient,

@@ -110,6 +110,7 @@ def powershell_runner(script_path: str, *params: str):
     commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
     for param in params:
         commandline_options.append("'" + param + "'")
+    # commandline_options.extend(params)
     logger.info(f'POWERSHELL RUNNER - COMMANDS: {commandline_options}')
     process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
@@ -123,13 +124,12 @@ def powershell_runner(script_path: str, *params: str):
         return process_result.returncode
 
 
-def update_commence(config: Config, shipment: Shipment, id_to_pass: str):
+def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script:Path):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
-    ps_script = str(config.paths.cmc_logger)
-    try:  # utility class static method runs powershell script bypassing execuction policy
-        commence_edit = powershell_runner(ps_script, shipment.category, shipment._shipment_name, id_to_pass,
-                                          str(config.outbound))
+    try:
+        commence_edit = powershell_runner(str(ps_script), shipment.category, shipment._shipment_name, id_to_pass,
+                                          str(outbound))
     except RuntimeError as e:
         logger.exception('Error logging to commence')
         sg.popup_scrolled(f'Error logging to commence - is it running?')

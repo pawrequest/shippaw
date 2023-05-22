@@ -19,6 +19,7 @@ class AddressGui(Gui):
         self.shipment = shipment
         self.window = self.get_contact_window()
         self.outbound = outbound
+        self.client = client
 
     def get_address(self):
         """ Gui loop, takes an address and shipment for contact details,
