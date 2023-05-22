@@ -63,8 +63,6 @@ class Shipper:
                         logger.exception(f'ERROR for {shipment.shipment_name_printable}')
                         sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
-
-
     def dispatch_loop(self):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
         listens for user input and updates shipments
@@ -84,7 +82,8 @@ class Shipper:
                     self.gui.window.close()
                     return self.process_shipments()
             else:
-                self.edit_shipment(shipments=self.shipments)
+                self.edit_shipment(shipment_to_edit=next((shipment for shipment in self.shipments if
+                                         shipment.shipment_name_printable.lower() in self.gui.event.lower())))
 
     def tracking_loop(self, ship_ids):
         for shipment_id in ship_ids:
@@ -141,9 +140,7 @@ class Shipper:
         shipment.service = get_actual_service(default_service_id=default_service_id,
                                               available_services=shipment.available_services)
 
-    def edit_shipment(self, shipments):
-        self.shipment_to_edit: Shipment = next((shipment for shipment in shipments
-                                                if shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+    def edit_shipment(self, shipment_to_edit):
         if 'boxes' in self.gui.event.lower():
             self.boxes_click()
         elif 'service' in self.gui.event.lower():
@@ -155,7 +152,7 @@ class Shipper:
         elif 'recipient' in self.gui.event.lower():
             self.recipient_click()
         elif 'remove' in self.gui.event.lower():
-            shipments, self.gui.window = self.remove_click(shipments=shipments)
+            self.remove_click(shipment_to_remove=shipment_to_edit)
 
     def boxes_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -167,11 +164,11 @@ class Shipper:
             window[f'-{shipment_to_edit.shipment_name_printable}_SERVICE-'.upper()].update(
                 f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
 
-    def remove_click(self, shipments: [Shipment]):
-        shipments = [s for s in shipments if s != self.shipment_to_edit]
+    def remove_click(self, shipment_to_remove):
+        # [s for s in self.shipments if s.shipment_name_printable != shipment_to_remove.shipment_name_printable]
+        self.shipments = [s for s in self.shipments if s != shipment_to_remove]
         self.gui.window.close()
-        window = self.gui.bulk_shipper_window(shipments=shipments)
-        return shipments, window
+        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
 
     def date_click(self):
         new_collection_date = self.gui.new_date_selector(shipment=self.shipment_to_edit,
@@ -249,7 +246,8 @@ class Shipper:
                             collection_date=shipment.collection.date.date,
                             collection_address=shipment.collection.sender_address.sender_address
                             )
-        update_commence(shipment=shipment, id_to_pass=shipment_id, outbound=self.config.outbound, ps_script=self.config.paths.cmc_logger)
+        update_commence(shipment=shipment, id_to_pass=shipment_id, outbound=self.config.outbound,
+                        ps_script=self.config.paths.cmc_logger)
         return shipment
 
     def process_shipments(self):

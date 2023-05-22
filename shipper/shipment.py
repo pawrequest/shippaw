@@ -78,6 +78,9 @@ class Shipment:
         [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
         logging.info('\n')
 
+    def __eq__(self, other):
+        return self._shipment_name == other._shipment_name
+
 
     @property
     def shipment_name_printable(self):
