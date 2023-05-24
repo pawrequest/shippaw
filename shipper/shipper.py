@@ -82,8 +82,9 @@ class Shipper:
                     self.gui.window.close()
                     return self.process_shipments()
             else:
-                self.edit_shipment(shipment_to_edit=next((shipment for shipment in self.shipments if
-                                         shipment.shipment_name_printable.lower() in self.gui.event.lower())))
+                s_to_e = next((shipment for shipment in self.shipments if
+                                         shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+                self.edit_shipment(shipment_to_edit=s_to_e)
 
     def tracking_loop(self, ship_ids):
         for shipment_id in ship_ids:
@@ -141,6 +142,7 @@ class Shipper:
                                               available_services=shipment.available_services)
 
     def edit_shipment(self, shipment_to_edit):
+        self.shipment_to_edit = shipment_to_edit
         if 'boxes' in self.gui.event.lower():
             self.boxes_click()
         elif 'service' in self.gui.event.lower():
