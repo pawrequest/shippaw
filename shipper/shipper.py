@@ -92,8 +92,11 @@ class Shipper:
             tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
     def address_shipments(self, outbound: bool):
-        home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+        if self.config.home_contact and self.config.home_address.dbay_key:
+            home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
                                                     contact=self.config.home_contact)
+        else:
+            raise ValueError("Home Contact or Dbay Key Missing")
         home_sender = self.client.sender(address_id=self.config.home_address.address_id)
 
         for shipment in self.shipments:
