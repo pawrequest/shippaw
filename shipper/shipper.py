@@ -132,9 +132,10 @@ class Shipper:
             shipment.collection_date = self.get_collection_date(shipment=shipment)
             if str(shipment.send_out_date) != shipment.collection_date.date:
                 if shipment.send_out_date == datetime.today().date() and datetime.now().hour >= 12:
-                    # sg.popup_yes_no("Can't Ship Today until dbay configure it")
-                    shipment.sender = get_dropoff_sender(client=self.client,
-                                                     dropoff_sender_id=self.config.home_address.dropoff_sender_id)
+                    sg.popup_yes_no("Can't Ship Today until dbay configure it")
+                    # shipment.sender = get_dropoff_sender(client=self.client,
+                    #                                  dropoff_sender_id=self.config.home_address.dropoff_sender_id)
+
 
             shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
