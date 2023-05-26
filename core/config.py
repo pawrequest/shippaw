@@ -49,7 +49,6 @@ class Config:
         self.home_address = HomeAddress(**config_dict.get('home_address'))
         self.home_contact = Contact(**config_dict.get('home_contact'))
         self.return_label_email_body = config_dict.get('return_label_email_body')
-        self.home_sender_id = str()
 
         dbay = config_dict.get('dbay')[self.scope_from_sandbox()]
         self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])

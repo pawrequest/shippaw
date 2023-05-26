@@ -32,6 +32,7 @@ class GuiColIndex(Enum):
 class DateMenuMap:
     ...
 
+
 #
 # @dataclass
 # class BookingJob:
@@ -53,7 +54,6 @@ class DateMenuMap:
 #             la
 #
 #         )
-
 
 
 class FuzzyScoresEnum(Enum):
@@ -151,12 +151,15 @@ class PathsList:
 
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
+
+
 # Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
 @dataclass
 class Contact:
     email: str
     telephone: str
     name: str
+
 
 class GuiMap(Enum):
     shipment_name = 'Shipment Name'
@@ -216,3 +219,4 @@ class HomeAddress:
     county: Optional[str]
     postal_code: str
     country_code: Optional[str] = 'GB'
+    dropoff_sender_id: Optional[int] = None

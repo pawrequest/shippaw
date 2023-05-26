@@ -36,6 +36,11 @@ def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
     return client.sender(address_id=config.home_address.address_id)
 
 
+def get_dropoff_sender(client: DespatchBaySDK, dropoff_sender_id: Config) -> Sender:
+    """ return a dbay sender object representing home address defined in toml / Shipper.config"""
+    return client.sender(address_id=dropoff_sender_id)
+
+
 def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
     """ return a dbay recipient object representing home address defined in toml / Shipper.config"""
     address = client.get_address_by_key(config.home_address.dbay_key)

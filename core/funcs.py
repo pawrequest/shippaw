@@ -10,7 +10,6 @@ from despatchbay.despatchbay_entities import ShipmentReturn, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 
-from core.config import Config
 from core.enums import FieldsList, DateTimeMasks
 from shipper.shipment import Shipment, logger
 
@@ -62,7 +61,7 @@ def email_label(shipment: Shipment, body: str, collection_date: datetime.date, c
     col_address += f'{collection_address.street}'
 
     body = body.replace("ADDRESSREPLACE", f'{col_address}')
-    body = body.replace("DATEREPLACE", f'{collection_date}')
+    body = body.replace("DATEREPLACE", f'{collection_date:{DateTimeMasks.DISPLAY}}')
 
     newmail.To = shipment.email
     newmail.Subject = "Radio Hire Return - Shipping Label Attached"
@@ -104,7 +103,7 @@ def download_label(client: DespatchBaySDK, label_folder_path: Path, shipment: Sh
         return label_location
 
 
-def powershell_runner(script_path: str, *params: str):
+def powershell_runner(script_path: str, *params):
     POWERSHELL_PATH = "powershell.exe"
 
     commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
@@ -124,7 +123,12 @@ def powershell_runner(script_path: str, *params: str):
         return process_result.returncode
 
 
-def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script:Path):
+def edit_commence_db(ps_script: Path, category: str, shipment_name: str, **payload: dict):
+    update_params = category, shipment_name, [f'{field}, {value}' for field, value in payload.items()]
+    completed_process = powershell_runner(str(ps_script), update_params)
+
+
+def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script: Path):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
     try:

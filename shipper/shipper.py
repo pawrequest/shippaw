@@ -22,7 +22,8 @@ from gui.address_gui import AddressGui
 from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import TrackingGui
 from shipper.addresser import address_from_bestmatch, address_from_gui, address_from_logic
-from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address
+from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address, \
+    get_dropoff_sender
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -83,7 +84,7 @@ class Shipper:
                     return self.process_shipments()
             else:
                 s_to_e = next((shipment for shipment in self.shipments if
-                                         shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+                               shipment.shipment_name_printable.lower() in self.gui.event.lower()))
                 self.edit_shipment(shipment_to_edit=s_to_e)
 
     def tracking_loop(self, ship_ids):
@@ -94,7 +95,7 @@ class Shipper:
     def address_shipments(self, outbound: bool):
         if self.config.home_contact and self.config.home_address.dbay_key:
             home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
-                                                    contact=self.config.home_contact)
+                                                        contact=self.config.home_contact)
         else:
             raise ValueError("Home Contact or Dbay Key Missing")
         home_sender = self.client.sender(address_id=self.config.home_address.address_id)
@@ -129,6 +130,11 @@ class Shipper:
         for shipment in self.shipments:
             shipment.service = self.client.get_services()[0]  # needed to get dates
             shipment.collection_date = self.get_collection_date(shipment=shipment)
+            if shipment.send_out_date == datetime.today().date() and datetime.now().hour >= 12:
+                sg.popup_yes_no("Can't Ship Today until dbay configure it")
+                # shipment.sender = get_dropoff_sender(client=self.client,
+                #                                      dropoff_sender_id=self.config.home_address.dropoff_sender_id)
+
             shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
             shipment.available_services = self.client.get_available_services(shipment.shipment_request)
@@ -334,6 +340,11 @@ class Shipper:
         logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
 
         return parcels
+
+    def convert_to_dropoff(self, shipment):
+        # self.config.home_address.dropoff_sender_id
+        shipment.sender = self.client.sender()
+        pass
 
 
 def get_service_menu_map(available_services: List[Service]):
