@@ -23,7 +23,7 @@ from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import TrackingGui
 from shipper.addresser import address_from_bestmatch, address_from_gui, address_from_logic
 from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address, \
-    get_dropoff_sender
+    sender_from_address_id
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -43,6 +43,12 @@ class Shipper:
 
     def dispatch(self):
         self.address_shipments(outbound=self.config.outbound)
+        self.gather_dbay_objs()
+        booked_shipments = self.dispatch_loop()
+        self.gui.post_book(shipments=booked_shipments)
+
+    def dispatch_outbound_dropoffs(self):
+        self.address_outbound_dropoffs()
         self.gather_dbay_objs()
         booked_shipments = self.dispatch_loop()
         self.gui.post_book(shipments=booked_shipments)
@@ -92,6 +98,16 @@ class Shipper:
             shipment_return = self.client.get_shipment(shipment_id).is_delivered
             tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
+
+    def address_outbound_dropoffs(self):
+        home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
+        for shipment in self.shipments:
+            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                              name=shipment.contact_name)
+            shipment.sender = home_sender
+            remote_address = self.remote_address_script(shipment=shipment)
+            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact, address=remote_address)
+
     def address_shipments(self, outbound: bool):
         if self.config.home_contact and self.config.home_address.dbay_key:
             home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
@@ -135,7 +151,6 @@ class Shipper:
                     sg.popup_ok("Can't Ship Today until dbay configure it")
                     # shipment.sender = get_dropoff_sender(client=self.client,
                     #                                  dropoff_sender_id=self.config.home_address.dropoff_sender_id)
-
 
             shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
@@ -270,7 +285,14 @@ class Shipper:
         booked_shipments = []
 
         for shipment in self.shipments:
-            book = self.gui.values.get(f'-{shipment.shipment_name_printable}_book-'.upper())
+            book = self.gui.values.get(f'-{shipment.shipment_name_printable}_BOOK-'.upper())
+
+            # dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
+            # if dropoff:
+            #     logger.info('Converting to Dropoff')
+            #     shipment.sender = sender_from_address_id(client=client,
+            #                                              address_id=config.home_address.dropoff_sender_id)
+
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
             shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
             shipment_id = self.client.add_shipment(shipment.shipment_request)
@@ -303,6 +325,11 @@ class Shipper:
     #
     #         window2.close()
     #         break
+
+
+    def get_dropoff_date(self):
+        pass
+
 
     def get_collection_date(self, shipment: Shipment) -> CollectionDate:
         """ return despatchbay CollecitonDate Entity

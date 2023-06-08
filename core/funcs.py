@@ -123,10 +123,6 @@ def powershell_runner(script_path: str, *params):
         return process_result.returncode
 
 
-def edit_commence_db(ps_script: Path, category: str, shipment_name: str, **payload: dict):
-    update_params = category, shipment_name, [f'{field}, {value}' for field, value in payload.items()]
-    completed_process = powershell_runner(str(ps_script), update_params)
-
 
 def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script: Path):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """

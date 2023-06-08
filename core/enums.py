@@ -14,6 +14,7 @@ class ShipmentCategory(StrEnum):
     HIRE = auto()
     SALE = auto()
     FAKE = auto()
+    DROP = auto()
 
 
 class GuiColIndex(Enum):
@@ -84,6 +85,7 @@ class ShipMode(StrEnum):
     SHIP_IN = auto()
     TRACK = auto()
     FAKE = auto()
+    DROP = auto()
 
 
 @dataclass

@@ -31,14 +31,13 @@ logger = get_amdesp_logger()
 #         shipment.recipient = home_sender_recip
 
 
-def get_home_sender(client: DespatchBaySDK, config: Config) -> Sender:
-    """ return a dbay sender object representing home address defined in toml / Shipper.config"""
-    return client.sender(address_id=config.home_address.address_id)
 
 
-def get_dropoff_sender(client: DespatchBaySDK, dropoff_sender_id: Config) -> Sender:
+
+
+def sender_from_address_id(client: DespatchBaySDK, address_id:str) -> Sender:
     """ return a dbay sender object representing home address defined in toml / Shipper.config"""
-    return client.sender(address_id=dropoff_sender_id)
+    return client.sender(address_id=address_id)
 
 
 def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
