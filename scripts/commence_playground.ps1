@@ -23,7 +23,7 @@ $cursor.Columns.AddDirectColumns("Radio Type", "Number UHF")
 $cursor.Columns.Apply()
 
 $export = New-Object ExportEngine
-$exportPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop) + "\today_hires"
+$exportPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop) + "\today_hires.json"
 
 
 
