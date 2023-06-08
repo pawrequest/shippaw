@@ -108,7 +108,7 @@ class Shipment:
 
     @classmethod
     def get_shipments(cls, config: Config, category: ShipmentCategory, dbase_file: str) -> list:
-        logger.info(f'DBase file = {dbase_file}')
+        logger.info(f'DBase file og = {dbase_file}')
         shipments: [Shipment] = []
         try:
             for record in DBF(dbase_file, encoding='cp1252'):
@@ -163,7 +163,7 @@ class Shipment:
 
 
 def get_dbay_shipments(import_mapping:dict, category: ShipmentCategory, dbase_file: str):
-    logger.info(f'DBase file = {dbase_file}')
+    logger.info(f'DBase file NEW = {dbase_file}')
     shipments_dict = {}
     try:
         for record in DBF(dbase_file):

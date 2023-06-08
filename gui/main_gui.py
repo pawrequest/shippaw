@@ -71,6 +71,7 @@ class MainGui(Gui):
             sg.Checkbox('Book', default=True, k=f'-{shipment.shipment_name_printable}_BOOK-'.upper()),
             sg.Checkbox(f'{print_or_email}', default=True,
                         k=f'-{shipment.shipment_name_printable}_PRINT_EMAIL-'.upper()),
+            sg.Checkbox('Drop-off', default=False, k=f'-{shipment.shipment_name_printable}_DROP-'.upper()),
             sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-'.upper())
         ]
 
