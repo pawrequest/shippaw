@@ -15,7 +15,7 @@ from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import Contact, DateTimeMasks
 from core.funcs import download_label_2, email_label, log_shipment, print_label, update_commence
 from gui.address_gui import AddressGui
@@ -27,7 +27,6 @@ from shipper.sender_receiver import recip_from_contact_address, recip_from_conta
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
-logger = get_amdesp_logger()
 LIMITED_SHIPMENTS = 1
 
 
@@ -181,6 +180,8 @@ class Shipper:
             self.recipient_click()
         elif 'remove' in self.gui.event.lower():
             self.remove_click(shipment_to_remove=shipment_to_edit)
+        elif 'customer_contact' in self.gui.event.lower():
+            self.customer_click()
 
     def boxes_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -287,11 +288,11 @@ class Shipper:
         for shipment in self.shipments:
             book = self.gui.values.get(f'-{shipment.shipment_name_printable}_BOOK-'.upper())
 
-            # dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
-            # if dropoff:
-            #     logger.info('Converting to Dropoff')
-            #     shipment.sender = sender_from_address_id(client=client,
-            #                                              address_id=config.home_address.dropoff_sender_id)
+            dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
+            if dropoff:
+                logger.info('Converting to Dropoff')
+                shipment.sender = sender_from_address_id(client=client,
+                                                         address_id=config.home_address.dropoff_sender_id)
 
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
             shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
@@ -375,6 +376,9 @@ class Shipper:
         shipment.sender = self.client.sender()
         pass
 
+    def customer_click(self):
+        sg.popup_ok(self.shipment_to_edit._address_as_str)
+
 
 def get_service_menu_map(available_services: List[Service]):
     return ({service.name: service for service in available_services})
@@ -400,7 +404,7 @@ def get_shipment_request(client: DespatchBaySDK, shipment: Shipment):
         follow_shipment=True
     )
 
-    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST {request}')
+    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return request
 
 

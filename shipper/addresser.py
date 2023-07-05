@@ -9,14 +9,12 @@ from fuzzywuzzy import fuzz
 from gui.address_gui import AddressGui
 from core.enums import BestMatch, FuzzyScores
 from shipper.shipment import Shipment, parse_amherst_address_string
-from core.config import get_amdesp_logger
+from core.config import logger
 
-logger = get_amdesp_logger()
 
 
 
 def address_from_single_search(client: DespatchBaySDK, postcode:str, search_terms:Iterable) -> Address | None:
-    """ Return an address if found by simple search on postcode and building number or company name """
 
     check_set = set(search_terms)
     for term in check_set:
@@ -25,10 +23,12 @@ def address_from_single_search(client: DespatchBaySDK, postcode:str, search_term
             address = client.find_address(postcode, term)
             return address
         except ApiException as e1:
-            logger.info(f"ADDRESS SEARCH FAIL - {str(e1)}")
+            if 'No Addresses Found At Postcode' in e1.args:
+                logger.info(f"ADDRESS SEARCH FAIL - {str(e1)}")
             continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL")
+        sg.popup_quick_message("Address Not Matched - please check it")
         return None
 
 
@@ -174,7 +174,6 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
 
 def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool) -> Address | None:
-    """ returns an address, tries by direct search, quick address string comparison, explicit BestMatch, BestMatch from FuzzyScores, or finally user input  """
     # if address := address_from_search(client=client, shipment=shipment):
     terms = {shipment.customer, shipment.delivery_name,
              parse_amherst_address_string(str_address=shipment._address_as_str)}

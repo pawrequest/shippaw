@@ -5,13 +5,12 @@ from despatchbay.exceptions import ApiException
 
 from gui.main_gui import Gui
 from shipper.shipment import Shipment
-from core.config import get_amdesp_logger
+from core.config import logger
 
-logger= get_amdesp_logger()
 
 
 class TrackingGui(Gui):
-    def tracking_viewer_window(self, shipment_return:ShipmentReturn):
+    def tracking_viewer_window(self, client, shipment_return:ShipmentReturn):
         delivered = shipment_return.is_delivered
         tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
         tracking_d = {}

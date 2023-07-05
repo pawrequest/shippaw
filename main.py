@@ -9,7 +9,7 @@ import sys
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import ShipmentCategory, ShipMode
 from gui.main_gui import MainGui
 from shipper.shipment import Shipment, get_dbay_shipments, DbayShipment
@@ -30,7 +30,6 @@ includes
 + Vovin CmcLibNet installer for interacting with commence
 """
 
-logger = get_amdesp_logger()
 
 
 def main(main_mode: str):

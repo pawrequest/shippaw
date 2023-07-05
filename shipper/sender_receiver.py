@@ -2,11 +2,10 @@ from despatchbay.despatchbay_entities import Sender, Recipient, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 from shipper.addresser import address_from_logic
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import Contact
 from shipper.shipment import Shipment
 
-logger = get_amdesp_logger()
 # def get_remote_sender_recip(client, outbound:bool, remote_address:Address, remote_contact:Contact):
 #     if outbound:
 #         return get_remote_recipient(client=client, remote_address=remote_address, contact=remote_contact)

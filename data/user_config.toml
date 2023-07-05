@@ -1,4 +1,5 @@
-sandbox = true
+debug = true
+sandbox = false
 return_label_email_body = """Thanks for Hiring from Amherst.\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\

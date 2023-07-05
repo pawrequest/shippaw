@@ -8,13 +8,12 @@ from typing import List, Optional
 
 from dbfread.dbf import DBF, DBFNotFound
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn, Collection
 from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
 from core.exceptions import ShipDictError
-
-logger = get_amdesp_logger()
+from core.config import logger
 
 
 @dataclass

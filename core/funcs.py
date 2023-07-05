@@ -11,7 +11,10 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 
 from core.enums import FieldsList, DateTimeMasks
-from shipper.shipment import Shipment, logger
+from shipper.shipment import Shipment
+
+
+from core.config import logger
 
 
 def print_label(shipment):
@@ -150,3 +153,6 @@ def check_today_ship(shipment):
 
     logger.info(f'PREP SHIPMENT - CHECK TODAY SHIP {shipment.send_out_date}')
     return shipment if keep_shipment else None
+
+
+

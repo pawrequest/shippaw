@@ -1,6 +1,7 @@
+import subprocess
 from datetime import datetime, timedelta
 from dataclasses import dataclass
-from core.funcs import powershell_runner
+from core.funcs import logger
 
 
 
@@ -9,6 +10,32 @@ date_range = 3
 temp_file = 'temp_file.json'
 
 stock_change = {}
+
+
+
+
+def stock_check_script_runner(script_path: str, *params):
+    POWERSHELL_PATH = "powershell.exe"
+
+    commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
+    for param in params:
+        commandline_options.append("'" + param + "'")
+    # commandline_options.extend(params)
+    logger.info(f'POWERSHELL RUNNER - COMMANDS: {commandline_options}')
+    process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    logger.info(f'POWERSHELL RUNNER - PROCESS RESULT: {process_result}')
+    if process_result.stderr:
+        if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
+            raise RuntimeError('CmCLibNet is not installed')
+        else:
+            raise RuntimeError(f'Std Error = {process_result.stderr}')
+    else:
+        return process_result.returncode
+
+
+
+result = stock_check_script_runner(script_path='C:\paul\AmDesp\scripts\commence_playground.ps1', )
 
 
 
@@ -38,7 +65,6 @@ for date in dates:
 
 
 
-powershell_runner()
 
 ...
 

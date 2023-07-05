@@ -3,10 +3,10 @@ from datetime import datetime
 import PySimpleGUI as sg
 from PySimpleGUI import Window
 from dateutil.parser import parse
-from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentReturn
+from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import DateTimeMasks, FieldsList
 from core.funcs import print_label
 from gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
@@ -14,8 +14,6 @@ from gui.gui_params import address_fieldname_params, address_head_params, addres
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
 from shipper.shipment import Shipment
-
-logger = get_amdesp_logger()
 
 
 class Gui:
@@ -63,7 +61,7 @@ class MainGui(Gui):
         num_parcels = len(shipment.parcels)
 
         row = [
-            sg.T(f'{shipment.contact_name}\n{shipment.customer}', **shipment_params),
+            get_customer_contact_button(shipment=shipment),
             get_recip_button(recipient_address_name=recipient_address_name, shipment=shipment),
             get_date_button(date_name=date_name, shipment=shipment),
             get_parcels_button(num_parcels=num_parcels, shipment=shipment),
@@ -168,7 +166,6 @@ class MainGui(Gui):
                 print_label(ship_in_play)
 
         window2.close()
-
 
     @staticmethod
     def get_new_parcels_window(location):
@@ -297,6 +294,15 @@ def get_recip_button(recipient_address_name, shipment):
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
                                k=f'-{shipment.shipment_name_printable.upper()}_RECIPIENT-', **address_params)
     return recipient_button
+
+
+def get_customer_contact_button(shipment):
+    return sg.T(f'{shipment.contact_name}\n{shipment.customer_safe_print}', enable_events=True,
+                k=f"-{shipment.shipment_name_printable}_CUSTOMER_CONTACT-".upper(), **shipment_params)
+
+    # return sg.T(f'{shipment.contact_name}\n{shipment.customer_safe_print}', enable_events=True,
+    #             k=f"-{shipment.shipment_name_printable}_CUSTOMER_CONTACT-".upper(),
+    #             **shipment_params),
 
 
 def get_sender_button(sender_address_name, shipment_name: str) -> sg.Text:
