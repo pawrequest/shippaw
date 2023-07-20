@@ -36,16 +36,20 @@ def main(main_mode: str):
     config = Config.from_toml2(mode=main_mode)
     client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
     shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
+    #TODO
     shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category,
                                         dbase_file=input_file_arg)
     gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
-    shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments, shipments_dict=shipments_dict)
+    shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
     if main_mode == 'drop':
         shipper.dispatch_outbound_dropoffs()
-    if 'ship' in main_mode:
-        shipper.dispatch()
+    if main_mode == 'ship_out':
+        shipper.dispatch_outbound()
+    if main_mode == 'ship_in':
+        shipper.dispatch_inbound()
     elif 'track' in main_mode:
         shipper.track()
+
     sys.exit()
 
 

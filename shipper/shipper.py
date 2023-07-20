@@ -7,6 +7,7 @@ guis dont have clients
 
 import sys
 from datetime import datetime
+from functools import partial
 from typing import List, Optional
 
 import PySimpleGUI as sg
@@ -31,20 +32,22 @@ LIMITED_SHIPMENTS = 1
 
 
 class Shipper:
-    def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment],
-                 shipments_dict: dict[str | Shipment]):
-        self.shipments_dict = shipments_dict
+    def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment]):
+        # self.shipments_dict = shipments_dict
         self.shipment_to_edit: Optional[Shipment] = None
         self.gui = gui
         self.config = config
         self.shipments: [Shipment] = shipments
         self.client = client
 
-    def dispatch(self):
-        self.address_shipments(outbound=self.config.outbound)
+    def dispatch(self, outbound):
+        self.address_shipments(outbound=outbound)
         self.gather_dbay_objs()
         booked_shipments = self.dispatch_loop()
         self.gui.post_book(shipments=booked_shipments)
+
+    dispatch_outbound = partial(dispatch, outbound=True)
+    dispatch_inbound = partial(dispatch, outbound=False)
 
     def dispatch_outbound_dropoffs(self):
         self.address_outbound_dropoffs()
@@ -75,7 +78,7 @@ class Shipper:
         listens for go_ship  button to start booking"""
         logger.info('GUI LOOP')
 
-        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
+        self.gui.window = self.gui.main_window(shipments=self.shipments)
 
         while True:
             self.gui.event, self.gui.values = self.gui.window.read()
@@ -88,15 +91,14 @@ class Shipper:
                     self.gui.window.close()
                     return self.process_shipments()
             else:
-                s_to_e = next((shipment for shipment in self.shipments if
-                               shipment.shipment_name_printable.lower() in self.gui.event.lower()))
-                self.edit_shipment(shipment_to_edit=s_to_e)
+                shipment_to_edit = next((shipment for shipment in self.shipments if
+                                         shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+                self.edit_shipment(shipment_to_edit=shipment_to_edit)
 
     def tracking_loop(self, ship_ids):
         for shipment_id in ship_ids:
             shipment_return = self.client.get_shipment(shipment_id).is_delivered
             tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
-
 
     def address_outbound_dropoffs(self):
         home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
@@ -105,7 +107,8 @@ class Shipper:
                                               name=shipment.contact_name)
             shipment.sender = home_sender
             remote_address = self.remote_address_script(shipment=shipment)
-            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact, address=remote_address)
+            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+                                                            address=remote_address)
 
     def address_shipments(self, outbound: bool):
         if self.config.home_contact and self.config.home_address.dbay_key:
@@ -197,11 +200,11 @@ class Shipper:
         # [s for s in self.shipments if s.shipment_name_printable != shipment_to_remove.shipment_name_printable]
         self.shipments = [s for s in self.shipments if s != shipment_to_remove]
         self.gui.window.close()
-        self.gui.window = self.gui.bulk_shipper_window(shipments=self.shipments)
+        self.gui.window = self.gui.main_window(shipments=self.shipments)
 
     def date_click(self):
         new_collection_date = self.gui.new_date_selector(shipment=self.shipment_to_edit,
-                                                         location=self.gui.window.mouse_location())
+                                                         popup_location=self.gui.window.mouse_location())
         self.gui.window[self.gui.event].update(get_date_label(collection_date=new_collection_date))
         self.shipment_to_edit.collection_date = new_collection_date
 
@@ -327,10 +330,8 @@ class Shipper:
     #         window2.close()
     #         break
 
-
     def get_dropoff_date(self):
         pass
-
 
     def get_collection_date(self, shipment: Shipment) -> CollectionDate:
         """ return despatchbay CollecitonDate Entity

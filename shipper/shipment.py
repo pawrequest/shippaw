@@ -336,8 +336,6 @@ def parse_amherst_address_string(str_address: str):
 
 
 def shipdict_from_dbase(record, import_mapping:dict):
-    # todo check thse
-
     ship_dict_from_dbf = {}
     for k, v in record.items():
         if v:

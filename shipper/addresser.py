@@ -3,7 +3,7 @@ from typing import Iterable
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import ApiException
+from despatchbay.exceptions import ApiException, RateLimitException
 from fuzzywuzzy import fuzz
 
 from gui.address_gui import AddressGui
@@ -14,7 +14,7 @@ from core.config import logger
 
 
 
-def address_from_single_search(client: DespatchBaySDK, postcode:str, search_terms:Iterable) -> Address | None:
+def address_from_searchterms(client: DespatchBaySDK, postcode:str, search_terms:Iterable) -> Address | None:
 
     check_set = set(search_terms)
     for term in check_set:
@@ -35,15 +35,6 @@ def address_from_single_search(client: DespatchBaySDK, postcode:str, search_term
 
 
 def get_bestmatch(client: DespatchBaySDK, shipment: Shipment) -> BestMatch:
-    """
-    requires shipment.candidate_keys dict
-    Return a dbay recipient/sender object representing the customer address defined in imported xml or dbase file.
-    search by customer name, then shipment search_term
-    call explicit_matches to compare strings,
-    call get_bestmatch for fuzzy results,
-    if best score exceed threshold ask user to confirm
-    If still no valid address, call get_new_address.
-    """
     fuzzyscores = []
     for address_str, key in shipment.candidate_keys.items():
         candidate_address = client.get_address_by_key(key)
@@ -178,7 +169,7 @@ def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool)
     terms = {shipment.customer, shipment.delivery_name,
              parse_amherst_address_string(str_address=shipment._address_as_str)}
 
-    if address := address_from_single_search(client=client, postcode=shipment.postcode, search_terms=terms):
+    if address := address_from_searchterms(client=client, postcode=shipment.postcode, search_terms=terms):
         if sandbox:
             # then nothing will match so give up now
             return address
@@ -189,12 +180,16 @@ def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool)
 
 
 def address_from_bestmatch(client, shipment):
-    # shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
-    shipment.candidate_keys = get_candidate_keys_new(client=client, postcode=shipment.postcode)
-    shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
-    log_str = "\n".join(f"{key} : {value}" for key, value in shipment.candidate_keys.items())
-    logger.info(f"CANDIDATE KEYS :\n{log_str}")
-    logger.info(f"BESTMATCH : {shipment.bestmatch}")
+    try:
+        # shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
+        shipment.candidate_keys = get_candidate_keys_new(client=client, postcode=shipment.postcode)
+        shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
+        log_str = "\n".join(f"{key} : {value}" for key, value in shipment.candidate_keys.items())
+        logger.info(f"CANDIDATE KEYS :\n{log_str}")
+        logger.info(f"BESTMATCH : {shipment.bestmatch}")
+    except RateLimitException:
+        logger.info("API CALLS EXCEEDED ABANDONING SEARCH")
+        return None
     return shipment.bestmatch.address
 
 

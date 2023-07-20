@@ -35,7 +35,7 @@ def get_date_label(collection_date: CollectionDate):
 
 
 class MainGui(Gui):
-    def bulk_shipper_window(self, shipments: [Shipment]):
+    def main_window(self, shipments: [Shipment]):
         logger.info('BULK SHIPPER WINDOW')
         if self.sandbox:
             sg.theme('Tan')
@@ -46,13 +46,13 @@ class MainGui(Gui):
 
         return sg.Window('Bulk Shipper',
                          layout=[
-                             [self.get_headers()],
-                             [[self.get_shipment_frame(shipment=shipment)] for shipment in shipments],
+                             [self.headers()],
+                             [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
                              [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
                          ],
                          finalize=True)
 
-    def get_shipment_frame(self, shipment: Shipment):
+    def shipment_frame(self, shipment: Shipment):
         print_or_email = 'print' if self.outbound else 'email'
 
         date_name = get_date_label(collection_date=shipment.collection_date)
@@ -81,8 +81,8 @@ class MainGui(Gui):
 
         return sg.Frame('', layout=layout, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
 
-    def get_headers(self):
-        headers = [
+    def headers(self):
+        heads = [
             # sg.Sizer(30, 0),
             sg.T('Contact / Customer', **head_params),
             sg.T('Recipient', **address_head_params),
@@ -97,12 +97,12 @@ class MainGui(Gui):
         ]
 
         if not self.outbound:
-            headers.insert(1, sg.T('Sender', **address_head_params))
+            heads.insert(1, sg.T('Sender', **address_head_params))
 
-        return headers
+        return heads
 
     @staticmethod
-    def booked_shipments_frame(shipments: [Shipment]):
+    def results_frame(shipments: [Shipment]):
         params = {
             'expand_x': True,
             'expand_y': True,
@@ -131,8 +131,7 @@ class MainGui(Gui):
         return sg.Frame('', vertical_alignment="c", layout=result_layout, element_justification='center')
 
     @staticmethod
-    def new_date_selector(shipment: Shipment, location):
-        location = location
+    def new_date_selector(shipment: Shipment, popup_location):
         menu_map = shipment.date_menu_map
         men_def = [k for k in menu_map.keys()]
         datetime_mask = DateTimeMasks.DISPLAY.value
@@ -142,7 +141,7 @@ class MainGui(Gui):
             [sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date,
                       **option_menu_params)]]
 
-        window = Window('Select a date', layout=layout, location=location, relative_location=(-100, -50))
+        window = Window('Select a date', layout=layout, location=popup_location, relative_location=(-100, -50))
         while True:
             e, v = window.read()
             if e in [sg.WIN_CLOSED, "Cancel"]:
@@ -154,7 +153,7 @@ class MainGui(Gui):
 
     def post_book(self, shipments: [Shipment]):
         headers = []
-        frame = self.booked_shipments_frame(shipments=shipments)
+        frame = self.results_frame(shipments=shipments)
         window2 = sg.Window('Booking Results:', layout=[[frame]])
         while True:
             e2, v2 = window2.read()
