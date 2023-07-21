@@ -41,7 +41,7 @@ class Shipper:
         self.shipments: [Shipment] = shipments
         self.client = client
 
-    def dispatch(self, outbound):
+    def dispatch(self, outbound: bool):
         if outbound:
             self.address_outbound_collections()
         else:
@@ -79,7 +79,7 @@ class Shipper:
 
     def dispatch_loop(self):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
-        listens for user input and updates shipments
+        listens for user input to edit and update shipments
         listens for go_ship  button to start booking"""
         logger.info('GUI LOOP')
 
@@ -314,8 +314,8 @@ class Shipper:
 
         for shipment in self.shipments:
             book = self.gui.values.get(f'-{shipment.shipment_name_printable}_BOOK-'.upper())
-
             dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
+
             if dropoff:
                 logger.info('Converting to Dropoff')
                 shipment.sender = sender_from_address_id(client=client,

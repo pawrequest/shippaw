@@ -61,12 +61,12 @@ def get_remote_recipient(contact: Contact, client: DespatchBaySDK, remote_addres
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=remote_address, **contact.__dict__)
-    logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip
 
 def recip_from_contact_address( client: DespatchBaySDK, contact: Contact, address: Address) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=address, **contact.__dict__)
-    logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip

@@ -153,7 +153,7 @@ def check_today_ship(shipment):
             f"{shipment.shipment_name_printable} would be collected on {datetime.strptime(shipment.collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.DISPLAY.value}}.\n"
             "'Ok' to continue, 'Cancel' to remove shipment from manifest?") == 'Ok' else False
 
-    logger.info(f'PREP SHIPMENT - CHECK TODAY SHIP {shipment.send_out_date}')
+    logger.info(f'CHECK TODAY SHIP {shipment.send_out_date}')
     return shipment if keep_shipment else None
 
 
