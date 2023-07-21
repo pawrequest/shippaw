@@ -47,9 +47,9 @@ def main(main_mode: str):
     if main_mode == 'drop':
         shipper.dispatch_outbound_dropoffs()
     if main_mode == 'ship_out':
-        shipper.dispatch_outbound(shipper)
+        shipper.dispatch(outbound=True)
     if main_mode == 'ship_in':
-        shipper.dispatch_inbound()
+        shipper.dispatch(outbound=False)
     elif 'track' in main_mode:
         shipper.track()
 

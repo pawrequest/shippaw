@@ -22,10 +22,10 @@ def address_from_searchterms(client: DespatchBaySDK, postcode: str, search_terms
             return address
         except ApiException as e1:
             if 'No Addresses Found At Postcode' in e1.args:
-                logger.info(f"ADDRESS SEARCH FAIL - {str(e1)}")
+                logger.info(f"ADDRESS SEARCH FAIL - {f'{postcode} + {term}'}")
             continue
     else:
-        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode, check_set}")
+        logger.info(f"ALL ADDRESS SEARCHES FAIL - {f'{postcode=}, {check_set=}'}")
         sg.popup_quick_message("Address Not Matched - please check it and consider updating Commence")
         return None
 
@@ -113,7 +113,7 @@ def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
 
 def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     """ return BestMatch from a list of FuzzyScores"""
-    logger.info(f'Searching BestMatch from fuzzyscores: {fuzzyscores=}')
+    logger.info(f'Searching BestMatch from fuzzyscores')
     best_address = None
     best_score = 0
     best_category = ""
@@ -124,6 +124,7 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
         max_score = f.scores[max_category]
 
         if max_score > best_score:
+            logger.info(f'New BestMatch found with matchscore = {max_score}: {f.address}')
             best_score = max_score
             best_category = max_category
             best_address = f.address
@@ -136,22 +137,17 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
 def fuzzy_address(client, shipment, candidate_keys) -> Address:
+    """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
-        try:
-            # use backoff in case of postcodes with 70 addresses. yes they exist - ask me how I know
-            candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
-
-            logger.info(f"{candidate_address=}")
-            # client.get_address_by_key(key)
-        except RateLimitException:
-            logger.info("Rate Limit Exception, backoff failed")
+        # use backoff in case of postcodes with 70+ addresses. yes they exist - ask me how I know
+        candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
+        logger.info(f"{candidate_address=}")
+        address = get_explicit_match(shipment=shipment, candidate_address=candidate_address)
+        if isinstance(address, Address):
+            return address
         else:
-            address = get_explicit_match(shipment=shipment, candidate_address=candidate_address)
-            if isinstance(address, Address):
-                return address
-            else:
-                fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
+            fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     else:
         logger.info(f'No exact match found, trying fuzzy match')
         bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
