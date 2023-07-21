@@ -36,13 +36,12 @@ includes
 def main(main_mode: str):
     config = Config.from_toml2(mode=main_mode)
     client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
-    # client = APIClientWrapper(client=client)
+    # wrap client to count and log API calls
     client = cast(DespatchBaySDK, APIClientWrapper(client))
-
     shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
-    #TODO
-    shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category,
-                                        dbase_file=input_file_arg)
+    # TODO - dictify shipments
+    # shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category,
+    #                                     dbase_file=input_file_arg)
     gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
     shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
     if main_mode == 'drop':

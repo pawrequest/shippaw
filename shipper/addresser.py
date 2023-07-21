@@ -26,38 +26,13 @@ def address_from_searchterms(client: DespatchBaySDK, postcode: str, search_terms
             continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode, check_set}")
-        sg.popup_quick_message("Address Not Matched - please check it")
+        sg.popup_quick_message("Address Not Matched - please check it and consider updating Commence")
         return None
 
-
-def get_bestmatch(client: DespatchBaySDK, shipment: Shipment, candidate_keys, ) -> BestMatch:
-    fuzzyscores = []
-    for address_str, key in candidate_keys.items():
-        candidate_address = client.get_address_by_key(key)
-        if explicit_match := get_explicit_bestmatch(candidate_address=candidate_address, shipment=shipment):
-            return explicit_match
-        else:
-            fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
-    else:
-        # finished loop, no explicitmatch from candidates so get a bestmatch from fuzzyscores
-        bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
-        return bestmatch
-
-
-def get_explicit_bestmatch(shipment: Shipment, candidate_address) -> BestMatch | None:
-    """ compares shipment details to address, return a bestmatch if an explicit match is found  else None"""
-
-    if shipment.customer == candidate_address.company_name \
-            or shipment.str_to_match == candidate_address.street \
-            or shipment.delivery_name == candidate_address.company_name:
-        return BestMatch(address=candidate_address, category='explicit', score=100,
-                         str_matched=shipment.str_to_match)
-    else:
-        return None
 
 
 def get_explicit_match(shipment: Shipment, candidate_address) -> Address | None:
-    """ compares shipment details to address, return a bestmatch if an explicit match is found  else None"""
+    """ compares various shipment details to address, return address is matched else None"""
     if candidate_address.company_name:
         if shipment.customer in candidate_address.company_name \
                 or candidate_address.company_name in shipment.customer \
@@ -235,3 +210,29 @@ def address_from_gui(client, sandbox: bool, outbound: bool, shipment):
 #             continue
 #         else:
 #             return candidate_keys_dict
+
+#
+# def get_bestmatch(client: DespatchBaySDK, shipment: Shipment, candidate_keys, ) -> BestMatch:
+#     fuzzyscores = []
+#     for address_str, key in candidate_keys.items():
+#         candidate_address = client.get_address_by_key(key)
+#         if explicit_match := get_explicit_bestmatch(candidate_address=candidate_address, shipment=shipment):
+#             return explicit_match
+#         else:
+#             fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
+#     else:
+#         # finished loop, no explicitmatch from candidates so get a bestmatch from fuzzyscores
+#         bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
+#         return bestmatch
+#
+#
+# def get_explicit_bestmatch(shipment: Shipment, candidate_address) -> BestMatch | None:
+#     """ compares shipment details to address, return a bestmatch if an explicit match is found  else None"""
+#
+#     if shipment.customer == candidate_address.company_name \
+#             or shipment.str_to_match == candidate_address.street \
+#             or shipment.delivery_name == candidate_address.company_name:
+#         return BestMatch(address=candidate_address, category='explicit', score=100,
+#                          str_matched=shipment.str_to_match)
+#     else:
+#         return None
