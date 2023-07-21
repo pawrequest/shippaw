@@ -6,16 +6,14 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException, RateLimitException
 from fuzzywuzzy import fuzz
 
-from gui.address_gui import AddressGui
-from core.enums import BestMatch, FuzzyScores
-from shipper.shipment import Shipment, parse_amherst_address_string
 from core.config import logger
+from core.enums import BestMatch, FuzzyScores
+from core.funcs import retry_with_backoff
+from gui.address_gui import AddressGui
+from shipper.shipment import Shipment, parse_amherst_address_string
 
 
-
-
-def address_from_searchterms(client: DespatchBaySDK, postcode:str, search_terms:Iterable) -> Address | None:
-
+def address_from_searchterms(client: DespatchBaySDK, postcode: str, search_terms: Iterable) -> Address | None:
     check_set = set(search_terms)
     for term in check_set:
         try:
@@ -27,16 +25,14 @@ def address_from_searchterms(client: DespatchBaySDK, postcode:str, search_terms:
                 logger.info(f"ADDRESS SEARCH FAIL - {str(e1)}")
             continue
     else:
-        logger.info(f"ALL ADDRESS SEARCHES FAIL")
+        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode, check_set}")
         sg.popup_quick_message("Address Not Matched - please check it")
         return None
 
 
-
-
-def get_bestmatch(client: DespatchBaySDK, shipment: Shipment) -> BestMatch:
+def get_bestmatch(client: DespatchBaySDK, shipment: Shipment, candidate_keys, ) -> BestMatch:
     fuzzyscores = []
-    for address_str, key in shipment.candidate_keys.items():
+    for address_str, key in candidate_keys.items():
         candidate_address = client.get_address_by_key(key)
         if explicit_match := get_explicit_bestmatch(candidate_address=candidate_address, shipment=shipment):
             return explicit_match
@@ -55,11 +51,25 @@ def get_explicit_bestmatch(shipment: Shipment, candidate_address) -> BestMatch |
             or shipment.str_to_match == candidate_address.street \
             or shipment.delivery_name == candidate_address.company_name:
         return BestMatch(address=candidate_address, category='explicit', score=100,
-                               str_matched=shipment.str_to_match)
+                         str_matched=shipment.str_to_match)
     else:
         return None
 
 
+def get_explicit_match(shipment: Shipment, candidate_address) -> Address | None:
+    """ compares shipment details to address, return a bestmatch if an explicit match is found  else None"""
+    if candidate_address.company_name:
+        if shipment.customer in candidate_address.company_name \
+                or candidate_address.company_name in shipment.customer \
+                or shipment.delivery_name in candidate_address.company_name \
+                or candidate_address.company_name in shipment.delivery_name:
+            return candidate_address
+
+    if shipment.str_to_match == candidate_address.street:
+        return candidate_address
+
+    else:
+        return None
 
 
 def check_address_company(address: Address, shipment: Shipment) -> Address | None:
@@ -67,12 +77,13 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
     if no address.company_name insert shipment.delivery_name"""
 
     if not address.company_name:
-        # address.company_name = shipment.delivery_name
+        logger.info(f'No address company name, passing check')
         return address
     elif address.company_name:
         if address.company_name == shipment.customer \
                 or address.company_name in shipment._address_as_str \
                 or address.company_name in shipment.delivery_name:
+            logger.info(f'Address company name matches customer')
             return address
         else:
             pop_msg = f'Address Company name and Shipment Customer do not exactly match:\n' \
@@ -83,25 +94,6 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
 
         answer = sg.popup_yes_no(pop_msg, line_width=100)
         return address if answer == 'Yes' else None
-
-
-def get_candidate_keys_dict(shipment: Shipment, client: DespatchBaySDK, postcode=None) -> dict:
-    """ return a dict of dbay addresses and keys, from postcode or shipment.postcode,
-        popup if postcode no good """
-    postcode = postcode or shipment.postcode
-    candidate_keys_dict = None
-    while not candidate_keys_dict:
-        try:
-            candidate_keys_dict = {candidate.address: candidate.key for candidate in
-                                   client.get_address_keys_by_postcode(postcode)}
-        except ApiException as e:
-            postcode = sg.popup_get_text(f'Bad postcode for {shipment.customer} - Please Enter')
-            if postcode is None:
-                break
-            continue
-        else:
-            return candidate_keys_dict
-
 
 
 def get_candidate_keys_new(client: DespatchBaySDK, postcode) -> dict:
@@ -163,8 +155,7 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
 
-
-def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool) -> Address | None:
+def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox: bool) -> Address | None:
     # if address := address_from_search(client=client, shipment=shipment):
     terms = {shipment.customer, shipment.delivery_name,
              parse_amherst_address_string(str_address=shipment._address_as_str)}
@@ -179,25 +170,68 @@ def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox:bool)
     return None
 
 
-def address_from_bestmatch(client, shipment):
-    try:
-        # shipment.candidate_keys = get_candidate_keys_dict(client=client, shipment=shipment)  # 1x api call
-        shipment.candidate_keys = get_candidate_keys_new(client=client, postcode=shipment.postcode)
-        shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
-        log_str = "\n".join(f"{key} : {value}" for key, value in shipment.candidate_keys.items())
-        logger.info(f"CANDIDATE KEYS :\n{log_str}")
-        logger.info(f"BESTMATCH : {shipment.bestmatch}")
-    except RateLimitException:
-        logger.info("API CALLS EXCEEDED ABANDONING SEARCH")
-        return None
-    return shipment.bestmatch.address
+def address_or_bestmatch_script(client, shipment, candidate_keys) -> Address | BestMatch:
+    fuzzyscores = []
+    for address_str, key in candidate_keys.items():
+        try:
+            candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
+
+            logger.info(f"{candidate_address=}")
+            # client.get_address_by_key(key)
+        except RateLimitException:
+            logger.info("Rate Limit Exception, backoff failed")
+        else:
+            address = get_explicit_match(shipment=shipment, candidate_address=candidate_address)
+            if isinstance(address, Address):
+                return address
+            else:
+                fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
+    else:
+        logger.info(f'No exact match found, trying fuzzy match')
+        bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
+        logger.info(f'Bestmatch Address: {bestmatch.address}')
+        return bestmatch.address
+
+    ################
+
+    # try:
+    #     shipment.bestmatch = get_bestmatch(client=client, shipment=shipment)  # candidate key x api call
+    #     log_str = "\n".join(f"{key} : {value}" for key, value in candidate_keys.items())
+    #     logger.info(f"CANDIDATE KEYS :\n{log_str}")
+    #     logger.info(f"BESTMATCH : {shipment.bestmatch}")
+    # except RateLimitException:
+    #     logger.info("API CALLS EXCEEDED ABANDONING SEARCH")
+    #     return None
+    # return shipment.bestmatch.address
 
 
-def address_from_gui(client, sandbox:bool, outbound:bool, shipment):
-    address_gui = AddressGui(outbound=outbound, sandbox=sandbox, client=client, shipment=shipment, address=shipment.bestmatch.address,
+def address_from_gui(client, sandbox: bool, outbound: bool, shipment):
+    address_gui = AddressGui(outbound=outbound, sandbox=sandbox, client=client, shipment=shipment,
+                             address=shipment.bestmatch.address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
     address = address_gui.address
     logger.info(f'ADDRESS FROM GUI - {shipment.shipment_name_printable} - {address=}')
     return address
+
+
 """ GET CONTACT?"""
+
+# depric
+
+# def get_candidate_keys_dict(shipment: Shipment, client: DespatchBaySDK, postcode=None) -> dict:
+#     """ return a dict of dbay addresses and keys, from postcode or shipment.postcode,
+#         popup if postcode no good """
+#     postcode = postcode or shipment.postcode
+#     candidate_keys_dict = None
+#     while not candidate_keys_dict:
+#         try:
+#             candidate_keys_dict = {candidate.address: candidate.key for candidate in
+#                                    client.get_address_keys_by_postcode(postcode)}
+#         except ApiException as e:
+#             postcode = sg.popup_get_text(f'Bad postcode for {shipment.customer} - Please Enter')
+#             if postcode is None:
+#                 break
+#             continue
+#         else:
+#             return candidate_keys_dict

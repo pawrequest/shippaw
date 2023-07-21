@@ -1,6 +1,8 @@
 import json
 import os
+import random
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -155,4 +157,42 @@ def check_today_ship(shipment):
     return shipment if keep_shipment else None
 
 
+
+def retry_with_backoff(fn, retries=5, backoff_in_seconds=1, *args, **kwargs, ):
+    x = 0
+    while True:
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            logger.info(f" {fn.__name__=} failed with {str(e)}")
+            if x == retries:
+                sg.popup_error(f'Error, probably API rate limit, retries exhausted')
+                logger.info("Retries exhausted")
+                raise
+            sleep = (backoff_in_seconds * 2**x + random.uniform(0, 1))
+            sg.popup_quick_message(f'Error, probably API rate limit, retrying in {sleep:.0f} seconds')
+            logger.info(f"Retrying {fn.__name__} after {sleep} seconds")
+            time.sleep(sleep)
+            x += 1
+
+
+def retry_with_backoff_dec(retries=5, backoff_in_seconds=1):
+    def rwb(f):
+        def wrapper(*args, **kwargs):
+            x = 0
+            while True:
+                try:
+                    return f(*args, **kwargs)
+                except:
+                    if x == retries:
+                        raise
+
+                    sleep = (backoff_in_seconds * 2 ** x +
+                             random.uniform(0, 1))
+                    time.sleep(sleep)
+                    x += 1
+
+        return wrapper
+
+    return rwb
 

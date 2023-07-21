@@ -8,9 +8,10 @@
 import sys
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-
+from typing import cast
 from core.config import Config, logger
 from core.enums import ShipmentCategory, ShipMode
+from core.desp_client_wrapper import APIClientWrapper
 from gui.main_gui import MainGui
 from shipper.shipment import Shipment, get_dbay_shipments, DbayShipment
 from shipper.shipper import Shipper
@@ -35,6 +36,9 @@ includes
 def main(main_mode: str):
     config = Config.from_toml2(mode=main_mode)
     client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
+    # client = APIClientWrapper(client=client)
+    client = cast(DespatchBaySDK, APIClientWrapper(client))
+
     shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
     #TODO
     shipments_dict = get_dbay_shipments(import_mapping=config.import_mapping, category=category,
@@ -44,7 +48,7 @@ def main(main_mode: str):
     if main_mode == 'drop':
         shipper.dispatch_outbound_dropoffs()
     if main_mode == 'ship_out':
-        shipper.dispatch_outbound()
+        shipper.dispatch_outbound(shipper)
     if main_mode == 'ship_in':
         shipper.dispatch_inbound()
     elif 'track' in main_mode:
