@@ -22,11 +22,11 @@ from core.funcs import download_label_2, email_label, log_shipment, print_label,
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import TrackingGui
-from shipper.addresser import address_or_bestmatch_script, address_from_gui, address_from_logic, check_address_company, \
+from shipper.addresser import address_or_bestmatch_script, address_from_gui, check_address_company, \
     address_from_searchterms, get_candidate_keys_new
 from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address, \
     sender_from_address_id
-from shipper.shipment import Shipment, parse_amherst_address_string
+from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
 LIMITED_SHIPMENTS = 1
@@ -43,9 +43,9 @@ class Shipper:
 
     def dispatch(self, outbound):
         if outbound:
-            self.address_outbound_shipments()
+            self.address_outbound_collections()
         else:
-            self.address_inbound_shipments()
+            self.address_inbound_collections()
 
         self.gather_dbay_objs()
         booked_shipments = self.dispatch_loop()
@@ -106,6 +106,7 @@ class Shipper:
             tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
     def address_outbound_dropoffs(self):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
         for shipment in self.shipments:
             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
@@ -115,35 +116,13 @@ class Shipper:
             shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
                                                             address=remote_address)
 
-    def address_shipments(self, outbound: bool):
-        if self.config.home_contact and self.config.home_address.dbay_key and not outbound:
-            home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
-                                                        contact=self.config.home_contact)
-        else:
-            raise ValueError("Home Contact or Dbay Key Missing")
-        home_sender = self.client.sender(address_id=self.config.home_address.address_id)
-
-        for shipment in self.shipments:
-            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                              name=shipment.contact_name)
-            shipment.remote_address = self.remote_address_script(shipment=shipment)
-
-            if outbound:
-                shipment.sender = home_sender
-                shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
-                                                                address=shipment.remote_address)
-
-            elif not outbound:
-                shipment.recipient = home_recipient
-                shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
-                                                              remote_address=shipment.remote_address)
-
-    def address_inbound_shipments(self):
+    def address_inbound_collections(self):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         if not self.config.home_contact or not self.config.home_address.dbay_key:
             raise ValueError("Home Contact or Dbay Key Missing")
 
         home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
-                                                        contact=self.config.home_contact)
+                                                    contact=self.config.home_contact)
 
         for shipment in self.shipments:
             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
@@ -152,9 +131,10 @@ class Shipper:
 
             shipment.recipient = home_recipient
             shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
-                                                              remote_address=shipment.remote_address)
+                                                          remote_address=shipment.remote_address)
 
-    def address_outbound_shipments(self):
+    def address_outbound_collections(self):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         if not self.config.home_address.address_id:
             sg.popup_error('Home Address ID Missing')
 
@@ -186,8 +166,6 @@ class Shipper:
                                        shipment=shipment)
 
         return address
-
-
 
     def gather_dbay_objs(self):
         config = self.config
@@ -428,10 +406,12 @@ class Shipper:
 
 
 def get_service_menu_map(available_services: List[Service]):
+    """returns a dict of service names to service objects"""
     return ({service.name: service for service in available_services})
 
 
 def get_actual_service(default_service_id: str, available_services: [Service]) -> Service:
+    """returns the service object for the default service id if it exists, otherwise returns the first service"""
     return next((service for service in available_services if service.service_id == default_service_id),
                 available_services[0])
 
@@ -459,3 +439,28 @@ def book_shipment(client: DespatchBaySDK, shipment_id: str):
     shipment_return = client.book_shipments(shipment_id)[0]
     # shipment.collection_booked = True
     return shipment_return
+
+# depric
+#
+#     def address_shipments(self, outbound: bool):
+#         if self.config.home_contact and self.config.home_address.dbay_key and not outbound:
+#             home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+#                                                         contact=self.config.home_contact)
+#         else:
+#             raise ValueError("Home Contact or Dbay Key Missing")
+#         home_sender = self.client.sender(address_id=self.config.home_address.address_id)
+#
+#         for shipment in self.shipments:
+#             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+#                                               name=shipment.contact_name)
+#             shipment.remote_address = self.remote_address_script(shipment=shipment)
+#
+#             if outbound:
+#                 shipment.sender = home_sender
+#                 shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+#                                                                 address=shipment.remote_address)
+#
+#             elif not outbound:
+#                 shipment.recipient = home_recipient
+#                 shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
+#                                                               remote_address=shipment.remote_address)
