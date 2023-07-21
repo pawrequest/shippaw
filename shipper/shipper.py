@@ -22,10 +22,9 @@ from core.funcs import download_label_2, email_label, log_shipment, print_label,
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import TrackingGui
-from shipper.addresser import address_or_bestmatch_script, address_from_gui, check_address_company, \
-    address_from_searchterms, get_candidate_keys_new
-from shipper.sender_receiver import recip_from_contact_address, recip_from_contact_and_key, sender_from_contact_address, \
-    sender_from_address_id
+from shipper.addresser import fuzzy_address, address_from_gui, check_address_company, \
+    address_from_searchterms, get_candidate_keys, sender_from_address_id, recip_from_contact_and_key, \
+    sender_from_contact_address, recip_from_contact_address, get_explicit_match
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
@@ -155,11 +154,12 @@ class Shipper:
         address = address_from_searchterms(client=self.client, postcode=shipment.postcode, search_terms=terms)
 
         if address is None:
-            candidate_keys = get_candidate_keys_new(client=self.client, postcode=shipment.postcode)
-            address = address_or_bestmatch_script(client=self.client, shipment=shipment, candidate_keys=candidate_keys)
+            candidate_keys = get_candidate_keys(client=self.client, postcode=shipment.postcode)
+            address = fuzzy_address(client=self.client, shipment=shipment, candidate_keys=candidate_keys)
 
         if not self.config.sandbox:  # nothing will match if sandbox mode so skip company check
             address = check_address_company(address=address, shipment=shipment)
+            address = get_explicit_match(candidate_address=address, shipment=shipment)
 
         if address is None:
             address = address_from_gui(client=self.client, outbound=self.config.outbound, sandbox=self.config.sandbox,

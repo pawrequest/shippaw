@@ -1,13 +1,13 @@
 from typing import Iterable
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_entities import Address
+from despatchbay.despatchbay_entities import Address, Sender, Recipient
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException, RateLimitException
 from fuzzywuzzy import fuzz
 
-from core.config import logger
-from core.enums import BestMatch, FuzzyScores
+from core.config import logger, Config
+from core.enums import BestMatch, FuzzyScores, Contact
 from core.funcs import retry_with_backoff
 from gui.address_gui import AddressGui
 from shipper.shipment import Shipment, parse_amherst_address_string
@@ -31,7 +31,7 @@ def address_from_searchterms(client: DespatchBaySDK, postcode: str, search_terms
 
 
 
-def get_explicit_match(shipment: Shipment, candidate_address) -> Address | None:
+def get_explicit_match(shipment: Shipment, candidate_address:Address) -> Address | None:
     """ compares various shipment details to address, return address is matched else None"""
     if candidate_address.company_name:
         if shipment.customer in candidate_address.company_name \
@@ -48,32 +48,36 @@ def get_explicit_match(shipment: Shipment, candidate_address) -> Address | None:
 
 
 def check_address_company(address: Address, shipment: Shipment) -> Address | None:
-    """ compare address company_name to shipment [customer, address_as_str, delivery_name
-    if no address.company_name insert shipment.delivery_name"""
+    """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
 
     if not address.company_name:
-        logger.info(f'No address company name, passing check')
+        logger.info(f'No company name at address - passing check')
         return address
-    elif address.company_name:
-        if address.company_name == shipment.customer \
-                or address.company_name in shipment._address_as_str \
-                or address.company_name in shipment.delivery_name:
-            logger.info(f'Address company name matches customer')
-            return address
-        else:
-            pop_msg = f'Address Company name and Shipment Customer do not exactly match:\n' \
-                      f'\nCustomer: {shipment.customer}\n' \
-                      f'Address Company Name: {address.company_name}\n' \
-                      f'\nShipment Delivery Details:\n{shipment.delivery_name} \n{shipment._address_as_str}\n' \
-                      f'\n[Yes] to accept matched address or [No] to edit / replace'
+
+    if address.company_name == shipment.customer \
+            or address.company_name in shipment._address_as_str \
+            or address.company_name in shipment.delivery_name:
+        logger.info(f'Address company name matches customer')
+        return address
+
+    else:
+        pop_msg = f'Company name @Found Address and Shipment Customer Name do not exactly match' \
+                  f'\n\nDatabase Details:' \
+                  f'\nCustomer = {shipment.customer}' \
+                  f'\nDelivery Name= {shipment.delivery_name}' \
+                  f'\nString Address from database=' \
+                  f'\n{shipment._address_as_str}' \
+                  f'\n\nFound Address Details:'\
+                  f'\nAddress Company Name= {address.company_name}' \
+                  f'\nStreet addres= {address.street}' \
+                  f'\n\n[Yes] to accept matched address or [No] to edit / replace'
 
         answer = sg.popup_yes_no(pop_msg, line_width=100)
         return address if answer == 'Yes' else None
 
 
-def get_candidate_keys_new(client: DespatchBaySDK, postcode) -> dict:
-    """ return a dict of dbay addresses and keys, from postcode or shipment.postcode,
-        popup if postcode no good """
+def get_candidate_keys(client: DespatchBaySDK, postcode) -> dict:
+    """takes a client and postcode, returns a dict with keys= dbay addresses as strings and values =  dbay address keys"""
     candidate_keys_dict = None
     while not candidate_keys_dict:
         try:
@@ -109,6 +113,7 @@ def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
 
 def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     """ return BestMatch from a list of FuzzyScores"""
+    logger.info(f'Searching BestMatch from fuzzyscores: {fuzzyscores=}')
     best_address = None
     best_score = 0
     best_category = ""
@@ -124,31 +129,17 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
             best_address = f.address
             str_matched = f.str_matched
         if max_score == 100:
+            logger.info(f'BestMatch found with score of 100: {f.address}')
             # well we won't beat that?
             break
 
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
-
-def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox: bool) -> Address | None:
-    # if address := address_from_search(client=client, shipment=shipment):
-    terms = {shipment.customer, shipment.delivery_name,
-             parse_amherst_address_string(str_address=shipment._address_as_str)}
-
-    if address := address_from_searchterms(client=client, postcode=shipment.postcode, search_terms=terms):
-        if sandbox:
-            # then nothing will match so give up now
-            return address
-        if checked_address := check_address_company(address=address, shipment=shipment):
-            logger.info(f"Address Passed Company Name Check")
-            return checked_address
-    return None
-
-
-def address_or_bestmatch_script(client, shipment, candidate_keys) -> Address | BestMatch:
+def fuzzy_address(client, shipment, candidate_keys) -> Address:
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
         try:
+            # use backoff in case of postcodes with 70 addresses. yes they exist - ask me how I know
             candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
 
             logger.info(f"{candidate_address=}")
@@ -191,6 +182,46 @@ def address_from_gui(client, sandbox: bool, outbound: bool, shipment):
 
 
 """ GET CONTACT?"""
+
+def sender_from_address_id(client: DespatchBaySDK, address_id:str) -> Sender:
+    """ return a dbay sender object representing home address defined in toml / Shipper.config"""
+    return client.sender(address_id=address_id)
+
+
+def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
+    """ return a dbay recipient object representing home address defined in toml / Shipper.config"""
+    address = client.get_address_by_key(config.home_address.dbay_key)
+    return client.recipient(
+        recipient_address=address, **config.home_contact.__dict__)
+
+
+def recip_from_contact_and_key(client: DespatchBaySDK, dbay_key:str, contact:Contact) -> Recipient:
+    """ return a dbay recipient object"""
+    return client.recipient(recipient_address=client.get_address_by_key(dbay_key), **contact.__dict__)
+
+
+def sender_from_contact_address(client: DespatchBaySDK, contact: Contact,
+                                remote_address: Address) -> Sender:
+    sender = client.sender(
+        sender_address=remote_address, **contact.__dict__)
+    return sender
+
+
+def get_remote_recipient(contact: Contact, client: DespatchBaySDK, remote_address: Address) -> Sender:
+    recip = client.recipient(
+        # recipient_address=remote_address, **contact._asdict())
+        recipient_address=remote_address, **contact.__dict__)
+    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+    return recip
+
+
+def recip_from_contact_address( client: DespatchBaySDK, contact: Contact, address: Address) -> Sender:
+    recip = client.recipient(
+        # recipient_address=remote_address, **contact._asdict())
+        recipient_address=address, **contact.__dict__)
+    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
+    return recip
+
 
 # depric
 
@@ -236,3 +267,49 @@ def address_from_gui(client, sandbox: bool, outbound: bool, shipment):
 #                          str_matched=shipment.str_to_match)
 #     else:
 #         return None
+
+
+
+# depric or notes or something?
+
+
+# def get_remote_sender_recip(client, outbound:bool, remote_address:Address, remote_contact:Contact):
+#     if outbound:
+#         return get_remote_recipient(client=client, remote_address=remote_address, contact=remote_contact)
+#     else:
+#         return get_remote_sender(client=client, remote_address=remote_address, contact=remote_contact)
+
+
+# def get_remote_sender_recip(client1, config1, shipment: Shipment, home_sender_recip: Sender | Recipient):
+#     client = client1
+#     config = config1
+#     remote_address = None
+#     while not remote_address:
+#         remote_address = get_remote_address(config1, shipment=shipment, client=client)
+#
+#     if config.outbound:
+#         shipment.sender = home_sender_recip
+#         shipment.recipient = get_remote_recipient(client=client, remote_address=remote_address,
+#                                                   contact=shipment.remote_contact)
+#     else:
+#         shipment.sender = get_remote_sender(client=client, remote_address=remote_address,
+#                                             contact=shipment.remote_contact)
+#         shipment.recipient = home_sender_recip
+
+
+#
+#
+# def address_from_logic(client: DespatchBaySDK, shipment: Shipment, sandbox: bool) -> Address | None:
+#     # if address := address_from_search(client=client, shipment=shipment):
+#     terms = {shipment.customer, shipment.delivery_name,
+#              parse_amherst_address_string(str_address=shipment._address_as_str)}
+#
+#     if address := address_from_searchterms(client=client, postcode=shipment.postcode, search_terms=terms):
+#         if sandbox:
+#             # then nothing will match so give up now
+#             return address
+#         if checked_address := check_address_company(address=address, shipment=shipment):
+#             logger.info(f"Address Passed Company Name Check")
+#             return checked_address
+#     return None
+#
