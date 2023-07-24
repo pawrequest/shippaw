@@ -41,8 +41,9 @@ def main(main_mode: str):
     shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
 
     gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
-
     shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
+
+
 
     if 'ship' in main_mode:
         outbound = 'out' in main_mode
