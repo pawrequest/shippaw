@@ -317,11 +317,16 @@ class Shipper:
             dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
 
             if dropoff:
-                logger.info('Converting to Dropoff')
-                shipment.sender = sender_from_address_id(client=client,
-                                                         address_id=config.home_address.dropoff_sender_id)
+                if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') == 'yes':
+                    logger.info('Converting to Dropoff')
+                    shipment.sender = sender_from_address_id(client=client,
+                                                             address_id=config.home_address.dropoff_sender_id)
+                    shipment.collection_date = self.client.get_available_collection_dates(sender_address=shipment.sender,
+                                                                                 courier_id=self.config.default_shipping_service.courier)[0]
+
 
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+            ...
             shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
             shipment_id = self.client.add_shipment(shipment.shipment_request)
 
