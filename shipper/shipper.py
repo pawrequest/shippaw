@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
+from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
@@ -22,8 +22,8 @@ from core.funcs import download_label_2, email_label, log_shipment, print_label,
 from gui.address_gui import AddressGui
 from gui.main_gui import MainGui, get_date_label, get_service_string
 from gui.tracking_gui import TrackingGui
-from shipper.addresser import fuzzy_address, address_from_gui, check_address_company, \
-    address_from_searchterms, get_candidate_keys, sender_from_address_id, recip_from_contact_and_key, \
+from shipper.addresser import fuzzy_address, address_from_gui, address_from_direct_search, sender_from_address_id, \
+    recip_from_contact_and_key, \
     sender_from_contact_address, recip_from_contact_address, get_explicit_match
 from shipper.shipment import Shipment
 
@@ -42,22 +42,14 @@ class Shipper:
 
     def dispatch(self, outbound: bool):
         if outbound:
-            self.address_outbound_collections()
+            self.address_outbound()
         else:
-            self.address_inbound_collections()
+            self.address_inbound()
 
         self.gather_dbay_objs()
         booked_shipments = self.dispatch_loop()
         self.gui.post_book(shipments=booked_shipments)
 
-    dispatch_outbound = partial(dispatch, outbound=True)
-    dispatch_inbound = partial(dispatch, outbound=False)
-
-    def dispatch_outbound_dropoffs(self):
-        self.address_outbound_dropoffs()
-        self.gather_dbay_objs()
-        booked_shipments = self.dispatch_loop()
-        self.gui.post_book(shipments=booked_shipments)
 
     def track(self):
         for shipment in self.shipments:
@@ -104,18 +96,7 @@ class Shipper:
             shipment_return = self.client.get_shipment(shipment_id).is_delivered
             tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
-    def address_outbound_dropoffs(self):
-        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
-        home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
-        for shipment in self.shipments:
-            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                              name=shipment.contact_name)
-            shipment.sender = home_sender
-            remote_address = self.remote_address_script(shipment=shipment)
-            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
-                                                            address=remote_address)
-
-    def address_inbound_collections(self):
+    def address_inbound(self):
         """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         if not self.config.home_contact or not self.config.home_address.dbay_key:
             raise ValueError("Home Contact or Dbay Key Missing")
@@ -132,7 +113,7 @@ class Shipper:
             shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
                                                           remote_address=shipment.remote_address)
 
-    def address_outbound_collections(self):
+    def address_outbound(self):
         """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         if not self.config.home_address.address_id:
             sg.popup_error('Home Address ID Missing')
@@ -151,21 +132,21 @@ class Shipper:
     def remote_address_script(self, shipment):
         terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
-        address = address_from_searchterms(client=self.client, postcode=shipment.postcode, search_terms=terms)
+        if address := address_from_direct_search(client=self.client, postcode=shipment.postcode, search_terms=terms):
+            return address
 
-        if address is None:
-            candidate_keys = get_candidate_keys(client=self.client, postcode=shipment.postcode)
-            address = fuzzy_address(client=self.client, shipment=shipment, candidate_keys=candidate_keys)
+        try:
+            if address := get_explicit_match(candidate_address=address, shipment=shipment):
+                return address
+        except:
+            pass
 
-        if not self.config.sandbox:  # nothing will match if sandbox mode so skip company check
-            address = check_address_company(address=address, shipment=shipment)
-            address = get_explicit_match(candidate_address=address, shipment=shipment)
+        fuzzy = fuzzy_address(client=self.client, shipment=shipment)
+        if isinstance(fuzzy, Address):
+            return fuzzy
 
-        if address is None:
-            address = address_from_gui(client=self.client, outbound=self.config.outbound, sandbox=self.config.sandbox,
-                                       shipment=shipment)
-
-        return address
+        return address_from_gui(client=self.client, outbound=self.config.outbound, sandbox=self.config.sandbox,
+                                starter_address=fuzzy.address, shipment=shipment)
 
     def gather_dbay_objs(self):
         config = self.config
@@ -317,13 +298,16 @@ class Shipper:
             dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
 
             if dropoff:
-                if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') == 'yes':
+                if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') == 'Yes':
                     logger.info('Converting to Dropoff')
                     shipment.sender = sender_from_address_id(client=client,
                                                              address_id=config.home_address.dropoff_sender_id)
-                    shipment.collection_date = self.client.get_available_collection_dates(sender_address=shipment.sender,
-                                                                                 courier_id=self.config.default_shipping_service.courier)[0]
 
+                    if sg.popup_yes_no(f'Change date to Today?') == 'Yes':
+                        shipment.collection_date = \
+                        self.client.get_available_collection_dates(sender_address=shipment.sender,
+                                                                   courier_id=self.config.default_shipping_service.courier)[
+                            0]
 
             shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
             ...
@@ -469,3 +453,30 @@ def book_shipment(client: DespatchBaySDK, shipment_id: str):
 #                 shipment.recipient = home_recipient
 #                 shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
 #                                                               remote_address=shipment.remote_address)
+
+
+# def address_inbound_dropoffs(self):
+#     if not self.config.home_contact or not self.config.home_address.dbay_key:
+#         raise ValueError("Home Contact or Dbay Key Missing")
+#
+#     home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+#                                                 contact=self.config.home_contact)
+#
+#
+#
+# def address_outbound_dropoffs(self):
+#     """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
+#     home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
+#     for shipment in self.shipments:
+#         shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+#                                           name=shipment.contact_name)
+#         shipment.sender = home_sender
+#         remote_address = self.remote_address_script(shipment=shipment)
+#         shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+#                                                         address=remote_address)
+
+    # def dispatch_outbound_dropoffs(self):
+    #     self.address_outbound_dropoffs()
+    #     self.gather_dbay_objs()
+    #     booked_shipments = self.dispatch_loop()
+    #     self.gui.post_book(shipments=booked_shipments)

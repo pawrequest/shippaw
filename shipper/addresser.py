@@ -13,7 +13,7 @@ from gui.address_gui import AddressGui
 from shipper.shipment import Shipment, parse_amherst_address_string
 
 
-def address_from_searchterms(client: DespatchBaySDK, postcode: str, search_terms: Iterable) -> Address | None:
+def address_from_direct_search(client: DespatchBaySDK, postcode: str, search_terms: Iterable) -> Address | None:
     check_set = set(search_terms)
     for term in check_set:
         try:
@@ -136,8 +136,9 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
-def fuzzy_address(client, shipment, candidate_keys) -> Address:
+def fuzzy_address(client, shipment) -> Address | BestMatch:
     """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
+    candidate_keys = get_candidate_keys(client=client, postcode=shipment.postcode)
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
         # use backoff in case of postcodes with 70+ addresses. yes they exist - ask me how I know
@@ -152,7 +153,7 @@ def fuzzy_address(client, shipment, candidate_keys) -> Address:
         logger.info(f'No exact match found, trying fuzzy match')
         bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
         logger.info(f'Bestmatch Address: {bestmatch.address}')
-        return bestmatch.address
+        return bestmatch
 
     ################
 
@@ -167,9 +168,9 @@ def fuzzy_address(client, shipment, candidate_keys) -> Address:
     # return shipment.bestmatch.address
 
 
-def address_from_gui(client, sandbox: bool, outbound: bool, shipment):
+def address_from_gui(client, sandbox: bool, outbound: bool, shipment, starter_address:Address) -> Address:
     address_gui = AddressGui(outbound=outbound, sandbox=sandbox, client=client, shipment=shipment,
-                             address=shipment.bestmatch.address,
+                             address=starter_address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
     address = address_gui.address

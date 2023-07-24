@@ -44,12 +44,11 @@ def main(main_mode: str):
     #                                     dbase_file=input_file_arg)
     gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
     shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
-    if main_mode == 'drop':
-        shipper.dispatch_outbound_dropoffs()
-    if main_mode == 'ship_out':
-        shipper.dispatch(outbound=True)
-    if main_mode == 'ship_in':
-        shipper.dispatch(outbound=False)
+
+    if 'ship' in main_mode:
+        outbound = 'out' in main_mode
+        shipper.dispatch(outbound=outbound)
+
     elif 'track' in main_mode:
         shipper.track()
 

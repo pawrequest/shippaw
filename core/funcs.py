@@ -57,7 +57,6 @@ def log_shipment(log_path, shipment: Shipment):
 
 
 def email_label(shipment: Shipment, body: str, collection_date: datetime.date, collection_address: Address):
-    collection_date = collection_date
     collection_address = collection_address
     ol = win32com.client.Dispatch('Outlook.Application')
     newmail = ol.CreateItem(0)
