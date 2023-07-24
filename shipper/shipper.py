@@ -28,8 +28,6 @@ from shipper.addresser import fuzzy_address, address_from_gui, address_from_dire
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
-LIMITED_SHIPMENTS = 1
-
 
 class Shipper:
     def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment]):

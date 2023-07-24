@@ -1,5 +1,4 @@
 from core.config import logger
-API_CALLS = 0
 
 
 class APIClientWrapper:
@@ -8,7 +7,6 @@ class APIClientWrapper:
         self.api_calls = 0
 
     def _log_api_call(self, method_name, *args, **kwargs):
-        global API_CALLS
         # Log the API call with its name and parameters
         self.api_calls += 1
         # logger.info(f"API call number {self.api_calls}: {method_name}, args: {args}, kwargs: {kwargs}")
