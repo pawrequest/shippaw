@@ -12,12 +12,14 @@ from shipper.shipment import Shipment
 
 
 class AddressGui(Gui):
-    def __init__(self, config: Config, client: DespatchBaySDK, shipment: Shipment, contact: Contact, address: Address):
-        super().__init__(config, client)
+    def __init__(self, outbound:bool, sandbox:bool, client: DespatchBaySDK, shipment: Shipment, contact: Contact, address: Address):
+        super().__init__(outbound=outbound, sandbox=sandbox)
         self.contact = contact
         self.address = address
         self.shipment = shipment
         self.window = self.get_contact_window()
+        self.outbound = outbound
+        self.client = client
 
     def get_address(self):
         """ Gui loop, takes an address and shipment for contact details,
@@ -160,3 +162,5 @@ class AddressGui(Gui):
     #         [sg.B('Submit', k=f'-SUBMIT-')]
     #     ]
     #     return sg.Frame('Contact Frame', layout=layout)
+
+

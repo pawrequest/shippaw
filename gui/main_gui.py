@@ -6,31 +6,38 @@ from dateutil.parser import parse
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import DateTimeMasks, FieldsList
+from core.funcs import print_label
 from gui.gui_params import address_fieldname_params, address_head_params, address_input_params, \
     address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
 from shipper.shipment import Shipment
-from core.funcs import print_label
-
-logger = get_amdesp_logger()
 
 
 class Gui:
-    def __init__(self, config: Config, client: DespatchBaySDK):
+    def __init__(self, outbound: bool, sandbox):
         self.window = None
         self.event = None
         self.values = None
-        self.config = config
-        self.client = client
+        self.sandbox = sandbox
+        self.outbound = outbound
+
+
+def get_service_string(num_boxes: int, service: Service):
+    return f'{service.name}\n{num_boxes * service.cost:.2f}'
+
+
+def get_date_label(collection_date: CollectionDate):
+    return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
+    # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
 
 
 class MainGui(Gui):
-    def bulk_shipper_window(self, shipments: [Shipment]):
+    def main_window(self, shipments: [Shipment]):
         logger.info('BULK SHIPPER WINDOW')
-        if self.config.sandbox:
+        if self.sandbox:
             sg.theme('Tan')
         else:
             sg.theme('Dark Blue')
@@ -39,34 +46,34 @@ class MainGui(Gui):
 
         return sg.Window('Bulk Shipper',
                          layout=[
-                             [self.get_headers()],
-                             [self.get_shipment_frame(shipment=shipment) for shipment in shipments],
+                             [self.headers()],
+                             [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
                              [sg.Button("LETS GO", k='-GO_SHIP-', expand_y=True, expand_x=True)]
                          ],
                          finalize=True)
 
-    def get_shipment_frame(self, shipment: Shipment):
-        print_or_email = 'print' if self.config.outbound else 'email'
+    def shipment_frame(self, shipment: Shipment):
+        print_or_email = 'print' if self.outbound else 'email'
 
-        date_name = self.get_date_label(collection_date=shipment.collection_date)
+        date_name = get_date_label(collection_date=shipment.collection_date)
         sender_address_name = self.get_address_button_string(address=shipment.sender.sender_address)
         recipient_address_name = self.get_address_button_string(shipment.recipient.recipient_address)
         num_parcels = len(shipment.parcels)
 
         row = [
-            sg.T(f'{shipment.contact_name}\n{shipment.customer}', **shipment_params),
+            get_customer_contact_button(shipment=shipment),
             get_recip_button(recipient_address_name=recipient_address_name, shipment=shipment),
             get_date_button(date_name=date_name, shipment=shipment),
             get_parcels_button(num_parcels=num_parcels, shipment=shipment),
             get_service_button(num_parcels=num_parcels, shipment=shipment),
-            sg.Checkbox('Add', default=True, k=f'-{shipment.shipment_name_printable}_ADD-'.upper()),
             sg.Checkbox('Book', default=True, k=f'-{shipment.shipment_name_printable}_BOOK-'.upper()),
             sg.Checkbox(f'{print_or_email}', default=True,
                         k=f'-{shipment.shipment_name_printable}_PRINT_EMAIL-'.upper()),
+            sg.Checkbox('Drop-off', default=False, k=f'-{shipment.shipment_name_printable}_DROP-'.upper()),
             sg.Button('remove', k=f'-{shipment.shipment_name_printable}_REMOVE-'.upper())
         ]
 
-        if not self.config.outbound:
+        if not self.outbound:
             row.insert(1, get_sender_button(sender_address_name=sender_address_name,
                                             shipment_name=shipment.shipment_name_printable))
 
@@ -74,8 +81,8 @@ class MainGui(Gui):
 
         return sg.Frame('', layout=layout, k=f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper())
 
-    def get_headers(self):
-        headers = [
+    def headers(self):
+        heads = [
             # sg.Sizer(30, 0),
             sg.T('Contact / Customer', **head_params),
             sg.T('Recipient', **address_head_params),
@@ -89,44 +96,42 @@ class MainGui(Gui):
             sg.Push(),
         ]
 
-        if not self.config.outbound:
-            headers.insert(1, sg.T('Sender', **address_head_params))
+        if not self.outbound:
+            heads.insert(1, sg.T('Sender', **address_head_params))
 
-        return headers
-
-    def get_service_string(self, num_boxes: int, service: Service):
-        return f'{service.name}\n{num_boxes * service.cost:.2f}'
+        return heads
 
     @staticmethod
-    def booked_shipments_frame(shipments: [Shipment]):
+    def results_frame(shipments: [Shipment]):
         params = {
             'expand_x': True,
             'expand_y': True,
-            'size': (25, 2)
+            'size': (25, 2),
         }
 
         result_layout = []
         for shipment in shipments:
             num_boxes = len(shipment.parcels)
-            ship_res = [sg.Text(shipment.shipment_request.client_reference, **params),
-                        sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
-                        sg.Text(
-                            f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2f}'),
-                        ]
+            ship_res = [
+                sg.Text(shipment.shipment_request.client_reference, **params),
+                sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
+                sg.Text(f'{shipment.service.name} - {num_boxes} boxes = £{num_boxes * shipment.service.cost:.2f}',
+                        **params),
+            ]
 
             if shipment.printed:
-                ship_res.extend([sg.Text('Shipment Printed'), sg.Button('Reprint Label',
-                                                                        key=f'-{shipment.shipment_name_printable.upper()}_REPRINT-')])
+                ship_res.extend([sg.Text('Shipment Printed', **params),
+                                 sg.Button('Reprint Label',
+                                           key=f'-{shipment.shipment_name_printable.upper()}_REPRINT-', **params)])
             if shipment.logged_to_commence:
-                ship_res.append(sg.Text('Shipment ID Logged to Commence'))
+                ship_res.append(sg.Text('Shipment ID Logged to Commence', **params))
             # result_layout.append([sg.Frame('', layout=[ship_res])])
             result_layout.append(ship_res)
             # result_layout.append([sg.Text('')])
-        return sg.Frame('', layout=result_layout)
+        return sg.Frame('', vertical_alignment="c", layout=result_layout, element_justification='center')
 
     @staticmethod
-    def new_date_selector(shipment: Shipment, location):
-        location = location
+    def new_date_selector(shipment: Shipment, popup_location):
         menu_map = shipment.date_menu_map
         men_def = [k for k in menu_map.keys()]
         datetime_mask = DateTimeMasks.DISPLAY.value
@@ -136,7 +141,7 @@ class MainGui(Gui):
             [sg.Combo(k='-DATE-', values=men_def, enable_events=True, default_value=default_date,
                       **option_menu_params)]]
 
-        window = Window('Select a date', layout=layout, location=location, relative_location=(-100, -50))
+        window = Window('Select a date', layout=layout, location=popup_location, relative_location=(-100, -50))
         while True:
             e, v = window.read()
             if e in [sg.WIN_CLOSED, "Cancel"]:
@@ -148,7 +153,7 @@ class MainGui(Gui):
 
     def post_book(self, shipments: [Shipment]):
         headers = []
-        frame = self.booked_shipments_frame(shipments=shipments)
+        frame = self.results_frame(shipments=shipments)
         window2 = sg.Window('Booking Results:', layout=[[frame]])
         while True:
             e2, v2 = window2.read()
@@ -160,40 +165,6 @@ class MainGui(Gui):
                 print_label(ship_in_play)
 
         window2.close()
-
-    def tracking_viewer_window(self, shipment_id):
-        client = self.client
-        logger.info(f'TRACKING VIEWER GUI - SHIPMENT ID: {shipment_id}')
-        shipment_return = client.get_shipment(shipment_id)
-        tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
-        tracking_d = {}
-        layout = []
-        for tracked_parcel in tracking_numbers:
-            parcel_layout = []
-            signatory = None
-            params = {}
-            tracking = client.get_tracking(tracked_parcel)
-            # courier = tracking['CourierName'] # debug unused?
-            # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
-            history = tracking['TrackingHistory']
-            for event in history:
-                if 'delivered' in event.Description.lower():
-                    signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-                    params.update({'background_color': 'aquamarine', 'text_color': 'red'})
-
-                event_text = sg.T(
-                    f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
-                    **params)
-
-                parcel_layout.append([event_text])
-
-            parcel_col = sg.Column(parcel_layout)
-            layout.append(parcel_col)
-            tracking_d.update({tracked_parcel: tracking})
-
-        shipment_return.tracking_dict = tracking_d
-        tracking_window = sg.Window('', [layout])
-        tracking_window.read()
 
     @staticmethod
     def get_new_parcels_window(location):
@@ -224,10 +195,6 @@ class MainGui(Gui):
             return None
 
     # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
-
-    def get_date_label(self, collection_date: CollectionDate):
-        return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
-        # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
 
     @staticmethod
     def get_address_button_string(address: Address):
@@ -269,7 +236,7 @@ def shipment_ids_frame() -> sg.Frame:
     return frame
 
 
-def get_address_dict_frame(config: Config, address_dict):
+def get_address_dict_frame(address_dict):
     layout = []
     address_fields = FieldsList.address.value
     for field in address_fields:
@@ -326,6 +293,15 @@ def get_recip_button(recipient_address_name, shipment):
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
                                k=f'-{shipment.shipment_name_printable.upper()}_RECIPIENT-', **address_params)
     return recipient_button
+
+
+def get_customer_contact_button(shipment):
+    return sg.T(f'{shipment.contact_name}\n{shipment.customer_safe_print}', enable_events=True,
+                k=f"-{shipment.shipment_name_printable}_CUSTOMER_CONTACT-".upper(), **shipment_params)
+
+    # return sg.T(f'{shipment.contact_name}\n{shipment.customer_safe_print}', enable_events=True,
+    #             k=f"-{shipment.shipment_name_printable}_CUSTOMER_CONTACT-".upper(),
+    #             **shipment_params),
 
 
 def get_sender_button(sender_address_name, shipment_name: str) -> sg.Text:

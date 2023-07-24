@@ -1041,3 +1041,93 @@ def update_contact_from_gui(config: Config, contact: Sender | Recipient, values:
         value = values.get(f'-{contact_type}_{field}-'.upper())
         if all([value, field]):
             setattr(contact, field, value)
+
+
+
+    def address_prep_out(self, shipment: Shipment):
+        # use strategy pattern to select prep method
+        """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
+        stores all in shipment attrs
+        uses an arbitrary service to get collection dates, then gets real service from eventual shipment_return dbay object"""
+
+        prepped_shipments = []
+        config = self.config
+        client = self.client
+
+        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                          name=shipment.contact_name)
+        shipment.remote_address = get_remote_address(config1=config, client=client, shipment=shipment)
+        shipment.recipient = get_remote_recipient(contact=shipment.remote_contact, client=client,
+                                                  remote_address=shipment.remote_address)
+
+    #
+    # def prep_shipments(self):
+    #     # use strategy pattern to select prep method
+    #     """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
+    #     stores all in shipment attrs
+    #     uses an arbitrary service to get collection dates, then gets real service from eventual shipment_return dbay object"""
+    #     logger.info('PREP SHIPMENTS')
+    #     prepped_shipments = []
+    #     config = self.config
+    #     client = self.client
+    #
+    #     home_recip = recipient_from_contact_and_dbay_key(client=client, dbay_key=config.home_address.dbay_key,
+    #                                                      contact=config.home_contact)
+    #     home_sender = client.sender(address_id=config.home_address.address_id)
+    #     logger.info(f'PREP SHIPMENT -  {home_sender=}')
+    #     logger.info(f'PREP SHIPMENT -  {home_recip=}')
+    #
+    #     for shipment in self.shipments:
+    #         try:
+    #             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+    #                                               name=shipment.contact_name)
+    #             shipment.remote_address = get_remote_address(config1=config, client=client, shipment=shipment)
+    #
+    #             self.shipment_sender_recip(client=client, config=config, home_sender_recip=home_sender_recip,
+    #                                        shipment=shipment)
+    #
+    #             shipment.service = client.get_services()[0]  # needed to get dates
+    #             if check_today_ship(shipment) is None:  # no bookings after 1pm
+    #                 continue
+    #             shipment.collection_date = self.get_collection_date(shipment=shipment)
+    #             shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
+    #             shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
+    #             shipment.available_services = client.get_available_services(shipment.shipment_request)
+    #             shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
+    #                                                   available_services=shipment.available_services)
+    #
+    #             prepped_shipments.append(shipment)
+    #
+    #         except Exception as e:
+    #             self.shipments.remove(shipment)
+    #             logger.exception(f'Error with {shipment.shipment_name_printable}:\n {e}')
+    #             continue
+    #     return prepped_shipments
+    #
+
+
+    def shipment_sender_recip(self, client, config, home_sender_recip, shipment):
+        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                          name=shipment.contact_name)
+        shipment.remote_address = get_remote_address(config1=config, client=client, shipment=shipment)
+        if config.outbound:
+            shipment.sender = home_sender_recip
+            shipment.recipient = get_remote_recipient(client=client, remote_address=shipment.remote_address,
+                                                      contact=shipment.remote_contact)
+        else:
+            shipment.sender = get_remote_sender(client=client, contact=shipment.remote_contact,
+                                                remote_address=shipment.remote_address)
+            shipment.recipient = home_sender_recip
+
+
+
+
+def address_from_quickmatch(client: DespatchBaySDK, shipment: Shipment, candidate_key_dict: dict):
+    for add, key in candidate_key_dict.items():
+        add = add.split(',')[0]
+
+        if add == shipment.customer:
+            return client.get_address_by_key(key)
+        if add == shipment.str_to_match:
+            return client.get_address_by_key(key)
+

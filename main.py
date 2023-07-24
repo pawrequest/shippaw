@@ -8,13 +8,13 @@
 import sys
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-
-from core.config import Config, get_amdesp_logger
+from typing import cast
+from core.config import Config, logger
 from core.enums import ShipmentCategory, ShipMode
+from core.desp_client_wrapper import APIClientWrapper
 from gui.main_gui import MainGui
-from shipper.shipment import Shipment
+from shipper.shipment import Shipment, get_dbay_shipments, DbayShipment
 from shipper.shipper import Shipper
-
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -31,25 +31,30 @@ includes
 + Vovin CmcLibNet installer for interacting with commence
 """
 
-logger = get_amdesp_logger()
 
 
 def main(main_mode: str):
-    try:
-        config = Config.from_toml2(mode=main_mode)
-        creds = config.dbay_creds
-        client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-        shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
-        gui = MainGui(config=config, client=client)
-        shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
-        shipper.dispatch()
+    config = Config.from_toml2(mode=main_mode)
+    client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
+    client = APIClientWrapper(client)
+    client = cast(DespatchBaySDK, client)
+    shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
 
-    except Exception as e:
-        logger.exception(f'MAINLOOP ERROR: {e}')
+    gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
+
+    shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
+
+    if 'ship' in main_mode:
+        outbound = 'out' in main_mode
+        shipper.dispatch(outbound=outbound)
+
+    elif 'track' in main_mode:
+        shipper.track()
+
+    sys.exit()
 
 
 if __name__ == '__main__':
-    # AmDesp called from commandline, i.e. launched from Commence vbs script - parse args for mode
     logger.info(f'launched with {len(sys.argv)} arguments:{sys.argv}')
     shipping_mode_arg = sys.argv[1]
     category_arg = sys.argv[2]

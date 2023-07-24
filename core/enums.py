@@ -10,11 +10,11 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
 
-
 class ShipmentCategory(StrEnum):
     HIRE = auto()
     SALE = auto()
     FAKE = auto()
+    DROP = auto()
 
 
 class GuiColIndex(Enum):
@@ -34,14 +34,27 @@ class DateMenuMap:
     ...
 
 
-@dataclass
-class BookingJob:
-    shipment_request: ShipmentRequest
-    add: bool
-    book: bool
-    print_or_email: bool
-    shipment_id: Optional[str] = None
-    result: Optional[str] = None
+#
+# @dataclass
+# class BookingJob:
+#     shipment_request: ShipmentRequest
+#     book: bool
+#     outbound: bool
+#     print_or_email: bool
+#     label_str:str
+#     result: Optional[str] = None
+#     timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+#
+#     @classmethod
+#     def from_shipment(cls, shipment:Shipment, book:bool, print_or_email:bool):
+#         return cls(
+#             shipment_request=shipment.shipment_request,
+#             book=book,
+#             print_or_email=print_or_email,
+#             label_str=shipment.shipment_name_printable,
+#             la
+#
+#         )
 
 
 class FuzzyScoresEnum(Enum):
@@ -72,6 +85,7 @@ class ShipMode(StrEnum):
     SHIP_IN = auto()
     TRACK = auto()
     FAKE = auto()
+    DROP = auto()
 
 
 @dataclass
@@ -113,7 +127,7 @@ class FieldsList(Enum):
     contact = ['telephone', 'name', 'email']
     address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
     export = ['category', 'collection_booked', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
-              'outbound_id', 'shipment_name', 'timestamp']
+              'outbound_id', '_shipment_name', 'timestamp']
     shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
                 'date', 'inbound_id', 'outbound_id', 'shipment_name']
 
@@ -139,12 +153,15 @@ class PathsList:
 
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
+
+
 # Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
 @dataclass
 class Contact:
     email: str
     telephone: str
     name: str
+
 
 class GuiMap(Enum):
     shipment_name = 'Shipment Name'
@@ -204,3 +221,4 @@ class HomeAddress:
     county: Optional[str]
     postal_code: str
     country_code: Optional[str] = 'GB'
+    dropoff_sender_id: Optional[int] = None

@@ -1,105 +1,78 @@
+"""
+rules of thumb
+shipper has the client, if you dont need the client, you are not shipper
+guis dont have clients
+
+"""
+
 import sys
 from datetime import datetime
+from functools import partial
 from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service
+from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from core.config import Config, get_amdesp_logger
+from core.config import Config, logger
 from core.enums import Contact, DateTimeMasks
-from core.funcs import print_label, log_shipment, email_label, download_label, update_commence, \
-    check_today_ship
+from core.funcs import download_label_2, email_label, log_shipment, print_label, update_commence
+from gui.address_gui import AddressGui
+from gui.main_gui import MainGui, get_date_label, get_service_string
+from gui.tracking_gui import TrackingGui
+from shipper.addresser import fuzzy_address, address_from_gui, address_from_direct_search, sender_from_address_id, \
+    recip_from_contact_and_key, \
+    sender_from_contact_address, recip_from_contact_address, get_explicit_match
 from shipper.shipment import Shipment
 
-from shipper.sender_receiver import get_remote_sender_recip, get_home_sender, get_home_recipient
-from gui.address_gui import AddressGui
-from gui.main_gui import MainGui
-from gui.tracking_gui import tracking_loop
-
 dotenv.load_dotenv()
-logger = get_amdesp_logger()
-LIMITED_SHIPMENTS = 1
-
 
 class Shipper:
     def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment]):
+        # self.shipments_dict = shipments_dict
         self.shipment_to_edit: Optional[Shipment] = None
         self.gui = gui
         self.config = config
         self.shipments: [Shipment] = shipments
         self.client = client
 
-    def dispatch(self):
-        mode = self.config.mode
-        try:
-            if 'ship' in mode.lower():
-                prepped_shipments = self.prep_shipments()
-                booked_shipments = self.main_gui_loop(prepped_shipments)
-                self.gui.post_book(shipments=booked_shipments)
+    def dispatch(self, outbound: bool):
+        if outbound:
+            self.address_outbound()
+        else:
+            self.address_inbound()
 
-            elif 'track' in mode.lower():
-                for shipment in self.shipments:
-                    if any([shipment.outbound_id, shipment.inbound_id]):
-                        result = tracking_loop(self.gui, shipment=shipment)
-            else:
-                raise ValueError('Ship Mode Fault')
-        except Exception as e:
-            logger.exception(f'DISPATCH EXCEPTION \n{e}')
-
-        sys.exit()
-
-    def prep_shipments(self):
-        # use strategy pattern to select prep method
-        """  gets sender, recipient, service, date, parcels and shipment request objects from dbay api \n
-        stores all in shipment attrs
-        uses an arbitrary service to get collection dates, then gets real service from eventual shipment_return dbay object"""
-        logger.info('PREP SHIPMENTS')
-        prepped_shipments = []
-        config = self.config
-        client = self.client
+        self.gather_dbay_objs()
+        booked_shipments = self.dispatch_loop()
+        self.gui.post_book(shipments=booked_shipments)
 
 
-        # get a dbay object representing home base for either sender or receiver as per config.outbound
-        # only needs to be done once per batch unless add ability to mix outbound and inbound shipments
-        home_sender_recip = (get_home_sender(client=client, config=config) if config.outbound
-                             else get_home_recipient(client=client, config=config))
-        logger.info(f'PREP SHIPMENT -  {home_sender_recip=}')
-
+    def track(self):
         for shipment in self.shipments:
-            try:
-                shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                                  name=shipment.contact_name)
-                # shipment.remote_address =
-                get_remote_sender_recip(self.client, self.config, home_sender_recip=home_sender_recip, shipment=shipment)
-                shipment.service = client.get_services()[0]  # needed to get dates
-                if check_today_ship(shipment) is None:  # no bookings after 1pm
-                    continue
-                shipment.collection_date = self.get_collection_date(shipment=shipment)
-                shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
-                shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-                shipment.available_services = client.get_available_services(shipment.shipment_request)
-                shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
-                                                      available_services=shipment.available_services)
+            if ship_ids := [shipment.outbound_id, shipment.inbound_id]:
+                try:
+                    self.tracking_loop(ship_ids=ship_ids)
+                except ApiException as e:
+                    if 'no tracking data' in e.args.__repr__().lower():
+                        logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
+                    if 'not found' in e.args.__repr__().lower():
+                        logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
+                        sg.popup_error(f'Shipment ({shipment.shipment_name_printable}) not found')
 
-                prepped_shipments.append(shipment)
+                    else:
+                        logger.exception(f'ERROR for {shipment.shipment_name_printable}')
+                        sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
-            except Exception as e:
-                self.shipments.remove(shipment)
-                logger.exception(f'Error with {shipment.shipment_name_printable}:\n {e}')
-                continue
-
-        return prepped_shipments
-
-    def main_gui_loop(self, shipments: [Shipment]):
+    def dispatch_loop(self):
         """ pysimplegui main_loop, takes a prebuilt window and shipment list,
-        listens for user input and updates shipments
+        listens for user input to edit and update shipments
         listens for go_ship  button to start booking"""
         logger.info('GUI LOOP')
 
-        self.gui.window = self.gui.bulk_shipper_window(shipments=shipments)
+        self.gui.window = self.gui.main_window(shipments=self.shipments)
 
         while True:
             self.gui.event, self.gui.values = self.gui.window.read()
@@ -110,16 +83,97 @@ class Shipper:
                 if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                     sg.popup_quick_message('Please Wait')
                     self.gui.window.close()
-                    return self.queue_and_book()
+                    return self.process_shipments()
             else:
-                self.edit_shipment(shipments=shipments)
+                shipment_to_edit = next((shipment for shipment in self.shipments if
+                                         shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+                self.edit_shipment(shipment_to_edit=shipment_to_edit)
 
-    # def do_jobs(self):
-    #     job = Job()
+    def tracking_loop(self, ship_ids):
+        for shipment_id in ship_ids:
+            shipment_return = self.client.get_shipment(shipment_id).is_delivered
+            tracking_gui = TrackingGui(outbound=self.config.outbound, sandbox=self.config.sandbox)
 
-    def edit_shipment(self, shipments):
-        self.shipment_to_edit: Shipment = next((shipment for shipment in shipments
-                                                if shipment.shipment_name_printable.lower() in self.gui.event.lower()))
+    def address_inbound(self):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
+        if not self.config.home_contact or not self.config.home_address.dbay_key:
+            raise ValueError("Home Contact or Dbay Key Missing")
+
+        home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+                                                    contact=self.config.home_contact)
+
+        for shipment in self.shipments:
+            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                              name=shipment.contact_name)
+            shipment.remote_address = self.remote_address_script(shipment=shipment)
+
+            shipment.recipient = home_recipient
+            shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
+                                                          remote_address=shipment.remote_address)
+
+    def address_outbound(self):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
+        if not self.config.home_address.address_id:
+            sg.popup_error('Home Address ID Missing')
+
+        home_sender = self.client.sender(address_id=self.config.home_address.address_id)
+
+        for shipment in self.shipments:
+            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                              name=shipment.contact_name)
+            shipment.remote_address = self.remote_address_script(shipment=shipment)
+
+            shipment.sender = home_sender
+            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+                                                            address=shipment.remote_address)
+
+    def remote_address_script(self, shipment):
+        terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
+
+        if address := address_from_direct_search(client=self.client, postcode=shipment.postcode, search_terms=terms):
+            return address
+
+        try:
+            if address := get_explicit_match(candidate_address=address, shipment=shipment):
+                return address
+        except:
+            pass
+
+        fuzzy = fuzzy_address(client=self.client, shipment=shipment)
+        if isinstance(fuzzy, Address):
+            return fuzzy
+
+        return address_from_gui(client=self.client, outbound=self.config.outbound, sandbox=self.config.sandbox,
+                                starter_address=fuzzy.address, shipment=shipment)
+
+    def gather_dbay_objs(self):
+        config = self.config
+        for shipment in self.shipments:
+            shipment.service = self.client.get_services()[0]  # needed to get dates
+            shipment.collection_date = self.get_collection_date(shipment=shipment)
+            if str(shipment.send_out_date) != shipment.collection_date.date:
+                if shipment.send_out_date == datetime.today().date() and datetime.now().hour >= 12:
+                    sg.popup_ok("Can't Ship Today until dbay configure it")
+                    # shipment.sender = get_dropoff_sender(client=self.client,
+                    #                                  dropoff_sender_id=self.config.home_address.dropoff_sender_id)
+
+            shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=config.parcel_contents)
+            shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+            shipment.available_services = self.client.get_available_services(shipment.shipment_request)
+            shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
+                                                  available_services=shipment.available_services)
+
+    def gather_dbay_objs_single(self, shipment, default_service_id, parcel_contents):
+        shipment.service = self.client.get_services()[0]  # needed to get dates
+        shipment.collection_date = self.get_collection_date(shipment=shipment)
+        shipment.parcels = self.get_parcels(num_parcels=shipment.boxes, contents=parcel_contents)
+        shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+        shipment.available_services = self.client.get_available_services(shipment.shipment_request)
+        shipment.service = get_actual_service(default_service_id=default_service_id,
+                                              available_services=shipment.available_services)
+
+    def edit_shipment(self, shipment_to_edit):
+        self.shipment_to_edit = shipment_to_edit
         if 'boxes' in self.gui.event.lower():
             self.boxes_click()
         elif 'service' in self.gui.event.lower():
@@ -131,7 +185,9 @@ class Shipper:
         elif 'recipient' in self.gui.event.lower():
             self.recipient_click()
         elif 'remove' in self.gui.event.lower():
-            shipments, self.gui.window = self.remove_click(shipments=shipments)
+            self.remove_click(shipment_to_remove=shipment_to_edit)
+        elif 'customer_contact' in self.gui.event.lower():
+            self.customer_click()
 
     def boxes_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -143,36 +199,43 @@ class Shipper:
             window[f'-{shipment_to_edit.shipment_name_printable}_SERVICE-'.upper()].update(
                 f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
 
-    def remove_click(self, shipments: [Shipment]):
-        shipments = [s for s in shipments if s != self.shipment_to_edit]
+    def remove_click(self, shipment_to_remove):
+        # [s for s in self.shipments if s.shipment_name_printable != shipment_to_remove.shipment_name_printable]
+        self.shipments = [s for s in self.shipments if s != shipment_to_remove]
         self.gui.window.close()
-        window = self.gui.bulk_shipper_window(shipments=shipments)
-        return shipments, window
-
-    def recipient_click(self):
-        contact = self.shipment_to_edit.remote_contact if self.config.outbound else self.config.home_contact
-        old_address = self.shipment_to_edit.recipient.recipient_address
-        address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
-                                    address=old_address, contact=contact)
-        if new_address := address_window.get_address():
-            self.shipment_to_edit.recipient.recipient_address = new_address
-            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
+        self.gui.window = self.gui.main_window(shipments=self.shipments)
 
     def date_click(self):
         new_collection_date = self.gui.new_date_selector(shipment=self.shipment_to_edit,
-                                                         location=self.gui.window.mouse_location())
-        self.gui.window[self.gui.event].update(self.gui.get_date_label(collection_date=new_collection_date))
+                                                         popup_location=self.gui.window.mouse_location())
+        self.gui.window[self.gui.event].update(get_date_label(collection_date=new_collection_date))
         self.shipment_to_edit.collection_date = new_collection_date
 
     def sender_click(self):
-        contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
-        old_address = self.shipment_to_edit.sender.sender_address
+        send = self.shipment_to_edit.sender
+        contact = Contact(name=send.name, email=send.email, telephone=send.telephone)
+        self.sr_click(s_or_r='sender', contact=contact)
 
-        address_window = AddressGui(config=self.config, client=self.client, shipment=self.shipment_to_edit,
-                                    contact=contact, address=old_address)
+    def recipient_click(self):
+        rec = self.shipment_to_edit.recipient
+        contact = Contact(name=rec.name, email=rec.email, telephone=rec.telephone)
+        self.sr_click(s_or_r='recipient', contact=contact)
+
+    def sr_click(self, s_or_r, contact):
+        # contact = self.config.home_contact if self.config.outbound else self.shipment_to_edit.remote_contact
+        if s_or_r == 'sender':
+            address_to_edit = self.shipment_to_edit.sender.sender_address
+        elif s_or_r == 'recipient':
+            address_to_edit = self.shipment_to_edit.recipient.recipient_address
+        else:
+            raise ValueError('s_or_r must be sender or recipient')
+
+        address_window = AddressGui(outbound=self.config.outbound, sandbox=self.config.sandbox, client=self.client,
+                                    shipment=self.shipment_to_edit,
+                                    contact=contact, address=address_to_edit)
         if new_address := address_window.get_address():
-            self.shipment_to_edit.sender.sender_address = new_address
-            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=new_address))
+            address_to_edit = new_address
+            self.gui.window[self.gui.event].update(self.gui.get_address_button_string(address=address_to_edit))
 
     def service_click(self):
         shipment_to_edit = self.shipment_to_edit
@@ -181,8 +244,8 @@ class Shipper:
                                                             shipment_to_edit.available_services),
                                                         location=self.gui.window.mouse_location()):
             shipment_to_edit.service = new_service
-            self.gui.window[self.gui.event].update(self.gui.get_service_string(service=new_service,
-                                                                               num_boxes=len(shipment_to_edit.parcels)))
+            self.gui.window[self.gui.event].update(get_service_string(service=new_service,
+                                                                      num_boxes=len(shipment_to_edit.parcels)))
 
     def get_new_parcels(self, location) -> List[Parcel] | None:
         window = self.gui.get_new_parcels_window(location=location)
@@ -195,63 +258,74 @@ class Shipper:
             window.close()
             return self.get_parcels(new_boxes, contents=self.config.parcel_contents)
 
-    #
-    # def get_new_parcels(self, location) -> :
-    #     window = self.gui.get_new_parcels_window(location=location)
-    #     e, v = window.read()
-    #     if e == sg.WIN_CLOSED:
-    #         window.close()
-    #         return None
-    #     if e == 'BOX':
-    #         new_boxes = v[e]
-    #         window.close()
-    #         return self.get_parcels(int(new_boxes), contents = self.config.parcel_contents)
+    def book_a_shipment(self, shipment: Shipment, shipment_id):
+        outbound = self.config.outbound
+        shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
 
-    def queue_and_book(self):
+        print_email = self.gui.values.get(f'-{shipment.shipment_name_printable}_print_email-'.upper())
+
+        setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
+
+        shipment.shipment_return = self.client.book_shipments(shipment_id)[0]
+        shipment.label_location = download_label_2(client=self.client, label_folder_path=self.config.paths.labels,
+                                                   label_text=shipment.shipment_name_printable,
+                                                   shipment_return=shipment.shipment_return)
+        shipment.collection = self.client.get_collection(shipment.shipment_return.collection_id)
+
+        if outbound and print_email:
+            print_label(shipment=shipment)
+        else:
+            if not outbound and print_email:
+                email_label(shipment=shipment,
+                            body=self.config.return_label_email_body,
+                            collection_date=shipment.collection.date.date,
+                            collection_address=shipment.collection.sender_address.sender_address
+                            )
+        update_commence(shipment=shipment, id_to_pass=shipment_id, outbound=self.config.outbound,
+                        ps_script=self.config.paths.cmc_logger)
+        return shipment
+
+    def process_shipments(self):
         config = self.config
         client = self.client
         added_shipments = []
         booked_shipments = []
 
         for shipment in self.shipments:
-            try:
-                shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
-                shipment.shipment_request = get_shipment_request(client=client, shipment=shipment)
-                add = self.gui.values.get(f'-{shipment.shipment_name_printable}_add-'.upper())
-                book = self.gui.values.get(f'-{shipment.shipment_name_printable}_book-'.upper())
-                print_email = self.gui.values.get(f'-{shipment.shipment_name_printable}_print_email-'.upper())
+            book = self.gui.values.get(f'-{shipment.shipment_name_printable}_BOOK-'.upper())
+            dropoff = self.gui.values.get(f'-{shipment.shipment_name_printable}_DROP-'.upper())
 
-                if add:
-                    shipment_id = client.add_shipment(shipment.shipment_request)
-                    added_shipments.append(shipment)
-                    setattr(shipment, f'{"outbound_id" if config.outbound else "inbound_id"}', shipment_id)
+            if dropoff:
+                if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') == 'Yes':
+                    logger.info('Converting to Dropoff')
+                    shipment.sender = sender_from_address_id(client=client,
+                                                             address_id=config.home_address.dropoff_sender_id)
 
-                    if book:
-                        shipment.shipment_return = book_shipment(client=client, shipment_id=shipment_id)
-                        download_label(client=client, config=config, shipment=shipment)
+                    if sg.popup_yes_no(f'Change date to Today?') == 'Yes':
+                        shipment.collection_date = \
+                        self.client.get_available_collection_dates(sender_address=shipment.sender,
+                                                                   courier_id=self.config.default_shipping_service.courier)[
+                            0]
 
-                        if config.outbound and print_email:
-                            print_label(shipment=shipment)
-                        else:
-                            if not config.outbound and print_email:
-                                email_label(recipient=shipment.email, body=config.return_label_email_body,
-                                            attachment=shipment.label_location)
+            shipment.shipment_request = get_shipment_request(client=self.client, shipment=shipment)
+            ...
+            shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+            shipment_id = self.client.add_shipment(shipment.shipment_request)
 
-                        booked_shipments.append(shipment)
-                    update_commence(config=config, shipment=shipment, id_to_pass=shipment_id)
-                    log_shipment(config=config, shipment=shipment)
+            if book:
+                try:
+                    booked_shipments.append(
+                        self.book_a_shipment(shipment=shipment, shipment_id=shipment_id))
+
+                except ApiException as e:
+                    sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\nAvailable balance = "
+                                   f"£{client.get_account_balance().available}\n{e}\n")
+                    continue
+                except Exception as e:
+                    logger.exception(e)
                     continue
 
-            except ApiException as e:
-                sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\n"
-                               f"\nServer returned the following error:\n"
-                               f"{e}\n"
-                               f"\nThat probably didn't help?\n"
-                               f"How about this?:\n"
-                               f"Available balance = £{client.get_account_balance().available}\n")
-                continue
-            except Exception as e:
-                logger.exception(e)
+            log_shipment(log_path=config.paths.log_json, shipment=shipment)
 
         return booked_shipments if booked_shipments else None
 
@@ -266,6 +340,9 @@ class Shipper:
     #
     #         window2.close()
     #         break
+
+    def get_dropoff_date(self):
+        pass
 
     def get_collection_date(self, shipment: Shipment) -> CollectionDate:
         """ return despatchbay CollecitonDate Entity
@@ -284,20 +361,9 @@ class Shipper:
 
         collection_date = collection_date or available_dates[0]
 
-        logger.info(f'PREPPING SHIPMENT - COLLECTION DATE {collection_date}')
+        logger.info(
+            f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else ""}')
         return collection_date
-
-    # def get_arbitrary_service(self) -> Service:
-    #     """ needed to get available dates, swapped out for real service later """
-    #     client = self.client
-    #     config = self.config
-    #     all_services: [Service] = client.get_services()
-    #     arbitrary_service: Service = next(
-    #         (service for service in all_services if service.service_id == config.dbay_creds.service_id),
-    #         all_services[0])
-    #     logger.info(f'PREP SHIPMENT - ARBITRARY SERVICE {arbitrary_service.name}')
-    #
-    #     return arbitrary_service
 
     def get_parcels(self, num_parcels: int, contents: str) -> list[Parcel]:
         """ return an array of dbay parcel objects equal to the number of boxes provided
@@ -313,16 +379,26 @@ class Shipper:
                 height=40,
             )
             parcels.append(parcel)
-        logger.info(f'PREPPING SHIPMENT - PARCELS {parcels}')
+        logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
 
         return parcels
 
+    def convert_to_dropoff(self, shipment):
+        # self.config.home_address.dropoff_sender_id
+        shipment.sender = self.client.sender()
+        pass
+
+    def customer_click(self):
+        sg.popup_ok(self.shipment_to_edit._address_as_str)
+
 
 def get_service_menu_map(available_services: List[Service]):
+    """returns a dict of service names to service objects"""
     return ({service.name: service for service in available_services})
 
 
 def get_actual_service(default_service_id: str, available_services: [Service]) -> Service:
+    """returns the service object for the default service id if it exists, otherwise returns the first service"""
     return next((service for service in available_services if service.service_id == default_service_id),
                 available_services[0])
 
@@ -335,14 +411,14 @@ def get_shipment_request(client: DespatchBaySDK, shipment: Shipment):
     request = client.shipment_request(
         service_id=shipment.service.service_id,
         parcels=shipment.parcels,
-        client_reference=shipment.customer,
+        client_reference=shipment.customer_safe_print,
         collection_date=shipment.collection_date,
         sender_address=shipment.sender,
         recipient_address=shipment.recipient,
         follow_shipment=True
     )
 
-    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST {request}')
+    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return request
 
 
@@ -351,23 +427,54 @@ def book_shipment(client: DespatchBaySDK, shipment_id: str):
     # shipment.collection_booked = True
     return shipment_return
 
-# def get_dates_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
-#     """ get available collection dates as dbay collection date objects for shipment.sender.address
-#         construct a menu_def for a combo-box
-#         if desired send-date matches an available date then select it as default, otherwise select soonest colelction
-#         return a dict with values and default_value"""
+# depric
 #
-#     # potential dates as dbay objs not proper datetime objs
-#     available_dates = client.get_available_collection_dates(shipment.sender.sender_address, config.courier_id)
-#     datetime_mask = config.datetime_masks.display
+#     def address_shipments(self, outbound: bool):
+#         if self.config.home_contact and self.config.home_address.dbay_key and not outbound:
+#             home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+#                                                         contact=self.config.home_contact)
+#         else:
+#             raise ValueError("Home Contact or Dbay Key Missing")
+#         home_sender = self.client.sender(address_id=self.config.home_address.address_id)
 #
-#     chosen_collection_date_dbay = next((date for date in available_dates if parse(date.date) == shipment.date),
-#                                        available_dates[0])
+#         for shipment in self.shipments:
+#             shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+#                                               name=shipment.contact_name)
+#             shipment.remote_address = self.remote_address_script(shipment=shipment)
 #
-#     chosen_date_hr = f'{parse(chosen_collection_date_dbay.date):{datetime_mask}}'
-#     shipment.date_menu_map.update({f'{parse(date.date):{datetime_mask}}': date for date in available_dates})
-#     men_def = [f'{parse(date.date):{datetime_mask}}' for date in available_dates]
+#             if outbound:
+#                 shipment.sender = home_sender
+#                 shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+#                                                                 address=shipment.remote_address)
 #
-#     shipment.date = chosen_collection_date_dbay
-#     return {'default_value': chosen_date_hr, 'values': men_def}
+#             elif not outbound:
+#                 shipment.recipient = home_recipient
+#                 shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
+#                                                               remote_address=shipment.remote_address)
+
+
+# def address_inbound_dropoffs(self):
+#     if not self.config.home_contact or not self.config.home_address.dbay_key:
+#         raise ValueError("Home Contact or Dbay Key Missing")
 #
+#     home_recipient = recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+#                                                 contact=self.config.home_contact)
+#
+#
+#
+# def address_outbound_dropoffs(self):
+#     """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
+#     home_sender = sender_from_address_id(address_id=self.config.home_address.dropoff_sender_id, client=self.client)
+#     for shipment in self.shipments:
+#         shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+#                                           name=shipment.contact_name)
+#         shipment.sender = home_sender
+#         remote_address = self.remote_address_script(shipment=shipment)
+#         shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+#                                                         address=remote_address)
+
+    # def dispatch_outbound_dropoffs(self):
+    #     self.address_outbound_dropoffs()
+    #     self.gather_dbay_objs()
+    #     booked_shipments = self.dispatch_loop()
+    #     self.gui.post_book(shipments=booked_shipments)
