@@ -11,7 +11,7 @@ from typing import List, Optional
 
 import PySimpleGUI as sg
 import dotenv
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Address
+from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, Address, Recipient, Sender
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
@@ -29,8 +29,6 @@ from shipper.shipment import Shipment
 dotenv.load_dotenv()
 
 
-
-
 class Shipper:
     def __init__(self, config: Config, client: DespatchBaySDK, gui: MainGui, shipments: [Shipment]):
         # self.shipments_dict = shipments_dict
@@ -41,8 +39,9 @@ class Shipper:
         self.client = client
 
     def dispatch(self, outbound: bool):
-        self.address_outbound() if outbound \
-            else self.address_inbound()
+        # self.address_outbound() if outbound \
+        #     else self.address_inbound()
+        self.address_agnostic(outbound)
 
         self.gather_dbay_objs()
         booked_shipments = self.dispatch_loop()
@@ -110,6 +109,31 @@ class Shipper:
             shipment.sender = sender_from_contact_address(contact=shipment.remote_contact, client=self.client,
                                                           remote_address=shipment.remote_address)
 
+    def address_agnostic(self, outbound: bool):
+        """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
+        if not self.config.home_contact or not self.config.home_address.dbay_key:
+            raise ValueError(f"Home Contact or Dbay Key Missing - please edit .toml file")
+        home_base = self.get_home_base(outbound)
+
+        for shipment in self.shipments:
+            shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                              name=shipment.contact_name)
+            shipment.remote_address = self.remote_address_script(shipment=shipment)
+
+            shipment.recipient = recip_from_contact_address(client=self.client, contact=shipment.remote_contact,
+                                                            address=shipment.remote_address) if outbound \
+                else home_base
+
+            shipment.sender = home_base if outbound \
+                else sender_from_contact_address(contact=shipment.remote_contact,
+                                                 client=self.client,
+                                                 remote_address=shipment.remote_address)
+
+    def get_home_base(self, outbound) -> Sender | Recipient:
+        return self.client.sender(address_id=self.config.home_address.address_id) if outbound \
+            else recip_from_contact_and_key(client=self.client, dbay_key=self.config.home_address.dbay_key,
+                                            contact=self.config.home_contact)
+
     def address_outbound(self):
         """Sets Contact and Address for sender and recipient for each shipment in self.shipments"""
         if not self.config.home_address.address_id:
@@ -136,6 +160,7 @@ class Shipper:
             if address := get_explicit_match(candidate_address=address, shipment=shipment):
                 return address
         except:
+            logger.info({'No Explicit Match Found - getting fuzzy'})
             pass
 
         fuzzy = fuzzy_address(client=self.client, shipment=shipment)

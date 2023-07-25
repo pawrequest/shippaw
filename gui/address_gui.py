@@ -4,20 +4,21 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config
 from core.enums import Contact, FieldsList
-from gui.main_gui import Gui
 from gui.gui_params import address_fieldname_params, address_input_params
+from gui.main_gui import Gui
 from shipper.shipment import Shipment
 
 
 class AddressGui(Gui):
-    def __init__(self, outbound:bool, sandbox:bool, client: DespatchBaySDK, shipment: Shipment, contact: Contact, address: Address):
+    def __init__(self, outbound: bool, sandbox: bool, client: DespatchBaySDK, shipment: Shipment,
+                 contact: Contact | None, address: Address | None):
         super().__init__(outbound=outbound, sandbox=sandbox)
         self.contact = contact
         self.address = address
         self.shipment = shipment
-        self.window = self.get_contact_window()
+        # self.window = self.get_contact_window()
+        self.window = self.get_comparison_address_window()
         self.outbound = outbound
         self.client = client
 
@@ -53,7 +54,7 @@ class AddressGui(Gui):
         self.update_address_from_gui()
         setattr(self.address, 'company_name', self.shipment.customer)
 
-    def address_postcode_click(self, client: DespatchBaySDK, postcode: str) -> Address|None:
+    def address_postcode_click(self, client: DespatchBaySDK, postcode: str) -> Address | None:
 
         """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
         while True:
@@ -67,6 +68,28 @@ class AddressGui(Gui):
                     return None
             else:
                 return new_address
+
+    def commence_address_frame(self):
+        commence_text = f'{self.shipment.customer} \n{self.shipment._address_as_str}'
+        return sg.Frame(title='Address Details From Commence:', layout=[
+            [sg.Text(commence_text)]
+        ])
+
+    def get_comparison_address_window(self):
+        commence_frame = self.commence_address_frame()
+        address_col = sg.Col(layout=[
+            [self.get_contact_frame()],
+            [self.get_address_frame(address=self.address)]
+        ])
+
+        return sg.Window('comp window', layout=[[commence_frame, address_col]])
+
+    def get_modular_address_window(self):
+        layout = [
+            [self.get_contact_frame()],
+            [self.get_address_frame(address=self.address)],
+        ]
+        return sg.Window('Address and Contact Details', layout=layout)
 
     def get_contact_window(self):
         layout = [
@@ -85,6 +108,19 @@ class AddressGui(Gui):
         ]
         return sg.Window('Address', layout=layout)
 
+    def get_contact_frame(self):
+        layout = [
+            [sg.Text(f'Name:', **address_fieldname_params),
+             sg.InputText(f'{self.contact.name}', key=f'-NAME-', **address_input_params)],
+
+            [sg.Text(f'Email:', **address_fieldname_params),
+             sg.InputText(f'{self.contact.email}', key=f'-EMAIL-', **address_input_params)],
+
+            [sg.Text(f'Telephone:', **address_fieldname_params),
+             sg.InputText(f'{self.contact.telephone}', key=f'-TELEPHONE-', **address_input_params)],
+        ]
+        return sg.Frame("Contact Details", layout=layout)
+
     def update_gui_from_address(self, address: Address):
         if address:
             address_dict = {k: v for k, v in vars(address).items() if 'soap' not in k}
@@ -101,10 +137,11 @@ class AddressGui(Gui):
         for field in FieldsList.contact.value:
             value = self.values.get(f'-{field.upper()}-', None)
             setattr(self.contact, field, value)
+
     def get_address_frame(self, address: Address, index: str = None) -> sg.Frame:
         layout = []
         params = address_fieldname_params.copy()
-        input_text = ''
+
         for field in FieldsList.address.value:
             if index:
                 key = f'-{index}_ADDRESS_{field}-'.upper()
@@ -162,5 +199,3 @@ class AddressGui(Gui):
     #         [sg.B('Submit', k=f'-SUBMIT-')]
     #     ]
     #     return sg.Frame('Contact Frame', layout=layout)
-
-
