@@ -3,14 +3,14 @@ from typing import Iterable
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address, Sender, Recipient
 from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import ApiException, RateLimitException
+from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
 from core.config import logger, Config
 from core.enums import BestMatch, FuzzyScores, Contact
 from core.funcs import retry_with_backoff
 from gui.address_gui import AddressGui
-from shipper.shipment import Shipment, parse_amherst_address_string
+from shipper.shipment import Shipment
 
 
 def address_from_direct_search(client: DespatchBaySDK, postcode: str, search_terms: Iterable) -> Address | None:
@@ -30,8 +30,7 @@ def address_from_direct_search(client: DespatchBaySDK, postcode: str, search_ter
         return None
 
 
-
-def get_explicit_match(shipment: Shipment, candidate_address:Address) -> Address | None:
+def get_explicit_match(shipment: Shipment, candidate_address: Address) -> Address | None:
     """ compares various shipment details to address, return address is matched else None"""
     if candidate_address.company_name:
         if shipment.customer in candidate_address.company_name \
@@ -67,7 +66,7 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
                   f'\nDelivery Name= {shipment.delivery_name}' \
                   f'\nString Address from database=' \
                   f'\n{shipment._address_as_str}' \
-                  f'\n\nFound Address Details:'\
+                  f'\n\nFound Address Details:' \
                   f'\nAddress Company Name= {address.company_name}' \
                   f'\nStreet addres= {address.street}' \
                   f'\n\n[Yes] to accept matched address or [No] to edit / replace'
@@ -136,6 +135,7 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
+
 def fuzzy_address(client, shipment) -> Address | BestMatch:
     """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
     candidate_keys = get_candidate_keys(client=client, postcode=shipment.postcode)
@@ -168,8 +168,8 @@ def fuzzy_address(client, shipment) -> Address | BestMatch:
     # return shipment.bestmatch.address
 
 
-def address_from_gui(client, sandbox: bool, outbound: bool, shipment, starter_address:Address) -> Address:
-    address_gui = AddressGui(outbound=outbound, sandbox=sandbox, client=client, shipment=shipment,
+def address_from_gui(client, sandbox: bool, outbound: bool, shipment, starter_address: Address) -> Address:
+    address_gui = AddressGui(client=client, shipment=shipment,
                              address=starter_address,
                              contact=shipment.remote_contact)
     address_gui.get_address()
@@ -180,7 +180,8 @@ def address_from_gui(client, sandbox: bool, outbound: bool, shipment, starter_ad
 
 """ GET CONTACT?"""
 
-def sender_from_address_id(client: DespatchBaySDK, address_id:str) -> Sender:
+
+def sender_from_address_id(client: DespatchBaySDK, address_id: str) -> Sender:
     """ return a dbay sender object representing home address defined in toml / Shipper.config"""
     return client.sender(address_id=address_id)
 
@@ -192,7 +193,7 @@ def get_home_recipient(client: DespatchBaySDK, config: Config) -> Recipient:
         recipient_address=address, **config.home_contact.__dict__)
 
 
-def recip_from_contact_and_key(client: DespatchBaySDK, dbay_key:str, contact:Contact) -> Recipient:
+def recip_from_contact_and_key(client: DespatchBaySDK, dbay_key: str, contact: Contact) -> Recipient:
     """ return a dbay recipient object"""
     return client.recipient(recipient_address=client.get_address_by_key(dbay_key), **contact.__dict__)
 
@@ -212,13 +213,12 @@ def get_remote_recipient(contact: Contact, client: DespatchBaySDK, remote_addres
     return recip
 
 
-def recip_from_contact_address( client: DespatchBaySDK, contact: Contact, address: Address) -> Sender:
+def recip_from_contact_address(client: DespatchBaySDK, contact: Contact, address: Address) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=address, **contact.__dict__)
     # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip
-
 
 # depric
 
@@ -264,7 +264,6 @@ def recip_from_contact_address( client: DespatchBaySDK, contact: Contact, addres
 #                          str_matched=shipment.str_to_match)
 #     else:
 #         return None
-
 
 
 # depric or notes or something?

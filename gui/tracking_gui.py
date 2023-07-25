@@ -10,6 +10,9 @@ from core.config import logger
 
 
 class TrackingGui(Gui):
+    def __init__(self):
+        self.sandbox = sandbox
+
     def tracking_viewer_window(self, client, shipment_return:ShipmentReturn):
         delivered = shipment_return.is_delivered
         tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]

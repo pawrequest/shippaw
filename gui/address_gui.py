@@ -1,5 +1,3 @@
-# event, values = sg.Window('Window Title', [[sg.Text('Enter Something')], [sg.Input(key='-IN-'),],[sg.Button('OK'), sg.Button('Cancel')]]).read(close=True)
-
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address
 from despatchbay.despatchbay_sdk import DespatchBaySDK
@@ -11,15 +9,14 @@ from shipper.shipment import Shipment
 
 
 class AddressGui(Gui):
-    def __init__(self, outbound: bool, sandbox: bool, client: DespatchBaySDK, shipment: Shipment,
+    def __init__(self, client: DespatchBaySDK, shipment: Shipment,
                  contact: Contact | None, address: Address | None):
-        super().__init__(outbound=outbound, sandbox=sandbox)
+        super().__init__()
         self.contact = contact
         self.address = address
         self.shipment = shipment
         # self.window = self.get_contact_window()
         self.window = self.get_comparison_address_window()
-        self.outbound = outbound
         self.client = client
 
     def get_address(self):
@@ -82,7 +79,7 @@ class AddressGui(Gui):
             [self.get_address_frame(address=self.address)]
         ])
 
-        return sg.Window('comp window', layout=[[commence_frame, address_col]])
+        return sg.Window('Manual Address Selector', layout=[[commence_frame, address_col]])
 
     def get_modular_address_window(self):
         layout = [

@@ -17,12 +17,10 @@ from shipper.shipment import Shipment
 
 
 class Gui:
-    def __init__(self, outbound: bool, sandbox):
+    def __init__(self):
         self.window = None
         self.event = None
         self.values = None
-        self.sandbox = sandbox
-        self.outbound = outbound
 
 
 def get_service_string(num_boxes: int, service: Service):
@@ -35,6 +33,11 @@ def get_date_label(collection_date: CollectionDate):
 
 
 class MainGui(Gui):
+    def __init__(self, sandbox, outbound: bool):
+        self.sandbox = sandbox
+        self.outbound = outbound
+        super().__init__()
+
     def main_window(self, shipments: [Shipment]):
         logger.info('BULK SHIPPER WINDOW')
         if self.sandbox:
@@ -56,8 +59,8 @@ class MainGui(Gui):
         print_or_email = 'print' if self.outbound else 'email'
 
         date_name = get_date_label(collection_date=shipment.collection_date)
-        sender_address_name = self.get_address_button_string(address=shipment.sender.sender_address)
-        recipient_address_name = self.get_address_button_string(shipment.recipient.recipient_address)
+        sender_address_name = get_address_button_string(address=shipment.sender.sender_address)
+        recipient_address_name = get_address_button_string(shipment.recipient.recipient_address)
         num_parcels = len(shipment.parcels)
 
         row = [
@@ -196,82 +199,12 @@ class MainGui(Gui):
 
     # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
 
-    @staticmethod
-    def get_address_button_string(address: Address):
-        # return f'{address.company_name}\n{address.street}' if address.company_name else address.street
-        return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}'
+def get_address_button_string(address: Address):
+    # return f'{address.company_name}\n{address.street}' if address.company_name else address.street
+    return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}'
 
 
-def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
-    """ gets available shipping services for shipment sender and recipient
-    builds menu_def of potential services and if any matches service_id specified in user_config.toml then select it by default
-     return a dict of menu_def and default_value"""
-    services = client.get_services()
-    # todo get AVAILABLE services needs a request
-    # services = client.get_available_services()
-    shipment.service_menu_map.update({service.name: service for service in services})
-    chosen_service = next(
-        (service for service in services if service.service_id == config.default_shipping_service.service),
-        services[0])
-    shipment.service = chosen_service
-    return {'values': [service.name for service in services], 'default_value': chosen_service.name}
 
-
-def parcels_spin() -> sg.Combo:
-    element = sg.Combo(k='-BOXES-', values=[i for i in range(10)], **option_menu_params)
-
-    return element
-
-
-def shipment_ids_frame() -> sg.Frame:
-    layout = []
-    for direction in ['inbound', 'outbound']:
-        layout.append(
-            [sg.T('', font='Rockwell 20', size=20, border_width=3, justification='center', relief=sg.RELIEF_GROOVE,
-                  pad=20, k=f'-{direction.upper()}_ID-')])
-
-    frame = sg.Frame('Shipment IDs', layout, pad=20, element_justification='center',
-                     border_width=8,
-                     relief=sg.RELIEF_GROOVE, expand_y=True)
-    return frame
-
-
-def get_address_dict_frame(address_dict):
-    layout = []
-    address_fields = FieldsList.address.value
-    for field in address_fields:
-        upper_key = f'-ADDRESS_DICT_{field}-'.upper()
-        lower_key = f'-ADDRESS_DICT_{field}-'.lower()
-        address_field = field.title().replace('_', ' ')
-        address_value = address_dict.get(field)
-
-        # if field in ('company_name', 'postal_code'):
-        #     # is a button
-        #     params.pop('justification', None)
-        #     label_text = sg.B(key_for_humans, k=lower_key, **params)
-        # else:
-        label_text = sg.Text(address_field, k=lower_key, **address_fieldname_params)
-
-        input_box = sg.InputText(address_value, k=upper_key, **address_input_params)
-        layout.append([label_text, input_box])
-
-    frame = sg.Frame('Address', layout, pad=20, )
-    return frame
-
-
-def shipment_name_printable_element() -> sg.Text:
-    element = sg.Text('', expand_x=True, expand_y=True, justification='center',
-                      font='Rockwell 30',
-                      border_width=8, relief=sg.RELIEF_GROOVE, k='-shipment_name_printable-')
-    return element
-
-
-def loading():
-    layout = [
-        [sg.Text("Loading Shipments")]
-    ]
-
-    return sg.Window('Loading', layout, modal=True, disable_close=True, finalize=True)
 
 
 def get_service_button(num_parcels, shipment):
@@ -351,3 +284,45 @@ def get_date_button(date_name, shipment):
 #                      border_width=5, relief=sg.RELIEF_GROOVE,
 #                      title_location=sg.TITLE_LOCATION_TOP)
 #     return frame
+#
+# def shipment_name_printable_element() -> sg.Text:
+#     element = sg.Text('', expand_x=True, expand_y=True, justification='center',
+#                       font='Rockwell 30',
+#                       border_width=8, relief=sg.RELIEF_GROOVE, k='-shipment_name_printable-')
+#     return element
+
+#
+# def shipment_ids_frame() -> sg.Frame:
+#     layout = []
+#     for direction in ['inbound', 'outbound']:
+#         layout.append(
+#             [sg.T('', font='Rockwell 20', size=20, border_width=3, justification='center', relief=sg.RELIEF_GROOVE,
+#                   pad=20, k=f'-{direction.upper()}_ID-')])
+#
+#     frame = sg.Frame('Shipment IDs', layout, pad=20, element_justification='center',
+#                      border_width=8,
+#                      relief=sg.RELIEF_GROOVE, expand_y=True)
+#     return frame
+#
+
+# def parcels_spin() -> sg.Combo:
+#     element = sg.Combo(k='-BOXES-', values=[i for i in range(10)], **option_menu_params)
+#
+#     return element
+
+
+
+# def get_service_menu(client: DespatchBaySDK, config: Config, shipment: Shipment) -> dict:
+#     """ gets available shipping services for shipment sender and recipient
+#     builds menu_def of potential services and if any matches service_id specified in user_config.toml then select it by default
+#      return a dict of menu_def and default_value"""
+#     services = client.get_services()
+#     # todo get AVAILABLE services needs a request
+#     # services = client.get_available_services()
+#     shipment.service_menu_map.update({service.name: service for service in services})
+#     chosen_service = next(
+#         (service for service in services if service.service_id == config.default_shipping_service.service),
+#         services[0])
+#     shipment.service = chosen_service
+#     return {'values': [service.name for service in services], 'default_value': chosen_service.name}
+#
