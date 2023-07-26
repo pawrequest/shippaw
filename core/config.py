@@ -55,7 +55,7 @@ class Config:
         self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
     @classmethod
-    def from_toml2(cls, mode: str):
+    def from_toml(cls, mode: str):
         with open(CONFIG_TOML, 'rb') as g:
             config_dict = tomllib.load(g)
         config_dict['mode'] = mode

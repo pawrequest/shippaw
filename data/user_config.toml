@@ -5,8 +5,8 @@ return_label_email_body = """Thanks for Hiring from Amherst.\n\
                             Please print the label off and stick securely to the box.\n\
                             Also make sure any old Parcelforce labels are removed - or the box could get delivered back to you!\n\n\
                             Collection has been booked from:\n\
-                            ADDRESSREPLACE\n\
-                            on: DATEREPLACE\n\n\
+                            __--__ADDRESSREPLACE__--__\n\
+                            on: __--__DATEREPLACE__--__\n\n\
                             We are unable to provide accurate collection times - please contact us urgently if there will not be somebody at the collection address on the specified date.\n\
                             If the collection is missed for any reason, you can also just take the box, with the label securely attached, and drop it at any Post Office, the carriage fee is already paid.\n\
                             Thanks\n\

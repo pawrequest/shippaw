@@ -7,13 +7,8 @@
 
 import sys
 
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from typing import cast
 from core.config import Config, logger
 from core.enums import ShipmentCategory, ShipMode
-from core.desp_client_wrapper import APIClientWrapper
-from gui.main_gui import MainGui
-from shipper.shipment import Shipment, get_dbay_shipments, DbayShipment
 from shipper.shipper import Shipper
 
 """
@@ -32,25 +27,16 @@ includes
 """
 
 
-
 def main(main_mode: str):
-    config = Config.from_toml2(mode=main_mode)
-    client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
-    client = APIClientWrapper(client)
-    client = cast(DespatchBaySDK, client)
-    shipments = Shipment.get_shipments(config=config, category=category, dbase_file=input_file_arg)
-
-    gui = MainGui(outbound=config.outbound, sandbox=config.sandbox)
-    shipper = Shipper(config=config, client=client, gui=gui, shipments=shipments)
-
-
+    config = Config.from_toml(mode=main_mode)
+    shipper = Shipper(config=config)
+    shipments = shipper.get_shipments(config=config, category=category, dbase_file=input_file_arg)
 
     if 'ship' in main_mode:
-        outbound = 'out' in main_mode
-        shipper.dispatch(outbound=outbound)
+        shipper.dispatch(config=config, shipments=shipments)
 
     elif 'track' in main_mode:
-        shipper.track()
+        ...
 
     sys.exit()
 

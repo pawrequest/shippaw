@@ -8,9 +8,7 @@ from pathlib import Path
 
 import PySimpleGUI as sg
 import win32com.client
-from despatchbay.despatchbay_entities import ShipmentReturn, Address
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.documents_client import Document
+from despatchbay.despatchbay_entities import Address, CollectionDate
 
 from core.enums import FieldsList, DateTimeMasks
 from shipper.shipment import Shipment
@@ -56,16 +54,17 @@ def log_shipment(log_path, shipment: Shipment):
         f.write(",\n")
 
 
-def email_label(shipment: Shipment, body: str, collection_date: datetime.date, collection_address: Address):
-    collection_address = collection_address
+def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, collection_address: Address):
+    collection_date = collection_date_to_datetime(collection_date)
     ol = win32com.client.Dispatch('Outlook.Application')
     newmail = ol.CreateItem(0)
 
     col_address = f'{collection_address.company_name if collection_address.company_name else ""}'
     col_address += f'{collection_address.street}'
 
-    body = body.replace("ADDRESSREPLACE", f'{col_address}')
-    body = body.replace("DATEREPLACE", f'{collection_date:{DateTimeMasks.DISPLAY}}')
+    body = body.replace("__--__ADDRESSREPLACE__--__", f'{col_address}')
+    body = body.replace("__--__DATEREPLACE__--__", f'{collection_date:{DateTimeMasks.DISPLAY.value}}')
+
 
     newmail.To = shipment.email
     newmail.Subject = "Radio Hire Return - Shipping Label Attached"
@@ -75,36 +74,6 @@ def email_label(shipment: Shipment, body: str, collection_date: datetime.date, c
     newmail.Attachments.Add(attach)
     newmail.Display()  # preview
     # newmail.Send()
-
-
-def download_label_2(client: DespatchBaySDK, label_folder_path: Path, label_text: str, shipment_return: ShipmentReturn):
-    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
-    try:
-        label_pdf: Document = client.get_labels(document_ids=shipment_return.shipment_document_id,
-                                                label_layout='2A4')
-
-        label_string: str = label_text + '.pdf'
-        label_location = label_folder_path / label_string
-        label_pdf.download(label_location)
-    except:
-        return False
-    else:
-        return label_location
-
-
-def download_label(client: DespatchBaySDK, label_folder_path: Path, shipment: Shipment):
-    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
-    try:
-        label_pdf: Document = client.get_labels(document_ids=shipment.shipment_return.shipment_document_id,
-                                                label_layout='2A4')
-
-        label_string: str = shipment.shipment_name_printable + '.pdf'
-        label_location = label_folder_path / label_string
-        label_pdf.download(label_location)
-    except:
-        return False
-    else:
-        return label_location
 
 
 def powershell_runner(script_path: str, *params):
@@ -195,3 +164,6 @@ def retry_with_backoff_dec(retries=5, backoff_in_seconds=1):
 
     return rwb
 
+
+def collection_date_to_datetime(collection_date: CollectionDate):
+    return datetime.strptime(collection_date.date, DateTimeMasks.DB.value).date()

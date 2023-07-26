@@ -39,9 +39,6 @@ class Shipment:
         self.inbound_id: Optional[str] = ship_dict.get('inbound_id')
         self.outbound_id: Optional[str] = ship_dict.get('outbound_id')
 
-
-
-        self.collection_booked = False
         self.printed = False
         self.date_menu_map = dict()
         self.service_menu_map: dict = dict()
@@ -50,11 +47,9 @@ class Shipment:
         self.label_location: Path = Path()
 
         self.remote_address: Address | None = None
-        self.sender_contact = None
         self.remote_contact: Optional[Contact] = None
         self.remote_sender_recip: Optional[Sender | Recipient] = None
         self.sender = Sender
-        # self.recipient_contact = None
         self.recipient = Recipient
 
 
@@ -68,6 +63,7 @@ class Shipment:
         self.shipment_return: Optional[ShipmentReturn] = None
         self.service: Optional[Service] = None
         self.available_services: Optional[List[Service]] = None
+        self.available_date: Optional[List[CollectionDate]] = None
 
         self.default_service_matched: bool = False
         self.bestmatch: Optional[BestMatch] = None
@@ -87,7 +83,7 @@ class Shipment:
 
 
     @property
-    def customer_safe_print(self):
+    def customer_printable(self):
         return self.customer.replace("&", '"&"').replace("'", "''")
 
     def to_dict(self):
@@ -114,7 +110,7 @@ class Shipment:
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
-                    shipment = Shipment(ship_dict=ship_dict, category=category)
+                    shipment = cls(ship_dict=ship_dict, category=category)
                     shipments.append(shipment)
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')

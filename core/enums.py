@@ -17,44 +17,14 @@ class ShipmentCategory(StrEnum):
     DROP = auto()
 
 
-class GuiColIndex(Enum):
-    CONTACT = 0
-    SENDER = 1
-    RECIPIENT = 2
-    DATE = 3
-    BOXES = 4
-    SERVICE = 5
-    ADD = 6
-    BOOK = 7
-    PRINT_EMAIL = 8
-
-
 @dataclass
 class DateMenuMap:
     ...
 
 
-#
-# @dataclass
-# class BookingJob:
-#     shipment_request: ShipmentRequest
-#     book: bool
-#     outbound: bool
-#     print_or_email: bool
-#     label_str:str
-#     result: Optional[str] = None
-#     timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
-#
-#     @classmethod
-#     def from_shipment(cls, shipment:Shipment, book:bool, print_or_email:bool):
-#         return cls(
-#             shipment_request=shipment.shipment_request,
-#             book=book,
-#             print_or_email=print_or_email,
-#             label_str=shipment.shipment_name_printable,
-#             la
-#
-#         )
+@dataclass
+class CandidateKeys:
+    ...
 
 
 class FuzzyScoresEnum(Enum):
@@ -161,26 +131,6 @@ class Contact:
     email: str
     telephone: str
     name: str
-
-
-class GuiMap(Enum):
-    shipment_name = 'Shipment Name'
-    boxes = 'Boxes'
-    category = 'Category'
-    delivery_address = 'Delivery Address'
-    delivery_contact = 'Delivery Contact'
-    delivery_email = 'Delivery Email'
-    delivery_postcode = 'Delivery Postcode'
-    delivery_tel = 'Delivery Tel'
-    delivery_telephone = 'Delivery Telephone'
-    search_term = 'Search Term'
-    send_out_date = 'Send Out Date'
-    inbound_id = 'Inbound ID'
-    outbound_id = 'Outbound ID'
-    county = 'County'
-    town_city = 'Town / City'
-    company_name = 'Company Name'
-    postal_code = 'Postcode'
 
 
 @dataclass

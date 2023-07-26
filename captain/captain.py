@@ -11,21 +11,22 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
 from core.config import Config, logger
-from core.enums import Contact, DateTimeMasks
-from core.funcs import download_label_2, email_label, log_shipment, print_label, update_commence
-from gui.address_gui import AddressGui
-from gui.main_gui import MainGui, get_date_label, get_service_string, get_address_button_string
-from gui.tracking_gui import TrackingGui
-from shipper.addresser import fuzzy_address, address_from_gui, address_from_direct_search, sender_from_address_id, \
-    recip_from_contact_and_key, \
-    sender_from_contact_address, recip_from_contact_address, get_explicit_match
 from shipper.shipment import Shipment
 
 dotenv.load_dotenv()
 
-class GuiChoices(Enum):
-    go_ship = '-GO-SHIP-'
-    edit_ship = auto()
+
+
+def main():
+
+    main_window = main_window()
+
+
+
+def captain(main_window, shipper, config, client):
+    ...
+
+
 
 
 class Captain:
@@ -38,7 +39,6 @@ class Captain:
     def voyage(self, outbound):
         self.shipper.address_outbound if outbound \
             else self.shipper.address_inbound()
-        self.shipper.gathe
         window = self.gui.window
 
         while True:
