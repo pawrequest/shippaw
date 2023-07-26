@@ -15,6 +15,20 @@ from gui.gui_params import address_head_params, address_params, \
 from shipper.shipment import Shipment
 
 
+
+def main_window(outbound:bool, shipments: [Shipment]):
+    logger.info('BULK SHIPPER WINDOW')
+    sg.set_options(**default_params)
+
+    return sg.Window('Bulk Shipper',
+                     layout=[
+                         [headers(outbound)],
+                         # [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
+                         [[shipment_frame(shipment=shipment, outbound=outbound)] for shipment in shipments],
+                         [sg.Button("LETS GO", k=psg_keys.GO_SHIP(), expand_y=True, expand_x=True)]
+                     ],
+                     finalize=True)
+
 def shipment_frame(shipment: Shipment, outbound: bool):
     print_or_email = 'print' if outbound else 'email'
 
@@ -63,25 +77,6 @@ def headers(outbound: bool):
         heads.insert(1, sg.T('Sender', **address_head_params))
 
     return heads
-
-
-def main_window(config:Config, shipments: [Shipment]):
-    logger.info('BULK SHIPPER WINDOW')
-    if config.sandbox:
-        sg.theme('Tan')
-    else:
-        sg.theme('Dark Blue')
-
-    sg.set_options(**default_params)
-
-    return sg.Window('Bulk Shipper',
-                     layout=[
-                         [headers(outbound=config.outbound)],
-                         # [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
-                         [[shipment_frame(shipment=shipment, outbound=config.outbound)] for shipment in shipments],
-                         [sg.Button("LETS GO", k=psg_keys.GO_SHIP(), expand_y=True, expand_x=True)]
-                     ],
-                     finalize=True)
 
 
 def post_book(shipments: [Shipment]):

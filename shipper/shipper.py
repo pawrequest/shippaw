@@ -74,11 +74,19 @@ def dispatch_loop(config, shipments: List[Shipment]):
     listens for go_ship  button to start booking"""
     logger.info('GUI LOOP')
 
-    window = main_window(shipments=shipments, config=config)
+    if config.sandbox:
+        sg.theme('Tan')
+    else:
+        sg.theme('Dark Blue')
+
+
+    window = main_window(shipments=shipments, outbound=config.outbound)
 
     while True:
         package = None
         event, values = window.read()
+
+
         if event == sg.WIN_CLOSED:
             window.close()
             sys.exit()
