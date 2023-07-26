@@ -90,6 +90,9 @@ def dispatch_loop(config, shipments: List[Shipment]):
         shipment_to_edit: Shipment = next((shipment for shipment in shipments if
                                            shipment.shipment_name_printable.lower() in event.lower()))
 
+
+        package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
+
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                 sg.popup_quick_message('Please Wait')
