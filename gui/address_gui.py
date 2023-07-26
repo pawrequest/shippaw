@@ -10,7 +10,7 @@ from shipper.shipment import Shipment
 
 def address_postcode_click(postcode: str) -> Address | None:
     """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
-    client = shipper.shipper.CLIENT
+    client = shipper.shipper.DESP_CLIENT
     while True:
         try:
             candidates = client.get_address_keys_by_postcode(postcode)
@@ -39,7 +39,6 @@ def commence_address_frame(address_as_str: str):
     return sg.Frame(title='Address Details From Commence:', layout=[
         [sg.Text(address_as_str)]
     ])
-
 
 
 def contact_frame(contact: Contact):

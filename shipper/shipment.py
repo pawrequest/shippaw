@@ -1,30 +1,29 @@
 import logging
 import re
-from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
 from dbfread.dbf import DBF, DBFNotFound
-
-from core.config import Config
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn, Collection
+
+from core.config import Config
+from core.config import logger
 from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
 from core.exceptions import ShipDictError
-from core.config import logger
 
 
 @dataclass
 class Shipment:
-    def __init__(self, ship_dict: dict, category:ShipmentCategory):
+    def __init__(self, ship_dict: dict, category: ShipmentCategory):
         """
         :param ship_dict: a dictionary of shipment details
         """
 
         # input paramaters
-        self.category= category.title()
+        self.category = category.title()
         self._shipment_name: str = ship_dict.get('shipment_name')
         self._address_as_str: str = ship_dict.get('address_as_str')
         self.boxes: int = int(ship_dict.get('boxes', 1))
@@ -52,7 +51,6 @@ class Shipment:
         self.sender = Sender
         self.recipient = Recipient
 
-
         self.date_matched = False
 
         self.despatch_objects = DespatchObjects()
@@ -76,11 +74,9 @@ class Shipment:
     def __eq__(self, other):
         return self._shipment_name == other._shipment_name
 
-
     @property
     def shipment_name_printable(self):
         return re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
-
 
     @property
     def customer_printable(self):
@@ -95,11 +91,9 @@ class Shipment:
                 result[attr_name] = attr_value
         return result
 
-
     @property
     def str_to_match(self):
         return parse_amherst_address_string(self._address_as_str)
-
 
     @classmethod
     def get_shipments(cls, config: Config, category: ShipmentCategory, dbase_file: str) -> list:
@@ -125,12 +119,10 @@ class Shipment:
             raise e
         return shipments
 
-
     @classmethod
     def from_dbase_record(cls, record, ship_dict, category):
         [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
         return cls(ship_dict=ship_dict, category=category)
-
 
 
 class DbayShipment(Shipment):
@@ -158,7 +150,7 @@ class DbayShipment(Shipment):
     def get_dbay_shipments(cls, import_mapping: dict, category: ShipmentCategory, dbase_file: str):
         logger.info(f'DBase file = {dbase_file}')
         shipments_dict = {}
-        shipments_list:[DbayShipment] = []
+        shipments_list: [DbayShipment] = []
         try:
             for record in DBF(dbase_file):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
@@ -184,8 +176,7 @@ class DbayShipment(Shipment):
         return shipments_list
 
 
-
-def get_dbay_shipments(import_mapping:dict, category: ShipmentCategory, dbase_file: str):
+def get_dbay_shipments(import_mapping: dict, category: ShipmentCategory, dbase_file: str):
     logger.info(f'DBase file NEW = {dbase_file}')
     shipments_dict = {}
     try:
@@ -208,6 +199,7 @@ def get_dbay_shipments(import_mapping:dict, category: ShipmentCategory, dbase_fi
         raise e
     return shipments_dict
 
+
 def parse_amherst_address_string(str_address: str):
     str_address = str_address.lower()
     if 'unit' in ' '.join(str_address.split(" ")[0:2]):
@@ -222,7 +214,7 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
-def shipdict_from_dbase(record, import_mapping:dict):
+def shipdict_from_dbase(record, import_mapping: dict):
     ship_dict_from_dbf = {}
     for k, v in record.items():
         if v:
