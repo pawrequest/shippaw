@@ -1,3 +1,6 @@
+import PySimpleGUI as sg
+
+from shipper.shipper import DESP_CLIENT
 
 
 def tracking_loop(ship_ids):
@@ -21,3 +24,41 @@ def track(shipments):
                 else:
                     logger.exception(f'ERROR for {shipment.shipment_name_printable}')
                     sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
+
+
+def get_tracking(shipment_id):
+    shipment_return = DESP_CLIENT.get_shipment(shipment_id)
+    delivered = shipment_return.is_delivered
+
+    tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
+    tracking_d = {}
+    layout = []
+    for tracked_parcel in tracking_numbers:
+        parcel_layout = []
+        signatory = None
+        params = {}
+        tracking = DESP_CLIENT.get_tracking(tracked_parcel)
+        # courier = tracking['CourierName'] # debug unused?
+        # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
+        history = tracking['TrackingHistory']
+        for event in history:
+
+            if 'delivered' in event.Description.lower():
+                signatory = f"{chr(10)}Signed for by: {event.Signatory}"
+                event_text = sg.T(
+                    f'{event.Date} - {event.Description} in {event.Location}{signatory}',
+                    background_color='green', text_color='white')
+
+            else:
+                event_text = sg.T(
+                    f'{event.Date} - {event.Description} in {event.Location}',
+                    **params)
+
+            parcel_layout.append([event_text])
+
+        parcel_col = sg.Column(parcel_layout)
+        layout.append(parcel_col)
+        tracking_d.update({tracked_parcel: tracking})
+
+    shipment_return.tracking_dict = tracking_d
+    return sg.Window('', [layout])

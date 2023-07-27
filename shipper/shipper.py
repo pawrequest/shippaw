@@ -20,6 +20,7 @@ from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
 from shipper.shipment import Shipment, shipdict_from_dbase
+from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
@@ -75,41 +76,6 @@ def tracking_loop(shipments: List[Shipment]):
         if inbound_id := shipment.inbound_id:
             inbound_window = get_tracking(inbound_id)
             event, values = inbound_window.read()
-
-
-
-def get_tracking(shipment_id):
-    shipment_return = DESP_CLIENT.get_shipment(shipment_id)
-    delivered = shipment_return.is_delivered
-
-    tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
-    tracking_d = {}
-    layout = []
-    for tracked_parcel in tracking_numbers:
-        parcel_layout = []
-        signatory = None
-        params = {}
-        tracking = DESP_CLIENT.get_tracking(tracked_parcel)
-        # courier = tracking['CourierName'] # debug unused?
-        # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
-        history = tracking['TrackingHistory']
-        for event in history:
-            if 'delivered' in event.Description.lower():
-                signatory = f"{chr(10)}Signed for by: {event.Signatory}"
-                params.update({'background_color': 'aquamarine', 'text_color': 'maroon4'})
-
-            event_text = sg.T(
-                f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
-                **params)
-
-            parcel_layout.append([event_text])
-
-        parcel_col = sg.Column(parcel_layout)
-        layout.append(parcel_col)
-        tracking_d.update({tracked_parcel: tracking})
-
-    shipment_return.tracking_dict = tracking_d
-    return sg.Window('', [layout])
 
 
 def dispatch_loop(config, shipments: List[Shipment]):
