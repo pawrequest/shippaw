@@ -33,14 +33,15 @@ class Shipper:
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
         self.shipments: list[Shipment] = []
+        self.config = config
 
-    def get_shipments(self, config: Config, category: ShipmentCategory, dbase_file: str):
+    def get_shipments(self, category: ShipmentCategory, dbase_file: str):
         logger.info(f'DBase file og = {dbase_file}')
         try:
             for record in DBF(dbase_file, encoding='cp1252'):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
+                    ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mapping)
                     self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')
@@ -54,7 +55,8 @@ class Shipper:
             logger.exception(e)
             raise
 
-    def dispatch(self, config):
+    def dispatch(self):
+        config = self.config
         shipments = self.shipments
         address_shipments(outbound=config.outbound, shipments=shipments, config=config)
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]

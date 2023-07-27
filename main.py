@@ -1,6 +1,8 @@
 import argparse
 import sys
+
 import PySimpleGUI as sg
+
 from core.config import Config
 from core.enums import ShipmentCategory, ShipMode
 from shipper.shipper import Shipper
@@ -61,10 +63,10 @@ def main():
 
     config = Config.from_toml(mode=args.shipping_mode)
     shipper = Shipper(config=config)
-    shipper.get_shipments(config=config, category=category, dbase_file=input_file_arg)
+    shipper.get_shipments(category=args.category, dbase_file=args.input_file)
 
     if args.shipping_mode in [ShipMode.SHIP_OUT.name, ShipMode.SHIP_IN.name]:
-        shipper.dispatch(config=config, shipments=shipments)
+        shipper.dispatch()
 
     elif args.shipping_mode == ShipMode.TRACK:
         # Implement the logic for the 'track' mode.
@@ -75,4 +77,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
