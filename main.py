@@ -1,5 +1,6 @@
 import argparse
 import sys
+from pathlib import Path
 
 import PySimpleGUI as sg
 
@@ -18,7 +19,7 @@ includes
 """
 
 def main(args):
-    while not args.input_file:
+    while not Path(args.input_file).exists():
         args.input_file = sg.popup_get_file("Select input file")
 
     config = Config.from_toml(mode=args.shipping_mode)

@@ -40,7 +40,7 @@ logger = get_amdesp_logger()
 class Config:
     def __init__(self, config_dict: dict):
         self.mode = config_dict['mode'] #
-        self.outbound = 'out' in config_dict['mode']
+        self.outbound = 'out' in config_dict['mode'].lower()
         self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
         self.parcel_contents: str = config_dict.get('parcel_contents')
         self.sandbox: bool = config_dict.get('sandbox')
