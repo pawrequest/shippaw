@@ -1,7 +1,7 @@
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, cast
+from typing import List, Optional, cast
 
 import PySimpleGUI as sg
 import dotenv
@@ -14,12 +14,11 @@ from despatchbay.exceptions import ApiException
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import ShipmentCategory
-from core.funcs import email_label, log_shipment, print_label, update_commence, collection_date_to_datetime
-
+from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence
 from gui import keys_and_strings
-from gui.main_gui import post_book, main_window
+from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
-from shipper.edit_shipment import dropoff_click, boxes_click, date_click, address_click, service_click
+from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
 from shipper.shipment import Shipment, shipdict_from_dbase
 
 dotenv.load_dotenv()
@@ -33,18 +32,16 @@ class Shipper:
         client = APIClientWrapper(client)
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
+        self.shipments: list[Shipment] = []
 
-    @staticmethod
-    def get_shipments(config: Config, category: ShipmentCategory, dbase_file: str) -> list[Shipment]:
+    def get_shipments(self, config: Config, category: ShipmentCategory, dbase_file: str):
         logger.info(f'DBase file og = {dbase_file}')
-        shipments: [Shipment] = []
         try:
             for record in DBF(dbase_file, encoding='cp1252'):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
-                    shipment = Shipment(ship_dict=ship_dict, category=category)
-                    shipments.append(shipment)
+                    self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')
                     continue
@@ -55,11 +52,10 @@ class Shipper:
             logger.exception(f'.Dbf or Dbt are missing \n{e}')
         except Exception as e:
             logger.exception(e)
-            raise e
-        return shipments
+            raise
 
-    @staticmethod
-    def dispatch(shipments, config):
+    def dispatch(self, config):
+        shipments = self.shipments
         address_shipments(outbound=config.outbound, shipments=shipments, config=config)
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]
         booked_shipments = dispatch_loop(config=config, shipments=shipments)
@@ -90,8 +86,6 @@ def dispatch_loop(config, shipments: List[Shipment]):
         shipment_to_edit: Shipment = next((shipment for shipment in shipments if
                                            shipment.shipment_name_printable.lower() in event.lower()))
 
-
-        package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
 
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
@@ -235,24 +229,6 @@ def get_shipment_request(shipment: Shipment):
     logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return request
 
-
-def get_parcels(num_parcels: int, contents: str = 'Radios') -> list[Parcel]:
-    """ return an array of dbay parcel objects equal to the number of boxes provided
-        uses arbitrary sizes because dbay api wont allow skipping even though website does"""
-    parcels = []
-    for x in range(num_parcels):
-        parcel = DESP_CLIENT.parcel(
-            contents=contents,
-            value=500,
-            weight=6,
-            length=60,
-            width=40,
-            height=40,
-        )
-        parcels.append(parcel)
-    logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
-
-    return parcels
 
 
 def gather_dbay_objs(shipment: Shipment, config: Config):

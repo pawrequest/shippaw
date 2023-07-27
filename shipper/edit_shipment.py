@@ -102,3 +102,32 @@ def get_new_parcels(location, parcel_contents="Radios") -> List[Parcel] | None:
         new_boxes = int(v[e])
         window.close()
         return get_parcels(num_parcels=new_boxes, contents=parcel_contents)
+
+
+def get_parcels(num_parcels: int, contents: str = 'Radios') -> list[Parcel]:
+    """ return an array of dbay parcel objects equal to the number of boxes provided
+        uses arbitrary sizes because dbay api wont allow skipping even though website does"""
+    client = shipper.shipper.DESP_CLIENT
+    # parcels = []
+    # for x in range(num_parcels):
+    #     parcel = client.parcel(
+    #         contents=contents,
+    #         value=500,
+    #         weight=6,
+    #         length=60,
+    #         width=40,
+    #         height=40,
+    #     )
+    #     parcels.append(parcel)
+    # return parcels
+    # logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
+
+    return [client.parcel(
+                contents=contents,
+                value=500,
+                weight=6,
+                length=60,
+                width=40,
+                height=40,
+            )for i in range(num_parcels)]
+

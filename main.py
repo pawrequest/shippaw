@@ -30,10 +30,10 @@ includes
 def main(main_mode: str):
     config = Config.from_toml(mode=main_mode)
     shipper = Shipper(config=config)
-    shipments = shipper.get_shipments(config=config, category=category, dbase_file=input_file_arg)
+    shipper.get_shipments(config=config, category=category, dbase_file=input_file_arg)
 
     if 'ship' in main_mode:
-        shipper.dispatch(config=config, shipments=shipments)
+        shipper.dispatch(config=config)
 
     elif 'track' in main_mode:
         ...
