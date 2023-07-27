@@ -1,9 +1,8 @@
 /.env
-/venv/
-/build/
 /.idea
-/data/AmDesp.log
-/data/AmLog.json
-/data/Parcelforce Labels/
+/bench
+/data/
+/build/
 /dist/
-/builds/
+/venv/
+*.pyc
