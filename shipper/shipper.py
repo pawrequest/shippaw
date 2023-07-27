@@ -1,12 +1,12 @@
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import List, cast
 
 import PySimpleGUI as sg
 import dotenv
 from dbfread import DBF, DBFNotFound
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, ShipmentReturn
+from despatchbay.despatchbay_entities import CollectionDate, Service, ShipmentReturn
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
@@ -63,6 +63,52 @@ class Shipper:
         booked_shipments = dispatch_loop(config=config, shipments=shipments)
         post_book(shipments=booked_shipments)
 
+    def track(self):
+        tracking_loop(shipments=self.shipments)
+
+
+def tracking_loop(shipments: List[Shipment]):
+    for shipment in shipments:
+        if outbound_id := shipment.outbound_id:
+            outbound_window = get_tracking(outbound_id)
+        if inbound_id := shipment.inbound_id:
+            inbound_window = get_tracking(inbound_id)
+
+
+
+def get_tracking(shipment_id):
+    shipment_return = DESP_CLIENT.get_shipment(shipment_id)
+    delivered = shipment_return.is_delivered
+
+    tracking_numbers = [parcel.tracking_number for parcel in shipment_return.parcels]
+    tracking_d = {}
+    layout = []
+    for tracked_parcel in tracking_numbers:
+        parcel_layout = []
+        signatory = None
+        params = {}
+        tracking = DESP_CLIENT.get_tracking(tracked_parcel)
+        # courier = tracking['CourierName'] # debug unused?
+        # parcel_title = [f'{tracked_parcel} ({courier}):'] # debug unused?
+        history = tracking['TrackingHistory']
+        for event in history:
+            if 'delivered' in event.Description.lower():
+                signatory = f"{chr(10)}Signed for by: {event.Signatory}"
+                params.update({'background_color': 'aquamarine', 'text_color': 'maroon4'})
+
+            event_text = sg.T(
+                f'{event.Date} - {event.Description} in {event.Location}{signatory if signatory else ""}',
+                **params)
+
+            parcel_layout.append([event_text])
+
+        parcel_col = sg.Column(parcel_layout)
+        layout.append(parcel_col)
+        tracking_d.update({tracked_parcel: tracking})
+
+    shipment_return.tracking_dict = tracking_d
+    tracking_window = sg.Window('', [layout])
+
 
 def dispatch_loop(config, shipments: List[Shipment]):
     """ pysimplegui main_loop, takes a prebuilt window and shipment list,
@@ -87,7 +133,6 @@ def dispatch_loop(config, shipments: List[Shipment]):
 
         shipment_to_edit: Shipment = next((shipment for shipment in shipments if
                                            shipment.shipment_name_printable.lower() in event.lower()))
-
 
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
@@ -230,7 +275,6 @@ def get_shipment_request(shipment: Shipment):
 
     logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return request
-
 
 
 def gather_dbay_objs(shipment: Shipment, config: Config):
