@@ -20,7 +20,7 @@ from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
 from shipper.shipment import Shipment, shipdict_from_dbase
-from shipper.tracker import get_tracking
+from shipper.tracker import get_tracking, track2
 
 dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
@@ -65,8 +65,8 @@ class Shipper:
         post_book(shipments=booked_shipments)
 
     def track(self):
-        tracking_loop(shipments=self.shipments)
-
+        # tracking_loop(shipments=self.shipments)
+        track2(shipments=self.shipments)
 
 def tracking_loop(shipments: List[Shipment]):
     for shipment in shipments:
