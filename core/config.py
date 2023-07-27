@@ -12,7 +12,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
 from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
-    PathsList
+    PathsList, ShipMode
 
 config_env = dotenv_values(".env")
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +40,7 @@ logger = get_amdesp_logger()
 class Config:
     def __init__(self, config_dict: dict):
         self.mode = config_dict['mode'] #
-        self.outbound = 'out' in config_dict['mode']
+        self.outbound = 'out' in config_dict['mode'].lower()
         self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
         self.parcel_contents: str = config_dict.get('parcel_contents')
         self.sandbox: bool = config_dict.get('sandbox')
@@ -55,7 +55,7 @@ class Config:
         self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
     @classmethod
-    def from_toml(cls, mode: str):
+    def from_toml(cls, mode: ShipMode):
         with open(CONFIG_TOML, 'rb') as g:
             config_dict = tomllib.load(g)
         config_dict['mode'] = mode

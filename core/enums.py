@@ -10,11 +10,9 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
 
-class ShipmentCategory(StrEnum):
-    HIRE = auto()
-    SALE = auto()
-    FAKE = auto()
-    DROP = auto()
+class ShipmentCategory(Enum):
+    HIRE = 'HIRE'
+    SALE = 'SALE'
 
 
 @dataclass
@@ -50,12 +48,10 @@ class FuzzyScores:
         }
 
 
-class ShipMode(StrEnum):
-    SHIP_OUT = auto()
-    SHIP_IN = auto()
-    TRACK = auto()
-    FAKE = auto()
-    DROP = auto()
+class ShipMode(Enum):
+    SHIP_OUT = 'SHIP_OUT'
+    SHIP_IN = 'SHIP_IN'
+    TRACK = 'TRACK'
 
 
 @dataclass

@@ -1,12 +1,12 @@
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import List, cast
 
 import PySimpleGUI as sg
 import dotenv
 from dbfread import DBF, DBFNotFound
-from despatchbay.despatchbay_entities import CollectionDate, Parcel, Service, ShipmentReturn
+from despatchbay.despatchbay_entities import CollectionDate, Service, ShipmentReturn
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
@@ -20,6 +20,7 @@ from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
 from shipper.shipment import Shipment, shipdict_from_dbase
+from shipper.tracker import get_tracking, track2
 
 dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
@@ -33,14 +34,15 @@ class Shipper:
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
         self.shipments: list[Shipment] = []
+        self.config = config
 
-    def get_shipments(self, config: Config, category: ShipmentCategory, dbase_file: str):
+    def get_shipments(self, category: ShipmentCategory, dbase_file: str):
         logger.info(f'DBase file og = {dbase_file}')
         try:
             for record in DBF(dbase_file, encoding='cp1252'):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
+                    ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mapping)
                     self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')
@@ -54,12 +56,26 @@ class Shipper:
             logger.exception(e)
             raise
 
-    def dispatch(self, config):
+    def dispatch(self):
+        config = self.config
         shipments = self.shipments
         address_shipments(outbound=config.outbound, shipments=shipments, config=config)
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]
         booked_shipments = dispatch_loop(config=config, shipments=shipments)
         post_book(shipments=booked_shipments)
+
+    def track(self):
+        # tracking_loop(shipments=self.shipments)
+        track2(shipments=self.shipments)
+
+def tracking_loop(shipments: List[Shipment]):
+    for shipment in shipments:
+        if outbound_id := shipment.outbound_id:
+            outbound_window = get_tracking(outbound_id)
+            event, values = outbound_window.read()
+        if inbound_id := shipment.inbound_id:
+            inbound_window = get_tracking(inbound_id)
+            event, values = inbound_window.read()
 
 
 def dispatch_loop(config, shipments: List[Shipment]):
@@ -85,7 +101,6 @@ def dispatch_loop(config, shipments: List[Shipment]):
 
         shipment_to_edit: Shipment = next((shipment for shipment in shipments if
                                            shipment.shipment_name_printable.lower() in event.lower()))
-
 
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
@@ -228,7 +243,6 @@ def get_shipment_request(shipment: Shipment):
 
     logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return request
-
 
 
 def gather_dbay_objs(shipment: Shipment, config: Config):
