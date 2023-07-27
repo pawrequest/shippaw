@@ -3,7 +3,7 @@
 
 * Takes .Dbase files representing Sale or Hire records, and connects to DespatchBay.com's shipping Api to book and track inbound and outbound courier collections.
 
-* Prints Shipping Labels for outbound, Sends generated Email to customer for outbound 
+* Prints Shipping Labels for outbound, Sends generated Email to customer for inbound 
 
 * Configured via toml
 
