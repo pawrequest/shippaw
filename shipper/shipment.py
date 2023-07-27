@@ -12,7 +12,6 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from core.config import Config
 from core.config import logger
 from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
-from core.exceptions import ShipDictError
 
 
 @dataclass
@@ -228,7 +227,8 @@ def shipdict_from_dbase(record, import_mapping: dict):
                 logging.info(f'SHIPDICT FROM DBASE - {k} : {v}')
                 ship_dict_from_dbf.update({k: v})
             except Exception as error:
-                raise ShipDictError(f'ShipDictError: {k=},\n{v=}\n{error=}')
+                logger.exception(error)
+                raise
 
     return ship_dict_from_dbf
 
