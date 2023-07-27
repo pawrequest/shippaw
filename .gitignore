@@ -1,7 +1,6 @@
 /.env
 /.idea
 /bench
-/data/
 /build/
 /dist/
 /venv/

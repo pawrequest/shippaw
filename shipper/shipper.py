@@ -71,8 +71,10 @@ def tracking_loop(shipments: List[Shipment]):
     for shipment in shipments:
         if outbound_id := shipment.outbound_id:
             outbound_window = get_tracking(outbound_id)
+            event, values = outbound_window.read()
         if inbound_id := shipment.inbound_id:
             inbound_window = get_tracking(inbound_id)
+            event, values = inbound_window.read()
 
 
 
@@ -107,7 +109,7 @@ def get_tracking(shipment_id):
         tracking_d.update({tracked_parcel: tracking})
 
     shipment_return.tracking_dict = tracking_d
-    tracking_window = sg.Window('', [layout])
+    return sg.Window('', [layout])
 
 
 def dispatch_loop(config, shipments: List[Shipment]):
