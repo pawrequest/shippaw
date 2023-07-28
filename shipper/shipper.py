@@ -59,7 +59,10 @@ class Shipper:
     def dispatch(self):
         config = self.config
         shipments = self.shipments
-        address_shipments(outbound=config.outbound, shipments=shipments, config=config)
+        shipments = address_shipments(outbound=config.outbound, shipments=shipments, config=config)
+        if not shipments:
+            logger.info('No shipments to process.')
+            sys.exit()
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]
         booked_shipments = dispatch_loop(config=config, shipments=shipments)
         post_book(shipments=booked_shipments)

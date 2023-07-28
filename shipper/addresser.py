@@ -234,7 +234,13 @@ def address_shipments(shipments: list[Shipment], config: Config, outbound: bool)
     for shipment in shipments:
         shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
                                           name=shipment.contact_name)
+
         shipment.remote_address = remote_address_script(shipment=shipment)
+
+        if shipment.remote_address is None:
+            shipments = [ s for s in shipments if s is not shipment]
+            logger.exception(f'No Address Found for {shipment}, skipping to next shipment')
+            continue
 
         shipment.recipient = recip_from_contact_address(contact=shipment.remote_contact,
                                                         address=shipment.remote_address) if outbound \
@@ -243,6 +249,7 @@ def address_shipments(shipments: list[Shipment], config: Config, outbound: bool)
         shipment.sender = home_base if outbound \
             else sender_from_contact_address(contact=shipment.remote_contact,
                                              remote_address=shipment.remote_address)
+    return shipments
 
 
 def remote_address_script(shipment: Shipment) -> Address:
@@ -255,6 +262,9 @@ def remote_address_script(shipment: Shipment) -> Address:
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=shipment.remote_contact)
         if address is None:
+            if sg.popup_yes_no(
+                f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
+                return None
             continue
         else:
             return address

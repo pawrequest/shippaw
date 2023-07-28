@@ -26,6 +26,10 @@ def main(args):
     shipper = Shipper(config=config)
     shipper.get_shipments(category=args.category, dbase_file=args.input_file)
 
+    if not shipper.shipments:
+        logger.info('No shipments to process.')
+        sys.exit()
+
     if args.shipping_mode == ShipMode.SHIP.name:
         shipper.dispatch()
 
