@@ -224,8 +224,8 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
 
 
 def address_shipments(shipments: list[Shipment], config: Config, outbound: bool):
-    """Sets Contact and Address for sender and recipient for each shipment in self.shipments
-    home_base is sender if outbound else recipient, other address from remote_address_Script"""
+    """Sets Contact and Address for sender and recipient for each shipment
+    home_base is sender if outbound else recipient, other address from remote_address_script"""
     if not all([config.home_contact, config.home_address.dbay_key]):
         raise ValueError(f"Home Contact or Dbay Key Missing - please edit .toml file")
 
@@ -236,9 +236,8 @@ def address_shipments(shipments: list[Shipment], config: Config, outbound: bool)
                                           name=shipment.contact_name)
 
         shipment.remote_address = remote_address_script(shipment=shipment)
-
-        if shipment.remote_address is None:
-            shipments = [ s for s in shipments if s is not shipment]
+        if shipment.remote_address is False:
+            shipments = [s for s in shipments if s is not shipment]
             logger.exception(f'No Address Found for {shipment}, skipping to next shipment')
             continue
 
@@ -252,7 +251,7 @@ def address_shipments(shipments: list[Shipment], config: Config, outbound: bool)
     return shipments
 
 
-def remote_address_script(shipment: Shipment) -> Address:
+def remote_address_script(shipment: Shipment) -> Address|bool:
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
@@ -263,11 +262,10 @@ def remote_address_script(shipment: Shipment) -> Address:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=shipment.remote_contact)
         if address is None:
             if sg.popup_yes_no(
-                f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
-                return None
+                    f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
+                return False
             continue
-        else:
-            return address
+        return address
 
 
 def get_home_base(config, outbound) -> Sender | Recipient:
