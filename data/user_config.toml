@@ -1,0 +1,90 @@
+debug = true
+sandbox = false
+return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
+                            Your prepaid label is attached for returning the radios.\n\
+                            Please print the label off and stick securely to the box.\n\
+                            Also make sure any old Parcelforce labels are removed - or the box could get delivered back to you!\n\n\
+                            Collection has been booked from:\n\
+                            __--__ADDRESSREPLACE__--__\n\
+                            on: __--__DATEREPLACE__--__\n\n\
+                            We are unable to provide accurate collection times - please contact us urgently if there will not be somebody at the collection address on the specified date.\n\
+                            If the collection is missed for any reason, you can also just take the box, with the label securely attached, and drop it at any Post Office, the carriage fee is already paid.\n\
+                            Thanks\n\
+                            Regards,\nGiles Toman\
+                          """
+parcel_contents = 'Radios'
+returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
+                            Your prepaid label is attached for returning the radios.\n\
+                            Please print the label off, stick securely to the box, and drop it at any Post Office, the carriage fee is already paid.\n\
+                            Please make very sure that any old Parcelforce labels are removed or overstuck - otherwise the box could be delivered back to you!\n\
+                            Thanks\n\
+                            Regards,\nGiles Toman\
+                          """
+
+# rename keys
+[import_mapping]
+DELIVERY_A = 'address_as_str'   # string representation of customer address
+DELIVERY_C = 'contact'          # contact name for the remote address
+DELIVERY_E = 'email'            # email for remote address
+DELIVERY_N = 'delivery_name'    # name of company at remote address
+DELIVERY_P = 'postcode'         # postcode of remote address
+DELIVERY_R = 'delivery_ref'     # delivery reference for rush etc
+DELIVERY_T = 'telephone'        # telephone number for remote contact
+BOXES = 'boxes'                 # number of boxes in shipment
+#DB_LABEL_P = 'label_printed'    # has a label been printed? depric
+#SEND___COL = 'send_collect'     # any use?
+SEND_METHO = 'send_method'      # contains parcelforce?
+SEND_OUT_D = 'send_out_date'    # hire record send out date
+INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
+OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
+#STATUS = 'status'
+NAME = 'shipment_name'          # hire or sale name
+FIELD10 = 'customer'            # from hire
+FIELD17 = 'customer'            # customer from hire
+FIELD9 = 'customer'             # customer from sale category
+
+[home_contact]
+name = 'Giles Toman'
+email = 'radios@amherst.co.uk'
+telephone = "0207 3289792"
+
+[home_address]
+address_id = 5536 # remove from .env
+dbay_key = 'NW64TE1003'
+company_name = 'Amherst Radio Center'
+street = '70 Kingsgate Road'
+locality = 'Kilburn'
+town_city = 'London'
+county = "London"
+postal_code = "NW6 4TE"
+country_code = "GB"
+dropoff_sender_id = 328187
+
+
+[dbay]
+[dbay.sandbox]
+courier = 99
+service = 9992
+api_user = "DESPATCH_API_USER_SANDBOX"
+api_key = "DESPATCH_API_KEY_SANDBOX"
+
+[dbay.production]
+courier = 8  # parcelforce
+service = 101  # parcelforce 24
+api_user = "DESPATCH_API_USER"
+api_key = "DESPATCH_API_KEY"
+
+
+
+[paths]
+data = 'data/'
+scripts = 'scripts/'
+labels = 'data/Parcelforce Labels/'
+log_json = 'data/AmLog.json'
+cmc_checkin = 'scripts/cmc_checkin.ps1'
+cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
+cmc_installer = 'scripts/CmcLibNet_Setup.exe'
+stored_xml = 'data/AmShip.xml'
+user_data = 'data/user_data.pk'
+dbase_export = 'data/amherst_export.dbf'
