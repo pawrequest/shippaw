@@ -4,7 +4,7 @@ import sys
 import PySimpleGUI as sg
 
 from core.config import Config, logger
-from core.enums import ShipmentCategory, ShipMode
+from core.enums import ShipmentCategory, ShipMode, ShipDirection
 from shipper.shipper import Shipper
 
 """
@@ -21,12 +21,12 @@ def main(args):
     while not args.input_file:
         args.input_file = sg.popup_get_file("Select input file")
     args.category = ShipmentCategory[args.category]
-
-    config = Config.from_toml(mode=args.shipping_mode)
+    outbound = 'out' in args.direction.lower()
+    config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
     shipper = Shipper(config=config)
     shipper.get_shipments(category=args.category, dbase_file=args.input_file)
 
-    if args.shipping_mode in [ShipMode.SHIP_OUT.name, ShipMode.SHIP_IN.name]:
+    if args.shipping_mode == ShipMode.SHIP.name:
         shipper.dispatch()
 
     elif args.shipping_mode == ShipMode.TRACK.name:
@@ -39,6 +39,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="AmDesp Shipping Agent.")
     parser.add_argument('shipping_mode', choices=[mode.name for mode in ShipMode], help="Choose shipping mode.")
+    parser.add_argument('direction', choices=[direc.name for direc in ShipDirection], help="Choose shipping direction.")
     parser.add_argument('category', choices=[category.name for category in ShipmentCategory],
                         help="Choose shipment category.")
     parser.add_argument('input_file', nargs='?', help="Path to input file.")

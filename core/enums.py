@@ -1,7 +1,7 @@
 import os
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum, StrEnum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -49,9 +49,14 @@ class FuzzyScores:
 
 
 class ShipMode(Enum):
-    SHIP_OUT = 'SHIP_OUT'
-    SHIP_IN = 'SHIP_IN'
+    SHIP = 'SHIP'
     TRACK = 'TRACK'
+
+
+class ShipDirection(Enum):
+    IN = 'IN'
+    OUT = 'OUT'
+
 
 
 @dataclass

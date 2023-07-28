@@ -27,19 +27,20 @@ $filter.Qualifier = "EqualTo"
 
 if ($outbound -eq 'True'){
     Write-Host "SHIPMENT IS OUTBOUND"
+    $box_to_tick = "DB label printed"
     $shipment_type = "Outbound ID"
 }
 Else {
     Write-Host "SHIPMENT IS INBOUND"
+    $box_to_tick = "Pickup Arranged"
     $shipment_type = "Inbound ID"
 }
-
 
 If ($cursor.Filters.Apply() = 0){
     # edit and write to db
     $ed = $cursor.GetEditRowSet()
 
-    $ed_index = $ed.GetColumnIndex("DB label printed")
+    $ed_index = $ed.GetColumnIndex($box_to_tick)
     $ed.ModifyRow(0, $ed_index, $true, 0)
     $ed.commit
 

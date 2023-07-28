@@ -102,7 +102,7 @@ def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_scri
 
     try:
         commence_edit = powershell_runner(str(ps_script), shipment.category, shipment._shipment_name, id_to_pass,
-                                          str(outbound))
+                                          str(outbound), str(shipment.is_dropoff))
     except RuntimeError as e:
         logger.exception('Error logging to commence')
         sg.popup_scrolled(f'Error logging to commence - is it running?')

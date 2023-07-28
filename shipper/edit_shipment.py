@@ -34,6 +34,7 @@ def dropoff_click(config, shipment: Shipment):
         return None
     logger.info('Converting to Dropoff')
     shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
+    shipment.is_dropoff = True
     available_dates = client.get_available_collection_dates(sender_address=shipment.sender,
                                                                  courier_id=config.default_shipping_service.courier)
     shipment.date_menu_map = DATE_MENU(dates=available_dates)
