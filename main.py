@@ -20,6 +20,7 @@ includes
 def main(args):
     while not args.input_file:
         args.input_file = sg.popup_get_file("Select input file")
+    args.category = ShipmentCategory[args.category]
 
     config = Config.from_toml(mode=args.shipping_mode)
     shipper = Shipper(config=config)

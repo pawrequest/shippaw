@@ -99,16 +99,18 @@ def dispatch_loop(config, shipments: List[Shipment]):
             window.close()
             sys.exit()
 
-        shipment_to_edit: Shipment = next((shipment for shipment in shipments if
-                                           shipment.shipment_name_printable.lower() in event.lower()))
-
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                 sg.popup_quick_message('Please Wait')
                 window.close()
                 return process_shipments(shipments=shipments, values=values, config=config)
+        else:
+            logger.info(f'Wrong Event key {event=}')
 
-        elif event == keys_and_strings.BOXES_KEY(shipment_to_edit):
+        shipment_to_edit: Shipment = next((shipment for shipment in shipments if
+                                           keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+
+        if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
             package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):

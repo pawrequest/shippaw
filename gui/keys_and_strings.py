@@ -16,7 +16,7 @@ def BOX_KEY():
 
 
 def BOXES_KEY(shipment):
-    return f'-{shipment.shipment_name_printable.upper()}_BOXES-'.upper()
+    return f'-{shipment.shipment_name_printable}_BOXES-'.upper()
 
 
 def CUSTOMER_KEY(shipment):
@@ -24,7 +24,7 @@ def CUSTOMER_KEY(shipment):
 
 
 def DATE_KEY(shipment):
-    return f'-{shipment.shipment_name_printable.upper()}_DATE-'.upper()
+    return f'-{shipment.shipment_name_printable}_DATE-'.upper()
 
 
 def DROPOFF_KEY(shipment):
@@ -40,7 +40,7 @@ def PRINT_EMAIL_KEY(shipment: Shipment):
 
 
 def RECIPIENT_KEY(shipment):
-    return f'-{shipment.shipment_name_printable.upper()}_RECIPIENT-'.upper()
+    return f'-{shipment.shipment_name_printable}_RECIPIENT-'.upper()
 
 
 def REMOVE_KEY(shipment: Shipment):
@@ -48,11 +48,11 @@ def REMOVE_KEY(shipment: Shipment):
 
 
 def REPRINT_KEY(shipment):
-    return f'-{shipment.shipment_name_printable.upper()}_REPRINT-'.upper()
+    return f'-{shipment.shipment_name_printable}_REPRINT-'.upper()
 
 
 def SHIPMENT_KEY(shipment: Shipment):
-    return f'-SHIPMENT_{shipment.shipment_name_printable}-'.upper()
+    return f'{shipment.shipment_name_printable}'.upper()
 
 
 def SENDER_KEY(shipment):
