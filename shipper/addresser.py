@@ -13,6 +13,52 @@ from gui.address_gui import address_from_gui
 from shipper.shipment import Shipment
 
 
+def address_shipments(shipments: list[Shipment], config: Config, outbound: bool):
+    """Sets Contact and Address for sender and recipient for each shipment
+    home_base is sender if outbound else recipient, other address from remote_address_script"""
+    if not all([config.home_contact, config.home_address.dbay_key]):
+        raise ValueError(f"Home Contact or Dbay Key Missing - please edit .toml file")
+
+    home_base = get_home_base(outbound=outbound, config=config)
+
+    for shipment in shipments:
+        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
+                                          name=shipment.contact_name)
+
+        shipment.remote_address = remote_address_script(shipment=shipment)
+        if shipment.remote_address is False:
+            shipments = [s for s in shipments if s is not shipment]
+            logger.exception(f'No Address Found for {shipment}, skipping to next shipment')
+            continue
+
+        shipment.sender = home_base if outbound \
+            else sender_from_contact_address(contact=shipment.remote_contact,
+                                             remote_address=shipment.remote_address)
+
+        shipment.recipient = home_base if not outbound \
+            else recip_from_contact_address(contact=shipment.remote_contact,
+                                            address=shipment.remote_address)
+
+    return shipments
+
+
+def remote_address_script(shipment: Shipment) -> Address | bool:
+    terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
+
+    if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
+        return address
+    logger.info({'No Explicit Match Found - getting fuzzy'})
+    fuzzy = fuzzy_address(shipment=shipment)
+    while True:
+        address = address_from_gui(shipment=shipment, address=fuzzy, contact=shipment.remote_contact)
+        if address is None:
+            if sg.popup_yes_no(
+                    f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
+                return False
+            continue
+        return address
+
+
 def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address | None:
     client = shipper.shipper.DESP_CLIENT
     check_set = set(search_terms)
@@ -166,7 +212,6 @@ def fuzzy_address(shipment) -> Address:
     candidate_keys = get_candidate_keys(postcode=shipment.postcode)
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
-        # use backoff in case of postcodes with 70+ addresses. yes they exist - ask me how I know
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
         if get_explicit_match(shipment=shipment, candidate_address=candidate_address):
             return candidate_address
@@ -221,51 +266,6 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
         recipient_address=address, **contact.__dict__)
     # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip
-
-
-def address_shipments(shipments: list[Shipment], config: Config, outbound: bool):
-    """Sets Contact and Address for sender and recipient for each shipment
-    home_base is sender if outbound else recipient, other address from remote_address_script"""
-    if not all([config.home_contact, config.home_address.dbay_key]):
-        raise ValueError(f"Home Contact or Dbay Key Missing - please edit .toml file")
-
-    home_base = get_home_base(outbound=outbound, config=config)
-
-    for shipment in shipments:
-        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                          name=shipment.contact_name)
-
-        shipment.remote_address = remote_address_script(shipment=shipment)
-        if shipment.remote_address is False:
-            shipments = [s for s in shipments if s is not shipment]
-            logger.exception(f'No Address Found for {shipment}, skipping to next shipment')
-            continue
-
-        shipment.recipient = recip_from_contact_address(contact=shipment.remote_contact,
-                                                        address=shipment.remote_address) if outbound \
-            else home_base
-
-        shipment.sender = home_base if outbound \
-            else sender_from_contact_address(contact=shipment.remote_contact,
-                                             remote_address=shipment.remote_address)
-    return shipments
-
-
-def remote_address_script(shipment: Shipment) -> Address|bool:
-    terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
-
-    if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
-        return address
-    logger.info({'No Explicit Match Found - getting fuzzy'})
-    fuzzy = fuzzy_address(shipment=shipment)
-    while True:
-        address = address_from_gui(shipment=shipment, address=fuzzy, contact=shipment.remote_contact)
-        if address is None:
-            if sg.popup_yes_no(
-                    f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
-                return False
-            continue
-        return address
 
 
 def get_home_base(config, outbound) -> Sender | Recipient:

@@ -21,7 +21,7 @@ def main(args):
     while not args.input_file:
         args.input_file = sg.popup_get_file("Select input file")
     args.category = ShipmentCategory[args.category]
-    outbound = 'out' in args.direction.lower()
+    outbound = 'out' == args.direction.lower()
     config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
     shipper = Shipper(config=config)
     shipper.get_shipments(category=args.category, dbase_file=args.input_file)

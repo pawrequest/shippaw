@@ -56,3 +56,19 @@ def has_20_after(index: int, nums: {int}):
 
 if __name__ == '__main__':
     main()
+
+
+"""
+imagine a commence invoice generator
+commence agent:
+1) export hire to dbf
+2) launch python with dbf as argument
+
+python:
+3) get latest invoice number
+4) produce .DOC
+5) get user edits / confirmation
+6) save .DOC + .PDF
+7) link invoice in commence
+
+"""

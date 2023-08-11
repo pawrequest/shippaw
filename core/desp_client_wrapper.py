@@ -7,9 +7,8 @@ class APIClientWrapper:
         self.api_calls = 0
 
     def _log_api_call(self, method_name, *args, **kwargs):
-        # Log the API call with its name and parameters
+        """ Log API call with its name and parameters """
         self.api_calls += 1
-        # logger.info(f"API call number {self.api_calls}: {method_name}, args: {args}, kwargs: {kwargs}")
         logger.info(f"API call number {self.api_calls}: {method_name}" +
                     (f", args: {args}" if args else "") +
                     (f", kwargs: {kwargs}" if kwargs else ""))

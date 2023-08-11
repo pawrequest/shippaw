@@ -27,7 +27,7 @@ DESP_CLIENT: DespatchBaySDK | None = None
 
 
 class Shipper:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         global DESP_CLIENT
         client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
         client = APIClientWrapper(client)
@@ -70,6 +70,7 @@ class Shipper:
     def track(self):
         # tracking_loop(shipments=self.shipments)
         track2(shipments=self.shipments)
+
 
 def tracking_loop(shipments: List[Shipment]):
     for shipment in shipments:
