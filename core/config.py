@@ -6,7 +6,7 @@ import tomllib
 
 import PySimpleGUI as sg
 from pathlib import Path
-from dotenv import dotenv_values
+from dotenv import dotenv_values, load_dotenv
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
@@ -14,10 +14,15 @@ from despatchbay.exceptions import AuthorizationException
 from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
     PathsList, ShipMode
 
-config_env = dotenv_values(".env")
 ROOT_DIR = Path(__file__).resolve().parent.parent
-LOG_FILE = ROOT_DIR / 'data/AmDesp.log'
-CONFIG_TOML = ROOT_DIR / 'data/user_config.toml'
+DATA_DIR = ROOT_DIR / 'data'
+LOG_FILE = DATA_DIR / 'AmDesp.log'
+CONFIG_TOML = DATA_DIR / 'user_config.toml'
+# config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
+load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
+
+...
+
 
 
 def get_amdesp_logger():
@@ -35,12 +40,21 @@ def get_amdesp_logger():
 
 
 logger = get_amdesp_logger()
-
+logger.info(f'AmDesp started, '
+            f'\n{__file__=}'
+            f'\n{sys.version=}'
+            f'\n{sys.executable=}'
+            f'\n{sys.path=}'
+            f'\n{ROOT_DIR=}'  
+            f'\n{DATA_DIR=}'
+            f'\n{LOG_FILE=}'
+            f'\n{CONFIG_TOML=}'
+            )
 
 class Config:
     def __init__(self, config_dict: dict):
-        self.mode = config_dict['mode'] #
-        self.outbound = 'out' in config_dict['mode'].lower()
+        self.mode = config_dict['mode']
+        self.outbound = config_dict['outbound']
         self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
         self.parcel_contents: str = config_dict.get('parcel_contents')
         self.sandbox: bool = config_dict.get('sandbox')
@@ -50,15 +64,16 @@ class Config:
         self.home_contact = Contact(**config_dict.get('home_contact'))
         self.return_label_email_body = config_dict.get('return_label_email_body')
 
-        dbay = config_dict.get('dbay')[self.scope_from_sandbox()]
+        dbay = config_dict.get('dbay')[self.scope_from_sandbox()] # gets the names of env vars
         self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
         self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
     @classmethod
-    def from_toml(cls, mode: ShipMode):
+    def from_toml(cls, mode: ShipMode, outbound:bool):
         with open(CONFIG_TOML, 'rb') as g:
             config_dict = tomllib.load(g)
         config_dict['mode'] = mode
+        config_dict['outbound'] = outbound
 
         return cls(config_dict=config_dict)
     #

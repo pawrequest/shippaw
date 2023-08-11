@@ -9,7 +9,7 @@ $ref_name = $args[1]
 $shipment_id = $args[2]
 $outbound = $args[3]
 
-Write-Host LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type
+Write-Host LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $ID_direction
 Write-Host LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name
 Write-Host LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name
 Write-Host LOG TO COMMENCE SCRIPT -  OUTBOUND - $outbound
@@ -27,23 +27,24 @@ $filter.Qualifier = "EqualTo"
 
 if ($outbound -eq 'True'){
     Write-Host "SHIPMENT IS OUTBOUND"
-    $shipment_type = "Outbound ID"
+    $box_to_tick = "DB label printed"
+    $ID_direction = "Outbound ID"
 }
 Else {
     Write-Host "SHIPMENT IS INBOUND"
-    $shipment_type = "Inbound ID"
+    $box_to_tick = "Pickup Arranged"
+    $ID_direction = "Inbound ID"
 }
-
 
 If ($cursor.Filters.Apply() = 0){
     # edit and write to db
     $ed = $cursor.GetEditRowSet()
 
-    $ed_index = $ed.GetColumnIndex("DB label printed")
+    $ed_index = $ed.GetColumnIndex($box_to_tick)
     $ed.ModifyRow(0, $ed_index, $true, 0)
     $ed.commit
 
-    $ed_index = $ed.GetColumnIndex($shipment_type)
+    $ed_index = $ed.GetColumnIndex($ID_direction)
     $ed.ModifyRow(0, $ed_index, $shipment_id, 0)
     $ed.Commit()
 
@@ -52,7 +53,7 @@ If ($cursor.Filters.Apply() = 0){
 Else{
     "ERROR IN POWERSHELL SCRIPT"
     "MULTIPLE RECORDS RETURNED?"
-    "LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $shipment_type"
+    "LOG TO COMMENCE SCRIPT - SHIPMENT TYPE - $ID_direction"
     "LOG TO COMMENCE SCRIPT -  REF NAME - $ref_name"
     "LOG TO COMMENCE SCRIPT -  SHIP ID - $ref_name"
     "LOG TO COMMENCE SCRIPT -  ISARETURN - $outbound"

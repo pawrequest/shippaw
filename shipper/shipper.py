@@ -27,7 +27,7 @@ DESP_CLIENT: DespatchBaySDK | None = None
 
 
 class Shipper:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         global DESP_CLIENT
         client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
         client = APIClientWrapper(client)
@@ -59,7 +59,10 @@ class Shipper:
     def dispatch(self):
         config = self.config
         shipments = self.shipments
-        address_shipments(outbound=config.outbound, shipments=shipments, config=config)
+        shipments = address_shipments(outbound=config.outbound, shipments=shipments, config=config)
+        if not shipments:
+            logger.info('No shipments to process.')
+            sys.exit()
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]
         booked_shipments = dispatch_loop(config=config, shipments=shipments)
         post_book(shipments=booked_shipments)
@@ -67,6 +70,7 @@ class Shipper:
     def track(self):
         # tracking_loop(shipments=self.shipments)
         track2(shipments=self.shipments)
+
 
 def tracking_loop(shipments: List[Shipment]):
     for shipment in shipments:
@@ -99,16 +103,18 @@ def dispatch_loop(config, shipments: List[Shipment]):
             window.close()
             sys.exit()
 
-        shipment_to_edit: Shipment = next((shipment for shipment in shipments if
-                                           shipment.shipment_name_printable.lower() in event.lower()))
-
         if event == keys_and_strings.GO_SHIP_KEY():
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                 sg.popup_quick_message('Please Wait')
                 window.close()
                 return process_shipments(shipments=shipments, values=values, config=config)
+        else:
+            logger.info(f'Wrong Event key {event=}')
 
-        elif event == keys_and_strings.BOXES_KEY(shipment_to_edit):
+        shipment_to_edit: Shipment = next((shipment for shipment in shipments if
+                                           keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+
+        if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
             package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):

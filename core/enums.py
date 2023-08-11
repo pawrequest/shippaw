@@ -1,7 +1,7 @@
 import os
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum, StrEnum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -49,9 +49,14 @@ class FuzzyScores:
 
 
 class ShipMode(Enum):
-    SHIP_OUT = 'SHIP_OUT'
-    SHIP_IN = 'SHIP_IN'
+    SHIP = 'SHIP'
     TRACK = 'TRACK'
+
+
+class ShipDirection(Enum):
+    IN = 'IN'
+    OUT = 'OUT'
+
 
 
 @dataclass
@@ -92,7 +97,7 @@ class ApiScope(Enum):
 class FieldsList(Enum):
     contact = ['telephone', 'name', 'email']
     address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
-    export = ['category', 'collection_booked', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
+    export = ['category', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
               'outbound_id', '_shipment_name', 'timestamp']
     shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
                 'date', 'inbound_id', 'outbound_id', 'shipment_name']

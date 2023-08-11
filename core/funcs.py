@@ -5,6 +5,7 @@ import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
+from pprint import pprint
 
 import PySimpleGUI as sg
 import win32com.client
@@ -47,6 +48,7 @@ def log_shipment(log_path, shipment: Shipment):
             export_dict.update({field: val})
         except Exception as e:
             print(f"{field} not found in shipment \n{e}")
+    pprint(export_dict)
 
     with open(log_path, 'a') as f:
         # todo better loggging.... sqlite?

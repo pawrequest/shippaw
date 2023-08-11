@@ -22,7 +22,9 @@ class Shipment:
         """
 
         # input paramaters
-        self.category = category.title()
+        self.is_dropoff: bool|None = None
+        self.is_outbound: bool|None = None
+        self.category = category.name.title()
         self._shipment_name: str = ship_dict.get('shipment_name')
         self._address_as_str: str = ship_dict.get('address_as_str')
         self.boxes: int = int(ship_dict.get('boxes', 1))
