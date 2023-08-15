@@ -23,8 +23,8 @@ def address_postcode_click(postcode: str) -> Address | None:
             return new_address
 
 
-def comparison_address_window(contact: Contact, address: Address, address_as_str):
-    commence_frame = commence_address_frame(address_as_str=address_as_str)
+def comparison_address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
+    commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name, address_as_str=address_as_str)
     address_col = sg.Col(layout=[
         [contact_frame(contact=contact)],
         [get_address_frame(address=address)],
@@ -35,8 +35,10 @@ def comparison_address_window(contact: Contact, address: Address, address_as_str
     return sg.Window('Manual Address Selector', layout=[[commence_frame, address_col]])
 
 
-def commence_address_frame(address_as_str: str):
+def commence_address_frame(contact_name, delivery_name, address_as_str: str):
     return sg.Frame(title='Address Details From Commence:', layout=[
+        [sg.Text(contact_name)],
+        [sg.Text(delivery_name)],
         [sg.Text(address_as_str)]
     ])
 
@@ -126,7 +128,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
 def address_from_gui(shipment: Shipment, address: Address, contact: Contact) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    window = comparison_address_window(contact=contact, address=address,
+    window = comparison_address_window(delivery_name = shipment.delivery_name, contact=contact, address=address,
                                        address_as_str=shipment._address_as_str)
     while True:
         event, values = window.read()
