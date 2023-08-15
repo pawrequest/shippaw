@@ -23,7 +23,7 @@ load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
 ...
 
-
+#todo make customer work, customer name clobbers shipment name
 
 def get_amdesp_logger():
     new_logger = logging.getLogger(name='AmDesp')
@@ -58,7 +58,7 @@ class Config:
         self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
         self.parcel_contents: str = config_dict.get('parcel_contents')
         self.sandbox: bool = config_dict.get('sandbox')
-        self.import_mapping: dict = config_dict.get('import_mapping')
+        self.import_mappings: dict = config_dict.get('import_mappings')
 
         self.home_address = HomeAddress(**config_dict.get('home_address'))
         self.home_contact = Contact(**config_dict.get('home_contact'))

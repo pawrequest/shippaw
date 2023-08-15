@@ -26,6 +26,10 @@ dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
 
 
+def get_mapping_name(category):
+    return f"{category.name.lower()}_mapping"
+
+
 class Shipper:
     def __init__(self, config: Config):
         global DESP_CLIENT
@@ -42,7 +46,9 @@ class Shipper:
             for record in DBF(dbase_file, encoding='cp1252'):
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mapping)
+                    import_map_name = get_mapping_name(category)
+                    # ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mapping)
+                    ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mappings[import_map_name])
                     self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')
