@@ -47,8 +47,10 @@ class Shipper:
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     import_map_name = get_mapping_name(category)
-                    # ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mapping)
                     ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mappings[import_map_name])
+                    # ship_dict['shipment_name'] = ship_dict.get('shipment_name', f'{ship_dict["customer"]} - {datetime.today().date()}')
+                    ship_dict['shipment_name'] = ship_dict.get('shipment_name', f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
+
                     self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
                     logger.exception(f'{record.__repr__()} - {e}')

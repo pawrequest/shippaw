@@ -83,14 +83,15 @@ class Shipment:
     def customer_printable(self):
         return self.customer.replace("&", '"&"').replace("'", "''")
 
-    def to_dict(self):
-        allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
-        result = {}
-        for attr_name in dir(self):
-            attr_value = getattr(self, attr_name)
-            if type(attr_value) in allowed_types:
-                result[attr_name] = attr_value
-        return result
+    # unused
+    # def to_dict(self):
+    #     allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
+    #     result = {}
+    #     for attr_name in dir(self):
+    #         attr_value = getattr(self, attr_name)
+    #         if type(attr_value) in allowed_types:
+    #             result[attr_name] = attr_value
+    #     return result
 
     @property
     def str_to_match(self):
