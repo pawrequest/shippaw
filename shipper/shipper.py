@@ -216,8 +216,7 @@ def book_shipment(config, values, shipment: Shipment, shipment_id):
 
     id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
     update_package = {id_to_store: shipment_id, 'DB label printed': True}
-
-    update_commence(input_dict=update_package, table_name='Hire', record_name=shipment._shipment_name,
+    update_commence(update_package=update_package, table_name='Hire', record_name=shipment._shipment_name,
                     script_path=config.paths.cmc_updater)
 
     return shipment
@@ -241,7 +240,7 @@ def get_collection_date(shipment: Shipment, courier_id) -> CollectionDate:
             break
 
     logger.info(
-        f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else ""}')
+        f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else "NO DATE MATCH - USING FIRST AVAILABLE"}')
     return collection_date
 
 

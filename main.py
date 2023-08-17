@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 
 from core.config import Config, logger
 from core.enums import ShipmentCategory, ShipMode, ShipDirection
+from core.funcs import update_commence
 from shipper.shipper import Shipper
 
 """
@@ -16,6 +17,7 @@ includes
 + powershell to log shipment ids to commence
 + Vovin CmcLibNet installer bundled for logging to Commence
 """
+
 
 def main(args):
     while not args.input_file:
@@ -36,8 +38,9 @@ def main(args):
     elif args.shipping_mode == ShipMode.TRACK.name:
         shipper.track()
 
-
     sys.exit()
+
+
 
 
 if __name__ == '__main__':

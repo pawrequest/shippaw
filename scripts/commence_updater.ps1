@@ -9,28 +9,26 @@ param(
 
 Write-Host Update Commence - Tablename = $tableName
 Write-Host Update Commence - Recordname = $recordName
-Write-Host Update Commence - UpdatePackage = $updatePackageJsonStr
+Write-Host Update Commence - UpdatePackageJson = $updatePackageJsonStr
 
 # parse json
-$processStatus | ConvertTo-Json > $jsonOutput
 $updatePackageMap = @{}
 (ConvertFrom-Json $updatePackageJsonStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
 
-
-
-# db / cursor properties
+# initialise commence and get table cursor
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 Add-Type -Path $commence_wrapper
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 $cursor = $db.GetCursor($tableName)
 
-# filter properties
+# filter table by record name
 $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
 $filter.FieldName = "Name"
 $filter.FieldValue = $recordName
 $filter.Qualifier = "EqualTo"
+$result = $cursor.Filters.Apply()
 
-If ($cursor.Filters.Apply() = 0){
+If ($result -eq 1){
     Write-Host Record Retrieved, proceeding to edit
 
     $ed = $cursor.GetEditRowSet()
@@ -43,7 +41,7 @@ If ($cursor.Filters.Apply() = 0){
     $ed.commit()
 }
 Else{
-    Write-Host ERROR IN POWERSHELL SCRIPT MULTIPLE RECORDS RETURNED?
+    Write-Host "ERROR IN POWERSHELL SCRIPT - Filters.Apply() returned " $result
 }
 
 #goodbye

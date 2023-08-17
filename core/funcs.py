@@ -95,10 +95,10 @@ def powershell_runner(script_path: str, *params):
         return process_result.returncode
 
 
-def update_commence(input_dict: dict, table_name: str, record_name: str,
+def update_commence(update_package: dict, table_name: str, record_name: str,
                     script_path: str = 'commence_updater.ps1'):
     POWERSHELL_PATH = "powershell.exe"
-    input_string = json.dumps(input_dict).replace('"', '\"')
+    input_string = json.dumps(update_package).replace('"', '\"')
     powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
                          script_path, table_name, record_name, input_string]
     logger.info(f'UPDATE COMMENCE VIA POWERSHELL - COMMANDS: {powershell_command}')
