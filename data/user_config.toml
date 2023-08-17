@@ -1,5 +1,5 @@
 debug = true
-sandbox = false
+sandbox = true
 return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\
@@ -102,6 +102,7 @@ labels = 'data/Parcelforce Labels/'
 log_json = 'data/AmLog.json'
 cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_updater = 'scripts/commence_updater.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
 stored_xml = 'data/AmShip.xml'

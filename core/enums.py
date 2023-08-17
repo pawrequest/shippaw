@@ -110,6 +110,7 @@ class PathsList:
         self.log_json: Path = Path()
         self.cmc_logger: Path = Path()
         self.cmc_installer: Path = Path()
+        self.cmc_updater:Path = Path()
         self.cmc_dll: Path = Path()
         self.labels: Path = Path()
         self.user_data = Path()

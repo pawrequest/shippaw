@@ -11,11 +11,9 @@ import PySimpleGUI as sg
 import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
+from core.config import logger
 from core.enums import FieldsList, DateTimeMasks
 from shipper.shipment import Shipment
-
-
-from core.config import logger
 
 
 def print_label(shipment):
@@ -67,7 +65,6 @@ def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, 
     body = body.replace("__--__ADDRESSREPLACE__--__", f'{col_address}')
     body = body.replace("__--__DATEREPLACE__--__", f'{collection_date:{DateTimeMasks.DISPLAY.value}}')
 
-
     newmail.To = shipment.email
     newmail.Subject = "Radio Hire Return - Shipping Label Attached"
     newmail.Body = body
@@ -98,7 +95,6 @@ def powershell_runner(script_path: str, *params):
         return process_result.returncode
 
 
-
 def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script: Path):
     """ runs cmclibnet via powershell script to add shipment_id to commence db """
 
@@ -115,21 +111,14 @@ def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_scri
     return shipment.logged_to_commence
 
 
-
-def update_commence_agnostic(input_dict: dict, table_name: str, record_name: str):
+def update_commence_agnostic(input_dict: dict, table_name: str, record_name: str,
+                             script_path: str = 'commence_updater.ps1'):
     POWERSHELL_PATH = "powershell.exe"
     input_string = json.dumps(input_dict).replace('"', '\"')
-    script_path = 'commence_updater.ps1'
-    powershell_string = [
-        POWERSHELL_PATH,
-        '-ExecutionPolicy', 'Unrestricted',
-        '-file', script_path,
-        table_name,  # Pass the table name
-        record_name,  # Pass the record name
-        input_string
-    ]
+    powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
+                         script_path, table_name, record_name, input_string]
 
-    process_result = subprocess.run(powershell_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    process_result = subprocess.run(powershell_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
     print(process_result)
     if process_result.stderr:
@@ -149,7 +138,7 @@ def retry_with_backoff(fn, retries=5, backoff_in_seconds=1, *args, **kwargs, ):
                 sg.popup_error(f'Error, probably API rate limit, retries exhausted')
                 logger.info("Retries exhausted")
                 raise
-            sleep = (backoff_in_seconds * 2**x + random.uniform(0, 1))
+            sleep = (backoff_in_seconds * 2 ** x + random.uniform(0, 1))
             sg.popup_quick_message(f'Error, probably API rate limit, retrying in {sleep:.0f} seconds')
             logger.info(f"Retrying {fn.__name__} after {sleep} seconds")
             time.sleep(sleep)

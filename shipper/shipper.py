@@ -14,7 +14,8 @@ from despatchbay.exceptions import ApiException
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence
+from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence, \
+    update_commence_agnostic
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
@@ -72,8 +73,8 @@ class Shipper:
             logger.info('No shipments to process.')
             sys.exit()
         [gather_dbay_objs(shipment=shipment, config=config) for shipment in shipments]
-        booked_shipments = dispatch_loop(config=config, shipments=shipments)
-        post_book(shipments=booked_shipments)
+        if booked_shipments := dispatch_loop(config=config, shipments=shipments):
+            post_book(shipments=booked_shipments)
 
     def track(self):
         # tracking_loop(shipments=self.shipments)
@@ -167,7 +168,9 @@ def process_shipments(shipments, values, config):
         shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
         shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
 
-        if values.get(keys_and_strings.BOOK_KEY(shipment)):
+        book_collection = values.get(keys_and_strings.BOOK_KEY(shipment))
+
+        if book_collection:
             try:
                 booked_shipments.append(
                     book_shipment(shipment=shipment, shipment_id=shipment_id, config=config, values=values))
@@ -178,7 +181,6 @@ def process_shipments(shipments, values, config):
                 continue
             except Exception as e:
                 sg.popup_error(f"Unable to Book {shipment.shipment_name_printable} due to: {e.args}")
-
                 logger.exception(e)
                 continue
 
@@ -188,8 +190,8 @@ def process_shipments(shipments, values, config):
 
 
 def book_shipment(config, values, shipment: Shipment, shipment_id):
-    outbound = config.outbound
     shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+    outbound = config.outbound
 
     print_email = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
 
@@ -210,8 +212,14 @@ def book_shipment(config, values, shipment: Shipment, shipment_id):
                         collection_date=shipment.collection_return.date,
                         collection_address=shipment.collection_return.sender_address.sender_address
                         )
-    update_commence(shipment=shipment, id_to_pass=shipment_id, outbound=config.outbound,
-                    ps_script=config.paths.cmc_logger)
+
+
+    id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
+    update_package = {id_to_store: shipment_id, 'DB label printed': True}
+
+    update_commence_agnostic(input_dict=update_package, table_name='Hire', record_name=shipment._shipment_name,
+                             script_path=config.paths.cmc_updater)
+
     return shipment
 
 
