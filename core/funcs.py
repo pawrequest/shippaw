@@ -115,17 +115,27 @@ def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_scri
     return shipment.logged_to_commence
 
 
-def check_today_ship(shipment):
-    keep_shipment = True
-    if shipment.send_out_date == datetime.today().date() and datetime.now().hour > 12:
-        keep_shipment = True if sg.popup_ok_cancel(
-            f"Warning - Shipment Send Out Date is today and it is afternoon\n"
-            f"{shipment.shipment_name_printable} would be collected on {datetime.strptime(shipment.collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.DISPLAY.value}}.\n"
-            "'Ok' to continue, 'Cancel' to remove shipment from manifest?") == 'Ok' else False
 
-    logger.info(f'CHECK TODAY SHIP {shipment.send_out_date}')
-    return shipment if keep_shipment else None
+def update_commence_agnostic(input_dict: dict, table_name: str, record_name: str):
+    POWERSHELL_PATH = "powershell.exe"
+    input_string = json.dumps(input_dict).replace('"', '\"')
+    script_path = 'commence_updater.ps1'
+    powershell_string = [
+        POWERSHELL_PATH,
+        '-ExecutionPolicy', 'Unrestricted',
+        '-file', script_path,
+        table_name,  # Pass the table name
+        record_name,  # Pass the record name
+        input_string
+    ]
 
+    process_result = subprocess.run(powershell_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    print(process_result)
+    if process_result.stderr:
+        raise RuntimeError(f'Std Error = {process_result.stderr}')
+    else:
+        print(process_result.stdout)
 
 
 def retry_with_backoff(fn, retries=5, backoff_in_seconds=1, *args, **kwargs, ):
