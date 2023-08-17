@@ -21,6 +21,7 @@ def print_label(shipment):
     try:
         os.startfile(str(shipment.label_location), "print")
     except Exception as e:
+        logger.warning(f"Failed to print label: {e}")
         return False
     else:
         shipment.printed = True
@@ -75,32 +76,13 @@ def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, 
     # newmail.Send()
 
 
-def powershell_runner(script_path: str, *params):
-    POWERSHELL_PATH = "powershell.exe"
-
-    commandline_options = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', script_path]
-    for param in params:
-        commandline_options.append("'" + param + "'")
-    # commandline_options.extend(params)
-    logger.info(f'POWERSHELL RUNNER - COMMANDS: {commandline_options}')
-    process_result = subprocess.run(commandline_options, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    logger.info(f'POWERSHELL RUNNER - PROCESS RESULT: {process_result}')
-    if process_result.stderr:
-        if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
-            raise RuntimeError('CmCLibNet is not installed')
-        else:
-            raise RuntimeError(f'Std Error = {process_result.stderr}')
-    else:
-        return process_result.returncode
-
 
 def update_commence(update_package: dict, table_name: str, record_name: str,
                     script_path: str = 'commence_updater.ps1'):
     POWERSHELL_PATH = "powershell.exe"
-    input_string = json.dumps(update_package).replace('"', '\"')
+    update_string = json.dumps(update_package).replace('"', '\"')
     powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
-                         script_path, table_name, record_name, input_string]
+                         script_path, table_name, record_name, update_string]
     logger.info(f'UPDATE COMMENCE VIA POWERSHELL - COMMANDS: {powershell_command}')
 
     process_result = subprocess.run(powershell_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
