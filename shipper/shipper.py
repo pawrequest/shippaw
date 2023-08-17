@@ -14,8 +14,7 @@ from despatchbay.exceptions import ApiException
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence, \
-    update_commence_agnostic
+from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
@@ -48,9 +47,11 @@ class Shipper:
                 [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
                 try:
                     import_map_name = get_mapping_name(category)
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=self.config.import_mappings[import_map_name])
+                    ship_dict = shipdict_from_dbase(record=record,
+                                                    import_mapping=self.config.import_mappings[import_map_name])
                     # ship_dict['shipment_name'] = ship_dict.get('shipment_name', f'{ship_dict["customer"]} - {datetime.today().date()}')
-                    ship_dict['shipment_name'] = ship_dict.get('shipment_name', f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
+                    ship_dict['shipment_name'] = ship_dict.get('shipment_name',
+                                                               f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
 
                     self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
                 except Exception as e:
@@ -213,12 +214,11 @@ def book_shipment(config, values, shipment: Shipment, shipment_id):
                         collection_address=shipment.collection_return.sender_address.sender_address
                         )
 
-
     id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
     update_package = {id_to_store: shipment_id, 'DB label printed': True}
 
-    update_commence_agnostic(input_dict=update_package, table_name='Hire', record_name=shipment._shipment_name,
-                             script_path=config.paths.cmc_updater)
+    update_commence(input_dict=update_package, table_name='Hire', record_name=shipment._shipment_name,
+                    script_path=config.paths.cmc_updater)
 
     return shipment
 

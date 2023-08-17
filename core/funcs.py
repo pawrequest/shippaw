@@ -95,34 +95,22 @@ def powershell_runner(script_path: str, *params):
         return process_result.returncode
 
 
-def update_commence(shipment: Shipment, id_to_pass: str, outbound: bool, ps_script: Path):
-    """ runs cmclibnet via powershell script to add shipment_id to commence db """
-
-    try:
-        commence_edit = powershell_runner(str(ps_script), shipment.category, shipment._shipment_name, id_to_pass,
-                                          str(outbound))
-    except RuntimeError as e:
-        logger.exception('Error logging to commence')
-        sg.popup_scrolled(f'Error logging to commence - is it running?')
-        shipment.logged_to_commence = False
-    else:
-        if commence_edit == 0:
-            shipment.logged_to_commence = True
-    return shipment.logged_to_commence
-
-
-def update_commence_agnostic(input_dict: dict, table_name: str, record_name: str,
-                             script_path: str = 'commence_updater.ps1'):
+def update_commence(input_dict: dict, table_name: str, record_name: str,
+                    script_path: str = 'commence_updater.ps1'):
     POWERSHELL_PATH = "powershell.exe"
     input_string = json.dumps(input_dict).replace('"', '\"')
     powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
                          script_path, table_name, record_name, input_string]
+    logger.info(f'UPDATE COMMENCE VIA POWERSHELL - COMMANDS: {powershell_command}')
 
     process_result = subprocess.run(powershell_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
-    print(process_result)
     if process_result.stderr:
-        raise RuntimeError(f'Std Error = {process_result.stderr}')
+        if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
+            logger.warning('CmCLibNet is not installed')
+        #todo install cmclibnet and retry
+        else:
+            raise RuntimeError(f'Commence Updater failed, Std Error: {process_result.stderr}')
     else:
         print(process_result.stdout)
 
