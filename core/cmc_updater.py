@@ -12,8 +12,7 @@ def update_commence(update_package: dict, table_name: str, record_name: str, scr
     :param record_name_esc: name of record to update
     :param script_path: path to powershell script
     :param append: append to existing record data or overwrite
-    :param with_shell: use shell to confirm update
-    :param insert: insert new record (vs edit existing)"""
+    :param insert: insert new record"""
 
     POWERSHELL_PATH = "powershell.exe"
     record_name_esc = f'"{record_name}"'
