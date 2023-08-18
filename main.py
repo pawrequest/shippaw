@@ -33,8 +33,8 @@ def main(args):
         sys.exit()
 
     if args.shipping_mode == ShipMode.SHIP.name:
-        shipper.dispatch()
-        # testing(shipment=shipper.shipments[0], config=config)
+        # shipper.dispatch()
+        testing(shipment=shipper.shipments[0], config=config)
 
     elif args.shipping_mode == ShipMode.TRACK.name:
         shipper.track()

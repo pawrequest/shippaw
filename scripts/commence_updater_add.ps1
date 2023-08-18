@@ -28,25 +28,20 @@ $filter.FieldValue = $recordName
 $filter.Qualifier = "EqualTo"
 $result = $cursor.Filters.Apply()
 
-If ($result -eq 1)
-{
+If ($result -eq 1) {
     Write-Host Record Retrieved, proceeding to edit
 
     $ed = $cursor.GetEditRowSet()
     foreach ($key in $updatePackageMap.Keys) {
         Write-Host Editing field $key with value $updatePackageMap[$key]
         $ed_index = $ed.GetColumnIndex($key)
-        write-host "ed_index: $ed_index"
         $current_val = $ed.GetRowValue(0, $ed_index)
         write-host "current_val: $current_val"
-        #    if ($current_val.Length -ge 1) {
-        #    if ($current_val -is [string]) {
-        write-host Type of current_var is $current_val.GetType()
-        #todo not check for length 6¬!¬!!
-        if ($current_val -is [string] -and $current_val.Length -ge 6) {
+        if ($updatePackageMap[$key] -is [string]){
             $new_val = $current_val + "`r`n" + $updatePackageMap[$key] }
-        else {$new_val = $updatePackageMap[$key]
-            write-host "not string: $new_val "}
+        else {
+            $new_val = $updatePackageMap[$key] }
+        write-host "new_val: $new_val"
         $ed.ModifyRow(0, $ed_index, $new_val, 0)
     }
     $ed.commit()
