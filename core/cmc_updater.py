@@ -45,10 +45,10 @@ def parse_std_err(process_result):
     if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
         logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
     # todo install cmclibnet and retry
-    if "ERROR: Filters.Apply returned " in process_result.stderr:
+    if "ERROR: Filters.Apply returned" in process_result.stderr:
         if "ERROR: Filters.Apply returned 0 results" in process_result.stderr:
             logger.warning(f'No records found in Commence : {process_result.stderr}')
         else:
             logger.warning(f'Multiple records found, Std Error: {process_result.stderr}')
     else:
-        raise RuntimeError(f'Commence Updater failed, Std Error: {process_result.stderr}')
+        logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')
