@@ -1,6 +1,6 @@
 from core.config import Config
 from core.enums import ShipmentCategory, ShipMode
-from core.funcs import update_commence_aggy
+from core.funcs import update_commence
 from shipper.shipper import Shipper
 
 in_file = r'C:\paul\AmDesp\data\test_hire.dbf'
@@ -13,8 +13,8 @@ def playground(shipment, config):
     """test stuff here"""
     # # update a record
     update_package = {'Missing Kit': 'withshelll'}
-    update_commence_aggy(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
-                         script_path=config.paths.cmc_updater_add, with_shell=False)
+    update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
+                    script_path=config.paths.cmc_updater_add, with_shell=False)
 
     # # # insert a record
     # update_package = {'Notes' : 'some notes'}
