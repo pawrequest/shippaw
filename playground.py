@@ -5,7 +5,7 @@ from core.config import Config
 from core.enums import ShipmentCategory, ShipMode, DateTimeMasks
 from shipper.shipper import Shipper
 
-aggy_script = r'C:\paul\AmDesp\scripts\cmc_updater_aggy.ps1'
+aggy_script = r'C:\paul\AmDesp\scripts\cmc_updater.ps1'
 in_file = r'C:\paul\AmDesp\data\test_hire.dbf'
 outbound = True
 category = ShipmentCategory.HIRE
@@ -18,14 +18,14 @@ def playground(shipment, config: Config):
     update_package = {
         'Booked Date': f'{datetime.today():{DateTimeMasks.DB_IMPORT.value}}',
         'Send Out Date': f'{datetime.today():{DateTimeMasks.DB_IMPORT.value}}',
-        'To Customer': 'Test'
+        'To Customer': 'Test Customer'
     }
 
     # # update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
     # #                 script_path=config.paths.cmc_updater_append, with_shell=False)
 
     update_commence(update_package=update_package, table_name='Hire', record_name='A FAKE HIRE',
-                    script_path=aggy_script, append=False, insert=True)
+                    script_path=aggy_script, append=False, insert=False)
 
     # # insert a record
     # update_package = {'Notes' : 'some notes'}

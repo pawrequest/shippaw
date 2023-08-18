@@ -9,9 +9,7 @@ param(
 [switch]$insert
 )
 
-Write-Host Update Commence - Tablename = $tableName
-Write-Host Update Commence - Recordname = $recordName
-Write-Host Update Commence - UpdatePackageJson = $updatePackageJsonStr
+Write-Host Tablename = $tableName; Recordname = $recordName; UpdatePackageJson = $updatePackageJsonStr
 
 # parse json
 $updatePackageMap = @{

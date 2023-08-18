@@ -113,9 +113,7 @@ class PathsList:
         self.cmc_logger: Path = Path()
         self.cmc_installer: Path = Path()
 
-        self.cmc_updater_replace:Path = Path()
-        self.cmc_updater_append:Path = Path()
-        self.cmc_updater_insert:Path = Path()
+        self.cmc_updater:Path = Path()
 
         self.cmc_dll: Path = Path()
         self.labels: Path = Path()

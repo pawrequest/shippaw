@@ -177,8 +177,7 @@ def process_shipments(shipments, values, config):
 
         if shipment.category in ['Hire', 'Sale']:
             cmc_update_package = collection_update_package(shipment_id=shipment_id, outbound=outbound)
-            # update_commence_f(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_add)
-            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name_esc=shipment.shipment_name, script_path=config.paths.cmc_updater_append)
+            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater)
 
         if not book_collection:
             continue

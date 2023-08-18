@@ -27,17 +27,18 @@ def update_commence(update_package: dict, table_name: str, record_name: str, scr
     if insert:
         if input(f"Create New Record {record_name} in {table_name}? (y/n)").lower() == 'y':
             process_command.append('-insert')
-            process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
-
+            # process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
     logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
 
     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
-
     logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
 
-    parse_std_err(process_result) if process_result.stderr \
-        else print(process_result.stdout)
+    if process_result.stderr:
+        parse_std_err(process_result)
+    else:
+        stdoutput = process_result.stdout.split('\n')
+        [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
 
 
 def parse_std_err(process_result):
