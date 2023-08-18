@@ -41,8 +41,8 @@ FIELD17 = 'customer'            # hire customer remote dev
 
 [import_mappings.sale_mapping]
 NAME = 'shipment_name'          # sale name
-#FIELD9 = 'customer'             # sale customr
-FIELD10 = 'customer'             # sale customr
+FIELD9 = 'customer'             # sale customr
+#FIELD10 = 'customer'             # sale customr
 DELIVERY_A = 'address_as_str'   # string representation of customer address
 DELIVERY_C = 'contact'          # contact name for the remote address
 DELIVERY_E = 'email'            # email for remote address
