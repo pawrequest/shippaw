@@ -5,7 +5,7 @@ import PySimpleGUI as sg
 
 from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
-from core.funcs import update_commence
+from core.funcs import update_commence_f
 from shipper.shipper import Shipper
 
 """
