@@ -14,16 +14,16 @@ def playground(shipment, config):
     # # update a record
     update_package = {'Missing Kit': 'withshelll'}
     update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
-                    script_path=config.paths.cmc_updater_add, with_shell=False)
+                    script_path=config.paths.cmc_updater_append, with_shell=False)
 
     # # # insert a record
     # update_package = {'Notes' : 'some notes'}
     # update_commence_shell(update_package=update_package, table_name='Customer', record_name='test python',
-    #                 script_path=r'C:\paul\AmDesp\scripts\commence_updater_insert.ps1')
+    #                 script_path=r'C:\paul\AmDesp\scripts\cmc_updater_insert.ps1')
     # # insert a record
     # update_package = {'Notes' : 'some notes'}
     # update_commence_aggy(update_package=update_package, table_name='Customer', record_name='test python',
-    #                 script_path=r'C:\paul\AmDesp\scripts\commence_updater_insert.ps1', with_shell=False)
+    #                 script_path=r'C:\paul\AmDesp\scripts\cmc_updater_insert.ps1', with_shell=False)
     #
     ...
 
