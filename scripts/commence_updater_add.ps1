@@ -33,14 +33,18 @@ If ($result -eq 1) {
 
     $ed = $cursor.GetEditRowSet()
     foreach ($key in $updatePackageMap.Keys) {
-        Write-Host Editing field $key with value $updatePackageMap[$key]
+#        Write-Host Editing field `"$key`" with value `"$updatePackageMap[$key]`"
+        Write-Host "Editing field `"$key`" with value `"$($updatePackageMap[$key])`""
+
         $ed_index = $ed.GetColumnIndex($key)
         $current_val = $ed.GetRowValue(0, $ed_index)
         write-host "current_val: $current_val"
-        if ($updatePackageMap[$key] -is [string]){
+
+        if ($updatePackageMap[$key] -is [string] -and $current_val.Length -ge 3){
             $new_val = $current_val + "`r`n" + $updatePackageMap[$key] }
         else {
             $new_val = $updatePackageMap[$key] }
+
         write-host "new_val: $new_val"
         $ed.ModifyRow(0, $ed_index, $new_val, 0)
     }
