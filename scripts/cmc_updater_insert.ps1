@@ -12,7 +12,9 @@ Write-Host Update Commence - Recordname = $recordName
 Write-Host Update Commence - UpdatePackageJson = $updatePackageJsonStr
 
 # parse json
-$updatePackageMap = @{'Name' = $recordName }
+$updatePackageMap = @{
+    'Name' = $recordName
+}
 (ConvertFrom-Json $updatePackageJsonStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
 
 # get commence db table
@@ -25,9 +27,10 @@ $cursor = $db.GetCursor($tableName)
 $new_record = $cursor.GetAddRowSet(1)
 
 # set record rows from input json (plus name from $recordname)
-foreach ($key in $updatePackageMap.Keys) {
+foreach ($key in $updatePackageMap.Keys)
+{
     $ed_index = $new_record.GetColumnIndex($key)
-    Write-Host "`"$key`" = `"$($updatePackageMap[$key])`" in column_id $ed_index. result_code follows(0 = success):"
+    Write-Host "`"$key`" = `"$( $updatePackageMap[$key] )`" in column_id $ed_index. result_code follows(0 = success):"
     $new_record.ModifyRow(0, $ed_index, $updatePackageMap[$key], 0)
 }
 

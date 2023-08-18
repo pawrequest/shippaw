@@ -5,7 +5,6 @@ import PySimpleGUI as sg
 
 from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
-from core.funcs import update_commence_f
 from shipper.shipper import Shipper
 
 """
@@ -14,8 +13,7 @@ includes
 + Commence vbs scripts for exporting records to xml,
 + python app with pysimplegui gui
 + powershell to check vbs into commence
-+ powershell to log shipment ids to commence
-+ Vovin CmcLibNet installer bundled for logging to Commence
++ wraps Vovin CmcLibNet to update commence database - installer bundled 
 """
 
 

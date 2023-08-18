@@ -14,8 +14,8 @@ from despatchbay.exceptions import ApiException
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import DateTimeMasks, ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, \
-    update_commence
+from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label
+from core.cmc_updater import update_commence
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
@@ -178,7 +178,7 @@ def process_shipments(shipments, values, config):
         if shipment.category in ['Hire', 'Sale']:
             cmc_update_package = collection_update_package(shipment_id=shipment_id, outbound=outbound)
             # update_commence_f(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_add)
-            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_append)
+            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name_esc=shipment.shipment_name, script_path=config.paths.cmc_updater_append)
 
         if not book_collection:
             continue

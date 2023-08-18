@@ -89,6 +89,7 @@ class DateTimeMasks(Enum):
     DB = '%Y-%m-%d'
     button_label = '%A \n%B %#d'
     filename = '%Y-%m-%d_%H-%M-%S'
+    DB_IMPORT = '%Y%m%d'
 
 
 class ApiScope(Enum):

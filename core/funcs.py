@@ -1,12 +1,8 @@
 import json
 import os
 import random
-import shlex
-import subprocess
 import time
 from datetime import datetime
-from functools import partial
-from pathlib import Path
 from pprint import pprint
 
 import PySimpleGUI as sg
@@ -81,35 +77,6 @@ def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, 
         logger.warning(f"Failed to email label: {e}")
         return False
     # newmail.Send()
-
-
-def update_commence(update_package: dict, table_name: str, record_name: str, script_path: str, with_shell: bool = False):
-    """ Update commence record via powershell, with or without shell for confirmation dialogue
-    :param update_package: dict of vey value pairs to update"""
-    POWERSHELL_PATH = "powershell.exe"
-    record_name = f'"{record_name}"'
-    update_string = json.dumps(update_package).replace('"', '`"')
-    update_string = f'"{update_string}"'
-    process_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-Command',
-                         script_path, table_name, record_name, update_string]
-    if with_shell:
-        process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
-
-    logger.info(f'LAUNCH CMD POWERSHELL {with_shell=}: {process_command}')
-
-    process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-
-    logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
-
-
-    if process_result.stderr:
-        if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
-            logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
-        #todo install cmclibnet and retry
-        else:
-            raise RuntimeError(f'Commence Updater failed, Std Error: {process_result.stderr}')
-    else:
-        print(process_result.stdout)
 
 
 def retry_with_backoff(fn, retries=5, backoff_in_seconds=1, *args, **kwargs, ):
