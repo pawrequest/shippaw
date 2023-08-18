@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import shlex
 import subprocess
 import time
 from datetime import datetime
@@ -85,13 +86,37 @@ def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, 
 
 def update_commence(update_package: dict, table_name: str, record_name: str, script_path: str):
     POWERSHELL_PATH = "powershell.exe"
-    update_string = json.dumps(update_package).replace('"', '\"')
+    update_string = json.dumps(update_package)
     powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
                          script_path, table_name, record_name, update_string]
     logger.info(f'UPDATE COMMENCE VIA POWERSHELL - COMMANDS: {powershell_command}')
 
     process_result = subprocess.run(powershell_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
+    if process_result.stderr:
+        if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
+            logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
+        #todo install cmclibnet and retry
+        else:
+            raise RuntimeError(f'Commence Updater failed, Std Error: {process_result.stderr}')
+    else:
+        print(process_result.stdout)
+
+
+def update_commence_shell(update_package: dict, table_name: str, record_name: str, script_path: str):
+    POWERSHELL_PATH = "powershell.exe"
+    record_name = f'"{record_name}"'
+    update_string = json.dumps(update_package).replace('"', '`"')
+    update_string = f'"{update_string}"'
+    powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-Command',
+                         script_path, table_name, record_name, update_string]
+
+    cmd_command = ['cmd.exe', '/c', 'start', '/wait'] + powershell_command
+    logger.info(f'LAUNCH CMD POWERSHELL: {cmd_command}')
+    process_result = subprocess.run(cmd_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    logger.info(f'POWERSHELL RESULT: {process_result}')
+
+
     if process_result.stderr:
         if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
             logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
