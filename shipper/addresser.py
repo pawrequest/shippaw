@@ -123,7 +123,7 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
         return address
 
     if address.company_name == shipment.customer \
-            or address.company_name in shipment._address_as_str \
+            or address.company_name in shipment.address_as_str \
             or address.company_name in shipment.delivery_name:
         logger.info(f'Address company name matches customer')
         return address
@@ -134,7 +134,7 @@ def check_address_company(address: Address, shipment: Shipment) -> Address | Non
                   f'\nCustomer = {shipment.customer}' \
                   f'\nDelivery Name= {shipment.delivery_name}' \
                   f'\nString Address from database=' \
-                  f'\n{shipment._address_as_str}' \
+                  f'\n{shipment.address_as_str}' \
                   f'\n\nFound Address Details:' \
                   f'\nAddress Company Name= {address.company_name}' \
                   f'\nStreet addres= {address.street}' \

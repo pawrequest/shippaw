@@ -36,7 +36,7 @@ OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get t
 #DB_LABEL_P = 'label_printed'    # has a label been printed? depric
 #SEND___COL = 'send_collect'     # any use?
 SEND_METHO = 'send_method'      # contains parcelforce?
-#FIELD17 = 'customer'            # hire customer
+FIELD17 = 'customer'            # hire customer remote dev
 
 
 [import_mappings.sale_mapping]
@@ -103,6 +103,7 @@ log_json = 'data/AmLog.json'
 cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
 cmc_updater = 'scripts/commence_updater.ps1'
+cmc_updater_add = 'scripts/commence_updater_add.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
 stored_xml = 'data/AmShip.xml'

@@ -13,7 +13,7 @@ from despatchbay.exceptions import ApiException
 
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
-from core.enums import ShipmentCategory
+from core.enums import DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label, update_commence
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
@@ -145,7 +145,7 @@ def dispatch_loop(config, shipments: List[Shipment]):
             window = main_window(shipments=shipments, outbound=config.outbound)
 
         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
-            sg.popup_ok(shipment_to_edit._address_as_str)
+            sg.popup_ok(shipment_to_edit.address_as_str)
 
         elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
             new_date = dropoff_click(config=config, shipment=shipment_to_edit)
@@ -163,28 +163,43 @@ def dispatch_loop(config, shipments: List[Shipment]):
 
 def process_shipments(shipments, values, config):
     booked_shipments = []
+    outbound = config.outbound
 
     for shipment in shipments:
+        print_email = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
+
         shipment.shipment_request = get_shipment_request(shipment=shipment)
-        shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
+        shipment.timestamp = f"{datetime.now():{DateTimeMasks.filename.value}}"
         shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
 
         book_collection = values.get(keys_and_strings.BOOK_KEY(shipment))
+        cmc_update_package = {}
 
         if book_collection:
-            try:
-                booked_shipments.append(
-                    book_shipment(shipment=shipment, shipment_id=shipment_id, config=config, values=values))
+            booked_shipments.append(
+                book_shipment(shipment=shipment, shipment_id=shipment_id, config=config, values=values))
 
-            except ApiException as e:
-                sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\nAvailable balance = "
-                               f"£{DESP_CLIENT.get_account_balance().available}\n{e}\n")
-                continue
-            except Exception as e:
-                sg.popup_error(f"Unable to Book {shipment.shipment_name_printable} due to: {e.args}")
-                logger.exception(e)
-                continue
+            shipment.label_location = download_label(label_folder_path=config.paths.labels,
+                                                     label_text=f'{shipment.shipment_name_printable} {shipment.timestamp}',
+                                                     shipment_return=shipment.shipment_return)
 
+            id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
+            cmc_update_package = cmc_update_package | {id_to_store: shipment_id}
+
+            if outbound:
+                cmc_update_package = cmc_update_package | {'DB label printed': True}
+                if print_email:
+                    print_label(shipment=shipment)
+            elif not outbound:
+                cmc_update_package = cmc_update_package | {
+                    'Return Notes': f'PF Return booked {datetime.today().date().isoformat()} by python'}
+                if print_email:
+                    email_label(shipment=shipment,
+                                body=config.return_label_email_body,
+                                collection_date=shipment.collection_return.date,
+                                collection_address=shipment.collection_return.sender_address.sender_address)
+            update_commence(update_package=cmc_update_package, table_name='Hire',
+                            record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_add)
         log_shipment(log_path=config.paths.log_json, shipment=shipment)
 
     return booked_shipments if booked_shipments else None
@@ -193,31 +208,23 @@ def process_shipments(shipments, values, config):
 def book_shipment(config, values, shipment: Shipment, shipment_id):
     shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
     outbound = config.outbound
-
-    print_email = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
-
     setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
 
-    shipment.shipment_return = DESP_CLIENT.book_shipments(shipment_id)[0]
-    shipment.label_location = download_label(label_folder_path=config.paths.labels,
-                                             label_text=shipment.shipment_name_printable,
-                                             shipment_return=shipment.shipment_return)
-    shipment.collection_return = DESP_CLIENT.get_collection(shipment.shipment_return.collection_id)
+    try:
+        shipment.shipment_return = DESP_CLIENT.book_shipments(shipment_id)[0]
 
-    if outbound and print_email:
-        print_label(shipment=shipment)
+    except ApiException as e:
+        sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\nAvailable balance = "
+                       f"£{DESP_CLIENT.get_account_balance().available}\n{e}\n")
+        raise e
+
+    except Exception as e:
+        sg.popup_error(f"Unable to Book {shipment.shipment_name_printable} due to: {e.args}")
+        logger.exception(e)
+        raise e
+
     else:
-        if not outbound and print_email:
-            email_label(shipment=shipment,
-                        body=config.return_label_email_body,
-                        collection_date=shipment.collection_return.date,
-                        collection_address=shipment.collection_return.sender_address.sender_address
-                        )
-
-    id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
-    update_package = {id_to_store: shipment_id, 'DB label printed': True}
-    update_commence(update_package=update_package, table_name='Hire', record_name=shipment._shipment_name,
-                    script_path=config.paths.cmc_updater)
+        shipment.collection_return = DESP_CLIENT.get_collection(shipment.shipment_return.collection_id)
 
     return shipment
 
@@ -284,7 +291,7 @@ def download_label(label_folder_path: Path, label_text: str, shipment_return: Sh
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=shipment_return.shipment_document_id,
                                                      label_layout='2A4')
 
-        label_string: str = label_text + '.pdf'
+        label_string: str = label_text.replace(':', '') + '.pdf'
         label_location = label_folder_path / label_string
         label_pdf.download(label_location)
     except:

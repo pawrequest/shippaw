@@ -4,7 +4,7 @@ import sys
 import PySimpleGUI as sg
 
 from core.config import Config, logger
-from core.enums import ShipmentCategory, ShipMode, ShipDirection
+from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import update_commence
 from shipper.shipper import Shipper
 
@@ -34,6 +34,7 @@ def main(args):
 
     if args.shipping_mode == ShipMode.SHIP.name:
         shipper.dispatch()
+        # testing(shipment=shipper.shipments[0], config=config)
 
     elif args.shipping_mode == ShipMode.TRACK.name:
         shipper.track()
@@ -41,6 +42,12 @@ def main(args):
     sys.exit()
 
 
+def testing(shipment, config):
+    update_package = {'Missing Kit': 'Some Missing Kit', 'DB label printed': True}
+    update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
+                    script_path=config.paths.cmc_updater_add)
+
+    ...
 
 
 if __name__ == '__main__':

@@ -57,28 +57,32 @@ def log_shipment(log_path, shipment: Shipment):
 
 def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, collection_address: Address):
     collection_date = collection_date_to_datetime(collection_date)
-    ol = win32com.client.Dispatch('Outlook.Application')
-    newmail = ol.CreateItem(0)
 
-    col_address = f'{collection_address.company_name if collection_address.company_name else ""}'
-    col_address += f'{collection_address.street}'
+    try:
+        ol = win32com.client.Dispatch('Outlook.Application')
+        newmail = ol.CreateItem(0)
 
-    body = body.replace("__--__ADDRESSREPLACE__--__", f'{col_address}')
-    body = body.replace("__--__DATEREPLACE__--__", f'{collection_date:{DateTimeMasks.DISPLAY.value}}')
+        col_address = f'{collection_address.company_name if collection_address.company_name else ""}'
+        col_address += f'{collection_address.street}'
 
-    newmail.To = shipment.email
-    newmail.Subject = "Radio Hire Return - Shipping Label Attached"
-    newmail.Body = body
-    attach = str(shipment.label_location)
+        body = body.replace("__--__ADDRESSREPLACE__--__", f'{col_address}')
+        body = body.replace("__--__DATEREPLACE__--__", f'{collection_date:{DateTimeMasks.DISPLAY.value}}')
 
-    newmail.Attachments.Add(attach)
-    newmail.Display()  # preview
+        newmail.To = shipment.email
+        newmail.Subject = "Radio Hire Return - Shipping Label Attached"
+        newmail.Body = body
+        attach = str(shipment.label_location)
+
+        newmail.Attachments.Add(attach)
+        newmail.Display()  # preview
+    except Exception as e:
+        logger.warning(f"Failed to email label: {e}")
+        return False
     # newmail.Send()
 
 
 
-def update_commence(update_package: dict, table_name: str, record_name: str,
-                    script_path: str = 'commence_updater.ps1'):
+def update_commence(update_package: dict, table_name: str, record_name: str, script_path: str):
     POWERSHELL_PATH = "powershell.exe"
     update_string = json.dumps(update_package).replace('"', '\"')
     powershell_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-file',
@@ -89,7 +93,7 @@ def update_commence(update_package: dict, table_name: str, record_name: str,
                                     universal_newlines=True)
     if process_result.stderr:
         if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
-            logger.warning('CmCLibNet is not installed')
+            logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
         #todo install cmclibnet and retry
         else:
             raise RuntimeError(f'Commence Updater failed, Std Error: {process_result.stderr}')

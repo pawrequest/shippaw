@@ -88,6 +88,7 @@ class DateTimeMasks(Enum):
     hire = '%d/%m/%Y'
     DB = '%Y-%m-%d'
     button_label = '%A \n%B %#d'
+    filename = '%Y-%m-%d_%H-%M-%S'
 
 
 class ApiScope(Enum):
@@ -111,6 +112,8 @@ class PathsList:
         self.cmc_logger: Path = Path()
         self.cmc_installer: Path = Path()
         self.cmc_updater:Path = Path()
+        self.cmc_updater_add:Path = Path()
+
         self.cmc_dll: Path = Path()
         self.labels: Path = Path()
         self.user_data = Path()

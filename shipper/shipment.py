@@ -25,8 +25,8 @@ class Shipment:
         self.is_dropoff: bool|None = None
         self.is_outbound: bool|None = None
         self.category = category.name.title()
-        self._shipment_name: str = ship_dict.get('shipment_name')
-        self._address_as_str: str = ship_dict.get('address_as_str')
+        self.shipment_name: str = ship_dict.get('shipment_name')
+        self.address_as_str: str = ship_dict.get('address_as_str')
         self.boxes: int = int(ship_dict.get('boxes', 1))
         self.customer: str = ship_dict.get('customer')
         self.contact_name: str = ship_dict.get('contact')
@@ -69,15 +69,15 @@ class Shipment:
         self.logged_to_commence: bool = False
         self.remote_contact: Optional[Contact] = None
 
-        [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
+        [logging.info(f'SHIPMENT - {self.shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
         logging.info('\n')
 
     def __eq__(self, other):
-        return self._shipment_name == other._shipment_name
+        return self.shipment_name == other.shipment_name
 
     @property
     def shipment_name_printable(self):
-        return re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
+        return re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
 
     @property
     def customer_printable(self):
@@ -95,7 +95,7 @@ class Shipment:
 
     @property
     def str_to_match(self):
-        return parse_amherst_address_string(self._address_as_str)
+        return parse_amherst_address_string(self.address_as_str)
 
 # DEPRIC now in shipper
     # @classmethod
