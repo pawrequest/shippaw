@@ -100,7 +100,7 @@ class FieldsList(Enum):
     contact = ['telephone', 'name', 'email']
     address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
     export = ['category', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
-              'outbound_id', '_shipment_name', 'timestamp']
+              'outbound_id', 'shipment_name', 'timestamp']
     shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
                 'date', 'inbound_id', 'outbound_id', 'shipment_name']
 

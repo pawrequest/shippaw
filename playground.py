@@ -3,7 +3,7 @@ from core.enums import ShipmentCategory, ShipMode
 from core.funcs import update_commence
 from shipper.shipper import Shipper
 
-in_file = r'C:\paul\AmDesp\data\amherst_export.dbf'
+in_file = r'C:\paul\AmDesp\data\amherst_export_test_bak.dbf'
 outbound = True
 category = ShipmentCategory.HIRE
 ship_mode = ShipMode.SHIP

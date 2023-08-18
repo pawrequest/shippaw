@@ -4,6 +4,7 @@ import random
 import subprocess
 import time
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from pprint import pprint
 

@@ -160,72 +160,79 @@ def dispatch_loop(config, shipments: List[Shipment]):
         if package:
             window[event].update(package)
 
+def read_window_cboxs(values, shipment):
+    print_or_email: bool = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
+    book_collection: bool = values.get(keys_and_strings.BOOK_KEY(shipment))
+    return book_collection, print_or_email
 
 def process_shipments(shipments, values, config):
     booked_shipments = []
     outbound = config.outbound
 
     for shipment in shipments:
-        print_email = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
+        book_collection, print_or_email = read_window_cboxs(values=values,shipment=shipment)
+        shipment_id = queue_shipment(shipment)
+        setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
 
-        shipment.shipment_request = get_shipment_request(shipment=shipment)
-        shipment.timestamp = f"{datetime.now():{DateTimeMasks.filename.value}}"
-        shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
+        if shipment.category in ['Hire', 'Sale']:
+            cmc_update_package = collection_update_package(shipment_id=shipment_id, outbound=outbound)
+            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_add)
 
-        book_collection = values.get(keys_and_strings.BOOK_KEY(shipment))
-        cmc_update_package = {}
+        if not book_collection:
+            continue
 
-        if book_collection:
-            booked_shipments.append(
-                book_shipment(shipment=shipment, shipment_id=shipment_id, config=config, values=values))
+        booked_shipments.append(book_shipment(shipment=shipment, shipment_id=shipment_id))
+        shipment.label_location = download_label(label_folder_path=config.paths.labels,
+                                                 label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
+                                                 doc_id=shipment.shipment_return.shipment_document_id)
+        if print_or_email:
+            print_email_label(email_body=config.return_label_email_body, outbound=outbound, shipment=shipment)
 
-            shipment.label_location = download_label(label_folder_path=config.paths.labels,
-                                                     label_text=f'{shipment.shipment_name_printable} {shipment.timestamp}',
-                                                     shipment_return=shipment.shipment_return)
 
-            id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
-            cmc_update_package = cmc_update_package | {id_to_store: shipment_id}
-
-            if outbound:
-                cmc_update_package = cmc_update_package | {'DB label printed': True}
-                if print_email:
-                    print_label(shipment=shipment)
-            elif not outbound:
-                cmc_update_package = cmc_update_package | {
-                    'Return Notes': f'PF Return booked {datetime.today().date().isoformat()} by python'}
-                if print_email:
-                    email_label(shipment=shipment,
-                                body=config.return_label_email_body,
-                                collection_date=shipment.collection_return.date,
-                                collection_address=shipment.collection_return.sender_address.sender_address)
-            update_commence(update_package=cmc_update_package, table_name='Hire',
-                            record_name=shipment.shipment_name, script_path=config.paths.cmc_updater_add)
-        log_shipment(log_path=config.paths.log_json, shipment=shipment)
-
+    [log_shipment(log_path=config.paths.log_json, shipment=shipment) for shipment in booked_shipments]
     return booked_shipments if booked_shipments else None
 
 
-def book_shipment(config, values, shipment: Shipment, shipment_id):
-    shipment.timestamp = f"{datetime.now().isoformat(sep=' ', timespec='seconds')}"
-    outbound = config.outbound
-    setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
+def print_email_label(email_body, outbound, shipment):
+    if outbound:
+        print_label(shipment=shipment)
+    elif not outbound:
+        email_label(shipment=shipment,
+                    body=email_body,
+                    collection_date=shipment.collection_return.date,
+                    collection_address=shipment.collection_return.sender_address.sender_address)
 
+
+def collection_update_package(shipment_id, outbound):
+    id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
+    cmc_update_package = {id_to_store: shipment_id}
+    if outbound:
+        cmc_update_package['DB label printed'] = True
+    else:
+        cmc_update_package['Return Notes'] = f'PF Return booked {datetime.today().date().isoformat()} [AD]'
+    return cmc_update_package
+
+
+def queue_shipment(shipment):
+    shipment.shipment_request = get_shipment_request(shipment=shipment)
+    shipment.timestamp = f"{datetime.now():{DateTimeMasks.filename.value}}"
+    shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
+    return shipment_id
+
+
+def book_shipment(shipment: Shipment, shipment_id):
     try:
         shipment.shipment_return = DESP_CLIENT.book_shipments(shipment_id)[0]
-
     except ApiException as e:
         sg.popup_error(f"Unable to Book {shipment.shipment_name_printable}\nAvailable balance = "
                        f"£{DESP_CLIENT.get_account_balance().available}\n{e}\n")
         raise e
-
     except Exception as e:
         sg.popup_error(f"Unable to Book {shipment.shipment_name_printable} due to: {e.args}")
         logger.exception(e)
         raise e
-
     else:
         shipment.collection_return = DESP_CLIENT.get_collection(shipment.shipment_return.collection_id)
-
     return shipment
 
 
@@ -285,10 +292,10 @@ def gather_dbay_objs(shipment: Shipment, config: Config):
                                           available_services=shipment.available_services)
 
 
-def download_label(label_folder_path: Path, label_text: str, shipment_return: ShipmentReturn):
+def download_label(label_folder_path: Path, label_text: str, doc_id:str):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
-        label_pdf: Document = DESP_CLIENT.get_labels(document_ids=shipment_return.shipment_document_id,
+        label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
                                                      label_layout='2A4')
 
         label_string: str = label_text.replace(':', '') + '.pdf'
