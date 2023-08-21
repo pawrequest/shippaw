@@ -1,8 +1,5 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
-$commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-Add-Type -Path $commence_wrapper
-
 param(
 [switch]$functionName,
 [string]$tableName,
@@ -10,13 +7,19 @@ param(
 [string]$updatePackageStr
 )
 
+Write-Host "FunctionName: $functionName"
+Write-Host "tableName: $tableName"
+Write-Host "recordName: $recordName"
+Write-Host "updatePackageStr: $updatePackageStr"
 
+$commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
+Add-Type -Path $commence_wrapper
 
 # parse json
 $updatePackageMap = @{
     'Name' = $recordName
 }
-(ConvertFrom-Json $updatePackageJsonStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
+(ConvertFrom-Json $updatePackageStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
 
 
 # initialise commence and get table cursor
@@ -128,7 +131,7 @@ switch ($FunctionToExecute)
         $record_to_edit.commit()
 
     }
-    "NewCustomer" {
+    "NewRecord" {
         $record_to_edit = CreateRecord $recordName $updatePackageMap
         $record_to_edit.commit()
 

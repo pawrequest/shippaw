@@ -1,9 +1,38 @@
 import json
 import subprocess
+from enum import Enum
 
 from core.config import logger
 
+class PS_FUNCS(Enum):
+    OVERWRITE="EditOverwrite"
+    APPEND = "EditAppend"
+    NEW = "NewRecord"
+    HIRES_CUSTOMER= "HiresByCustomer"
+    PRINT = "PrintRecord"
 
+def some_ps(pscript, function, table, record, package):
+    record_esc = f'"{record}"'
+    package_esc = json.dumps(package).replace('"', '`"')
+    # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
+    #                     pscript, function, table, record_esc, package_esc]
+
+    process_command = ["powershell.exe", '-ExecutionPolicy', 'Unrestricted',
+        '-File', pscript,
+        '-functionName', function,
+        '-tableName', table,
+        '-recordName', record_esc,
+        '-updatePackageStr', package_esc
+    ]
+    process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    if process_result.stderr:
+        parse_std_err(process_result)
+    else:
+        stdoutput = process_result.stdout.split('\n')
+        [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
+
+    return process_result
 
 
 
@@ -22,6 +51,7 @@ class Commence():
         process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         universal_newlines=True)
         logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
+
     def update_record(self, tablename, recordname, update_package):
         ...
 
@@ -49,8 +79,10 @@ def update_commence(table_name: str, record_name: str, update_package: dict, scr
 
     POWERSHELL_PATH = "powershell.exe"
     record_name_esc = f'"{record_name}"'
+
     update_string_esc = json.dumps(update_package).replace('"', '`"')
     update_string_esc = f'"{update_string_esc}"'
+
     process_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-Command',
                        script_path, table_name, record_name_esc, update_string_esc]
     if append:
@@ -74,6 +106,7 @@ def update_commence(table_name: str, record_name: str, update_package: dict, scr
 
 
 def parse_std_err(process_result):
+    print(process_result.stderr)
     if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
         logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
     # todo install cmclibnet and retry
