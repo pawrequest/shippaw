@@ -21,11 +21,16 @@ def playground(shipment, config: Config):
         'To Customer': 'Test Customer'
     }
 
+
+
+
+
+
     # # update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
     # #                 script_path=config.paths.cmc_updater_append, with_shell=False)
 
-    update_commence(update_package=update_package, table_name='Hire', record_name='A FAKE HIRE',
-                    script_path=aggy_script, append=False, insert=False)
+    # update_commence(update_package=update_package, table_name='Hire', record_name='A FAKE HIRE',
+    #                 script_path=aggy_script, append=False, insert=False)
 
     # # insert a record
     # update_package = {'Notes' : 'some notes'}

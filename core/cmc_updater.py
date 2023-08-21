@@ -4,11 +4,36 @@ import subprocess
 from core.config import logger
 
 
-def update_commence(update_package: dict, table_name: str, record_name: str, script_path: str, append: bool = False,
-                    insert=False):
+
+class Commence():
+    def __init__(self, script):
+        self.cmc_updater_script = script
+        self.powershell_path = "powershell.exe"
+
+    def get_record(self, tablename, recordname):
+        ...
+
+
+    def update_record(self, tablename, recordname, update_package):
+        ...
+
+    class Record:
+        def __init__(self, tablename, recordname):
+            self.tablename = tablename
+            self.recordname = recordname
+            self.update_package = {}
+
+        @property
+        def name_esc(self):
+            return f'"{self.recordname}"'
+
+
+
+def update_commence(table_name: str, record_name: str, update_package: dict, script_path: str,
+                    append: bool = False, insert:bool=False):
     """ Update commence record via powershell
-    :param update_package: dict of vey value pairs to update
     :param table_name: name of commence table
+    :param update_package: dict of vey value pairs to update
     :param record_name_esc: name of record to update
     :param script_path: path to powershell script
     :param append: append to existing record data or overwrite

@@ -63,11 +63,11 @@ foreach ($key in $updatePackageMap.Keys)
     $input_value = $updatePackageMap[$key]
     $ed_index = $record_to_edit.GetColumnIndex($key)
     Write-Host "`"$key`" = `"$input_value`" in column_id $ed_index. result_code follows(0 = success):"
+    $db_val = $record_to_edit.GetRowValue(0, $ed_index)
 
     # if -append is specified, get append existing value
     If ($append -and $input_value -is [string] -and $db_val.Length -ge 1)
     {
-        $db_val = $record_to_edit.GetRowValue(0, $ed_index)
         $new_val = $input_value + "`r`n" + $db_val
         write-host "new_val: $new_val"
     }
