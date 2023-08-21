@@ -5,15 +5,23 @@ from core.config import logger
 
 
 
+
+
+
 class Commence():
     def __init__(self, script):
         self.cmc_updater_script = script
         self.powershell_path = "powershell.exe"
 
-    def get_record(self, tablename, recordname):
-        ...
+    def get_record(self, table_name, record_name):
+        record_name_esc = f'"{record_name}"'
+        process_command = [self.powershell_path, '-ExecutionPolicy', 'Unrestricted', '-Command',
+                           self.cmc_updater_script, table_name, record_name_esc]
+        logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
 
-
+        process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        universal_newlines=True)
+        logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
     def update_record(self, tablename, recordname, update_package):
         ...
 

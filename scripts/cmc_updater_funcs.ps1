@@ -44,7 +44,7 @@ function RecordByName($recordName)
 }
 
 
-function HireRecordsByCustomerIncludes($searchterm)
+function HireRecordsCustomerIncludes($searchterm)
 {
     $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
     $filter.FieldName = "To Customer"
@@ -57,7 +57,7 @@ function HireRecordsByCustomerIncludes($searchterm)
 }
 
 
-function CreateRecord($recordName, $update_package)
+function NewRecord($recordName, $update_package)
 {
     Write-Host Inserting new record
 
@@ -69,7 +69,7 @@ function CreateRecord($recordName, $update_package)
     return $new_record
 }
 
-function editRecordOverwrite($record, $package)
+function EditRecordOverwrite($record, $package)
 {
     # apply update_package
     foreach ($key in $package.Keys)
@@ -82,7 +82,7 @@ function editRecordOverwrite($record, $package)
         $record.ModifyRow(0, $ed_index, $input_value, 0)
     }
 }
-function editRecordAppend($record, $package)
+function EditRecordAppend($record, $package)
 {
     # apply update_package
     foreach ($key in $package.Keys)
@@ -108,29 +108,38 @@ function editRecordAppend($record, $package)
     }
 }
 
+function PrintRecord($recordName)
+{
+    record = RecordByName $recordName
+    Write-Host $record
+    }
+
 switch ($FunctionToExecute)
 {
-    "edit_overwrite" {
+    "EditOverwrite" {
         $record_to_edit = RecordByName $recordName
         editRecordOverwrite $record_to_edit $updatePackageMap
         $record_to_edit.commit()
 
     }
-    "edit_append" {
+    "EditAppend" {
         $record_to_edit = RecordByName $recordName
         editRecordAppend $record_to_edit $updatePackageMap
         $record_to_edit.commit()
 
     }
-    "new_record" {
+    "NewCustomer" {
         $record_to_edit = CreateRecord $recordName $updatePackageMap
         $record_to_edit.commit()
 
     }
-    "hires_by_customer" {
+    "HiresByCustomer" {
         hires = HireRecordsByCustomerIncludes $recordName
         Write-Host $hires
 
+    }
+    "PrintRecord" {
+        PrintRecord $recordName
     }
 }
 

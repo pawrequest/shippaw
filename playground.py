@@ -14,12 +14,13 @@ ship_mode = ShipMode.SHIP
 
 def playground(shipment, config: Config):
     """test stuff here"""
-    # # update a record
     update_package = {
         'Booked Date': f'{datetime.today():{DateTimeMasks.DB_IMPORT.value}}',
         'Send Out Date': f'{datetime.today():{DateTimeMasks.DB_IMPORT.value}}',
         'To Customer': 'Test Customer'
     }
+
+
 
 
 
