@@ -1,33 +1,67 @@
 using namespace Vovin.CmcLibNet.Database # requires PS 5 or higher
 using namespace Vovin.CmcLibNet.Export # requires PS 5 or higher
 param(
-[switch]$functionName,
+[string]$functionName,
 [string]$tableName,
 [string]$recordName,
 [string]$updatePackageStr
 )
 
-Write-Host "FunctionName: $functionName"
-Write-Host "tableName: $tableName"
-Write-Host "recordName: $recordName"
-Write-Host "updatePackageStr: $updatePackageStr"
+$PSBoundParameters.GetEnumerator() | ForEach-Object {
+    Write-Output "$($_.Key): $($_.Value)"
+}
+
+#Write-Host "FunctionName: $functionName"
+#Write-Host "tableName: $tableName"
+#Write-Host "recordName: $recordName"
+#Write-Host "updatePackageStr: $updatePackageStr"
 
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 Add-Type -Path $commence_wrapper
 
 # parse json
 $updatePackageMap = @{
-    'Name' = $recordName
+#    'Name' = $recordName
 }
+
 (ConvertFrom-Json $updatePackageStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
+$cursor = $db.GetCursor($tableName)
 
 
 # initialise commence and get table cursor
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
-$cursor = $db.GetCursor($tableName)
+
+function GetRecordToEdit($recordName)
+{
+    write-host "Getting record by name: $recordName"
+    # filter table by record name
+
+    $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
+    $filter.FieldName = "Name"
+    $filter.FieldValue = $recordName
+    $filter.Qualifier = "EqualTo"
+    $result = $cursor.Filters.Apply()
+
+    If ($result -eq 1)
+    {
+        Write-Host One Record Retrieved, proceeding to edit
+        return $cursor.GetEditRowSet()
+    }
+    Else
+    {
+        throw "ERROR: Filters.Apply returned $result results"
+        Write-Host ERROR: Filters.Apply returned $result results
+    }
+}
+
+
+
+
 
 function RecordByName($recordName)
 {
+    Write-Host "Retrieving record by name: $recordName"
+
     # filter table by record name
     $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
     $filter.FieldName = "Name"
@@ -49,6 +83,7 @@ function RecordByName($recordName)
 
 function HireRecordsCustomerIncludes($searchterm)
 {
+    write-host "Retrieving records where To Customer includes: $searchterm"
     $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
     $filter.FieldName = "To Customer"
     $filter.FieldValue = $searchterm
@@ -74,19 +109,22 @@ function NewRecord($recordName, $update_package)
 
 function EditRecordOverwrite($record, $package)
 {
+    write-host "Editing record and overwriting values: $record"
     # apply update_package
     foreach ($key in $package.Keys)
     {
         $input_value = $package[$key]
         $ed_index = $record.GetColumnIndex($key)
         $db_val = $record.GetRowValue(0, $ed_index)
-
+        if ($ed_index -gt -1){
         Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
         $record.ModifyRow(0, $ed_index, $input_value, 0)
+        }
     }
 }
 function EditRecordAppend($record, $package)
 {
+    write-host "Editing record and appending values: $record"
     # apply update_package
     foreach ($key in $package.Keys)
     {
@@ -113,20 +151,25 @@ function EditRecordAppend($record, $package)
 
 function PrintRecord($recordName)
 {
+    write-host "Printing record: $recordName"
     record = RecordByName $recordName
     Write-Host $record
     }
 
-switch ($FunctionToExecute)
+write-host "functionName: $functionName"
+
+switch ($functionName)
 {
     "EditOverwrite" {
-        $record_to_edit = RecordByName $recordName
+#        $record_to_edit = RecordByName $recordName
+        $record_to_edit = GetRecordToEdit $recordName
         editRecordOverwrite $record_to_edit $updatePackageMap
         $record_to_edit.commit()
 
     }
     "EditAppend" {
-        $record_to_edit = RecordByName $recordName
+#        $record_to_edit = RecordByName $recordName
+        $record_to_edit = GetRecordToEdit $recordName
         editRecordAppend $record_to_edit $updatePackageMap
         $record_to_edit.commit()
 

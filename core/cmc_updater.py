@@ -13,7 +13,8 @@ class PS_FUNCS(Enum):
 
 def some_ps(pscript, function, table, record, package):
     record_esc = f'"{record}"'
-    package_esc = json.dumps(package).replace('"', '`"')
+    # package_esc = json.dumps(package).replace('"', '`"')
+    package_esc = json.dumps(package)
     # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
     #                     pscript, function, table, record_esc, package_esc]
 
