@@ -11,7 +11,7 @@ class PS_FUNCS(Enum):
     HIRES_CUSTOMER= "HiresByCustomer"
     PRINT = "PrintRecord"
 
-def some_ps(pscript, function, table, record, package):
+def edit_commence(pscript, function, table, record, package):
     record_esc = f'"{record}"'
     # package_esc = json.dumps(package).replace('"', '`"')
     package_esc = json.dumps(package)
@@ -22,7 +22,7 @@ def some_ps(pscript, function, table, record, package):
         '-File', pscript,
         '-functionName', function,
         '-tableName', table,
-        '-recordName', record_esc,
+        '-recordName', record,
         '-updatePackageStr', package_esc
     ]
     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

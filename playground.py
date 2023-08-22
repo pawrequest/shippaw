@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from core.cmc_updater import update_commence, PS_FUNCS, some_ps
+from core.cmc_updater import update_commence, PS_FUNCS, edit_commence
 from core.config import Config
 from core.enums import ShipmentCategory, ShipMode, DateTimeMasks
 from shipper.shipper import Shipper
@@ -18,16 +18,16 @@ def playground(shipment, config: Config):
     # record_name = "Test"
     table_name = 'Hire'
     update_package = {
-        'Send Out Date': f'{datetime.today():{DateTimeMasks.DB_IMPORT.value}}',
+        'Missing Kit': f'nothing to see',
     }
 
-    # some_ps(pscript="C:\paul\AmDesp\scripts\cmc_updater_funcs.ps1", function=PS_FUNCS.OVERWRITE.value, table=table_name, record=record_name, package=update_package)
+    edit_commence(pscript="C:\paul\AmDesp\scripts\cmc_updater_funcs.ps1", function=PS_FUNCS.OVERWRITE.value, table=table_name, record=record_name, package=update_package)
 
     # # update_commence(update_package=update_package, table_name='Hire', record_name=shipment.shipment_name,
     # #                 script_path=config.paths.cmc_updater_append, with_shell=False)
-
-    update_commence(update_package=update_package, table_name=table_name, record_name=record_name,
-                    script_path=script, append=False, insert=False)
+    #
+    # update_commence(update_package=update_package, table_name=table_name, record_name=record_name,
+    #                 script_path=script, append=False, insert=False)
 
     # # insert a record
     # update_package = {'Notes' : 'some notes'}

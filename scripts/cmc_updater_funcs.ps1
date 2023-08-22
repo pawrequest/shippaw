@@ -23,13 +23,10 @@ Add-Type -Path $commence_wrapper
 $updatePackageMap = @{
 #    'Name' = $recordName
 }
-
 (ConvertFrom-Json $updatePackageStr).psobject.properties | Foreach { $updatePackageMap[$_.Name] = $_.Value }
-$cursor = $db.GetCursor($tableName)
 
-
-# initialise commence and get table cursor
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
+$cursor = $db.GetCursor($tableName)
 
 function GetRecordToEdit($recordName)
 {

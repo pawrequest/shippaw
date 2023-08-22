@@ -15,7 +15,7 @@ from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label
-from core.cmc_updater import update_commence
+from core.cmc_updater import update_commence, edit_commence, PS_FUNCS
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
@@ -183,7 +183,8 @@ def process_shipments(shipments, values, config):
 
         if shipment.category in ['Hire', 'Sale']:
             cmc_update_package = collection_update_package(shipment_id=shipment_id, outbound=outbound)
-            update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater)
+            # update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater)
+            edit_commence(pscript=config.paths.cmc_updater, table=shipment.category, record=shipment.shipment_name, package=cmc_update_package, function=PS_FUNCS.APPEND.value)
 
         if not book_collection:
             continue
