@@ -15,7 +15,7 @@ from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label
-from core.cmc_updater import update_commence, edit_commence, PS_FUNCS
+from core.cmc_updater import edit_commence, PS_FUNCS
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments

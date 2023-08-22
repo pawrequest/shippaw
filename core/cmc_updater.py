@@ -11,10 +11,11 @@ class PS_FUNCS(Enum):
     HIRES_CUSTOMER= "HiresByCustomer"
     PRINT = "PrintRecord"
 
-def edit_commence(pscript, function, table, record, package):
+def edit_commence(pscript:str, function:str, table:str, record:str, package:dict):
+    logger.info(f'COMMENCE UPDATER -{function=} -{table=} -{record=} -{package=}')
     record_esc = f'"{record}"'
-    # package_esc = json.dumps(package).replace('"', '`"')
-    package_esc = json.dumps(package)
+    package_esc = json.dumps(package)#.replace('"', '`"')
+    # package_esc = f'"{package_esc}"'
     # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
     #                     pscript, function, table, record_esc, package_esc]
 
@@ -22,7 +23,8 @@ def edit_commence(pscript, function, table, record, package):
         '-File', pscript,
         '-functionName', function,
         '-tableName', table,
-        '-recordName', record,
+        '-recordName', record_esc,
+        # '-recordName', record,
         '-updatePackageStr', package_esc
     ]
     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -66,44 +68,44 @@ class Commence():
         def name_esc(self):
             return f'"{self.recordname}"'
 
-
-
-def update_commence(table_name: str, record_name: str, update_package: dict, script_path: str,
-                    append: bool = False, insert:bool=False):
-    """ Update commence record via powershell
-    :param table_name: name of commence table
-    :param update_package: dict of vey value pairs to update
-    :param record_name_esc: name of record to update
-    :param script_path: path to powershell script
-    :param append: append to existing record data or overwrite
-    :param insert: insert new record"""
-
-    POWERSHELL_PATH = "powershell.exe"
-    record_name_esc = f'"{record_name}"'
-
-    update_string_esc = json.dumps(update_package).replace('"', '`"')
-    update_string_esc = f'"{update_string_esc}"'
-
-    process_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-Command',
-                       script_path, table_name, record_name_esc, update_string_esc]
-    if append:
-        process_command.append('-append')
-
-    if insert:
-        if input(f"Create New Record {record_name} in {table_name}? (y/n)").lower() == 'y':
-            process_command.append('-insert')
-            # process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
-    logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
-
-    process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
-
-    if process_result.stderr:
-        parse_std_err(process_result)
-    else:
-        stdoutput = process_result.stdout.split('\n')
-        [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
+#
+#
+# def update_commence(table_name: str, record_name: str, update_package: dict, script_path: str,
+#                     append: bool = False, insert:bool=False):
+#     """ Update commence record via powershell
+#     :param table_name: name of commence table
+#     :param update_package: dict of vey value pairs to update
+#     :param record_name_esc: name of record to update
+#     :param script_path: path to powershell script
+#     :param append: append to existing record data or overwrite
+#     :param insert: insert new record"""
+#
+#     POWERSHELL_PATH = "powershell.exe"
+#     record_name_esc = f'"{record_name}"'
+#
+#     update_string_esc = json.dumps(update_package).replace('"', '`"')
+#     update_string_esc = f'"{update_string_esc}"'
+#
+#     process_command = [POWERSHELL_PATH, '-ExecutionPolicy', 'Unrestricted', '-Command',
+#                        script_path, table_name, record_name_esc, update_string_esc]
+#     if append:
+#         process_command.append('-append')
+#
+#     if insert:
+#         if input(f"Create New Record {record_name} in {table_name}? (y/n)").lower() == 'y':
+#             process_command.append('-insert')
+#             # process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
+#     logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
+#
+#     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+#                                     universal_newlines=True)
+#     logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
+#
+#     if process_result.stderr:
+#         parse_std_err(process_result)
+#     else:
+#         stdoutput = process_result.stdout.split('\n')
+#         [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
 
 
 def parse_std_err(process_result):

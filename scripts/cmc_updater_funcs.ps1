@@ -8,13 +8,8 @@ param(
 )
 
 $PSBoundParameters.GetEnumerator() | ForEach-Object {
-    Write-Output "$($_.Key): $($_.Value)"
+    Write-host "$($_.Key): $($_.Value)"
 }
-
-#Write-Host "FunctionName: $functionName"
-#Write-Host "tableName: $tableName"
-#Write-Host "recordName: $recordName"
-#Write-Host "updatePackageStr: $updatePackageStr"
 
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
 Add-Type -Path $commence_wrapper
@@ -27,32 +22,6 @@ $updatePackageMap = @{
 
 $db = New-Object -TypeName Vovin.CmcLibNet.Database.CommenceDatabase
 $cursor = $db.GetCursor($tableName)
-
-function GetRecordToEdit($recordName)
-{
-    write-host "Getting record by name: $recordName"
-    # filter table by record name
-
-    $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
-    $filter.FieldName = "Name"
-    $filter.FieldValue = $recordName
-    $filter.Qualifier = "EqualTo"
-    $result = $cursor.Filters.Apply()
-
-    If ($result -eq 1)
-    {
-        Write-Host One Record Retrieved, proceeding to edit
-        return $cursor.GetEditRowSet()
-    }
-    Else
-    {
-        throw "ERROR: Filters.Apply returned $result results"
-        Write-Host ERROR: Filters.Apply returned $result results
-    }
-}
-
-
-
 
 
 function RecordByName($recordName)
@@ -92,40 +61,53 @@ function HireRecordsCustomerIncludes($searchterm)
 }
 
 
-function NewRecord($recordName, $update_package)
+function EditRecordOverwrite($record, $package)
+{
+    write-host "Editing record and overwriting values"
+    write-host "type of record in EditRecordOverwrite is :" $record.GetType()
+    # apply update_package
+    foreach ($key in $package.Keys)
+    {
+        $input_value = $package[$key]
+        write-host "key: $key; value: $input_value"
+        $ed_index = $record.GetColumnIndex($key)
+        write-host "ed_index: $ed_index"
+        $db_val = $record.GetRowValue(0, $ed_index)
+        write-host "db_val: $db_val"
+        if ($ed_index -gt -1){
+        Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
+        $null = $record.ModifyRow(0, $ed_index, $input_value, 0)
+        }
+    }
+    $record.commit()
+    return $record
+}
+
+
+function NewRecord()
 {
     Write-Host Inserting new record
 
     $new_record = $cursor.GetAddRowSet(1)
-    $new_record.ModifyRow(0, 0, $recordName, 0)
+#    $null = $new_record.ModifyRow(0, 0, $recordName, 0)
+#    $edit_resulult = EditRecordOverwrite($new_record, $package)
 
-    editRecordOverwrite $new_record $update_package
+#    $returned = $new_record.commit()
+    write-host "type of record after commit :" $new_record.GetType()
+#    write-host "returned: $returned"
 
     return $new_record
 }
 
-function EditRecordOverwrite($record, $package)
-{
-    write-host "Editing record and overwriting values: $record"
-    # apply update_package
-    foreach ($key in $package.Keys)
-    {
-        $input_value = $package[$key]
-        $ed_index = $record.GetColumnIndex($key)
-        $db_val = $record.GetRowValue(0, $ed_index)
-        if ($ed_index -gt -1){
-        Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
-        $record.ModifyRow(0, $ed_index, $input_value, 0)
-        }
-    }
-}
+
 function EditRecordAppend($record, $package)
 {
-    write-host "Editing record and appending values: $record"
+    write-host "Editing record and appending values"
     # apply update_package
     foreach ($key in $package.Keys)
     {
         $input_value = $package[$key]
+        write-host "record: $record"
         $ed_index = $record.GetColumnIndex($key)
         $db_val = $record.GetRowValue(0, $ed_index)
 
@@ -153,27 +135,26 @@ function PrintRecord($recordName)
     Write-Host $record
     }
 
-write-host "functionName: $functionName"
 
 switch ($functionName)
 {
     "EditOverwrite" {
-#        $record_to_edit = RecordByName $recordName
-        $record_to_edit = GetRecordToEdit $recordName
-        editRecordOverwrite $record_to_edit $updatePackageMap
-        $record_to_edit.commit()
+        $to_overwrite = RecordByName $recordName
+        editRecordOverwrite $to_overwrite $updatePackageMap
+        $to_overwrite.commit()
 
     }
     "EditAppend" {
-#        $record_to_edit = RecordByName $recordName
-        $record_to_edit = GetRecordToEdit $recordName
-        editRecordAppend $record_to_edit $updatePackageMap
-        $record_to_edit.commit()
+        $to_append = RecordByName $recordName
+        editRecordAppend $to_append $updatePackageMap
+        $to_append.commit()
 
     }
     "NewRecord" {
-        $record_to_edit = CreateRecord $recordName $updatePackageMap
-        $record_to_edit.commit()
+
+
+        $new_record = NewRecord
+        $new_record = editRecordOverwrite $new_record $updatePackageMap
 
     }
     "HiresByCustomer" {
