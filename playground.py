@@ -14,13 +14,13 @@ ship_mode = ShipMode.SHIP
 def playground(shipment, config: Config):
     """test stuff here"""
     # record_name = shipment.shipment_name
-    record_name = 'not very real'
+    record_name = 'not very real is this'
     table_name = 'Hire'
     update_package = {
-        'Name': 'Testing some more stuff',
-        'To Customer': 'Test Customer',
+        # 'Name': 'Testing some more stuff',
+        'To Customer': 'Test',
     }
-    function_name = PS_FUNCS.NEW.value
+    function_name = PS_FUNCS.OVERWRITE.value
 
     edit_commence(pscript="C:\paul\AmDesp\scripts\cmc_updater_funcs.ps1", function=function_name, table=table_name,
                   record=record_name, package=update_package)

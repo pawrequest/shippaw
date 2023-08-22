@@ -154,6 +154,7 @@ switch ($functionName)
 
 
         $new_record = NewRecord
+        $updatePackageMap["Name"] = $recordName
         $new_record = editRecordOverwrite $new_record $updatePackageMap
 
     }

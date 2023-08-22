@@ -23,8 +23,8 @@ def edit_commence(pscript:str, function:str, table:str, record:str, package:dict
         '-File', pscript,
         '-functionName', function,
         '-tableName', table,
-        '-recordName', record_esc,
-        # '-recordName', record,
+        # '-recordName', record_esc,
+        '-recordName', record,
         '-updatePackageStr', package_esc
     ]
     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
