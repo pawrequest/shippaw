@@ -1,11 +1,13 @@
 import json
 import os
 import random
+import sys
 import time
 from datetime import datetime
 from pprint import pprint
 
 import PySimpleGUI as sg
+import requests
 import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
@@ -120,3 +122,18 @@ def retry_with_backoff_dec(retries=5, backoff_in_seconds=1):
 
 def collection_date_to_datetime(collection_date: CollectionDate):
     return datetime.strptime(collection_date.date, DateTimeMasks.DB.value).date()
+
+
+def is_connected():
+    url = "https://www.google.com"
+    timeout = 5
+    try:
+        request = requests.get(url, timeout=timeout)
+        logger.info("Internet is on")
+
+    except (requests.ConnectionError, requests.Timeout) as exception:
+        input_blah = input(f"\n\nCONNECTION ERROR: UNABLE TO CONNECT TO GOOGLE: \n(enter to exit...)")
+        logger.error(exception)
+        sys.exit(404)
+
+    return True

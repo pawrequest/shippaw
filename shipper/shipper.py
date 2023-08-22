@@ -34,8 +34,14 @@ def get_mapping_name(category):
 class Shipper:
     def __init__(self, config: Config):
         global DESP_CLIENT
-        client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
+        try:
+            client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
+        except Exception as e:
+            logger.exception(e)
+            raise ApiException("Unable to intitialise DespatchBay client")
+
         client = APIClientWrapper(client)
+
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
         self.shipments: list[Shipment] = []

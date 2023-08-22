@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 
 from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
+from core.funcs import is_connected
 from shipper.shipper import Shipper
 
 """
@@ -17,10 +18,12 @@ includes
 """
 
 
+def initial_checks():
+    is_internet_connected = is_connected()
+
+
 def main(args):
-    while not args.input_file:
-        args.input_file = sg.popup_get_file("Select input file")
-    args.category = ShipmentCategory[args.category]
+    initial_checks()
     outbound = 'out' == args.direction.lower()
     config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
     shipper = Shipper(config=config)
@@ -36,9 +39,7 @@ def main(args):
     elif args.shipping_mode == ShipMode.TRACK.name:
         shipper.track()
 
-    sys.exit()
-
-
+    sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -49,5 +50,9 @@ if __name__ == '__main__':
                         help="Choose shipment category.")
     parser.add_argument('input_file', nargs='?', help="Path to input file.")
     args = parser.parse_args()
+    args.category = ShipmentCategory[args.category]
+    while not args.input_file:
+        args.input_file = sg.popup_get_file("Select input file")
+
     logger.info(f'{args=}')
     main(args)
