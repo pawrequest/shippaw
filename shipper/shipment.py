@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import field
 from datetime import datetime
 from numbers import Number
@@ -6,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import PySimpleGUI as sg
+from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
@@ -36,6 +38,7 @@ class ParcelValid(BaseModel, Parcel):
     ...
 
 class ShipmentInput(BaseModel):
+    """ input validated"""
     is_dropoff: bool = False
     is_outbound: bool
     category: ShipmentCategory
@@ -53,35 +56,50 @@ class ShipmentInput(BaseModel):
     outbound_id: Optional[str] = ''
 
 class ShipmentAddressed(ShipmentInput):
-    remote_address: Optional[Address]
-    remote_contact: Optional[Contact]
-    remote_sender_recip: Optional[Union[Sender, Recipient]]
-class ShipmentToRequest(ShipmentAddressed):
+    """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    parcels: List[Parcel] = field(default_factory=list)
-    sender: Sender = field(default_factory=Sender)
-    recipient: Recipient = field(default_factory=Recipient)
-    collection_date: CollectionDate
+    remote_contact: Contact
+    remote_address: Address
+    sender: Sender
+    recipient: Recipient
+    remote_sender_recip: Optional[Union[Sender, Recipient]]
+
+
+class ShipmentPrepared(ShipmentAddressed):
+    """ non address prep done"""
+    date_matched: bool
+    default_service_matched: bool
     available_dates: List[CollectionDate]
     available_services: List[Service]
-    service: Service
+    date_menu_map: Dict
+    service_menu_map: Dict
     bestmatch: Optional[BestMatch] = None
-    candidate_keys: Optional[Dict] = field(default_factory=dict)
-    date_matched: bool = False
-    date_menu_map: Dict = field(default_factory=dict)
-    service_menu_map: Dict = field(default_factory=dict)
-    default_service_matched: bool = False
+    candidate_keys: Optional[Dict] = None
 
-class ShipmentRequested(ShipmentToRequest):
-    shipment_request: Optional[ShipmentRequest] = None
+class ShipmentForRequest(ShipmentPrepared):
+    """ ready to get request"""
+    collection_date: CollectionDate
+    parcels: List[Parcel]
+    service: Service
+class ShipmentRequested(ShipmentForRequest):
+    """ requested. ready to queue"""
+    shipment_request: ShipmentRequest
 
+class ShipmentGuiConfirmed(ShipmentRequested):
+    is_to_book: bool
+    is_to_print_email: bool
 
-class ShipmentConfirmed(ShipmentRequested):
-    logged_to_commence: bool = False
-    shipment_return: Optional[ShipmentReturn] = None
-    service: Optional[Service] = None
-    printed: bool = False
-    label_location: Path = field(default_factory=Path)
+class ShipmentQueued(ShipmentGuiConfirmed):
+    """ queued. ready to book"""
+    shipment_id: str
+    logged_to_commence: bool
+    is_queued: bool
+class ShipmentBooked(ShipmentQueued):
+    """ booked"""
+    is_booked:bool
+    shipment_return: ShipmentReturn
+    printed: bool
+    label_location: Path
 
 
 def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
@@ -214,3 +232,19 @@ def get_valid_shipment(input_dict: dict) -> ShipmentInput:
                 input_dict[field] = new_value
         else:
             return shippy
+
+
+def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1'):
+    if not Path(dbase_file).exists():
+        file = sg.popup_get_file('Select a .dbf file to import', file_types=(('DBF Files', '*.dbf'),))
+        if not file:
+            raise FileNotFoundError(f'{dbase_file} not found')
+
+    try:
+        return [record for record in DBF(dbase_file, encoding=encoding)]
+    except UnicodeDecodeError as e:
+        logger.exception(f'Char decoding import error with {dbase_file} \n {e}')
+    except DBFNotFound as e:
+        logger.exception(f'.Dbf or Dbt are missing \n{e}')
+    except Exception as e:
+        logger.exception(e)

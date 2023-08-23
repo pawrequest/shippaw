@@ -1,52 +1,24 @@
-from typing import Iterable
+from typing import Iterable, List
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_entities import Address, Sender, Recipient
+from despatchbay.despatchbay_entities import Address, Recipient, Sender
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
 import shipper.shipper
-from core.config import logger, Config
-from core.enums import BestMatch, FuzzyScores, Contact
+from core.config import Config, logger
+from core.enums import BestMatch, Contact, FuzzyScores
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
-from shipper.shipment import ShipmentToRequest
+from shipper.shipment import ShipmentAddressed, ShipmentInput, ShipmentRequested
 
 
-def address_shipments(shipments: list[ShipmentToRequest], config: Config, outbound: bool):
-    """Sets Contact and Address for sender and recipient for each shipment
-    home_base is sender if outbound else recipient, other address from remote_address_script"""
-    if not all([config.home_contact, config.home_address.dbay_key]):
-        raise ValueError(f"Home Contact or Dbay Key Missing - please edit .toml file")
-
-    home_base = get_home_base(outbound=outbound, config=config)
-
-    for shipment in shipments:
-        shipment.remote_contact = Contact(email=shipment.email, telephone=shipment.telephone,
-                                          name=shipment.contact_name)
-
-        shipment.remote_address = remote_address_script(shipment=shipment)
-        if shipment.remote_address is False:
-            shipments = [s for s in shipments if s is not shipment]
-            logger.exception(f'No Address Found for {shipment}, skipping to next shipment')
-            continue
-
-        shipment.sender = home_base if outbound \
-            else sender_from_contact_address(contact=shipment.remote_contact,
-                                             remote_address=shipment.remote_address)
-
-        shipment.recipient = home_base if not outbound \
-            else recip_from_contact_address(contact=shipment.remote_contact,
-                                            address=shipment.remote_address)
-
-    return shipments
-
-
-def remote_address_script(shipment: ShipmentToRequest) -> Address | bool:
+def remote_address_script(shipment: ShipmentInput) -> (Address | False):
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
         return address
+
     logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment)
     while True:
@@ -56,7 +28,8 @@ def remote_address_script(shipment: ShipmentToRequest) -> Address | bool:
                     f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
                 return False
             continue
-        return address
+        else:
+            return address
 
 
 def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address | None:
@@ -77,7 +50,7 @@ def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address
         return None
 
 
-def get_explicit_match(shipment: ShipmentToRequest, candidate_address: Address) -> bool:
+def get_explicit_match(shipment: ShipmentRequested, candidate_address: Address) -> bool:
     """Compares various shipment details to address and returns the address if matched, else None."""
     if candidate_address.company_name and (
             shipment.customer in candidate_address.company_name or
@@ -93,29 +66,7 @@ def get_explicit_match(shipment: ShipmentToRequest, candidate_address: Address) 
     return False
 
 
-#
-# def get_explicit_match(shipment: Shipment, candidate_address: Address) -> Address | None:
-#     """ compares various shipment details to address, return address is matched else None"""
-#
-#
-#     try:
-#         if candidate_address.company_name:
-#             if shipment.customer in candidate_address.company_name \
-#                     or candidate_address.company_name in shipment.customer \
-#                     or shipment.delivery_name in candidate_address.company_name \
-#                     or candidate_address.company_name in shipment.delivery_name:
-#                 return candidate_address
-#     except Exception as e:
-#         return None
-#     else:
-#         if shipment.str_to_match == candidate_address.street:
-#             return candidate_address
-#
-#         else:
-#             return None
-#
-
-def check_address_company(address: Address, shipment: ShipmentToRequest) -> Address | None:
+def check_address_company(address: Address, shipment: ShipmentRequested) -> Address | None:
     """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
 
     if not address.company_name:
@@ -268,7 +219,7 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
     return recip
 
 
-def get_home_base(config, outbound) -> Sender | Recipient:
+def get_home_sender_recip(config, outbound) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing """
     client = shipper.shipper.DESP_CLIENT
     return client.sender(address_id=config.home_address.address_id) if outbound \

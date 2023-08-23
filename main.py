@@ -1,12 +1,14 @@
 import argparse
 import sys
+from typing import List
 
 import PySimpleGUI as sg
 
 from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
-from shipper.shipper import Shipper, get_shipments
+from shipper.shipment import ShipmentInput
+from shipper.shipper import Shipper, dispatch, get_shipments
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -27,15 +29,16 @@ def main(args):
     outbound = 'out' == args.direction.lower()
     config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
     shipper = Shipper(config=config)
-    shipper.shipments = get_shipments(category=args.category, dbase_file=args.input_file, import_mappings=config.import_mappings)
-    # shipper.get_shipments(category=args.category, dbase_file=args.input_file)
 
-    if not shipper.shipments:
+    shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.input_file,
+                                                   import_mappings=config.import_mappings)
+
+    if not shipments:
         logger.info('No shipments to process.')
         sys.exit()
 
     if args.shipping_mode == ShipMode.SHIP.name:
-        shipper.dispatch()
+        dispatch(config=config, shipments=shipments)
 
     elif args.shipping_mode == ShipMode.TRACK.name:
         shipper.track()
