@@ -5,7 +5,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 import shipper.shipper
 from core.enums import Contact, FieldsList
 from gui.gui_params import address_fieldname_params, address_input_params
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentToRequest
 
 
 def address_postcode_click(postcode: str) -> Address | None:
@@ -125,7 +125,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: Shipment, address: Address, contact: Contact) -> Address | None:
+def address_from_gui(shipment: ShipmentToRequest, address: Address, contact: Contact) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
     window = comparison_address_window(delivery_name = shipment.delivery_name, contact=contact, address=address,

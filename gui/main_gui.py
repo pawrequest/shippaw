@@ -10,10 +10,10 @@ from gui.gui_params import address_head_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
 from gui.keys_and_strings import SERVICE_STRING, DATE_STRING, ADDRESS_STRING
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentToRequest
 
 
-def main_window(outbound: bool, shipments: [Shipment]):
+def main_window(outbound: bool, shipments: [ShipmentToRequest]):
     logger.info('BULK SHIPPER WINDOW')
     sg.set_options(**default_params)
 
@@ -27,7 +27,7 @@ def main_window(outbound: bool, shipments: [Shipment]):
                      finalize=True)
 
 
-def shipment_frame(shipment: Shipment, outbound: bool):
+def shipment_frame(shipment: ShipmentToRequest, outbound: bool):
     print_or_email = 'print' if outbound else 'email'
 
     date_name = DATE_STRING(collection_date=shipment.collection_date)
@@ -76,7 +76,7 @@ def headers(outbound: bool):
     return heads
 
 
-def post_book(shipments: [Shipment]):
+def post_book(shipments: [ShipmentToRequest]):
     headers = []
     frame = results_frame(shipments=shipments)
     window2 = sg.Window('Booking Results:', layout=[[frame]])
@@ -85,14 +85,14 @@ def post_book(shipments: [Shipment]):
         if e2 in [sg.WIN_CLOSED, 'Exit']:
             break
         if 'reprint' in e2.lower():
-            ship_in_play: Shipment = next((shipment for shipment in shipments if
-                                           shipment.shipment_name_printable.lower() in e2.lower()))
+            ship_in_play: ShipmentToRequest = next((shipment for shipment in shipments if
+                                                    shipment.shipment_name_printable.lower() in e2.lower()))
             print_label(ship_in_play)
 
     window2.close()
 
 
-def results_frame(shipments: [Shipment]):
+def results_frame(shipments: [ShipmentToRequest]):
     params = {
         'expand_x': True,
         'expand_y': True,
@@ -185,7 +185,7 @@ def date_button(date_name, shipment):
     return collection_date_button
 
 
-def new_date_selector(shipment: Shipment, popup_location) -> CollectionDate:
+def new_date_selector(shipment: ShipmentToRequest, popup_location) -> CollectionDate:
     menu_map = shipment.date_menu_map
     men_def = list(menu_map.keys())
     datetime_mask = DateTimeMasks.DISPLAY.value

@@ -33,10 +33,9 @@ FIELD10 = 'customer'            # hire customer
 SEND_OUT_D = 'send_out_date'    # hire record send out date
 INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
 OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
-#DB_LABEL_P = 'label_printed'    # has a label been printed? depric
-#SEND___COL = 'send_collect'     # any use?
 SEND_METHO = 'send_method'      # contains parcelforce?
-FIELD17 = 'customer'            # hire customer remote dev
+FIELD13 = 'customer'            # hire customer remote dev
+SENDING_ST = 'status'   # hire sending status
 
 
 [import_mappings.sale_mapping]

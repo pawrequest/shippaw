@@ -11,9 +11,9 @@ from despatchbay.exceptions import AuthorizationException
 
 
 class ShipmentCategory(Enum):
-    HIRE = 'HIRE'
-    SALE = 'SALE'
-    CUSTOMER = 'CUSTOMER'
+    HIRE = 'Hire'
+    SALE = 'Sale'
+    CUSTOMER = 'Customer'
 
 
 @dataclass

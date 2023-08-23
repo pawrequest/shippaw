@@ -13,7 +13,6 @@ from despatchbay.despatchbay_entities import Address, CollectionDate
 
 from core.config import logger
 from core.enums import FieldsList, DateTimeMasks
-from shipper.shipment import Shipment
 
 
 def print_label(shipment):
@@ -28,7 +27,7 @@ def print_label(shipment):
         return True
 
 
-def log_shipment(log_path, shipment: Shipment):
+def log_shipment(log_path, shipment: "ShipmentToGo"):
     # export from object attrs
     shipment.boxes = len(shipment.parcels)
     export_dict = {}
@@ -55,7 +54,7 @@ def log_shipment(log_path, shipment: Shipment):
         f.write(",\n")
 
 
-def email_label(shipment: Shipment, body: str, collection_date: CollectionDate, collection_address: Address):
+def email_label(shipment: "ShipmentToGo", body: str, collection_date: CollectionDate, collection_address: Address):
     collection_date = collection_date_to_datetime(collection_date)
 
     try:
@@ -137,3 +136,8 @@ def is_connected():
         sys.exit(404)
 
     return True
+
+
+def get_type(cls, field: str):
+    type_hint = cls.__annotations__.get(field, None)
+    return type_hint.__name__ if type_hint else None

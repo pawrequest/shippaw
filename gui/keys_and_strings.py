@@ -4,10 +4,10 @@ from typing import List
 from despatchbay.despatchbay_entities import Service, CollectionDate, Address
 
 from core.enums import DateTimeMasks
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentToRequest
 
 
-def BOOK_KEY(shipment: Shipment):
+def BOOK_KEY(shipment: ShipmentToRequest):
     return f'-{shipment.shipment_name_printable}_BOOK-'.upper()
 
 
@@ -35,7 +35,7 @@ def GO_SHIP_KEY():
     return '-GO_SHIP-'
 
 
-def PRINT_EMAIL_KEY(shipment: Shipment):
+def PRINT_EMAIL_KEY(shipment: ShipmentToRequest):
     return f'-{shipment.shipment_name_printable}_PRINT_EMAIL-'.upper()
 
 
@@ -43,7 +43,7 @@ def RECIPIENT_KEY(shipment):
     return f'-{shipment.shipment_name_printable}_RECIPIENT-'.upper()
 
 
-def REMOVE_KEY(shipment: Shipment):
+def REMOVE_KEY(shipment: ShipmentToRequest):
     return f'-{shipment.shipment_name_printable}_REMOVE-'.upper()
 
 
@@ -51,7 +51,7 @@ def REPRINT_KEY(shipment):
     return f'-{shipment.shipment_name_printable}_REPRINT-'.upper()
 
 
-def SHIPMENT_KEY(shipment: Shipment):
+def SHIPMENT_KEY(shipment: ShipmentToRequest):
     return f'{shipment.shipment_name_printable}'.upper()
 
 

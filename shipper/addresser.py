@@ -10,10 +10,10 @@ from core.config import logger, Config
 from core.enums import BestMatch, FuzzyScores, Contact
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentToRequest
 
 
-def address_shipments(shipments: list[Shipment], config: Config, outbound: bool):
+def address_shipments(shipments: list[ShipmentToRequest], config: Config, outbound: bool):
     """Sets Contact and Address for sender and recipient for each shipment
     home_base is sender if outbound else recipient, other address from remote_address_script"""
     if not all([config.home_contact, config.home_address.dbay_key]):
@@ -42,7 +42,7 @@ def address_shipments(shipments: list[Shipment], config: Config, outbound: bool)
     return shipments
 
 
-def remote_address_script(shipment: Shipment) -> Address | bool:
+def remote_address_script(shipment: ShipmentToRequest) -> Address | bool:
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
@@ -77,7 +77,7 @@ def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address
         return None
 
 
-def get_explicit_match(shipment: Shipment, candidate_address: Address) -> bool:
+def get_explicit_match(shipment: ShipmentToRequest, candidate_address: Address) -> bool:
     """Compares various shipment details to address and returns the address if matched, else None."""
     if candidate_address.company_name and (
             shipment.customer in candidate_address.company_name or
@@ -115,7 +115,7 @@ def get_explicit_match(shipment: Shipment, candidate_address: Address) -> bool:
 #             return None
 #
 
-def check_address_company(address: Address, shipment: Shipment) -> Address | None:
+def check_address_company(address: Address, shipment: ShipmentToRequest) -> Address | None:
     """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
 
     if not address.company_name:

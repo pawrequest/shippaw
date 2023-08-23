@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -6,21 +7,21 @@ from typing import List, cast
 import PySimpleGUI as sg
 import dotenv
 from dbfread import DBF, DBFNotFound
-from despatchbay.despatchbay_entities import CollectionDate, Service, ShipmentReturn
+from despatchbay.despatchbay_entities import CollectionDate, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
+from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, log_shipment, print_label
-from core.cmc_updater import edit_commence, PS_FUNCS
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import address_shipments
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
-from shipper.shipment import Shipment, shipdict_from_dbase
+from shipper.shipment import ShipmentInput, ShipmentToRequest, get_valid_shipment, shipdict_from_record
 from shipper.tracker import get_tracking, track2
 
 dotenv.load_dotenv()
@@ -44,34 +45,8 @@ class Shipper:
 
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
-        self.shipments: list[Shipment] = []
+        self.shipments: list[ShipmentToRequest | ShipmentDC] = []
         self.config = config
-
-    def get_shipments(self, category: ShipmentCategory, dbase_file: str):
-        logger.info(f'DBase file og = {dbase_file}')
-        try:
-            for record in DBF(dbase_file, encoding='cp1252'):
-                [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-                try:
-                    import_map_name = get_mapping_name(category)
-                    ship_dict = shipdict_from_dbase(record=record,
-                                                    import_mapping=self.config.import_mappings[import_map_name])
-                    # ship_dict['shipment_name'] = ship_dict.get('shipment_name', f'{ship_dict["customer"]} - {datetime.today().date()}')
-                    ship_dict['shipment_name'] = ship_dict.get('shipment_name',
-                                                               f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
-
-                    self.shipments.append(Shipment(ship_dict=ship_dict, category=category))
-                except Exception as e:
-                    logger.exception(f'{record.__repr__()} - {e}')
-                    continue
-
-        except UnicodeDecodeError as e:
-            logger.exception(f'DBASE import error with {dbase_file} \n {e}')
-        except DBFNotFound as e:
-            logger.exception(f'.Dbf or Dbt are missing \n{e}')
-        except Exception as e:
-            logger.exception(e)
-            raise
 
     def dispatch(self):
         config = self.config
@@ -89,7 +64,7 @@ class Shipper:
         track2(shipments=self.shipments)
 
 
-def tracking_loop(shipments: List[Shipment]):
+def tracking_loop(shipments: List[ShipmentToRequest]):
     for shipment in shipments:
         if outbound_id := shipment.outbound_id:
             outbound_window = get_tracking(outbound_id)
@@ -99,7 +74,7 @@ def tracking_loop(shipments: List[Shipment]):
             event, values = inbound_window.read()
 
 
-def dispatch_loop(config, shipments: List[Shipment]):
+def dispatch_loop(config, shipments: List[ShipmentToRequest]):
     """ pysimplegui main_loop, takes a prebuilt window and shipment list,
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking"""
@@ -128,8 +103,8 @@ def dispatch_loop(config, shipments: List[Shipment]):
         else:
             logger.info(f'Wrong Event key {event=}')
 
-        shipment_to_edit: Shipment = next((shipment for shipment in shipments if
-                                           keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+        shipment_to_edit: ShipmentToRequest = next((shipment for shipment in shipments if
+                                                    keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
 
         if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
             package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
@@ -167,24 +142,27 @@ def dispatch_loop(config, shipments: List[Shipment]):
         if package:
             window[event].update(package)
 
+
 def read_window_cboxs(values, shipment):
     print_or_email: bool = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
     book_collection: bool = values.get(keys_and_strings.BOOK_KEY(shipment))
     return book_collection, print_or_email
+
 
 def process_shipments(shipments, values, config):
     booked_shipments = []
     outbound = config.outbound
 
     for shipment in shipments:
-        book_collection, print_or_email = read_window_cboxs(values=values,shipment=shipment)
+        book_collection, print_or_email = read_window_cboxs(values=values, shipment=shipment)
         shipment_id = queue_shipment(shipment)
         setattr(shipment, f'{"outbound_id" if outbound else "inbound_id"}', shipment_id)
 
         if shipment.category in ['Hire', 'Sale']:
             cmc_update_package = collection_update_package(shipment_id=shipment_id, outbound=outbound)
             # update_commence(update_package=cmc_update_package, table_name=shipment.category, record_name=shipment.shipment_name, script_path=config.paths.cmc_updater)
-            edit_commence(pscript=config.paths.cmc_updater, table=shipment.category, record=shipment.shipment_name, package=cmc_update_package, function=PS_FUNCS.APPEND.value)
+            edit_commence(pscript=config.paths.cmc_updater, table=shipment.category, record=shipment.shipment_name,
+                          package=cmc_update_package, function=PS_FUNCS.APPEND.value)
 
         if not book_collection:
             continue
@@ -195,7 +173,6 @@ def process_shipments(shipments, values, config):
                                                  doc_id=shipment.shipment_return.shipment_document_id)
         if print_or_email:
             print_email_label(email_body=config.return_label_email_body, outbound=outbound, shipment=shipment)
-
 
     [log_shipment(log_path=config.paths.log_json, shipment=shipment) for shipment in booked_shipments]
     return booked_shipments if booked_shipments else None
@@ -228,7 +205,7 @@ def queue_shipment(shipment):
     return shipment_id
 
 
-def book_shipment(shipment: Shipment, shipment_id):
+def book_shipment(shipment: ShipmentToRequest, shipment_id):
     try:
         shipment.shipment_return = DESP_CLIENT.book_shipments(shipment_id)[0]
     except ApiException as e:
@@ -244,7 +221,7 @@ def book_shipment(shipment: Shipment, shipment_id):
     return shipment
 
 
-def get_collection_date(shipment: Shipment, courier_id) -> CollectionDate:
+def get_collection_date(shipment: ShipmentToRequest, courier_id) -> CollectionDate:
     """ return despatchbay CollecitonDate Entity
     make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
     available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
@@ -272,7 +249,7 @@ def get_actual_service(default_service_id: str, available_services: [Service]) -
                 available_services[0])
 
 
-def get_shipment_request(shipment: Shipment):
+def get_shipment_request(shipment: ShipmentToRequest):
     """ returns a dbay shipment request object from shipment"""
     request = DESP_CLIENT.shipment_request(
         service_id=shipment.service.service_id,
@@ -288,7 +265,7 @@ def get_shipment_request(shipment: Shipment):
     return request
 
 
-def gather_dbay_objs(shipment: Shipment, config: Config):
+def gather_dbay_objs(shipment: ShipmentToRequest, config: Config):
     client = DESP_CLIENT
     shipment.service = client.get_services()[0]  # needed to get dates
     shipment.collection_date = get_collection_date(shipment=shipment,
@@ -300,7 +277,7 @@ def gather_dbay_objs(shipment: Shipment, config: Config):
                                           available_services=shipment.available_services)
 
 
-def download_label(label_folder_path: Path, label_text: str, doc_id:str):
+def download_label(label_folder_path: Path, label_text: str, doc_id: str):
     """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
     try:
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
@@ -313,3 +290,50 @@ def download_label(label_folder_path: Path, label_text: str, doc_id:str):
         return False
     else:
         return label_location
+
+
+def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
+                  dbase_file: os.PathLike) -> [ShipmentInput]:
+    """ returns a list of validated shipments from a dbase file and a mapping dict"""
+
+    logger.info(f'DBase file og = {dbase_file}')
+    import_map_name = f"{category.name.lower()}_mapping"
+    import_map = import_mappings[import_map_name]
+    logger.info(f'Import map = {import_mappings[import_map_name]}')
+
+    records: [dict] = records_from_dbase(dbase_file)
+    shipments: [ShipmentInput] = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
+                                                        records=records)
+    return shipments
+
+
+def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool, records: [dict]):
+    shipments = []
+    for record in records:
+        [logger.debug(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
+        try:
+            ship_dict = shipdict_from_record(outbound=outbound, record=record,
+                                             category=category, import_mapping=import_map)
+            shipments.append(get_valid_shipment(input_dict=ship_dict))
+
+        except Exception as e:
+            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+            continue
+
+    return shipments
+
+
+def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1'):
+    if not Path(dbase_file).exists():
+        file = sg.popup_get_file('Select a .dbf file to import', file_types=(('DBF Files', '*.dbf'),))
+        if not file:
+            raise FileNotFoundError(f'{dbase_file} not found')
+
+    try:
+        return [record for record in DBF(dbase_file, encoding=encoding)]
+    except UnicodeDecodeError as e:
+        logger.exception(f'Char decoding import error with {dbase_file} \n {e}')
+    except DBFNotFound as e:
+        logger.exception(f'.Dbf or Dbt are missing \n{e}')
+    except Exception as e:
+        logger.exception(e)

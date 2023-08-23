@@ -13,7 +13,7 @@ from gui.main_gui import new_date_selector, new_service_popup, new_parcels_popup
 from gui.keys_and_strings import SERVICE_STRING, DATE_STRING, ADDRESS_STRING, DATE_MENU, \
     SERVICE_MENU
 from shipper.addresser import sender_from_address_id
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentToRequest
 
 
 def boxes_click(shipment_to_edit, window):
@@ -27,7 +27,7 @@ def boxes_click(shipment_to_edit, window):
     # update_parcels(new_parcels, shipment_to_edit, window)
 
 
-def dropoff_click(config, shipment: Shipment):
+def dropoff_click(config, shipment: ShipmentToRequest):
     client = shipper.shipper.DESP_CLIENT
 
     if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') != 'Yes':
@@ -63,7 +63,7 @@ def update_service_el(new_parcels, shipment_to_edit, service_button):
         f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
 
 
-def address_click(target: Sender | Recipient, shipment: Shipment):
+def address_click(target: Sender | Recipient, shipment: ShipmentToRequest):
     """ Takes a Sender or Recipient and returns a new address for that sender or recipient or None if exit """
     contact = Contact(name=target.name, email=target.email, telephone=target.telephone)
     if isinstance(target, Sender):
