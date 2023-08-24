@@ -20,6 +20,7 @@ def print_label(shipment):
     try:
         os.startfile(str(shipment.label_location), "print")
     except Exception as e:
+        shipment.is_printed = False
         logger.warning(f"Failed to print label: {e}")
         return False
     else:

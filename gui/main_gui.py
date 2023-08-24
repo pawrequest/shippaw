@@ -112,11 +112,9 @@ def results_frame(shipments: [ShipmentRequested]):
             ship_res.extend([sg.Text('Shipment Printed', **params),
                              sg.Button('Reprint Label',
                                        key=keys_and_strings.REPRINT_KEY(shipment), **params)])
-        if shipment.logged_to_commence:
+        if shipment.is_logged_to_commence:
             ship_res.append(sg.Text('Shipment ID Logged to Commence', **params))
-        # result_layout.append([sg.Frame('', layout=[ship_res])])
         result_layout.append(ship_res)
-        # result_layout.append([sg.Text('')])
     return sg.Frame('', vertical_alignment="c", layout=result_layout, element_justification='center')
 
 

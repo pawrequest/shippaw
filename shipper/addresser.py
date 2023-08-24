@@ -217,9 +217,9 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
     return recip
 
 
-def get_home_sender_recip(config, outbound) -> Sender | Recipient:
+def get_home_sender_recip(home_contact, home_address, outbound) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing """
     client = shipper.shipper.DESP_CLIENT
-    return client.sender(address_id=config.home_address.address_id) if outbound \
-        else recip_from_contact_and_key(dbay_key=config.home_address.dbay_key,
-                                        contact=config.home_contact)
+    return client.sender(address_id=home_address.address_id) if outbound \
+        else recip_from_contact_and_key(dbay_key=home_address.dbay_key,
+                                        contact=home_contact)

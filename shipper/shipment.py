@@ -116,7 +116,7 @@ class ShipmentQueued(ShipmentGuiConfirmed):
 
 
 class ShipmentCmcUpdated(ShipmentQueued):
-    logged_to_commence: bool
+    is_logged_to_commence: bool
 
 
 class ShipmentBooked(ShipmentQueued):
