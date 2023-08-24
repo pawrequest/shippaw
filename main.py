@@ -1,11 +1,9 @@
-import pydantic_argparse
 import argparse
 import sys
 from pathlib import Path
 from typing import List
 
 import PySimpleGUI as sg
-from pydantic import BaseModel, Field
 
 from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
@@ -22,11 +20,6 @@ includes
 + wraps Vovin CmcLibNet to update commence database - installer bundled 
 """
 
-class Arguments(BaseModel):
-    ship_mode:ShipMode = Field(description="shipping mode")
-    # category: ShipmentCategory = Field(description="shipment category")
-    # direction: ShipDirection = Field(description="shipping direction")
-    # input_file: Path = Field(description="Path to input file")
 
 def initial_checks():
     is_internet_connected = is_connected()
@@ -59,17 +52,15 @@ if __name__ == '__main__':
     category_choices = [category.name for category in ShipmentCategory]
     direction_choices = [direc.name for direc in ShipDirection]
 
-
     parser = argparse.ArgumentParser(description="AmDesp Shipping Agent.")
 
-
-    parser.add_argument('--mode',  choices=mode_choices,
+    parser.add_argument('--mode', choices=mode_choices,
                         help="Choose shipping mode.")
     parser.add_argument('--category', choices=category_choices,
                         help="Choose shipment category.")
-    parser.add_argument('--direction',  choices=direction_choices,
+    parser.add_argument('--direction', choices=direction_choices,
                         help="Choose shipping direction.")
-    parser.add_argument('--input_file', type=Path, help="Path to input file.")
+    parser.add_argument('--input_file', type=Path, help="Path to .dbf input file.")
     args = parser.parse_args()
 
     args.category = ShipmentCategory[args.category]
@@ -78,22 +69,5 @@ if __name__ == '__main__':
     while not args.input_file:
         args.input_file = Path(sg.popup_get_file("Select input file"))
     logger.info(f'{args=}')
+
     main(args)
-
-
-
-import pydantic_argparse
-
-
-
-
-def main() -> None:
-    # Create Parser and Parse Args
-
-
-    # Print Args
-    print(args)
-
-
-if __name__ == "__main__":
-    main()

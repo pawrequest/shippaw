@@ -72,6 +72,7 @@ class ShipmentInput(BaseModel):
     def __eq__(self, other):
         return self.shipment_name == other.shipment_name
 
+
 class ShipmentAddressed(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -113,6 +114,7 @@ class ShipmentQueued(ShipmentGuiConfirmed):
     shipment_id: str
     is_queued: bool
 
+
 class ShipmentCmcUpdated(ShipmentQueued):
     logged_to_commence: bool
 
@@ -122,11 +124,11 @@ class ShipmentBooked(ShipmentQueued):
     is_booked: bool
     shipment_return: ShipmentReturn
 
+
 class ShipmentPrinted(ShipmentBooked):
     is_printed: bool
     label_location: Path
     is_emailed: bool
-
 
 
 def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):

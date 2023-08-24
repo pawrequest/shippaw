@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import Iterable
 
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address, Recipient, Sender
@@ -10,10 +10,10 @@ from core.config import Config, logger
 from core.enums import BestMatch, Contact, FuzzyScores
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
-from shipper.shipment import ShipmentAddressed, ShipmentInput, ShipmentRequested
+from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
-def remote_address_script(shipment: ShipmentInput, remote_contact:Contact) -> (Address | bool):
+def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (Address | bool):
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
@@ -22,7 +22,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact:Contact) -> (A
     logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment)
     while True:
-        address = address_from_gui(shipment=shipment, address=fuzzy, contact_name=remote_contact)
+        address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact)
         if address is None:
             if sg.popup_yes_no(
                     f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
@@ -88,7 +88,7 @@ def check_address_company(address: Address, shipment: ShipmentRequested) -> Addr
                   f'\n{shipment.address_as_str}' \
                   f'\n\nFound Address Details:' \
                   f'\nAddress Company Name= {address.company_name}' \
-                  f'\nStreet addres= {address.street}' \
+                  f'\nStreet address= {address.street}' \
                   f'\n\n[Yes] to accept matched address or [No] to edit / replace'
 
         answer = sg.popup_yes_no(pop_msg, line_width=100)
@@ -206,7 +206,6 @@ def get_remote_recipient(contact: Contact, remote_address: Address) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=remote_address, **contact.__dict__)
-    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip
 
 
@@ -215,7 +214,6 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=address, **contact.__dict__)
-    # logger.info(f'PREP SHIPMENT - REMOTE RECIPIENT {recip}')
     return recip
 
 

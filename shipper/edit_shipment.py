@@ -1,17 +1,15 @@
 from typing import List
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_entities import Sender, Recipient, Parcel
+from despatchbay.despatchbay_entities import Parcel, Recipient, Sender
 
 import shipper.shipper
-
 from core.config import logger
 from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
-from gui.main_gui import new_date_selector, new_service_popup, new_parcels_popup
-from gui.keys_and_strings import SERVICE_STRING, DATE_STRING, ADDRESS_STRING, DATE_MENU, \
-    SERVICE_MENU
+from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_MENU, SERVICE_STRING
+from gui.main_gui import new_date_selector, new_parcels_popup, new_service_popup
 from shipper.addresser import sender_from_address_id
 from shipper.shipment import ShipmentRequested
 
@@ -36,7 +34,7 @@ def dropoff_click(config, shipment: ShipmentRequested):
     shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
     shipment.is_dropoff = True
     available_dates = client.get_available_collection_dates(sender_address=shipment.sender,
-                                                                 courier_id=config.default_shipping_service.courier)
+                                                            courier_id=config.default_shipping_service.courier)
     shipment.date_menu_map = DATE_MENU(dates=available_dates)
     new_date = available_dates[0]
     shipment.available_dates = available_dates
@@ -74,7 +72,7 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
         raise TypeError(f'add_click target must be Sender or Recipient, not {type(target)}')
 
     new_address = address_from_gui(shipment=shipment, address=address_to_edit,
-                                   contact_name=contact)
+                                   contact=contact)
     if new_address is None:
         return None
 
@@ -85,7 +83,7 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
 def service_click(shipment_to_edit, location):
     new_service = new_service_popup(default_service=shipment_to_edit.service.name,
                                     menu_map=SERVICE_MENU(
-                                           shipment_to_edit.available_services),
+                                        shipment_to_edit.available_services),
                                     location=location)
     if new_service is None:
         return None
@@ -107,28 +105,14 @@ def get_new_parcels(location, parcel_contents="Radios") -> List[Parcel] | None:
 
 def get_parcels(num_parcels: int, contents: str = 'Radios') -> list[Parcel]:
     """ return an array of dbay parcel objects equal to the number of boxes provided
-        uses arbitrary sizes because dbay api wont allow skipping even though website does"""
+        uses arbitrary sizes because dbay api won't allow skipping even though website does"""
     client = shipper.shipper.DESP_CLIENT
-    # parcels = []
-    # for x in range(num_parcels):
-    #     parcel = client.parcel(
-    #         contents=contents,
-    #         value=500,
-    #         weight=6,
-    #         length=60,
-    #         width=40,
-    #         height=40,
-    #     )
-    #     parcels.append(parcel)
-    # return parcels
-    # logger.info(f'PREPPING SHIPMENT - {len(parcels)} PARCELS ')
 
     return [client.parcel(
-                contents=contents,
-                value=500,
-                weight=6,
-                length=60,
-                width=40,
-                height=40,
-            )for i in range(num_parcels)]
-
+        contents=contents,
+        value=500,
+        weight=6,
+        length=60,
+        width=40,
+        height=40,
+    ) for _ in range(num_parcels)]

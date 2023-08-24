@@ -5,7 +5,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 import shipper.shipper
 from core.enums import Contact, FieldsList
 from gui.gui_params import address_fieldname_params, address_input_params
-from shipper.shipment import ShipmentInput, ShipmentRequested
+from shipper.shipment import ShipmentInput
 
 
 def address_postcode_click(postcode: str) -> Address | None:
@@ -24,7 +24,8 @@ def address_postcode_click(postcode: str) -> Address | None:
 
 
 def comparison_address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
-    commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name, address_as_str=address_as_str)
+    commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name,
+                                            address_as_str=address_as_str)
     address_col = sg.Col(layout=[
         [contact_frame(contact=contact)],
         [get_address_frame(address=address)],
@@ -128,7 +129,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
 def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    window = comparison_address_window(delivery_name = shipment.delivery_name, contact_name=contact, address=address,
+    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
                                        address_as_str=shipment.address_as_str)
     while True:
         event, values = window.read()
@@ -143,7 +144,7 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
                 update_gui_from_address(address=new_address, window=window)
 
         if 'company_name' in event.lower():
-            # copy customer name into address comany name field
+            # copy customer name into address company name field
             company_name_click(address=address, customer=shipment.customer, values=values)
             update_gui_from_address(address=address, window=window)
 

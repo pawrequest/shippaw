@@ -260,7 +260,7 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
 
 
 def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
-                  dbase_file: Path) -> [ShipmentInput]:
+                  dbase_file: Path) -> List[ShipmentInput]:
     """ returns a list of validated shipments from a dbase file and a mapping dict"""
 
     logger.info(f'DBase file og = {dbase_file}')
@@ -282,7 +282,7 @@ def address_shipment(shipment: ShipmentInput, config: Config) -> ShipmentAddress
         recipient = get_remote_recipient(contact=remote_contact,
                                          remote_address=remote_address)
     else:
-        sender = sender_from_contact_address(contact_name=shipment.remote_contact,
+        sender = sender_from_contact_address(contact=shipment.remote_contact,
                                              remote_address=remote_address)
         recipient = get_home_sender_recip(config=config, outbound=shipment.is_outbound)
     return ShipmentAddressed(**shipment.__dict__, remote_contact=remote_contact, sender=sender, recipient=recipient,
@@ -323,7 +323,7 @@ def shipment_requesting(shipment: ShipmentPrepared, config: Config) -> ShipmentF
     return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
 
 
-def request_shipment(shipment: ShipmentForRequest, config: Config) -> ShipmentRequested:
+def request_shipment(shipment: ShipmentForRequest) -> ShipmentRequested:
     shipment.shipment_request = get_shipment_request(shipment=shipment)
     return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
 
@@ -337,15 +337,15 @@ def process_shipment(shipment: ShipmentRequested, config: Config, values: dict) 
     gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
     shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
     shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
-                                                                 shipment=shipment)
+                                                         shipment=shipment)
 
     if not shipment.is_to_book:
         return shipment
 
     shipment = book_shipment(shipment=shipment)
     shipment.label_location = download_label(label_folder_path=config.paths.labels,
-                                                    label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
-                                                    doc_id=shipment.shipment_return.shipment_document_id)
+                                             label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
+                                             doc_id=shipment.shipment_return.shipment_document_id)
 
     print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
                       shipment=shipment)
