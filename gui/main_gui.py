@@ -21,7 +21,7 @@ def main_window(outbound: bool, shipments: [ShipmentRequested]):
                      layout=[
                          [headers(outbound)],
                          # [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
-                         [[shipment_frame(shipment=shipment, outbound=shipment.is_outbound)] for shipment in shipments],
+                         [[shipment_frame(shipment=shipment, outbound=outbound)] for shipment in shipments],
                          [sg.Button("LETS GO", k=keys_and_strings.GO_SHIP_KEY(), expand_y=True, expand_x=True)]
                      ],
                      finalize=True)

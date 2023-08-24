@@ -29,7 +29,7 @@ def main(args):
     initial_checks()
     outbound = 'out' == args.direction.value.lower()
     config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
-    shipper = Shipper(config=config)
+    shipper = Shipper(dbay_creds=config.dbay_creds)
 
     shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.input_file,
                                                    import_mappings=config.import_mappings, outbound=outbound)

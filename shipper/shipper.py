@@ -13,7 +13,7 @@ from despatchbay.exceptions import ApiException
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
-from core.enums import Contact, DateTimeMasks, ShipmentCategory
+from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
@@ -30,19 +30,17 @@ DESP_CLIENT: DespatchBaySDK | None = None
 
 
 class Shipper:
-    def __init__(self, config: Config):
+    def __init__(self, dbay_creds:DbayCreds):
         global DESP_CLIENT
         try:
-            client = DespatchBaySDK(api_user=config.dbay_creds.api_user, api_key=config.dbay_creds.api_key)
+            # client = DespatchBaySDK(api_user=dbay_creds.api_user, api_key=dbay_creds.api_key)
+            client = DespatchBaySDK(**dbay_creds.__dict__)
         except Exception as e:
             logger.exception(e)
             raise ApiException("Unable to intitialise DespatchBay client")
-
         client = APIClientWrapper(client)
-
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
-        self.config = config
 
     def track(self):
         # tracking_loop(shipments=self.shipments)
