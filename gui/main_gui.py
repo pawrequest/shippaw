@@ -21,7 +21,7 @@ def main_window(outbound: bool, shipments: [ShipmentRequested]):
                      layout=[
                          [headers(outbound)],
                          # [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
-                         [[shipment_frame(shipment=shipment, outbound=outbound)] for shipment in shipments],
+                         [[shipment_frame(shipment=shipment, outbound=shipment.is_outbound)] for shipment in shipments],
                          [sg.Button("LETS GO", k=keys_and_strings.GO_SHIP_KEY(), expand_y=True, expand_x=True)]
                      ],
                      finalize=True)
@@ -108,7 +108,7 @@ def results_frame(shipments: [ShipmentRequested]):
             sg.Text(SERVICE_STRING(num_boxes=num_boxes, service=shipment.service), **params),
         ]
 
-        if shipment.printed:
+        if shipment.is_printed:
             ship_res.extend([sg.Text('Shipment Printed', **params),
                              sg.Button('Reprint Label',
                                        key=keys_and_strings.REPRINT_KEY(shipment), **params)])
@@ -160,7 +160,7 @@ def parcels_button(num_parcels, shipment):
     return sg.Text(f'{num_parcels}', k=keys_and_strings.BOXES_KEY(shipment), enable_events=True, **boxes_params)
 
 
-def recipient_button(recipient_address_name, shipment):
+def recipient_button(recipient_address_name, shipment:ShipmentRequested):
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
                                k=keys_and_strings.RECIPIENT_KEY(shipment), **address_params)
     return recipient_button

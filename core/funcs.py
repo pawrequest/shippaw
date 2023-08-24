@@ -23,7 +23,7 @@ def print_label(shipment):
         logger.warning(f"Failed to print label: {e}")
         return False
     else:
-        shipment.printed = True
+        shipment.is_printed = True
         return True
 
 

@@ -1,20 +1,18 @@
 import logging
 import os
-from dataclasses import field
+import re
 from datetime import datetime
-from numbers import Number
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import PySimpleGUI as sg
 from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from core.config import logger
-from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
+from core.enums import BestMatch, Contact, ShipmentCategory
 from core.funcs import get_type
 
 
@@ -34,11 +32,9 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
-class ParcelValid(BaseModel, Parcel):
-    ...
-
 class ShipmentInput(BaseModel):
     """ input validated"""
+    model_config = ConfigDict(extra='allow')
     is_dropoff: bool = False
     is_outbound: bool
     category: ShipmentCategory
@@ -46,7 +42,7 @@ class ShipmentInput(BaseModel):
     address_as_str: str
     boxes: int
     customer: str
-    contact: str
+    contact_name: str
     email: str
     postcode: str
     send_out_date: datetime
@@ -55,6 +51,27 @@ class ShipmentInput(BaseModel):
     inbound_id: Optional[str] = ''
     outbound_id: Optional[str] = ''
 
+    @property
+    def shipment_name_printable(self):
+        return re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
+
+    @property
+    def str_to_match(self):
+        return parse_amherst_address_string(self.address_as_str)
+
+    @property
+    def customer_printable(self):
+        return self.customer.replace("&", '"&"').replace("'", "''")
+
+    def __str__(self):
+        return self.shipment_name_printable
+
+    def __repr__(self):
+        return self.shipment_name_printable
+
+    def __eq__(self, other):
+        return self.shipment_name == other.shipment_name
+
 class ShipmentAddressed(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -62,44 +79,54 @@ class ShipmentAddressed(ShipmentInput):
     remote_address: Address
     sender: Sender
     recipient: Recipient
-    remote_sender_recip: Optional[Union[Sender, Recipient]]
+    # remote_sender_recip: Optional[Union[Sender, Recipient]]
 
 
 class ShipmentPrepared(ShipmentAddressed):
-    """ non address prep done"""
-    date_matched: bool
-    default_service_matched: bool
     available_dates: List[CollectionDate]
-    available_services: List[Service]
+    all_services: List[Service]
     date_menu_map: Dict
     service_menu_map: Dict
     bestmatch: Optional[BestMatch] = None
     candidate_keys: Optional[Dict] = None
 
+
 class ShipmentForRequest(ShipmentPrepared):
-    """ ready to get request"""
     collection_date: CollectionDate
-    parcels: List[Parcel]
+    date_matched: bool
     service: Service
+    default_service_matched: bool
+    parcels: List[Parcel]
+
+
 class ShipmentRequested(ShipmentForRequest):
-    """ requested. ready to queue"""
     shipment_request: ShipmentRequest
+
 
 class ShipmentGuiConfirmed(ShipmentRequested):
     is_to_book: bool
     is_to_print_email: bool
 
+
 class ShipmentQueued(ShipmentGuiConfirmed):
     """ queued. ready to book"""
     shipment_id: str
-    logged_to_commence: bool
     is_queued: bool
+
+class ShipmentCmcUpdated(ShipmentQueued):
+    logged_to_commence: bool
+
+
 class ShipmentBooked(ShipmentQueued):
     """ booked"""
-    is_booked:bool
+    is_booked: bool
     shipment_return: ShipmentReturn
-    printed: bool
+
+class ShipmentPrinted(ShipmentBooked):
+    is_printed: bool
     label_location: Path
+    is_emailed: bool
+
 
 
 def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
@@ -248,3 +275,19 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1'):
         logger.exception(f'.Dbf or Dbt are missing \n{e}')
     except Exception as e:
         logger.exception(e)
+
+
+def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool, records: [dict]):
+    shipments = []
+    for record in records:
+        [logger.debug(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
+        try:
+            ship_dict = shipdict_from_record(outbound=outbound, record=record,
+                                             category=category, import_mapping=import_map)
+            shipments.append(get_valid_shipment(input_dict=ship_dict))
+
+        except Exception as e:
+            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+            continue
+
+    return shipments

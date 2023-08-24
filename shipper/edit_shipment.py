@@ -74,7 +74,7 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
         raise TypeError(f'add_click target must be Sender or Recipient, not {type(target)}')
 
     new_address = address_from_gui(shipment=shipment, address=address_to_edit,
-                                   contact=contact)
+                                   contact_name=contact)
     if new_address is None:
         return None
 

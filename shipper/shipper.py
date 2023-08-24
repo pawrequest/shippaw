@@ -1,4 +1,3 @@
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -21,9 +20,9 @@ from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
-from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentForRequest, ShipmentGuiConfirmed, ShipmentInput, \
-    ShipmentPrepared, ShipmentQueued, ShipmentRequested, records_from_dbase
-from shipper.shipments import shipments_from_records
+from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentForRequest, \
+    ShipmentGuiConfirmed, ShipmentInput, \
+    ShipmentPrepared, ShipmentPrinted, ShipmentQueued, ShipmentRequested, records_from_dbase, shipments_from_records
 from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
@@ -52,11 +51,14 @@ class Shipper:
 
 
 def dispatch(config: Config, shipments: List[ShipmentInput]):
-    shipments_addressed: List[ShipmentAddressed] = address_shipments(shipments=shipments, config=config)
-    shipments_prepared: List[ShipmentPrepared] = prepare_shipments(shipments=shipments_addressed, config=config)
-    shipments_for_request: List[ShipmentForRequest] = shipments_for_requesting(shipments=shipments_prepared,
-                                                                               config=config)
-    shipments_requested: List[ShipmentRequested] = request_shipments(shipments=shipments_for_request, config=config, )
+    shipments_addressed: List[ShipmentAddressed] = [address_shipment(shipment=shipment, config=config) for shipment in
+                                                    shipments]
+    shipments_prepared: List[ShipmentPrepared] = [prepare_shipment(shipment=shipment, config=config) for shipment in
+                                                  shipments_addressed]
+    shipments_for_request: List[ShipmentForRequest] = [shipment_requesting(config=config, shipment=shipment) for
+                                                       shipment in shipments_prepared]
+    shipments_requested: List[ShipmentRequested] = [request_shipment(shipment=shipment, config=config) for shipment in
+                                                    shipments_for_request]
 
     shipments_complete = dispatch_loop(config=config, shipments=shipments_requested)
     post_book(shipments=shipments_complete)
@@ -91,7 +93,7 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]):
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                 sg.popup_quick_message('Please Wait')
                 window.close()
-                return process_shipments(shipments=shipments, values=values, config=config)
+                return [process_shipment(shipment=shipment, config=config, values=values) for shipment in shipments]
         else:
             logger.info(f'Wrong Event key {event=}')
 
@@ -142,14 +144,22 @@ def read_window_cboxs(values, shipment):
     return shipment
 
 
-def print_email_label(email_body, shipment):
+def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
+    shipment.is_printed = False
+    shipment.is_emailed = False
+
+    if not print_email:
+        return
+
     if shipment.is_outbound:
         print_label(shipment=shipment)
+        shipment.is_printed = True
     else:
         email_label(shipment=shipment,
                     body=email_body,
                     collection_date=shipment.collection_return.date,
                     collection_address=shipment.collection_return.sender_address.sender_address)
+        shipment.is_emailed = True
 
 
 def collection_update_package(shipment_id, outbound):
@@ -165,10 +175,10 @@ def collection_update_package(shipment_id, outbound):
 def queue_shipment(shipment: ShipmentRequested) -> ShipmentQueued:
     shipment.shipment_request = get_shipment_request(shipment=shipment)
     shipment.timestamp = f"{datetime.now():{DateTimeMasks.filename.value}}"
-    shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
+    shipment.shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
     shipment.is_queued = True
-    queued_shipment = ShipmentQueued(**shipment.__dict__, shipment_id=shipment_id)
-    setattr(shipment, f'{"outbound_id" if shipment.is_outbound else "inbound_id"}', shipment_id)
+    setattr(shipment, f'{"outbound_id" if shipment.is_outbound else "inbound_id"}', shipment.shipment_id)
+    queued_shipment = ShipmentQueued(**shipment.__dict__, **shipment.model_extra)
     return queued_shipment
 
 
@@ -187,41 +197,43 @@ def book_shipment(shipment: ShipmentQueued) -> ShipmentBooked:
     else:
         shipment.collection_return = DESP_CLIENT.get_collection(shipment.shipment_return.collection_id)
         shipment.is_booked = True
-        booked_shipment = ShipmentBooked(**shipment.__dict__)
+        booked_shipment = ShipmentBooked(**shipment.__dict__, **shipment.model_extra)
         return booked_shipment
 
 
-def get_collection_date(shipment: ShipmentInput, courier_id) -> CollectionDate:
+def get_collection_date(shipment: ShipmentInput, available_dates: List[CollectionDate]) -> CollectionDate:
     """ return despatchbay CollecitonDate Entity
     make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
-    available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
-                                                                 courier_id=courier_id)
-    shipment.available_dates = available_dates
-
-    shipment.date_menu_map = keys_and_strings.DATE_MENU(available_dates)
-
-    collection_date = available_dates[0]
 
     for display, potential_date in shipment.date_menu_map.items():
         if collection_date_to_datetime(potential_date) == shipment.send_out_date:
             collection_date = potential_date
             shipment.date_matched = True
             break
+    else:
+        collection_date = available_dates[0]
+        shipment.date_matched = False
 
     logger.info(
         f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else "NO DATE MATCH - USING FIRST AVAILABLE"}')
     return collection_date
 
 
-def get_actual_service(default_service_id: str, available_services: [Service]) -> Service:
+def get_actual_service(shipment, default_service_id: str, available_services: [Service]) -> Service:
     """returns the service object for the default service id if it exists, otherwise returns the first service"""
-    return next((service for service in available_services if service.service_id == default_service_id),
-                available_services[0])
+    for service in available_services:
+        if service.service_id == default_service_id:
+            shipment.default_service_matched = True
+            return service
+    else:
+        shipment.default_service_matched = False
+        return available_services[0]
 
 
 def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequested:
     """ returns a dbay shipment request object from shipment"""
-    request = DESP_CLIENT.shipment_request(
+    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
+    return DESP_CLIENT.shipment_request(
         service_id=shipment.service.service_id,
         parcels=shipment.parcels,
         client_reference=shipment.customer_printable,
@@ -230,9 +242,6 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequested:
         recipient_address=shipment.recipient,
         follow_shipment=True
     )
-
-    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
-    return request
 
 
 def download_label(label_folder_path: Path, label_text: str, doc_id: str):
@@ -251,7 +260,7 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
 
 
 def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
-                  dbase_file: os.PathLike) -> [ShipmentInput]:
+                  dbase_file: Path) -> [ShipmentInput]:
     """ returns a list of validated shipments from a dbase file and a mapping dict"""
 
     logger.info(f'DBase file og = {dbase_file}')
@@ -265,93 +274,96 @@ def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCateg
     return shipments
 
 
-def address_shipments(shipments: List[ShipmentInput], config: Config) -> List[ShipmentAddressed]:
-    return [address_shipment(shipment=shipment, config=config) for shipment in shipments]
-
-
 def address_shipment(shipment: ShipmentInput, config: Config) -> ShipmentAddressed:
-    shipment.remote_contact = Contact(name=shipment.contact, email=shipment.email, telephone=shipment.phone)
-    shipment.remote_address = remote_address_script(shipment=shipment)
+    remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
+    remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact)
     if shipment.is_outbound:
-        shipment.sender = get_home_sender_recip(config=config, outbound=shipment.is_outbound)
-        shipment.recipient = get_remote_recipient(contact=shipment.remote_contact,
-                                                  remote_address=shipment.remote_address)
+        sender = get_home_sender_recip(config=config, outbound=shipment.is_outbound)
+        recipient = get_remote_recipient(contact=remote_contact,
+                                         remote_address=remote_address)
     else:
-        shipment.sender = sender_from_contact_address(contact=shipment.remote_contact,
-                                                      remote_address=shipment.remote_address)
-        shipment.recipient = get_home_sender_recip(config=config, outbound=shipment.is_outbound)
-    return ShipmentAddressed(**shipment.__dict__)
-
-
-def prepare_shipments(shipments: List[ShipmentAddressed], config: Config) -> List[ShipmentPrepared]:
-    return [prepare_shipment(shipment=shipment, config=config) for shipment in shipments]
+        sender = sender_from_contact_address(contact_name=shipment.remote_contact,
+                                             remote_address=remote_address)
+        recipient = get_home_sender_recip(config=config, outbound=shipment.is_outbound)
+    return ShipmentAddressed(**shipment.__dict__, remote_contact=remote_contact, sender=sender, recipient=recipient,
+                             remote_address=remote_address)
 
 
 def prepare_shipment(shipment: ShipmentAddressed, config: Config) -> ShipmentPrepared:
     client = DESP_CLIENT
-    # service = client.get_services()[0]  # needed to get dates isit tho?
-    shipment.collection_date = get_collection_date(shipment=shipment,
-                                                   courier_id=config.default_shipping_service.courier)
+    available_dates = client.get_available_collection_dates(sender_address=shipment.sender,
+                                                            courier_id=config.default_shipping_service.courier)
+    all_services = client.get_services()
+    date_menu_map = keys_and_strings.DATE_MENU(available_dates)
+    service_menu_map = keys_and_strings.SERVICE_MENU(all_services)
+
+    return ShipmentPrepared(**shipment.__dict__, available_dates=available_dates, all_services=all_services,
+                            date_menu_map=date_menu_map, service_menu_map=service_menu_map)
+
+
+def shipment_requesting(shipment: ShipmentPrepared, config: Config) -> ShipmentForRequest:
     shipment.parcels = get_parcels(num_parcels=shipment.boxes)
+    service_id = config.default_shipping_service.service
+    shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
 
-    shipment.shipment_request = get_shipment_request(shipment=shipment)
+    temp_request = DESP_CLIENT.shipment_request(
+        service_id=service_id,
+        parcels=shipment.parcels,
+        client_reference=shipment.customer_printable,
+        collection_date=shipment.collection_date,
+        sender_address=shipment.sender,
+        recipient_address=shipment.recipient,
+        follow_shipment=True
+    )
 
-    shipment.available_services = client.get_available_services(shipment.shipment_request)
+    available_services = DESP_CLIENT.get_available_services(temp_request)
     shipment.service = get_actual_service(default_service_id=config.default_shipping_service.service,
-                                          available_services=shipment.available_services)
-    return ShipmentRequested(**shipment.__dict__)
+                                          available_services=available_services, shipment=shipment)
 
-
-def shipments_for_requesting(shipments: List[ShipmentPrepared], config: Config) -> List[ShipmentForRequest]:
-    return [shipment_requesting(shipment) for shipment in shipments]
-
-
-def shipment_requesting(shipment: ShipmentPrepared) -> ShipmentForRequest:
-    ...
-
-
-def request_shipments(shipments: List[ShipmentForRequest], config: Config) -> List[ShipmentRequested]:
-    return [request_shipment(shipment=shipment, config=config) for shipment in shipments]
+    return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
 
 
 def request_shipment(shipment: ShipmentForRequest, config: Config) -> ShipmentRequested:
     shipment.shipment_request = get_shipment_request(shipment=shipment)
-    return ShipmentRequested(**shipment.__dict__)
+    return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
 
 
 def gui_confirm_shipment(shipment: ShipmentRequested, values: dict) -> ShipmentGuiConfirmed:
     read_window_cboxs(values=values, shipment=shipment)
-    return ShipmentGuiConfirmed(**shipment.__dict__)
+    return ShipmentGuiConfirmed(**shipment.__dict__, **shipment.model_extra)
 
 
-def process_shipments(shipments: List[ShipmentGuiConfirmed], config: Config) -> List[ShipmentBooked]:
-    return [process_shipment(shipment=shipment, config=config) for shipment in shipments]
-
-
-def process_shipment(shipment: ShipmentGuiConfirmed, config: Config) -> ShipmentBooked | ShipmentQueued:
-    queued_shipment: ShipmentQueued = queue_shipment(shipment=shipment)
-    maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater, shipment=shipment)
+def process_shipment(shipment: ShipmentRequested, config: Config, values: dict) -> ShipmentBooked | ShipmentQueued:
+    gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
+    shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
+    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
+                                                                 shipment=shipment)
 
     if not shipment.is_to_book:
-        return queued_shipment
-    else:
-        booked_shipment = book_shipment(shipment=queued_shipment)
-        shipment.label_location = download_label(label_folder_path=config.paths.labels,
-                                                 label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
-                                                 doc_id=shipment.shipment_return.shipment_document_id)
+        return shipment
 
-    if shipment.is_to_print_email:
-        print_email_label(email_body=config.return_label_email_body, shipment=shipment)
+    shipment = book_shipment(shipment=shipment)
+    shipment.label_location = download_label(label_folder_path=config.paths.labels,
+                                                    label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
+                                                    doc_id=shipment.shipment_return.shipment_document_id)
 
-    return booked_shipment
+    print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
+                      shipment=shipment)
+
+    booked = ShipmentPrinted(**shipment.__dict__, **shipment.model_extra)
+
+    return booked
 
 
-def maybe_update_commence(cmc_updater_ps1, shipment):
+def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
     if shipment.category in ['Hire', 'Sale']:
         cmc_update_package = collection_update_package(shipment_id=shipment.shipment_id, outbound=shipment.is_outbound)
         edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
                       package=cmc_update_package, function=PS_FUNCS.APPEND.value)
         shipment.logged_to_commence = True
+    else:
+        shipment.logged_to_commence = False
+    return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
 
 
 def tracking_loop(shipments: List[ShipmentRequested]):

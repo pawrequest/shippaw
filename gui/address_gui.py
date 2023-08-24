@@ -128,7 +128,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
 def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    window = comparison_address_window(delivery_name = shipment.delivery_name, contact=contact, address=address,
+    window = comparison_address_window(delivery_name = shipment.delivery_name, contact_name=contact, address=address,
                                        address_as_str=shipment.address_as_str)
     while True:
         event, values = window.read()

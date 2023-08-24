@@ -13,7 +13,7 @@ from gui.address_gui import address_from_gui
 from shipper.shipment import ShipmentAddressed, ShipmentInput, ShipmentRequested
 
 
-def remote_address_script(shipment: ShipmentInput) -> (Address | False):
+def remote_address_script(shipment: ShipmentInput, remote_contact:Contact) -> (Address | bool):
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
@@ -22,7 +22,7 @@ def remote_address_script(shipment: ShipmentInput) -> (Address | False):
     logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment)
     while True:
-        address = address_from_gui(shipment=shipment, address=fuzzy, contact=shipment.remote_contact)
+        address = address_from_gui(shipment=shipment, address=fuzzy, contact_name=remote_contact)
         if address is None:
             if sg.popup_yes_no(
                     f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
