@@ -31,7 +31,7 @@ def main(args):
     config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
     shipper = Shipper(dbay_creds=config.dbay_creds)
 
-    shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.input_file,
+    shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
                                                    import_mappings=config.import_mappings, outbound=outbound)
 
     if not shipments:
@@ -60,13 +60,13 @@ if __name__ == '__main__':
                         help="Choose shipment category.")
     parser.add_argument('--direction', choices=direction_choices,
                         help="Choose shipping direction.")
-    parser.add_argument('--input_file', type=Path, help="Path to .dbf input file.")
+    parser.add_argument('--file', type=Path, help="Path to .dbf input file.")
     args = parser.parse_args()
 
     args.category = ShipmentCategory[args.category]
     args.shipping_mode = ShipMode[args.mode]
     args.direction = ShipDirection[args.direction]
-    while not args.input_file:
+    while not args.file:
         args.input_file = Path(sg.popup_get_file("Select input file"))
     logger.info(f'{args=}')
 

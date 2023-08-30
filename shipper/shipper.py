@@ -88,7 +88,7 @@ def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> Shi
         recipient = get_remote_recipient(contact=remote_contact,
                                          remote_address=remote_address)
     else:
-        sender = sender_from_contact_address(contact=shipment.remote_contact,
+        sender = sender_from_contact_address(contact=remote_contact,
                                              remote_address=remote_address)
         recipient = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
                                           outbound=shipment.is_outbound)
