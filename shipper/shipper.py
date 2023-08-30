@@ -30,6 +30,8 @@ DESP_CLIENT: DespatchBaySDK | None = None
 
 
 class Shipper:
+    """ Utility class to hold config and DespatchBay client"""
+
     def __init__(self, dbay_creds: DbayCreds):
         global DESP_CLIENT
         try:
@@ -44,6 +46,8 @@ class Shipper:
 
 
 def dispatch(config: Config, shipments: List[ShipmentInput]):
+    """ Shipment processing pipeline - takes list of ShipmentInput and Config objects,
+    walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
     shipments_addressed = [address_shipment(shipment=shipment, home_address=config.home_address,
                                             home_contact=config.home_contact) for shipment in shipments]
     shipments_prepared = [prepare_shipment(shipment=shipment, default_shipping_service=config.default_shipping_service)
@@ -70,7 +74,7 @@ def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCateg
 
     records = records_from_dbase(dbase_file)
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
-                                                        records=records)
+                                       records=records)
     return shipments
 
 
@@ -93,7 +97,7 @@ def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> Shi
 
 
 def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> ShipmentPrepared:
-    """ gets available dates and services, creates menu maps for gui"""
+    """ Gets objects for all available CollectionDates and Services, creates menu maps for gui"""
     available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
                                                                  courier_id=default_shipping_service.courier)
     all_services = DESP_CLIENT.get_services()
@@ -105,7 +109,7 @@ def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> S
 
 
 def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service) -> ShipmentForRequest:
-    """ gets parcels, collection date and service"""
+    """ gets actual CollectionDate, Service and Parcel objects"""
     shipment.parcels = get_parcels(num_parcels=shipment.boxes)
     service_id = default_shipping_service.service
     shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
@@ -166,9 +170,9 @@ def process_shipment(shipment: ShipmentRequested, cmc_updater, values: dict, lab
 
 
 def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[ShipmentBooked | ShipmentQueued]:
-    """ pysimplegui main_loop, takes a prebuilt window and shipment list,
+    """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
-    listens for go_ship  button to start booking"""
+    listens for go_ship  button to start booking collection etc"""
     logger.info('GUI LOOP')
 
     if config.sandbox:
@@ -239,12 +243,14 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
 
 
 def read_window_cboxs(values, shipment):
+    """Gets values from pysimplegui checkboxes"""
     shipment.is_to_print_email = values.get(keys_and_strings.PRINT_EMAIL_KEY(shipment))
     shipment.is_to_book = values.get(keys_and_strings.BOOK_KEY(shipment))
     return shipment
 
 
 def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
+    """prints or emails label"""
     shipment.is_printed = False
     shipment.is_emailed = False
 
@@ -263,6 +269,7 @@ def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
 
 
 def collection_update_package(shipment_id, outbound):
+    """returns dict to update database with collection details"""
     id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
     cmc_update_package = {id_to_store: shipment_id}
     if outbound:
@@ -273,6 +280,7 @@ def collection_update_package(shipment_id, outbound):
 
 
 def queue_shipment(shipment: ShipmentRequested) -> ShipmentQueued:
+    """queues shipment with despatch bay api"""
     shipment.shipment_request = get_shipment_request(shipment=shipment)
     shipment.timestamp = f"{datetime.now():{DateTimeMasks.filename.value}}"
     shipment.shipment_id = DESP_CLIENT.add_shipment(shipment.shipment_request)
@@ -283,6 +291,7 @@ def queue_shipment(shipment: ShipmentRequested) -> ShipmentQueued:
 
 
 def book_shipment(shipment: ShipmentQueued) -> ShipmentBooked:
+    """books shipment with despatch bay api"""
     try:
         shipment.shipment_return = DESP_CLIENT.book_shipments(shipment.shipment_id)[0]
 
@@ -302,8 +311,7 @@ def book_shipment(shipment: ShipmentQueued) -> ShipmentBooked:
 
 
 def get_collection_date(shipment: ShipmentPrepared, available_dates: List[CollectionDate]) -> CollectionDate:
-    """ return despatchbay CollecitonDate Entity
-    make a menu_map of displayable dates to colleciton_date objects to populate gui choosers"""
+    """ Matches shipment send_out_date to available collections, or uses first available if no match """
 
     for display, potential_date in shipment.date_menu_map.items():
         if collection_date_to_datetime(potential_date) == shipment.send_out_date:
@@ -331,7 +339,7 @@ def get_actual_service(shipment, default_service_id: str, available_services: [S
 
 
 def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
-    """ returns a shipment_request"""
+    """ returns a shipment_request from shipment object"""
     logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
     return DESP_CLIENT.shipment_request(
         service_id=shipment.service.service_id,
@@ -345,7 +353,7 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
 
 
 def download_label(label_folder_path: Path, label_text: str, doc_id: str):
-    """" downlaods labels for given dbay shipment_return object and stores as {shipment_name_printable}.pdf at location specified in user_config.toml"""
+    """" downlaods labels from given doc_id to given folder path"""
     try:
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
                                                      label_layout='2A4')
