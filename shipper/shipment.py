@@ -84,6 +84,7 @@ class ShipmentAddressed(ShipmentInput):
 
 
 class ShipmentPrepared(ShipmentAddressed):
+    #todo bestmatch and cand keys should be in addressed?
     available_dates: List[CollectionDate]
     all_services: List[Service]
     date_menu_map: Dict
@@ -263,7 +264,7 @@ def get_valid_shipment(input_dict: dict) -> ShipmentInput:
             return shippy
 
 
-def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1'):
+def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[Dict]:
     if not Path(dbase_file).exists():
         file = sg.popup_get_file('Select a .dbf file to import', file_types=(('DBF Files', '*.dbf'),))
         if not file:
@@ -279,7 +280,8 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1'):
         logger.exception(e)
 
 
-def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool, records: [dict]):
+def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool,
+                           records: [dict]) -> List[ShipmentInput]:
     shipments = []
     for record in records:
         [logger.debug(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]

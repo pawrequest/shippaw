@@ -41,8 +41,8 @@ def main(args):
     if args.shipping_mode == ShipMode.SHIP:
         dispatch(config=config, shipments=shipments)
 
-    elif args.shipping_mode == ShipMode.TRACK:
-        shipper.track()
+    # elif args.shipping_mode == ShipMode.TRACK:
+    #     shipper.track()
 
     sys.exit(0)
 

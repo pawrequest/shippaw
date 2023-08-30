@@ -30,7 +30,7 @@ DESP_CLIENT: DespatchBaySDK | None = None
 
 
 class Shipper:
-    def __init__(self, dbay_creds:DbayCreds):
+    def __init__(self, dbay_creds: DbayCreds):
         global DESP_CLIENT
         try:
             # client = DespatchBaySDK(api_user=dbay_creds.api_user, api_key=dbay_creds.api_key)
@@ -42,32 +42,127 @@ class Shipper:
         client = cast(DespatchBaySDK, client)
         DESP_CLIENT = client
 
-    def track(self):
-        # tracking_loop(shipments=self.shipments)
-        # track2(shipments=self.shipments)
-        ...
-
 
 def dispatch(config: Config, shipments: List[ShipmentInput]):
-    shipments_addressed: List[ShipmentAddressed] = [
-        address_shipment(shipment=shipment, home_address=config.home_address, home_contact=config.home_contact) for
-        shipment in
-        shipments]
-    shipments_prepared: List[ShipmentPrepared] = [
-        prepare_shipment(shipment=shipment, default_shipping_service=config.default_shipping_service) for shipment in
-        shipments_addressed]
-    shipments_for_request: List[ShipmentForRequest] = [
-        shipment_requesting(default_shipping_service=config.default_shipping_service, shipment=shipment) for
-        shipment in shipments_prepared]
-    shipments_requested: List[ShipmentRequested] = [request_shipment(shipment=shipment) for shipment in
-                                                    shipments_for_request]
-
+    shipments_addressed = [address_shipment(shipment=shipment, home_address=config.home_address,
+                                            home_contact=config.home_contact) for shipment in shipments]
+    shipments_prepared = [prepare_shipment(shipment=shipment, default_shipping_service=config.default_shipping_service)
+                          for shipment in shipments_addressed]
+    shipments_for_request = [pre_request_shipment(default_shipping_service=config.default_shipping_service,
+                                                  shipment=shipment) for shipment in shipments_prepared]
+    shipments_requested = [request_shipment(shipment=shipment) for shipment in shipments_for_request]
     shipments_complete = dispatch_loop(config=config, shipments=shipments_requested)
     post_book(shipments=shipments_complete)
 
     # if not booked_shipments:
     #     logger.warning('No shipments, exiting')
     #     sys.exit()
+
+
+def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
+                  dbase_file: Path) -> List[ShipmentInput]:
+    """ returns a list of validated shipments from a dbase file and a mapping dict"""
+
+    logger.info(f'DBase file og = {dbase_file}')
+    import_map_name = f"{category.name.lower()}_mapping"
+    import_map = import_mappings[import_map_name]
+    logger.info(f'Import map = {import_map}')
+
+    records = records_from_dbase(dbase_file)
+    shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
+                                                        records=records)
+    return shipments
+
+
+def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> ShipmentAddressed:
+    """ gets Contact, Address, Sender and Recipient objects"""
+    remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
+    remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact)
+    if shipment.is_outbound:
+        sender = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
+                                       outbound=shipment.is_outbound)
+        recipient = get_remote_recipient(contact=remote_contact,
+                                         remote_address=remote_address)
+    else:
+        sender = sender_from_contact_address(contact=shipment.remote_contact,
+                                             remote_address=remote_address)
+        recipient = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
+                                          outbound=shipment.is_outbound)
+    return ShipmentAddressed(**shipment.__dict__, remote_contact=remote_contact, sender=sender, recipient=recipient,
+                             remote_address=remote_address)
+
+
+def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> ShipmentPrepared:
+    """ gets available dates and services, creates menu maps for gui"""
+    available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
+                                                                 courier_id=default_shipping_service.courier)
+    all_services = DESP_CLIENT.get_services()
+    date_menu_map = keys_and_strings.DATE_MENU(available_dates)
+    service_menu_map = keys_and_strings.SERVICE_MENU(all_services)
+
+    return ShipmentPrepared(**shipment.__dict__, available_dates=available_dates, all_services=all_services,
+                            date_menu_map=date_menu_map, service_menu_map=service_menu_map)
+
+
+def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service) -> ShipmentForRequest:
+    """ gets parcels, collection date and service"""
+    shipment.parcels = get_parcels(num_parcels=shipment.boxes)
+    service_id = default_shipping_service.service
+    shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
+
+    # need a shipment_request to get a service, need a service to get a shipment_request.... (thanks dbay)
+    # so make a temp request to get all services, then get the actually available services from that
+    temp_request = DESP_CLIENT.shipment_request(
+        service_id=service_id,
+        parcels=shipment.parcels,
+        client_reference=shipment.customer_printable,
+        collection_date=shipment.collection_date,
+        sender_address=shipment.sender,
+        recipient_address=shipment.recipient,
+        follow_shipment=True
+    )
+
+    available_services = DESP_CLIENT.get_available_services(temp_request)
+    shipment.service = get_actual_service(default_service_id=default_shipping_service.service,
+                                          available_services=available_services, shipment=shipment)
+
+    return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
+
+
+def request_shipment(shipment: ShipmentForRequest) -> ShipmentRequested:
+    """ gets shipment request"""
+    shipment.shipment_request = get_shipment_request(shipment=shipment)
+    return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
+
+
+def gui_confirm_shipment(shipment: ShipmentRequested, values: dict) -> ShipmentGuiConfirmed:
+    """ reads gui checkboxes"""
+    read_window_cboxs(values=values, shipment=shipment)
+    return ShipmentGuiConfirmed(**shipment.__dict__, **shipment.model_extra)
+
+
+def process_shipment(shipment: ShipmentRequested, cmc_updater, values: dict, label_path,
+                     return_label_email_body) -> ShipmentBooked | ShipmentQueued:
+    """ queues and books shipment, updates commence, prints and emails label"""
+    gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
+    shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
+    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=cmc_updater,
+                                                         shipment=shipment)
+
+    if not shipment.is_to_book:
+        return shipment
+
+    shipment = book_shipment(shipment=shipment)
+    shipment.label_location = download_label(label_folder_path=label_path,
+                                             label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
+                                             doc_id=shipment.shipment_return.shipment_document_id)
+
+    print_email_label(print_email=shipment.is_to_print_email, email_body=return_label_email_body,
+                      shipment=shipment)
+
+    booked = ShipmentPrinted(**shipment.__dict__, **shipment.model_extra)
+
+    return booked
 
 
 def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[ShipmentBooked | ShipmentQueued]:
@@ -264,112 +359,6 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
         return label_location
 
 
-def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
-                  dbase_file: Path) -> List[ShipmentInput]:
-    """ returns a list of validated shipments from a dbase file and a mapping dict"""
-
-    logger.info(f'DBase file og = {dbase_file}')
-    import_map_name = f"{category.name.lower()}_mapping"
-    import_map = import_mappings[import_map_name]
-    logger.info(f'Import map = {import_mappings[import_map_name]}')
-
-    records: [dict] = records_from_dbase(dbase_file)
-    shipments: [ShipmentInput] = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
-                                                        records=records)
-    return shipments
-
-
-def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> ShipmentAddressed:
-    """ gets Contact, Address, Sender and Recipient objects"""
-    remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
-    remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact)
-    if shipment.is_outbound:
-        sender = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
-                                       outbound=shipment.is_outbound)
-        recipient = get_remote_recipient(contact=remote_contact,
-                                         remote_address=remote_address)
-    else:
-        sender = sender_from_contact_address(contact=shipment.remote_contact,
-                                             remote_address=remote_address)
-        recipient = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
-                                          outbound=shipment.is_outbound)
-    return ShipmentAddressed(**shipment.__dict__, remote_contact=remote_contact, sender=sender, recipient=recipient,
-                             remote_address=remote_address)
-
-
-def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> ShipmentPrepared:
-    """ gets available dates and services, creates menu maps for gui"""
-    available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
-                                                                 courier_id=default_shipping_service.courier)
-    all_services = DESP_CLIENT.get_services()
-    date_menu_map = keys_and_strings.DATE_MENU(available_dates)
-    service_menu_map = keys_and_strings.SERVICE_MENU(all_services)
-
-    return ShipmentPrepared(**shipment.__dict__, available_dates=available_dates, all_services=all_services,
-                            date_menu_map=date_menu_map, service_menu_map=service_menu_map)
-
-
-def shipment_requesting(shipment: ShipmentPrepared, default_shipping_service) -> ShipmentForRequest:
-    """ gets parcels, collection date and service"""
-    shipment.parcels = get_parcels(num_parcels=shipment.boxes)
-    service_id = default_shipping_service.service
-    shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
-
-    # need a shipment_request to get a service, need a service to get a shipment_request.... (thanks dbay)
-    # so make a temp request to get all services, then get the actually available services from that
-    temp_request = DESP_CLIENT.shipment_request(
-        service_id=service_id,
-        parcels=shipment.parcels,
-        client_reference=shipment.customer_printable,
-        collection_date=shipment.collection_date,
-        sender_address=shipment.sender,
-        recipient_address=shipment.recipient,
-        follow_shipment=True
-    )
-
-    available_services = DESP_CLIENT.get_available_services(temp_request)
-    shipment.service = get_actual_service(default_service_id=default_shipping_service.service,
-                                          available_services=available_services, shipment=shipment)
-
-    return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
-
-
-def request_shipment(shipment: ShipmentForRequest) -> ShipmentRequested:
-    """ gets shipment request"""
-    shipment.shipment_request = get_shipment_request(shipment=shipment)
-    return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
-
-
-def gui_confirm_shipment(shipment: ShipmentRequested, values: dict) -> ShipmentGuiConfirmed:
-    """ reads gui checkboxes"""
-    read_window_cboxs(values=values, shipment=shipment)
-    return ShipmentGuiConfirmed(**shipment.__dict__, **shipment.model_extra)
-
-
-def process_shipment(shipment: ShipmentRequested, cmc_updater, values: dict, label_path,
-                     return_label_email_body) -> ShipmentBooked | ShipmentQueued:
-    """ queues and books shipment, updates commence, prints and emails label"""
-    gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
-    shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
-    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=cmc_updater,
-                                                         shipment=shipment)
-
-    if not shipment.is_to_book:
-        return shipment
-
-    shipment = book_shipment(shipment=shipment)
-    shipment.label_location = download_label(label_folder_path=label_path,
-                                             label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
-                                             doc_id=shipment.shipment_return.shipment_document_id)
-
-    print_email_label(print_email=shipment.is_to_print_email, email_body=return_label_email_body,
-                      shipment=shipment)
-
-    booked = ShipmentPrinted(**shipment.__dict__, **shipment.model_extra)
-
-    return booked
-
-
 def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
     if shipment.category.value in ['Hire', 'Sale']:
@@ -390,3 +379,9 @@ def tracking_loop(shipments: List[ShipmentRequested]):
         if inbound_id := shipment.inbound_id:
             inbound_window = get_tracking(inbound_id)
             event, values = inbound_window.read()
+
+
+def track():
+    # tracking_loop(shipments=self.shipments)
+    # track2(shipments=self.shipments)
+    ...
