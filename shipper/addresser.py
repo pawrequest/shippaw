@@ -14,6 +14,7 @@ from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
 def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (Address | bool):
+    """ Gets an Address object representing the client location. tries direct search, then fuzzy search, then gui entry."""
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
@@ -33,6 +34,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (
 
 
 def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address | None:
+    """ return address from postcode and search terms, or None if no address found."""
     client = shipper.shipper.DESP_CLIENT
     check_set = set(search_terms)
     for term in check_set:
@@ -114,7 +116,7 @@ def get_candidate_keys(postcode) -> dict:
 
 
 def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
-    """" return a fuzzyscopres tuple"""
+    """" return a Fuzzyscores representing distance from shipment details to candidate_address"""
     address_str_to_match = shipment.str_to_match
 
     str_to_company = fuzz.partial_ratio(address_str_to_match, candidate_address.company_name)
