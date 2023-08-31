@@ -1,5 +1,5 @@
 debug = true
-sandbox = true
+sandbox = false
 return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\
@@ -41,7 +41,7 @@ SENDING_ST = 'status'   # hire sending status
 [import_mappings.sale_mapping]
 NAME = 'shipment_name'          # sale name
 FIELD9 = 'customer'             # sale customr
-#FIELD10 = 'customer'             # sale customr
+FIELD10 = 'customer'             # sale customr
 DELIVERY_A = 'address_as_str'   # string representation of customer address
 DELIVERY_C = 'contact_name'          # contact name for the remote address
 DELIVERY_E = 'email'            # email for remote address

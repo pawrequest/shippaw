@@ -146,6 +146,9 @@ def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategor
 
     ship_dict_from_dbf['shipment_name'] = ship_dict_from_dbf.get('shipment_name',
                                                                  f'{ship_dict_from_dbf["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
+    ship_dict_from_dbf['send_out_date'] = ship_dict_from_dbf.get('send_out_date', datetime.today())
+    ship_dict_from_dbf['boxes'] = ship_dict_from_dbf.get('boxes', 1)
+
     ship_dict_from_dbf['category'] = category.value
     ship_dict_from_dbf['is_outbound'] = outbound
     return ship_dict_from_dbf
