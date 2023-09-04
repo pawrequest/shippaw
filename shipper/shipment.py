@@ -318,7 +318,7 @@ def shipments_from_records(category: ShipmentCategory, import_map: dict, outboun
                            records: [dict]) -> List[ShipmentInput]:
     shipments = []
     for record in records:
-        [logger.debug(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
+        [logger.info(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
         try:
             ship_dict = shipdict_from_record(outbound=outbound, record=record,
                                              category=category, import_mapping=import_map)
