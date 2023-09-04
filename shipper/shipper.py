@@ -322,8 +322,7 @@ def get_collection_date(shipment: ShipmentPrepared, available_dates: List[Collec
         collection_date = available_dates[0]
         shipment.date_matched = False
 
-    logger.info(
-        f'PREPPING SHIPMENT - COLLECTION DATE {collection_date.date}{" - DATE MATCHED" if shipment.date_matched else "NO DATE MATCH - USING FIRST AVAILABLE"}')
+    logger.info(f'COLLECTION DATE {"NOT" if not shipment.date_matched else ""} MATCHED')
     return collection_date
 
 
@@ -340,8 +339,7 @@ def get_actual_service(shipment, default_service_id: str, available_services: [S
 
 def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
     """ returns a shipment_request from shipment object"""
-    logger.info(f'PREPPING SHIPMENT - SHIPMENT REQUEST')
-    return DESP_CLIENT.shipment_request(
+    request = DESP_CLIENT.shipment_request(
         service_id=shipment.service.service_id,
         parcels=shipment.parcels,
         client_reference=shipment.customer_printable,
@@ -350,6 +348,9 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
         recipient_address=shipment.recipient,
         follow_shipment=True
     )
+    logger.info(f'SHIPMENT REQUEST:\n{request}')
+    return request
+
 
 
 def download_label(label_folder_path: Path, label_text: str, doc_id: str):

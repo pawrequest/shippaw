@@ -9,9 +9,7 @@ class APIClientWrapper:
     def _log_api_call(self, method_name, *args, **kwargs):
         """ Log API call with its name and parameters """
         self.api_calls += 1
-        logger.info(f"API call number {self.api_calls}: {method_name}" +
-                    (f", args: {args}" if args else "") +
-                    (f", kwargs: {kwargs}" if kwargs else ""))
+        logger.info(f"API call number {self.api_calls}: {method_name}")
 
     def __getattr__(self, name):
         # Override the method to intercept API calls

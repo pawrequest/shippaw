@@ -41,10 +41,6 @@ def get_amdesp_logger():
 
 logger = get_amdesp_logger()
 logger.info(f'AmDesp started, '
-            f'\n{__file__=}'
-            f'\n{sys.version=}'
-            f'\n{sys.executable=}'
-            f'\n{sys.path=}'
             f'\n{ROOT_DIR=}'  
             f'\n{DATA_DIR=}'
             f'\n{LOG_FILE=}'

@@ -62,9 +62,6 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
-# Example usage
-# print(parse_amherst_address_string("123/5, Main St\nUnit 5"))
-
 
 class ShipmentInput(BaseModel):
     """ input validated"""
