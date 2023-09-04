@@ -369,14 +369,19 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
 
 def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
+    # todo break into separate methods
     if shipment.category.value in ['Hire', 'Sale']:
         cmc_update_package = collection_update_package(shipment_id=shipment.shipment_id, outbound=shipment.is_outbound)
-        edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
-                      package=cmc_update_package, function=PS_FUNCS.APPEND.value)
-        shipment.is_logged_to_commence = True
+        if shipment.category.value == 'Sale':
+            cmc_update_package['Delivery Notes'] = f"DB label printed {datetime.today().date().isoformat()} [AD]"
+        result = edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
+                               package=cmc_update_package, function=PS_FUNCS.APPEND.value)
+        if result.returncode == 0:
+            shipment.is_logged_to_commence = True
+            return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
     else:
         shipment.is_logged_to_commence = False
-    return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
+        return shipment
 
 
 def tracking_loop(shipments: List[ShipmentRequested]):
