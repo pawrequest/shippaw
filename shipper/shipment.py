@@ -61,7 +61,7 @@ class ShipmentInput(BaseModel):
 
     @property
     def customer_printable(self):
-        return self.customer.replace("&", '"&"').replace("'", "''")
+        return self.customer.replace("&", 'and')
 
     def __str__(self):
         return self.shipment_name_printable
