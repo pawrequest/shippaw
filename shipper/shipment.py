@@ -17,19 +17,53 @@ from core.funcs import get_type
 
 
 #
+#
+# def parse_amherst_address_string(str_address: str):
+#     str_address = str_address.lower()
+#     if 'unit' in ' '.join(str_address.split(" ")[0:2]):
+#         first_block = ' '.join(str_address.split(" ")[0:2])
+#         return first_block
+#     else:
+#         first_block = str_address.split(" ")[0].split(",")[0]
+#     first_char = first_block[0]
+#     # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
+#     firstline = str_address.split("\n")[0].strip()
+#
+#     return first_block if first_char.isnumeric() else firstline
+
 
 def parse_amherst_address_string(str_address: str):
+    # Step 1: Convert the address string to lowercase
     str_address = str_address.lower()
-    if 'unit' in ' '.join(str_address.split(" ")[0:2]):
-        first_block = ' '.join(str_address.split(" ")[0:2])
-        return first_block
+
+    # Step 2: Split the address string into words
+    words = str_address.split(" ")
+
+    # Step 3: Check if the word 'unit' is in the first two words of the address
+    if 'unit' in ' '.join(words[:2]):
+        first_block = ' '.join(words[:2])
     else:
-        first_block = str_address.split(" ")[0].split(",")[0]
+        # Step 4: If 'unit' is not in the first two words, set first_block to the part of the first word before any comma
+        first_block = words[0].split(",")[0]
+
+    # Step 5: Get the first character of the first_block
     first_char = first_block[0]
-    # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
+
+    # Step 6: Get the first line of the address string
     firstline = str_address.split("\n")[0].strip()
 
+    # Step 7: Check if there is a "/" in the first block and notify the user if found
+    if "/" in first_block:
+        sg.popup_ok(
+            "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
+            "Please check the address carefully.")
+
+    # Step 8: Return first_block if the first character is numeric; otherwise, return firstline
     return first_block if first_char.isnumeric() else firstline
+
+
+# Example usage
+# print(parse_amherst_address_string("123/5, Main St\nUnit 5"))
 
 
 class ShipmentInput(BaseModel):
@@ -84,7 +118,7 @@ class ShipmentAddressed(ShipmentInput):
 
 
 class ShipmentPrepared(ShipmentAddressed):
-    #todo bestmatch and cand keys should be in addressed?
+    # todo bestmatch and cand keys should be in addressed?
     available_dates: List[CollectionDate]
     all_services: List[Service]
     date_menu_map: Dict

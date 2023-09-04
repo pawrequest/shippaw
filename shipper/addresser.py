@@ -48,7 +48,7 @@ def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address
             continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL - {f'{postcode=}, {check_set=}'}")
-        sg.popup_quick_message("Address Not Matched - please check it and consider updating Commence")
+        sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
         return None
 
 
