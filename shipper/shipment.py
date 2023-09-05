@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -62,7 +62,6 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
-
 class ShipmentInput(BaseModel):
     """ input validated"""
     model_config = ConfigDict(extra='allow')
@@ -76,7 +75,7 @@ class ShipmentInput(BaseModel):
     contact_name: str
     email: str
     postcode: str
-    send_out_date: datetime
+    send_out_date: date
     telephone: str
     delivery_name: str
     inbound_id: Optional[str] = ''
@@ -164,7 +163,7 @@ class ShipmentPrinted(ShipmentBooked):
 
 
 def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
-    ship_dict_from_dbf: dict = {}
+    ship_dict: dict = {}
     for k, v in record.items():
         if v:
             if isinstance(v, str):
@@ -173,16 +172,16 @@ def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategor
             k = import_mapping.get(k, k)
 
             logging.info(f'SHIPDICT FROM DBASE - {k} : {v}')
-            ship_dict_from_dbf.update({k: v})
+            ship_dict.update({k: v})
 
-    ship_dict_from_dbf['shipment_name'] = ship_dict_from_dbf.get('shipment_name',
-                                                                 f'{ship_dict_from_dbf["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
-    ship_dict_from_dbf['send_out_date'] = ship_dict_from_dbf.get('send_out_date', datetime.today())
-    ship_dict_from_dbf['boxes'] = ship_dict_from_dbf.get('boxes', 1)
+    ship_dict['shipment_name'] = ship_dict.get('shipment_name',
+                                               f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
+    ship_dict['send_out_date'] = ship_dict.get('send_out_date', datetime.today())
+    ship_dict['boxes'] = ship_dict.get('boxes', 1)
 
-    ship_dict_from_dbf['category'] = category.value
-    ship_dict_from_dbf['is_outbound'] = outbound
-    return ship_dict_from_dbf
+    ship_dict['category'] = category.value
+    ship_dict['is_outbound'] = outbound
+    return ship_dict
 
 
 def to_snake_case(input_string: str) -> str:

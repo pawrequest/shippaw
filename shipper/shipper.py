@@ -70,7 +70,7 @@ def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCateg
     logger.info(f'DBase file og = {dbase_file}')
     import_map_name = f"{category.name.lower()}_mapping"
     import_map = import_mappings[import_map_name]
-    logger.info(f'Import map = {import_map}')
+    logger.info(f'Import map = {import_map_name} - {import_map}')
 
     records = records_from_dbase(dbase_file)
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
