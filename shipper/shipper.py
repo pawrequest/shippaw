@@ -196,10 +196,9 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
                 window.close()
                 return [process_shipment(shipment=shipment, cmc_updater=config.paths.cmc_updater,
                                          label_path=config.paths.labels,
-                                         return_label_email_body=config.return_label_email_body, values=values) for
-                        shipment in shipments]
-        else:
-            logger.info(f'Wrong Event key {event=}')
+                                         return_label_email_body=config.return_label_email_body, values=values)
+                        for shipment in shipments]
+
 
         # todo if values[event] == shipment_to_edit?
         shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
