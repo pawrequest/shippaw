@@ -339,10 +339,13 @@ def get_actual_service(shipment, default_service_id: str, available_services: [S
 
 def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
     """ returns a shipment_request from shipment object"""
+    label_text = shipment.customer_printable
+    if not shipment.is_outbound:
+        label_text += ' RTN'
     request = DESP_CLIENT.shipment_request(
         service_id=shipment.service.service_id,
         parcels=shipment.parcels,
-        client_reference=shipment.customer_printable,
+        client_reference=label_text,
         collection_date=shipment.collection_date,
         sender_address=shipment.sender,
         recipient_address=shipment.recipient,
