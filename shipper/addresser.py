@@ -15,8 +15,10 @@ from shipper.shipment import ShipmentInput, ShipmentRequested
 
 def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (Address | bool):
     """ Gets an Address object representing the client location. tries direct search, then fuzzy search, then gui entry."""
-    # terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
     terms = {shipment.customer, shipment.delivery_name}
+
+    if all(s not in shipment.str_to_match for s in [r'/']):
+        terms.add(shipment.str_to_match)
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
         return address

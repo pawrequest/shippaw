@@ -153,3 +153,34 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
             update_contact_from_gui(values=values, contact=contact)
             window.close()
             return address
+
+def compare_before_send(shipment: ShipmentInput, address: Address, contact: Contact) -> Address | None:
+    """ Gui loop, takes an address and shipment for contact details,
+    allows editing / replacing address and contact """
+    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
+                                       address_as_str=shipment.address_as_str)
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED:
+            return None
+
+        if 'postal' in event.lower():
+            postcode = values.get(event.upper())
+            new_address = address_postcode_click(postcode=postcode)
+            if new_address:
+                # update_gui_from_address(address=new_address)
+                update_gui_from_address(address=new_address, window=window)
+
+        if 'company_name' in event.lower():
+            # copy customer name into address company name field
+            company_name_click(address=address, customer=shipment.customer, values=values)
+            update_gui_from_address(address=address, window=window)
+
+        if event == '-SUBMIT-':
+            update_address_from_gui(values=values, address=address)
+            update_contact_from_gui(values=values, contact=contact)
+
+
+
+            window.close()
+            return address

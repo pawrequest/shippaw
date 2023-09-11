@@ -9,7 +9,7 @@ from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from shipper.shipment import ShipmentInput
-from shipper.shipper import Shipper, dispatch, get_shipments
+from shipper.shipper import Shipper, dispatch, get_shipments, single_dispatch
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -33,6 +33,9 @@ def main(args):
 
     shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
                                                    import_mappings=config.import_mappings, outbound=outbound)
+
+    if len(shipments) == 1:
+        single_dispatch(config=config, shipment=shipments[0])
 
     if not shipments:
         logger.info('No shipments to process.')
