@@ -5,7 +5,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 import shipper.shipper
 from core.enums import Contact, FieldsList
 from gui.gui_params import address_fieldname_params, address_input_params
-from shipper.shipment import ShipmentInput
+from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
 def address_postcode_click(postcode: str) -> Address | None:
@@ -154,10 +154,12 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
             window.close()
             return address
 
-def compare_before_send(shipment: ShipmentInput, address: Address, contact: Contact) -> Address | None:
+
+def compare_before_send(shipment: ShipmentRequested) -> True:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
+    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=shipment.remote_contact,
+                                       address=shipment.remote_address,
                                        address_as_str=shipment.address_as_str)
     while True:
         event, values = window.read()
@@ -173,14 +175,9 @@ def compare_before_send(shipment: ShipmentInput, address: Address, contact: Cont
 
         if 'company_name' in event.lower():
             # copy customer name into address company name field
-            company_name_click(address=address, customer=shipment.customer, values=values)
-            update_gui_from_address(address=address, window=window)
+            company_name_click(address=shipment.remote_address, customer=shipment.customer, values=values)
+            update_gui_from_address(address=shipment.remote_address, window=window)
 
         if event == '-SUBMIT-':
-            update_address_from_gui(values=values, address=address)
-            update_contact_from_gui(values=values, contact=contact)
-
-
-
             window.close()
-            return address
+            return True

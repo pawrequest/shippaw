@@ -73,7 +73,7 @@ def DATE_STRING(collection_date: CollectionDate):
 
 
 def ADDRESS_STRING(address: Address):
-    return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}'
+    return f'{address.company_name if address.company_name else "< no company name >"}\n{address.street}\n{address.locality}\n{address.town_city}'
 
 
 def DATE_MENU(dates: list[CollectionDate]):

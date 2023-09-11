@@ -45,20 +45,20 @@ def shipment_frame(shipment: ShipmentRequested, outbound: bool):
         sg.Checkbox(f'{print_or_email}', default=True, k=keys_and_strings.PRINT_EMAIL_KEY(shipment)),
         sg.Button('Drop-off', k=keys_and_strings.DROPOFF_KEY(shipment)),
         sg.Button('remove', k=keys_and_strings.REMOVE_KEY(shipment))
-    ]
 
+    ]
     if not outbound:
         row.insert(1, sender_button(sender_address_name=sender_address_name, shipment=shipment))
 
     layout = [row]
 
-    return sg.Frame('', layout=layout, k=keys_and_strings.SHIPMENT_KEY(shipment))
+    return sg.Frame('', layout=layout, k=keys_and_strings.SHIPMENT_KEY(shipment), element_justification='center')
 
 
 def headers(outbound: bool):
     heads = [
         # sg.Sizer(30, 0),
-        sg.T('Contact / Customer', **head_params),
+        sg.T('Contact / Customer', **address_head_params),
         sg.T('Recipient', **address_head_params),
         sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
@@ -158,7 +158,7 @@ def parcels_button(num_parcels, shipment):
     return sg.Text(f'{num_parcels}', k=keys_and_strings.BOXES_KEY(shipment), enable_events=True, **boxes_params)
 
 
-def recipient_button(recipient_address_name, shipment:ShipmentRequested):
+def recipient_button(recipient_address_name, shipment: ShipmentRequested):
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
                                k=keys_and_strings.RECIPIENT_KEY(shipment), **address_params)
     return recipient_button
@@ -172,8 +172,9 @@ def sender_button(sender_address_name, shipment) -> sg.Text:
 
 
 def customer_contact_button(shipment):
-    return sg.T(f'{shipment.contact_name}\n{shipment.customer_printable}', enable_events=True,
-                k=keys_and_strings.CUSTOMER_KEY(shipment), **shipment_params)
+    return sg.T(f'{shipment.contact_name}\n{shipment.customer_printable}\n {shipment.address_as_str}',
+                enable_events=True,
+                k=keys_and_strings.CUSTOMER_KEY(shipment), **address_params)
 
 
 def date_button(date_name, shipment):

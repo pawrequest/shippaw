@@ -16,6 +16,7 @@ from core.desp_client_wrapper import APIClientWrapper
 from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
+from gui.address_gui import compare_before_send
 from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
@@ -61,6 +62,7 @@ def dispatch(config: Config, shipments: List[ShipmentInput]):
     # if not booked_shipments:
     #     logger.warning('No shipments, exiting')
     #     sys.exit()
+
 
 def single_dispatch(config: Config, shipment: ShipmentInput):
     """ Shipment processing pipeline - takes list of ShipmentInput and Config objects,
@@ -160,23 +162,25 @@ def gui_confirm_shipment(shipment: ShipmentRequested, values: dict) -> ShipmentG
     return ShipmentGuiConfirmed(**shipment.__dict__, **shipment.model_extra)
 
 
-def process_shipment(shipment: ShipmentRequested, cmc_updater, values: dict, label_path,
-                     return_label_email_body) -> ShipmentBooked | ShipmentQueued:
+def process_shipment(shipment: ShipmentRequested, values: dict, config: Config) -> ShipmentBooked | ShipmentQueued:
     """ queues and books shipment, updates commence, prints and emails label"""
     gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
     shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
-    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=cmc_updater,
+    if not config.sandbox:
+        shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
                                                          shipment=shipment)
+    else:
+        shipment: ShipmentCmcUpdated = ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
 
     if not shipment.is_to_book:
         return shipment
 
     shipment = book_shipment(shipment=shipment)
-    shipment.label_location = download_label(label_folder_path=label_path,
+    shipment.label_location = download_label(label_folder_path=config.paths.labels,
                                              label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
                                              doc_id=shipment.shipment_return.shipment_document_id)
 
-    print_email_label(print_email=shipment.is_to_print_email, email_body=return_label_email_body,
+    print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
                       shipment=shipment)
 
     booked = ShipmentPrinted(**shipment.__dict__, **shipment.model_extra)
@@ -196,6 +200,7 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
         sg.theme('Dark Blue')
 
     window = main_window(shipments=shipments, outbound=config.outbound)
+    processed_shipments = []
 
     while True:
         package = None
@@ -206,16 +211,18 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
             sys.exit()
 
         if event == keys_and_strings.GO_SHIP_KEY():
-            if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
-                sg.popup_quick_message('Please Wait')
-                window.close()
-                return [process_shipment(shipment=shipment, cmc_updater=config.paths.cmc_updater,
-                                         label_path=config.paths.labels,
-                                         return_label_email_body=config.return_label_email_body, values=values)
-                        for shipment in shipments]
+            # if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
+            #     sg.popup_quick_message('Please Wait')
+            window.close()
 
+            for shipment in shipments:
+                # if not compare_before_send(shipment=shipment):
+                #     pass
+                sg.popup_quick_message('Processing shipments, please wait...')
+                processed_shipments.append(process_shipment(shipment=shipment, values=values, config=config))
+            return processed_shipments
 
-        # todo if values[event] == shipment_to_edit?
+        # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
         shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
                                                     keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
 
@@ -256,8 +263,7 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
             window[event].update(package)
 
 
-
-def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> List[ShipmentBooked | ShipmentQueued]:
+def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> ShipmentBooked | ShipmentQueued:
     """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking collection etc"""
@@ -267,6 +273,7 @@ def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> List[Sh
         sg.theme('Tan')
     else:
         sg.theme('Dark Blue')
+
 
     window = main_window(shipments=shipment, outbound=config.outbound)
 
@@ -282,35 +289,23 @@ def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> List[Sh
             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
                 sg.popup_quick_message('Please Wait')
                 window.close()
-                return [process_shipment(shipment=shipment, cmc_updater=config.paths.cmc_updater,
-                                         label_path=config.paths.labels,
-                                         return_label_email_body=config.return_label_email_body, values=values)
-                        for shipment in shipments]
-
+                return process_shipment(shipment=shipment, config=config, values=values)
 
         # todo if values[event] == shipment_to_edit?
-        shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
-                                                    keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+        if event == keys_and_strings.BOXES_KEY(shipment):
+            package = boxes_click(shipment_to_edit=shipment, window=window)
 
-        if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
-            package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
+        elif event == keys_and_strings.SERVICE_KEY(shipment):
+            package = service_click(shipment_to_edit=shipment, location=window.mouse_location())
 
-        elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
-            package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location())
+        elif event == keys_and_strings.DATE_KEY(shipment):
+            package = date_click(location=window.mouse_location(), shipment_to_edit=shipment)
 
-        elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
-            package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
+        elif event == keys_and_strings.SENDER_KEY(shipment):
+            package = address_click(shipment=shipment, target=shipment.sender)
 
-        elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender)
-
-        elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient)
-
-        elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
-            shipments = [s for s in shipments if s != shipment_to_edit]
-            window.close()
-            window = main_window(shipments=shipments, outbound=config.outbound)
+        elif event == keys_and_strings.RECIPIENT_KEY(shipment):
+            package = address_click(shipment=shipment, target=shipment.recipient)
 
         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
             sg.popup_ok(shipment_to_edit.address_as_str)
@@ -440,7 +435,6 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
     )
     logger.info(f'SHIPMENT REQUEST:\n{request}')
     return request
-
 
 
 def download_label(label_folder_path: Path, label_text: str, doc_id: str):

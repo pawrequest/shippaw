@@ -53,10 +53,11 @@ def parse_amherst_address_string(str_address: str):
     firstline = str_address.split("\n")[0].strip()
 
     # Step 7: Check if there is a "/" in the first block and notify the user if found
-    if "/" in first_block:
-        sg.popup_ok(
-            "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
-            "Please check the address carefully.")
+    # now in get valid shipment
+    # if "/" in first_block:
+    #     sg.popup_ok(
+    #         "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
+    #         "Please check the address carefully.")
 
     # Step 8: Return first_block if the first character is numeric; otherwise, return firstline
     return first_block if first_char.isnumeric() else firstline
@@ -294,6 +295,10 @@ def get_valid_shipment(input_dict: dict) -> ShipmentInput:
                     f"Validation Error for {field}. Enter correct value (of type '{expected_type}')")
                 input_dict[field] = new_value
         else:
+            if "/" in shippy.address_as_str:
+                    sg.popup_ok(
+                        "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
+                        "Please check the address carefully.")
             return shippy
 
 
