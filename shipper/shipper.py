@@ -16,7 +16,6 @@ from core.desp_client_wrapper import APIClientWrapper
 from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
-from gui.address_gui import compare_before_send
 from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
@@ -166,11 +165,12 @@ def process_shipment(shipment: ShipmentRequested, values: dict, config: Config) 
     """ queues and books shipment, updates commence, prints and emails label"""
     gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
     shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
-    if not config.sandbox:
-        shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
+    # todo put this back!!
+    # if not config.sandbox:
+    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
                                                          shipment=shipment)
-    else:
-        shipment: ShipmentCmcUpdated = ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
+    # else:
+    #     shipment: ShipmentCmcUpdated = ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
 
     if not shipment.is_to_book:
         return shipment
@@ -274,7 +274,6 @@ def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> Shipmen
     else:
         sg.theme('Dark Blue')
 
-
     window = main_window(shipments=shipment, outbound=config.outbound)
 
     while True:
@@ -348,17 +347,6 @@ def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
                     collection_date=shipment.collection_return.date,
                     collection_address=shipment.collection_return.sender_address.sender_address)
         shipment.is_emailed = True
-
-
-def collection_update_package(shipment_id, outbound):
-    """returns dict to update database with collection details"""
-    id_to_store = 'Outbound ID' if outbound else 'Inbound ID'
-    cmc_update_package = {id_to_store: shipment_id}
-    if outbound:
-        cmc_update_package['DB label printed'] = True
-    else:
-        cmc_update_package['Return Notes'] = f'PF Return booked {datetime.today().date().isoformat()} [AD]'
-    return cmc_update_package
 
 
 def queue_shipment(shipment: ShipmentRequested) -> ShipmentQueued:
@@ -452,18 +440,42 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
         return label_location
 
 
+def commence_package_sale(shipment: ShipmentQueued):
+    """returns dict to update database with collection details"""
+    return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()} [AD]'}
+
+
+def commence_package_hire(shipment: ShipmentQueued):
+    """returns dict to update database with collection details"""
+    cmc_update_package = {}
+    if shipment.is_outbound:
+        cmc_update_package['DB label printed'] = True
+    else:
+        cmc_update_package['Return Notes'] = f'PF Return booked {datetime.today().date().isoformat()} [AD]'
+
+    return cmc_update_package
+
+
 def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
-    # todo break into separate methods
-    if shipment.category.value in ['Hire', 'Sale']:
-        cmc_update_package = collection_update_package(shipment_id=shipment.shipment_id, outbound=shipment.is_outbound)
-        if shipment.category.value == 'Sale':
-            cmc_update_package['Delivery Notes'] = f"DB label printed {datetime.today().date().isoformat()} [AD]"
-        result = edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
-                               package=cmc_update_package, function=PS_FUNCS.APPEND.value)
-        if result.returncode == 0:
-            shipment.is_logged_to_commence = True
-            return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
+    id_to_store = 'Outbound ID' if shipment.is_outbound else 'Inbound ID'
+    cmc_update_package = {id_to_store: shipment.shipment_id}
+
+    if shipment.category == ShipmentCategory.HIRE:
+        cmc_update_package.update(commence_package_hire(shipment))
+
+    elif shipment.category == ShipmentCategory.SALE:
+        cmc_update_package.update(commence_package_sale(shipment))
+
+    else:
+        logger.warning(f'Category {shipment.category} not recognised for commence updater')
+        return shipment
+
+    result = edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
+                           package=cmc_update_package, function=PS_FUNCS.APPEND.value)
+    if result.returncode == 0:
+        shipment.is_logged_to_commence = True
+        return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
     else:
         shipment.is_logged_to_commence = False
         return shipment

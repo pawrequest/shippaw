@@ -8,7 +8,7 @@ param(
 )
 
 $PSBoundParameters.GetEnumerator() | ForEach-Object {
-    Write-host "$($_.Key): $($_.Value)"
+    Write-host "$( $_.Key ): $( $_.Value )"
 }
 
 $commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
@@ -74,9 +74,10 @@ function EditRecordOverwrite($record, $package)
         write-host "ed_index: $ed_index"
         $db_val = $record.GetRowValue(0, $ed_index)
         write-host "db_val: $db_val"
-        if ($ed_index -gt -1){
-        Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
-        $null = $record.ModifyRow(0, $ed_index, $input_value, 0)
+        if ($ed_index -gt -1)
+        {
+            Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
+            $null = $record.ModifyRow(0, $ed_index, $input_value, 0)
         }
     }
     $record.commit()
@@ -89,12 +90,12 @@ function NewRecord()
     Write-Host Inserting new record
 
     $new_record = $cursor.GetAddRowSet(1)
-#    $null = $new_record.ModifyRow(0, 0, $recordName, 0)
-#    $edit_resulult = EditRecordOverwrite($new_record, $package)
+    #    $null = $new_record.ModifyRow(0, 0, $recordName, 0)
+    #    $edit_resulult = EditRecordOverwrite($new_record, $package)
 
-#    $returned = $new_record.commit()
+    #    $returned = $new_record.commit()
     write-host "type of record after commit :" $new_record.GetType()
-#    write-host "returned: $returned"
+    #    write-host "returned: $returned"
 
     return $new_record
 }
@@ -102,26 +103,29 @@ function NewRecord()
 
 function EditRecordAppend($record, $package)
 {
-    write-host "Editing record and appending values"
-    # apply update_package
     foreach ($key in $package.Keys)
     {
         $input_value = $package[$key]
-        write-host "record: $record"
         $ed_index = $record.GetColumnIndex($key)
         $db_val = $record.GetRowValue(0, $ed_index)
+
+        Write-Host "Field = `"$key`""
+        Write-Host "Current value = `"$db_val`""
+        Write-Host "Input value = `"$input_value`""
+
+
 
         # if input type is a string and current value is 1+, append
         If ($input_value -is [string] -and $db_val.Length -ge 1)
         {
-            Write-Host " Appending `"$input_value`"  to existing value (`"$db_val`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
-            $new_val = $input_value + "`r`n" + $db_val
-            write-host "new_val: $new_val"
+            $new_val = $db_val + "  [AD]  " + $input_value
+            write-host "String - appending with: $new_val"
+            Write-Host "Result Code follows (0 = success):"
         }
         Else
         {
-            Write-Host "Replacing `"$db_val`"  with (`"$input_value`") in field `"$key`", column_id = $ed_index. result_code follows(0 = success):"
             $new_val = $input_value
+            write-host "Not or empty string - replacing with: $new_val"
         }
 
         $record.ModifyRow(0, $ed_index, $new_val, 0)
@@ -133,7 +137,7 @@ function PrintRecord($recordName)
     write-host "Printing record: $recordName"
     record = RecordByName $recordName
     Write-Host $record
-    }
+}
 
 
 switch ($functionName)

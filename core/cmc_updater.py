@@ -4,40 +4,37 @@ from enum import Enum
 
 from core.config import logger
 
+
 class PS_FUNCS(Enum):
-    OVERWRITE="EditOverwrite"
+    OVERWRITE = "EditOverwrite"
     APPEND = "EditAppend"
     NEW = "NewRecord"
-    HIRES_CUSTOMER= "HiresByCustomer"
+    HIRES_CUSTOMER = "HiresByCustomer"
     PRINT = "PrintRecord"
 
-def edit_commence(pscript:str, function:str, table:str, record:str, package:dict):
-    logger.info(f'COMMENCE UPDATER -{function=} -{table=} -{record=} -{package=}')
+
+def edit_commence(pscript: str, function: str, table: str, record: str, package: dict):
     record_esc = f'"{record}"'
-    package_esc = json.dumps(package)#.replace('"', '`"')
+    package_esc = json.dumps(package)  # .replace('"', '`"')
     # package_esc = f'"{package_esc}"'
     # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
     #                     pscript, function, table, record_esc, package_esc]
 
     process_command = ["powershell.exe", '-ExecutionPolicy', 'Unrestricted',
-        '-File', pscript,
-        '-functionName', function,
-        '-tableName', table,
-        # '-recordName', record_esc,
-        '-recordName', record,
-        '-updatePackageStr', package_esc
-    ]
+                       '-File', pscript,
+                       '-functionName', function,
+                       '-tableName', table,
+                       # '-recordName', record_esc,
+                       '-recordName', record,
+                       '-updatePackageStr', package_esc
+                       ]
     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     universal_newlines=True)
     if process_result.stderr:
         parse_std_err(process_result)
     else:
-        stdoutput = process_result.stdout.split('\n')
-        [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
-
+        logger.info(f'COMMENCE UPDATER:\n{process_result.stdout}')
     return process_result
-
-
 
 
 class Commence():
@@ -67,6 +64,7 @@ class Commence():
         @property
         def name_esc(self):
             return f'"{self.recordname}"'
+
 
 #
 #
