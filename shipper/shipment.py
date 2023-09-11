@@ -176,7 +176,7 @@ def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategor
 
     ship_dict['shipment_name'] = ship_dict.get('shipment_name',
                                                f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
-    ship_dict['send_out_date'] = ship_dict.get('send_out_date', datetime.today())
+    ship_dict['send_out_date'] = ship_dict.get('send_out_date', datetime.today().date())
     ship_dict['boxes'] = ship_dict.get('boxes', 1)
 
     ship_dict['category'] = category.value
