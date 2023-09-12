@@ -118,7 +118,8 @@ class PathsList:
         self.cmc_installer: Path = Path()
         self.cmc_updater:Path = Path()
         self.cmc_dll: Path = Path()
-        self.labels: Path = Path()
+        self.outbound_labels: Path = Path()
+        self.inbound_labels: Path = Path()
         self.user_data = Path()
         self.dbase_export = Path()
 
@@ -127,7 +128,7 @@ class PathsList:
         pl = cls()
         for name, path in paths_dict.items():
             setattr(pl, name, root_dir / path)
-        pl.labels.mkdir(parents=True, exist_ok=True)
+        pl.outbound_labels.mkdir(parents=True, exist_ok=True)
         return pl
 
 

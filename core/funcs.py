@@ -28,34 +28,8 @@ def print_label(shipment):
         return True
 
 
-def log_shipment(log_path, shipment: "ShipmentToGo"):
-    # export from object attrs
-    shipment.boxes = len(shipment.parcels)
-    export_dict = {}
 
-    for field in FieldsList.export.value:
-        try:
-            if field == 'sender':
-                val = shipment.sender.__repr__()
-            elif field == 'recipient':
-                val = shipment.recipient.__repr__()
-            else:
-                val = getattr(shipment, field)
-                if isinstance(val, datetime):
-                    val = f"{val.isoformat(sep=' ', timespec='seconds')}"
-
-            export_dict.update({field: val})
-        except Exception as e:
-            print(f"{field} not found in shipment \n{e}")
-    pprint(export_dict)
-
-    with open(log_path, 'a') as f:
-        # todo better loggging.... sqlite?
-        json.dump(export_dict, f, sort_keys=True)
-        f.write(",\n")
-
-
-def email_label(shipment: "ShipmentToGo", body: str, collection_date: CollectionDate, collection_address: Address):
+def email_label(shipment: "ShipmentCompleted", body: str, collection_date: CollectionDate, collection_address: Address):
     collection_date = collection_date_to_datetime(collection_date)
 
     try:

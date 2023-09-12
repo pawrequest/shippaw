@@ -22,7 +22,7 @@ from shipper.addresser import get_home_sender_recip, get_remote_recipient, remot
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentForRequest, \
     ShipmentGuiConfirmed, ShipmentInput, \
-    ShipmentPrepared, ShipmentPrinted, ShipmentQueued, ShipmentRequested, records_from_dbase, shipments_from_records
+    ShipmentPrepared, ShipmentCompleted, ShipmentQueued, ShipmentRequested, records_from_dbase, shipments_from_records
 from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
@@ -145,29 +145,27 @@ def gui_confirm_shipment(shipment: ShipmentRequested, values: dict) -> ShipmentG
     return ShipmentGuiConfirmed(**shipment.__dict__, **shipment.model_extra)
 
 
-def process_shipment(shipment: ShipmentRequested, values: dict, config: Config) -> ShipmentBooked | ShipmentQueued:
+def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Config) -> ShipmentBooked | ShipmentQueued:
     """ queues and books shipment, updates commence, prints and emails label"""
-    gui_confirmed = gui_confirm_shipment(shipment=shipment, values=values)
-    shipment: ShipmentQueued = queue_shipment(shipment=gui_confirmed)
-    # todo put this back!!
-    # if not config.sandbox:
-    shipment: ShipmentCmcUpdated = maybe_update_commence(cmc_updater_ps1=config.paths.cmc_updater,
-                                                         shipment=shipment)
-    # else:
-    #     shipment: ShipmentCmcUpdated = ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
+    if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
+        if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
+            logger.info('User quit')
+            sys.exit()
 
+    shipment: ShipmentGuiConfirmed = gui_confirm_shipment(shipment=shipment_req, values=values)
+    shipment: ShipmentQueued = queue_shipment(shipment=shipment)
+    shipment: ShipmentCmcUpdated = maybe_update_commence(config=config, shipment=shipment)
     if not shipment.is_to_book:
         return shipment
 
-    shipment = book_shipment(shipment=shipment)
-    shipment.label_location = download_label(label_folder_path=config.paths.labels,
-                                             label_text=f'{shipment.shipment_name_printable} - {shipment.timestamp}',
-                                             doc_id=shipment.shipment_return.shipment_document_id)
+    shipment:ShipmentBooked = book_shipment(shipment=shipment)
+
+    shipment.label_location = download_shipment_label(shipment=shipment, config=config)
 
     print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
                       shipment=shipment)
 
-    booked = ShipmentPrinted(**shipment.__dict__, **shipment.model_extra)
+    booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
 
     return booked
 
@@ -203,7 +201,11 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
                 # if not compare_before_send(shipment=shipment):
                 #     pass
                 sg.popup_quick_message('Processing shipments, please wait...')
-                processed_shipments.append(process_shipment(shipment=shipment, values=values, config=config))
+                processed = process_shipment(shipment_req=shipment, values=values, config=config)
+                if processed is not None:
+                    processed_shipments.append(processed)
+                else:
+                    continue
             return processed_shipments
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
@@ -351,6 +353,7 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
 
 def download_label(label_folder_path: Path, label_text: str, doc_id: str):
     """" downlaods labels from given doc_id to given folder path"""
+
     try:
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
                                                      label_layout='2A4')
@@ -359,6 +362,31 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
         label_location = label_folder_path / label_string
         label_pdf.download(label_location)
     except:
+        return False
+    else:
+        return label_location
+
+def download_shipment_label(shipment:ShipmentBooked, config:Config):
+    """" downlaods labels from given doc_id to given folder path"""
+    doc_id = shipment.shipment_return.shipment_document_id
+
+    if shipment.is_outbound:
+        label_folder = config.paths.outbound_labels
+        label_filename = shipment.label_filename_outbound
+    else:
+        label_folder = config.paths.inbound_labels
+        label_filename = shipment.label_filename_inbound
+
+
+    try:
+        label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
+                                                     label_layout='2A4')
+
+        label_filename: str = label_filename.replace(':', '') + '.pdf'
+        label_location = label_folder / label_filename
+        label_pdf.download(label_location)
+    except:
+        logger.warning(f'Unable to download label for {shipment.shipment_name_printable}')
         return False
     else:
         return label_location
@@ -375,14 +403,20 @@ def commence_package_hire(shipment: ShipmentQueued):
     if shipment.is_outbound:
         cmc_update_package['DB label printed'] = True
     else:
-        cmc_update_package['Return Notes'] = f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}} [AD]'
+        cmc_update_package[
+            'Return Notes'] = f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}} [AD]'
         cmc_update_package['Pickup Arranged'] = True
 
     return cmc_update_package
 
 
-def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
+def maybe_update_commence(config: Config, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
+
+    if config.sandbox:
+        if sg.popup_yes_no("Sandbox mode: Update Commence Anyway?") != 'Yes':
+            return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
+
     id_to_store = 'Outbound ID' if shipment.is_outbound else 'Inbound ID'
     cmc_update_package = {id_to_store: shipment.shipment_id}
 
@@ -396,7 +430,8 @@ def maybe_update_commence(cmc_updater_ps1, shipment: ShipmentQueued):
         logger.warning(f'Category {shipment.category} not recognised for commence updater')
         return shipment
 
-    result = edit_commence(pscript=cmc_updater_ps1, table=shipment.category.value, record=shipment.shipment_name,
+    result = edit_commence(pscript=config.paths.cmc_updater, table=shipment.category.value,
+                           record=shipment.shipment_name,
                            package=cmc_update_package, function=PS_FUNCS.APPEND.value)
     if result.returncode == 0:
         shipment.is_logged_to_commence = True

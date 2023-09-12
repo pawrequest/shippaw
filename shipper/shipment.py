@@ -12,7 +12,7 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from core.config import logger
-from core.enums import BestMatch, Contact, ShipmentCategory
+from core.enums import BestMatch, Contact, ShipmentCategory, DateTimeMasks
 from core.funcs import get_type, collection_date_to_datetime
 
 
@@ -152,19 +152,30 @@ class ShipmentQueued(ShipmentGuiConfirmed):
 
 
 class ShipmentCmcUpdated(ShipmentQueued):
-    is_logged_to_commence: bool
+    is_logged_to_commence: bool = False
 
 
 class ShipmentBooked(ShipmentQueued):
     """ booked"""
-    is_booked: bool
+    is_booked: bool = False
     shipment_return: ShipmentReturn
 
+    @property
+    def collection_booked_string(self):
+        return f"Collection Booked for {self.collection_date_datetime:{DateTimeMasks.DISPLAY.value}} -" if self.is_booked else ""
+    @property
+    def label_filename_outbound(self):
+        return f'{self.customer_printable} - Shipping Label - {self.collection_booked_string} booked at {self.timestamp}'
 
-class ShipmentPrinted(ShipmentBooked):
-    is_printed: bool
+    @property
+    def label_filename_inbound(self):
+        return f'{self.customer_printable} - Returns Label - {self.collection_booked_string} booked at {self.timestamp}'
+
+
+class ShipmentCompleted(ShipmentBooked):
     label_location: Path
-    is_emailed: bool
+    is_printed: bool = False
+    is_emailed: bool = False
 
 
 def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
@@ -300,9 +311,9 @@ def get_valid_shipment(input_dict: dict) -> ShipmentInput:
                 input_dict[field] = new_value
         else:
             if "/" in shippy.address_as_str:
-                    sg.popup_ok(
-                        "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
-                        "Please check the address carefully.")
+                sg.popup_ok(
+                    "Beware: This address contains a '/', which might indicate a Scottish or unusual address format. "
+                    "Please check the address carefully.")
             return shippy
 
 
