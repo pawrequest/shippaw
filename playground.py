@@ -11,7 +11,7 @@ from shipper.shipper import Shipper, get_shipments
 
 script = 'C:\paul\AmDesp\scripts\cmc_updater.ps1'
 # in_file = r'E:\Dev\AmDesp\data\amherst_export.dbf'
-in_file = Path(r'E:\Dev\AmDesp\data\rd_test_export.dbf')
+in_file = Path(r'C:\paul\AmDesp\data\amherst_export.dbf')
 outbound = True
 category = ShipmentCategory.HIRE
 ship_mode = ShipMode.SHIP
@@ -41,5 +41,4 @@ def main():
 
 
 if __name__ == '__main__':
-    ...
-    # main()
+    main()
