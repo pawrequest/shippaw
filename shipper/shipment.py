@@ -9,9 +9,9 @@ import PySimpleGUI as sg
 from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError, root_validator, validator
 
-from core.config import logger
+from core.config import logger, ImportMap
 from core.enums import BestMatch, Contact, ShipmentCategory, DateTimeMasks
 from core.funcs import get_type, collection_date_to_datetime
 
@@ -63,7 +63,83 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
+
+
+
 class ShipmentInput(BaseModel):
+    """ input validated"""
+    model_config = ConfigDict(extra='allow')
+    is_dropoff: bool = False
+    is_outbound: bool
+    category: ShipmentCategory
+    shipment_name: Optional[str]
+    address_as_str: str
+    boxes: int = 1
+    customer: str
+    contact_name: str
+    email: str
+    postcode: str
+    send_out_date: date = datetime.today().date()
+    telephone: str
+    delivery_name: str
+    inbound_id: Optional[str]
+    outbound_id: Optional[str]
+
+    @root_validator(pre=True)
+    def clean_strings(cls, values):
+        for k, v in values.items():
+            if isinstance(v, str) and '\x00' in v:
+                values[k] = v.split('\x00')[0]
+        return values
+
+    @validator('shipment_name', always=True)
+    def set_shipment_name(cls, v, values):
+        customer = values.get('customer')
+        if v is None and customer:
+            v = f'{customer} - {datetime.now().isoformat(timespec="seconds")}'
+        return v
+
+
+    @property
+    def shipment_name_printable(self):
+        return re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
+
+    @property
+    def str_to_match(self):
+        return parse_amherst_address_string(self.address_as_str)
+
+    @property
+    def customer_printable(self):
+        return self.customer.replace("&", 'and')
+
+    def __str__(self):
+        return self.shipment_name_printable
+
+    def __repr__(self):
+        return self.shipment_name_printable
+
+    def __eq__(self, other):
+        return self.shipment_name == other.shipment_name
+
+
+
+def shipments_from_records_gpt(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict])\
+        -> List[ShipmentInput]:
+    shipments = []
+    for record in records:
+        [logger.info(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
+        try:
+            # Using ImportMap to transform record keys here before validation
+            transformed_record = {k: record.get(v) for k, v in import_map.dict().items() if record.get(v)}
+            shipment_input = ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
+            shipments.append(shipment_input)
+        except Exception as e:
+            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+            continue
+
+    return shipments
+
+class ShipmentInputOld(BaseModel):
     """ input validated"""
     model_config = ConfigDict(extra='allow')
     is_dropoff: bool = False
@@ -178,17 +254,16 @@ class ShipmentCompleted(ShipmentBooked):
     is_emailed: bool = False
 
 
-def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
+def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: ImportMap):
     ship_dict: dict = {}
-    for k, v in record.items():
-        if v:
-            if isinstance(v, str):
-                if '\x00' in v:
-                    v = v.split('\x00')[0]
-            k = import_mapping.get(k, k)
+    for k, v in import_mapping.items():
+        if record.get(v):
+            val = record[v]
+            if isinstance(val, str) and '\x00' in val:
+                val = val.split('\x00')[0]
 
-            logging.info(f'SHIPDICT FROM DBASE - {k} : {v}')
-            ship_dict.update({k: v})
+            logging.info(f'SHIPDICT FROM DBASE - {k} : {val}')
+            ship_dict.update({k: val})
 
     ship_dict['shipment_name'] = ship_dict.get('shipment_name',
                                                f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
@@ -199,6 +274,29 @@ def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategor
     ship_dict['is_outbound'] = outbound
     return ship_dict
 
+#
+#
+# def shipdict_from_record(outbound: bool, record: dict, category: ShipmentCategory, import_mapping: dict):
+#     ship_dict: dict = {}
+#     for k, v in record.items():
+#         if v:
+#             if isinstance(v, str):
+#                 if '\x00' in v:
+#                     v = v.split('\x00')[0]
+#             k = import_mapping.get(k, k)
+#
+#             logging.info(f'SHIPDICT FROM DBASE - {k} : {v}')
+#             ship_dict.update({k: v})
+#
+#     ship_dict['shipment_name'] = ship_dict.get('shipment_name',
+#                                                f'{ship_dict["customer"]} - {datetime.now().isoformat(timespec="seconds")}')
+#     ship_dict['send_out_date'] = ship_dict.get('send_out_date', datetime.today().date())
+#     ship_dict['boxes'] = ship_dict.get('boxes', 1)
+#
+#     ship_dict['category'] = category.value
+#     ship_dict['is_outbound'] = outbound
+#     return ship_dict
+#
 
 def to_snake_case(input_string: str) -> str:
     """Convert a string to lowercase snake case."""
@@ -333,7 +431,7 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
         logger.exception(e)
 
 
-def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool,
+def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
                            records: [dict]) -> List[ShipmentInput]:
     shipments = []
     for record in records:
@@ -348,3 +446,19 @@ def shipments_from_records(category: ShipmentCategory, import_map: dict, outboun
             continue
 
     return shipments
+#
+# def shipments_from_records(category: ShipmentCategory, import_map: dict, outbound: bool,
+#                            records: [dict]) -> List[ShipmentInput]:
+#     shipments = []
+#     for record in records:
+#         [logger.info(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
+#         try:
+#             ship_dict = shipdict_from_record(outbound=outbound, record=record,
+#                                              category=category, import_mapping=import_map)
+#             shipments.append(get_valid_shipment(input_dict=ship_dict))
+#
+#         except Exception as e:
+#             logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+#             continue
+#
+#     return shipments

@@ -5,10 +5,10 @@ from typing import List
 
 import PySimpleGUI as sg
 
-from core.config import Config, logger
+from core.config import Config, logger, get_config_pydantic
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
-from shipper.shipment import ShipmentInput
+from shipper.shipment import ShipmentInput, records_from_dbase, shipments_from_records_gpt
 from shipper.shipper import Shipper, dispatch, get_shipments
 
 """
@@ -28,11 +28,20 @@ def initial_checks():
 def main(args):
     initial_checks()
     outbound = 'out' == args.direction.value.lower()
-    config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
-    shipper = Shipper(dbay_creds=config.dbay_creds)
+    category = args.category
 
-    shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
-                                                   import_mappings=config.import_mappings, outbound=outbound)
+    # config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
+    # shipper = Shipper(dbay_creds=config.dbay_creds)
+
+    new_conf = get_config_pydantic(outbound=outbound, category=category)
+    shipper = Shipper(dbay_creds=new_conf.dbay_creds)
+    records = records_from_dbase(dbase_file=args.file)
+    shipments = shipments_from_records_gpt(category=category, import_map=new_conf.import_map, outbound=outbound,
+                                           records=records)
+    ...
+    #
+    # shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
+    #                                                import_mappings=config.import_mappings, outbound=outbound)
 
 
     if not shipments:

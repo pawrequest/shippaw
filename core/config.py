@@ -4,13 +4,12 @@ import subprocess
 import sys
 import tomllib
 from datetime import date
+from pathlib import Path
 
 import PySimpleGUI as sg
-from pathlib import Path
-from dotenv import dotenv_values, load_dotenv
-
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
@@ -25,7 +24,8 @@ load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
 ...
 
-#todo make customer work, customer name clobbers shipment name
+
+# todo make customer work, customer name clobbers shipment name
 
 def get_amdesp_logger():
     new_logger = logging.getLogger(name='AmDesp')
@@ -43,11 +43,13 @@ def get_amdesp_logger():
 
 logger = get_amdesp_logger()
 logger.info(f'AmDesp started, '
-            f'\n{ROOT_DIR=}'  
+            f'\n{ROOT_DIR=}'
             f'\n{DATA_DIR=}'
             f'\n{LOG_FILE=}'
             f'\n{CONFIG_TOML=}'
             )
+
+
 class ImportMap(BaseModel):
     address_as_str: str
     contact_name: str
@@ -56,76 +58,71 @@ class ImportMap(BaseModel):
     postcode: str
     telephone: str
     customer: str
+
+
 class HireMap(ImportMap):
-    shipment_name:str
-    boxes:int
+    shipment_name: str
+    boxes: int
     send_out_date: date
     send_method: str
 
     outbound_id: str = None
     inbound_id: str = None
+
+
 class SaleMap(ImportMap):
+    shipment_name:str
     outbound_id: str = None
     inbound_id: str = None
 
 
-def get_import_dict(category:ShipmentCategory, config_dict:dict)->dict:
+def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
+    map_dict = mappings[category.value.lower()]
     if category == ShipmentCategory.HIRE:
-    elif category == ShipmentCategory.SALE:
-        return config_dict['import_map']['sale']
-    elif category == ShipmentCategory.CUSTOMER:
-        return config_dict['import_map']['customer']
-    else:
-        raise ValueError(f'Unknown ShipmentCategory {category}')
-
-def get_import_map(category:ShipmentCategory, mappings:dict[str, dict]) -> ImportMap:
-    if category == ShipmentCategory.HIRE:
-        map_dict = mappings['hire_mapping']
         return HireMap(**map_dict)
     elif category == ShipmentCategory.SALE:
-        map_dict = mappings['sale_mapping']
         return SaleMap(**map_dict)
     elif category == ShipmentCategory.CUSTOMER:
-        map_dict = mappings['customer_mapping']
         return ImportMap(**map_dict)
     else:
         raise ValueError(f'Unknown ShipmentCategory {category}')
 
 
 class Config_pydantic(BaseModel):
-    mode: ShipMode
-    outbound: bool
-    paths: PathsList
-    parcel_contents: str
-    sandbox: bool
     import_map: ImportMap
     home_address: HomeAddress
     home_contact: Contact
-    return_label_email_body: str
     dbay_creds: DbayCreds
     default_shipping_service: DefaultShippingService
+    paths: PathsList
+    outbound: bool
+    parcel_contents: str
+    sandbox: bool
+    return_label_email_body: str
 
-def get_config_dict(toml_file)->dict:
+
+def get_config_dict(toml_file) -> dict:
     with open(toml_file, 'rb') as g:
         return tomllib.load(g)
 
 
-
-def get_config_pydantic(category:ShipmentCategory)->Config_pydantic:
+def get_config_pydantic(outbound, category: ShipmentCategory) -> Config_pydantic:
     config_dict = get_config_dict(toml_file=CONFIG_TOML)
-    import_mappings = config_dict['import_mappings']
-    import_map = get_import_map(category=category, mappings = import_mappings)
-    paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
+    sandbox = config_dict.get('sandbox')
+    dbay = config_dict.get('dbay')[scope_from_sandbox_func(sandbox=sandbox)]  # gets the names of env vars
 
-
-
-
-    conf = Config_pydantic()
-
-
-    ...
-
-
+    return Config_pydantic(
+        import_map=get_import_map(category=category, mappings=config_dict['import_mappings']),
+        home_address=HomeAddress(**config_dict.get('home_address')),
+        home_contact=Contact(**config_dict.get('home_contact')),
+        dbay_creds=DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key']),
+        default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
+        paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
+        outbound=outbound,
+        parcel_contents=config_dict.get('parcel_contents'),
+        sandbox=sandbox,
+        return_label_email_body=config_dict.get('return_label_email_body'),
+    )
 
 
 class Config:
@@ -140,12 +137,12 @@ class Config:
         self.home_contact = Contact(**config_dict.get('home_contact'))
         self.return_label_email_body = config_dict.get('return_label_email_body')
 
-        dbay = config_dict.get('dbay')[self.scope_from_sandbox()] # gets the names of env vars
+        dbay = config_dict.get('dbay')[self.scope_from_sandbox()]  # gets the names of env vars
         self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
         self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
 
     @classmethod
-    def from_toml(cls, mode: ShipMode, outbound:bool):
+    def from_toml(cls, mode: ShipMode, outbound: bool):
         with open(CONFIG_TOML, 'rb') as g:
             config_dict = tomllib.load(g)
         config_dict['mode'] = mode
@@ -199,6 +196,7 @@ class Config:
             except Exception as e:
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
+
 #####
 
 
@@ -245,3 +243,7 @@ def set_despatch_env(api_user, api_key, sandbox):
         logger.error("Error:", result2.stderr)
     else:
         logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+
+
+def scope_from_sandbox_func(sandbox):
+    return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value

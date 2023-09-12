@@ -11,7 +11,7 @@ from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
 from core.cmc_updater import PS_FUNCS, edit_commence
-from core.config import Config, logger
+from core.config import Config, logger, ImportMap
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
@@ -62,16 +62,27 @@ def dispatch(config: Config, shipments: List[ShipmentInput]):
     #     logger.warning('No shipments, exiting')
     #     sys.exit()
 
+#
+# def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
+#                   dbase_file: Path) -> List[ShipmentInput]:
+#     """ returns a list of validated shipments from a dbase file and a mapping dict"""
+#
+#     logger.info(f'DBase file og = {dbase_file}')
+#     import_map_name = f"{category.name.lower()}_mapping"
+#     import_map = import_mappings[import_map_name]
+#     logger.info(f'Import map = {import_map_name} - {import_map}')
+#
+#     records = records_from_dbase(dbase_file)
+#     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
+#                                        records=records)
+#     return shipments
+#
 
-def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
+def get_shipments(outbound: bool, import_map: ImportMap, category: ShipmentCategory,
                   dbase_file: Path) -> List[ShipmentInput]:
     """ returns a list of validated shipments from a dbase file and a mapping dict"""
 
     logger.info(f'DBase file og = {dbase_file}')
-    import_map_name = f"{category.name.lower()}_mapping"
-    import_map = import_mappings[import_map_name]
-    logger.info(f'Import map = {import_map_name} - {import_map}')
-
     records = records_from_dbase(dbase_file)
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)

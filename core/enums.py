@@ -52,11 +52,6 @@ class FuzzyScores:
 class ShipMode(Enum):
     SHIP = auto()
     TRACK = auto()
-#
-# class ShipMode(Enum):
-#     SHIP = 'SHIP'
-#     TRACK = 'TRACK'
-
 
 class ShipDirection(Enum):
     IN = 'IN'
