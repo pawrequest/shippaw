@@ -3,6 +3,7 @@ import logging
 import subprocess
 import sys
 import tomllib
+from datetime import date
 
 import PySimpleGUI as sg
 from pathlib import Path
@@ -10,9 +11,10 @@ from dotenv import dotenv_values, load_dotenv
 
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
+from pydantic import BaseModel
 
 from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
-    PathsList, ShipMode
+    PathsList, ShipMode, ShipmentCategory
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -46,10 +48,88 @@ logger.info(f'AmDesp started, '
             f'\n{LOG_FILE=}'
             f'\n{CONFIG_TOML=}'
             )
+class ImportMap(BaseModel):
+    address_as_str: str
+    contact_name: str
+    email: str
+    delivery_name: str
+    postcode: str
+    telephone: str
+    customer: str
+class HireMap(ImportMap):
+    shipment_name:str
+    boxes:int
+    send_out_date: date
+    send_method: str
+
+    outbound_id: str = None
+    inbound_id: str = None
+class SaleMap(ImportMap):
+    outbound_id: str = None
+    inbound_id: str = None
+
+
+def get_import_dict(category:ShipmentCategory, config_dict:dict)->dict:
+    if category == ShipmentCategory.HIRE:
+    elif category == ShipmentCategory.SALE:
+        return config_dict['import_map']['sale']
+    elif category == ShipmentCategory.CUSTOMER:
+        return config_dict['import_map']['customer']
+    else:
+        raise ValueError(f'Unknown ShipmentCategory {category}')
+
+def get_import_map(category:ShipmentCategory, mappings:dict[str, dict]) -> ImportMap:
+    if category == ShipmentCategory.HIRE:
+        map_dict = mappings['hire_mapping']
+        return HireMap(**map_dict)
+    elif category == ShipmentCategory.SALE:
+        map_dict = mappings['sale_mapping']
+        return SaleMap(**map_dict)
+    elif category == ShipmentCategory.CUSTOMER:
+        map_dict = mappings['customer_mapping']
+        return ImportMap(**map_dict)
+    else:
+        raise ValueError(f'Unknown ShipmentCategory {category}')
+
+
+class Config_pydantic(BaseModel):
+    mode: ShipMode
+    outbound: bool
+    paths: PathsList
+    parcel_contents: str
+    sandbox: bool
+    import_map: ImportMap
+    home_address: HomeAddress
+    home_contact: Contact
+    return_label_email_body: str
+    dbay_creds: DbayCreds
+    default_shipping_service: DefaultShippingService
+
+def get_config_dict(toml_file)->dict:
+    with open(toml_file, 'rb') as g:
+        return tomllib.load(g)
+
+
+
+def get_config_pydantic(category:ShipmentCategory)->Config_pydantic:
+    config_dict = get_config_dict(toml_file=CONFIG_TOML)
+    import_mappings = config_dict['import_mappings']
+    import_map = get_import_map(category=category, mappings = import_mappings)
+    paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
+
+
+
+
+    conf = Config_pydantic()
+
+
+    ...
+
+
+
 
 class Config:
     def __init__(self, config_dict: dict):
-        self.mode = config_dict['mode']
         self.outbound = config_dict['outbound']
         self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
         self.parcel_contents: str = config_dict.get('parcel_contents')
@@ -72,24 +152,6 @@ class Config:
         config_dict['outbound'] = outbound
 
         return cls(config_dict=config_dict)
-    #
-    # def setup_amdesp(self, sandbox: bool, client: DespatchBaySDK):
-    #     # candidates = client.get_address_keys_by_postcode
-    #     """
-    #     check system environ variables
-    #     home address details - get dbay key
-    #     cmclibnet
-    #
-    #     """
-    #     if not self.check_system_env(dbay_dict=self.dbay, sandbox=sandbox):
-    #         logging.exception('Unable to set Environment variables')
-    #     if not self.home_address.get('dbay_key'):
-    #         postcode = self.home_address.get('postal_code')
-    #         if not postcode:
-    #             postcode = sg.popup_get_text('No Home Postcode - enter now')
-    #         candidates = client.get_address_keys_by_postcode(postcode)
-    #     #     address = address_chooser_popup(candidate_dict=candidates, client=client)
-    #     # self.setup_commence()
 
     def creds_from_user(self) -> DbayCreds:
         scope = self.scope_from_sandbox()
@@ -117,6 +179,12 @@ class Config:
             else:
                 return client
 
+    #
+    def install_cmc_lib_net(self):
+        """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
+        subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       check=True)
+
     def setup_commence(self):
         """
         looks for CmcLibNet.dll at location specified in user_config.toml,
@@ -130,13 +198,6 @@ class Config:
                 self.install_cmc_lib_net()
             except Exception as e:
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
-
-    #
-    def install_cmc_lib_net(self):
-        """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
-        subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       check=True)
-
 
 #####
 

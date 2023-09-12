@@ -28,20 +28,18 @@ DELIVERY_E = 'email'            # email for remote address
 DELIVERY_P = 'postcode'         # postcode of remote address
 DELIVERY_T = 'telephone'        # telephone number for remote contact
 DELIVERY_N = 'delivery_name'    # name of company at remote address
-BOXES = 'boxes'                 # number of boxes in shipment
 FIELD10 = 'customer'            # hire customer
+BOXES = 'boxes'                 # number of boxes in shipment
 SEND_OUT_D = 'send_out_date'    # hire record send out date
 INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
 OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
 SEND_METHO = 'send_method'      # contains parcelforce?
-FIELD13 = 'customer'            # hire customer remote dev
-SENDING_ST = 'status'   # hire sending status
+#FIELD13 = 'customer'            # hire customer remote dev
 
 
 [import_mappings.sale_mapping]
 NAME = 'shipment_name'          # sale name
 FIELD9 = 'customer'             # sale customr
-FIELD10 = 'customer'             # sale customr
 DELIVERY_A = 'address_as_str'   # string representation of customer address
 DELIVERY_C = 'contact_name'          # contact name for the remote address
 DELIVERY_E = 'email'            # email for remote address
@@ -49,7 +47,7 @@ DELIVERY_N = 'delivery_name'    # name of company at remote address
 DELIVERY_P = 'postcode'         # postcode of remote address
 DELIVERY_T = 'telephone'        # telephone number for remote contact
 OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
-
+INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
 
 [import_mappings.customer_mapping]
 DELIV_ADDR = 'address_as_str'
