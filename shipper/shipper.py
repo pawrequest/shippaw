@@ -62,22 +62,6 @@ def dispatch(config: Config, shipments: List[ShipmentInput]):
     #     logger.warning('No shipments, exiting')
     #     sys.exit()
 
-#
-# def single_dispatch(config: Config, shipment: ShipmentInput):
-#     """ Shipment processing pipeline - takes list of ShipmentInput and Config objects,
-#     walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
-#     addressed = address_shipment(shipment=shipment, home_address=config.home_address, home_contact=config.home_contact)
-#     prepared = prepare_shipment(shipment=addressed, default_shipping_service=config.default_shipping_service)
-#     for_request = pre_request_shipment(default_shipping_service=config.default_shipping_service, shipment=prepared)
-#     requested = request_shipment(shipment=for_request)
-#
-#     complete = dispatch_loop_single(config=config, shipment=requested)
-#     post_book(shipments=complete)
-#
-#     # if not booked_shipments:
-#     #     logger.warning('No shipments, exiting')
-#     #     sys.exit()
-
 
 def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
                   dbase_file: Path) -> List[ShipmentInput]:
@@ -261,66 +245,6 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
 
         if package:
             window[event].update(package)
-
-#
-# def dispatch_loop_single(config: Config, shipment: ShipmentRequested) -> ShipmentBooked | ShipmentQueued:
-#     """ pysimplegui main_loop, takes list of ShipmentRequested objects
-#     listens for user input to edit and update shipments
-#     listens for go_ship  button to start booking collection etc"""
-#     logger.info('GUI LOOP')
-#
-#     if config.sandbox:
-#         sg.theme('Tan')
-#     else:
-#         sg.theme('Dark Blue')
-#
-#     window = main_window(shipments=shipment, outbound=config.outbound)
-#
-#     while True:
-#         package = None
-#         event, values = window.read()
-#
-#         if event == sg.WIN_CLOSED:
-#             window.close()
-#             sys.exit()
-#
-#         if event == keys_and_strings.GO_SHIP_KEY():
-#             if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
-#                 sg.popup_quick_message('Please Wait')
-#                 window.close()
-#                 return process_shipment(shipment=shipment, config=config, values=values)
-#
-#         # todo if values[event] == shipment_to_edit?
-#         if event == keys_and_strings.BOXES_KEY(shipment):
-#             package = boxes_click(shipment_to_edit=shipment, window=window)
-#
-#         elif event == keys_and_strings.SERVICE_KEY(shipment):
-#             package = service_click(shipment_to_edit=shipment, location=window.mouse_location())
-#
-#         elif event == keys_and_strings.DATE_KEY(shipment):
-#             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment)
-#
-#         elif event == keys_and_strings.SENDER_KEY(shipment):
-#             package = address_click(shipment=shipment, target=shipment.sender)
-#
-#         elif event == keys_and_strings.RECIPIENT_KEY(shipment):
-#             package = address_click(shipment=shipment, target=shipment.recipient)
-#
-#         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
-#             sg.popup_ok(shipment_to_edit.address_as_str)
-#
-#         elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
-#             new_date = dropoff_click(config=config, shipment=shipment_to_edit)
-#             if new_date is None:
-#                 continue
-#             window[keys_and_strings.DATE_KEY(shipment_to_edit)].update(new_date)
-#             window[event].update(button_color='red')
-#
-#         else:
-#             sg.popup_error(f'Wrong event code from pysimplegui listener = {event}')
-#
-#         if package:
-#             window[event].update(package)
 
 
 def read_window_cboxs(values, shipment):

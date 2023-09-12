@@ -34,8 +34,6 @@ def main(args):
     shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
                                                    import_mappings=config.import_mappings, outbound=outbound)
 
-    # if len(shipments) == 1:
-    #     single_dispatch(config=config, shipment=shipments[0])
 
     if not shipments:
         logger.info('No shipments to process.')
