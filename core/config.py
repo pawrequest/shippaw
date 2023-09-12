@@ -11,7 +11,7 @@ from dotenv import dotenv_values, load_dotenv
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
-from .enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
+from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
     PathsList, ShipMode
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

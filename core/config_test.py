@@ -2,8 +2,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .config import Config
-from .enums import ShipMode
+from core.config import Config
+from core.enums import ShipMode
+
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'

@@ -10,20 +10,20 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
-from ..core.cmc_updater import PS_FUNCS, edit_commence
-from ..core.config import Config, logger
-from ..core.desp_client_wrapper import APIClientWrapper
-from ..core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
-from ..core.funcs import collection_date_to_datetime, email_label, print_label
-from ..gui import keys_and_strings
-from ..gui.main_gui import main_window, post_book
-from .addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
+from core.cmc_updater import PS_FUNCS, edit_commence
+from core.config import Config, logger
+from core.desp_client_wrapper import APIClientWrapper
+from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
+from core.funcs import collection_date_to_datetime, email_label, print_label
+from gui import keys_and_strings
+from gui.main_gui import main_window, post_book
+from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
-from .edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
-from .shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentForRequest, \
+from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
+from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentForRequest, \
     ShipmentGuiConfirmed, ShipmentInput, \
     ShipmentPrepared, ShipmentCompleted, ShipmentQueued, ShipmentRequested, records_from_dbase, shipments_from_records
-from .tracker import get_tracking
+from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
