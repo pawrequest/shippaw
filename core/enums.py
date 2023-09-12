@@ -89,10 +89,10 @@ class DefaultShippingService:
 
 class DateTimeMasks(Enum):
     DISPLAY = '%A - %B %#d'
-    hire = '%d/%m/%Y'
+    HIRE = '%d/%m/%Y'
     DB = '%Y-%m-%d'
-    button_label = '%A \n%B %#d'
-    filename = '%Y-%m-%d_%H-%M-%S'
+    BUTTON = '%A \n%B %#d'
+    FILE = '%Y-%m-%d_%H-%M-%S'
     COMMENCE = '%Y%m%d'
 
 

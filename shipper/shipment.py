@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from core.config import logger
 from core.enums import BestMatch, Contact, ShipmentCategory
-from core.funcs import get_type
+from core.funcs import get_type, collection_date_to_datetime
 
 
 #
@@ -130,6 +130,10 @@ class ShipmentForRequest(ShipmentPrepared):
     service: Service
     default_service_matched: bool
     parcels: List[Parcel]
+
+    @property
+    def collection_date_datetime(self):
+        return collection_date_to_datetime(self.collection_date)
 
 
 class ShipmentRequested(ShipmentForRequest):

@@ -9,7 +9,7 @@ from core.config import Config, logger
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from shipper.shipment import ShipmentInput
-from shipper.shipper import Shipper, dispatch, get_shipments, single_dispatch
+from shipper.shipper import Shipper, dispatch, get_shipments
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.

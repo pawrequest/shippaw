@@ -68,7 +68,7 @@ def SERVICE_STRING(num_boxes: int, service: Service):
 
 
 def DATE_STRING(collection_date: CollectionDate):
-    return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.button_label.value}}'
+    return f'{datetime.strptime(collection_date.date, DateTimeMasks.DB.value):{DateTimeMasks.BUTTON.value}}'
     # return f'{datetime.strptime(collection_date.date, DateTimeMasks.db.value):%A\n%B %#d}'
 
 
