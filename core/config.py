@@ -96,7 +96,6 @@ class Config(BaseModel):
     parcel_contents: str
     return_label_email_body: str
     sandbox: bool
-    outbound: bool
 
     def creds_from_user(self) -> DbayCreds:
         scope = self.scope_from_sandbox()
@@ -143,7 +142,7 @@ def get_config(outbound, category: ShipmentCategory) -> Config:
         dbay_creds=DbayCreds.from_dict(api_user_envar=dbay['api_user'], api_key_envar=dbay['api_key']),
         default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
         paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
-        outbound=outbound,
+        # outbound=outbound,
         parcel_contents=config_dict.get('parcel_contents'),
         sandbox=sandbox,
         return_label_email_body=config_dict.get('return_label_email_body'),

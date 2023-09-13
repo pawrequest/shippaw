@@ -20,24 +20,6 @@ record_hire = OrderedDict([
     ('REPROGRAMM', False),
     ('SENDING_ST', 'Fine no problem')])
 
-record_customer = OrderedDict([
-    ('NAME', 'Showsec International Ltd - 22/08/2023 ref 20139'),
-    ('DELIVERY_A', 'Unit 6, 72 Bradgate Street\r\nLeicester\x00\x00\x00\x00\x00\x00\x00\x00'),
-    ('DELIVERY_C', 'Adam Hepke\x00\x00\x00\x00\x00\x00\x00\x00'),
-    ('DELIVERY_E', 'adam.hepke@showsec.co.uk\x00\x00\x00\x00\x00\x00\x00\x00'),
-    ('DELIVERY_P', 'LE4 0AW\x00\x00\x00\x00\x00\x00\x00\x00'),
-    ('DELIVERY_T', '0116 204 3300'),
-    ('DELIVERY_N', 'Showsec International Ltd\x00\x00\x00\x00\x00\x00\x00\x00'),
-    ('BOXES', '2'),
-    ('STATUS', 'Booked in'),
-    ('FIELD10', 'Showsec International Ltd\x00'),
-    ('SEND_OUT_D', datetime.date(2023, 8, 22)),
-    ('INBOUND_ID', None),
-    ('OUTBOUND_I', None),
-    ('CUSTOMER_N', None),
-    ('DB_LABEL_P', False),
-    ('REPROGRAMM', False),
-    ('SENDING_ST', 'Fine no problem')])
 
 record_sale = OrderedDict([
     ('NAME', 'Woodlands Primary School - 01/09/2023 ref 313'),

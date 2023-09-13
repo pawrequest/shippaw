@@ -36,7 +36,6 @@ def do_commence():
 
 def main():
     """mock env from input_file"""
-    config = Config.from_toml(mode=ship_mode, outbound=outbound)
     new_conf = get_config(outbound=outbound, category=category)
     establish_client(dbay_creds=new_conf.dbay_creds)
 
