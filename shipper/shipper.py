@@ -135,7 +135,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
 
     shipment: ShipmentGuiConfirmed = gui_confirm_shipment(shipment=shipment_req, values=values)
     shipment: ShipmentQueued = queue_shipment(shipment=shipment)
-    shipment: ShipmentCmcUpdated = maybe_update_commence(config=config, shipment=shipment)
+    shipment: ShipmentCmcUpdated = update_commence(config=config, shipment=shipment)
     if not shipment.is_to_book:
         return shipment
     shipment: ShipmentBooked = book_shipment(shipment=shipment)
@@ -339,45 +339,35 @@ def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
     return request
 
 
-def download_label(label_folder_path: Path, label_text: str, doc_id: str):
+
+
+def download_shipment_label(shipment: ShipmentBooked, config: Config) -> Path | bool:
     """" downlaods labels from given doc_id to given folder path"""
+    doc_id = shipment.shipment_return.shipment_document_id
+
+    label_path = get_label_path(config, shipment)
 
     try:
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
                                                      label_layout='2A4')
 
-        label_string: str = label_text.replace(':', '') + '.pdf'
-        label_location = label_folder_path / label_string
-        label_pdf.download(label_location)
+        label_pdf.download(label_path)
     except:
-        return False
+        logger.warning(f'Unable to download label for {shipment.shipment_name_printable} to {label_path}')
     else:
-        return label_location
+        return label_path
 
 
-def download_shipment_label(shipment: ShipmentBooked, config: Config):
-    """" downlaods labels from given doc_id to given folder path"""
-    doc_id = shipment.shipment_return.shipment_document_id
-
+def get_label_path(config:Config, shipment:ShipmentBooked) -> Path:
     if shipment.is_outbound:
         label_folder = config.paths.outbound_labels
         label_filename = shipment.label_filename_outbound
     else:
         label_folder = config.paths.inbound_labels
         label_filename = shipment.label_filename_inbound
-
-    try:
-        label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
-                                                     label_layout='2A4')
-
-        label_filename: str = label_filename.replace(':', '') + '.pdf'
-        label_location = label_folder / label_filename
-        label_pdf.download(label_location)
-    except:
-        logger.warning(f'Unable to download label for {shipment.shipment_name_printable}')
-        return False
-    else:
-        return label_location
+    label_filename: str = label_filename.replace(':', '') + '.pdf'
+    label_path = label_folder / label_filename
+    return label_path
 
 
 def commence_package_sale(shipment: ShipmentQueued):
@@ -398,7 +388,7 @@ def commence_package_hire(shipment: ShipmentQueued):
     return cmc_update_package
 
 
-def maybe_update_commence(config: Config, shipment: ShipmentQueued):
+def update_commence(config: Config, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
 
     if config.sandbox:
@@ -415,10 +405,9 @@ def maybe_update_commence(config: Config, shipment: ShipmentQueued):
         cmc_update_package.update(commence_package_sale(shipment))
 
     elif shipment.category == ShipmentCategory.CUSTOMER:
+        shipment.is_logged_to_commence = False
         logger.warning(f'Category "Customer" not implemented for commence updater')
-
-
-
+        return shipment
 
     else:
         logger.warning(f'Category {shipment.category} not recognised for commence updater')
