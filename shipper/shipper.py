@@ -20,7 +20,9 @@ from gui.keys_and_strings import SERVICE_STRING
 from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
-from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
+from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_new_boxes, get_parcels, \
+    service_click, \
+    update_service_button
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
     ShipmentForRequest, ShipmentGuiConfirmed, ShipmentInput, ShipmentPrepared, ShipmentQueued, ShipmentRequested
 from shipper.tracker import get_tracking
@@ -180,15 +182,27 @@ def gui_listener(config: Config, shipments: List[ShipmentRequested]) -> List[Shi
             return processed_shipments
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
-        shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
-                                                    keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+        shipment_to_edit_index = next(
+            (i for i, shipment in enumerate(shipments) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()),
+            None)
+
+        # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
+        #                                             keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
+        shipment_to_edit = shipments[shipment_to_edit_index]
 
         if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
-            package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
+            new_boxes = get_new_boxes(location=window.mouse_location())
+            if new_boxes is None:
+                continue
+            shipment_to_edit.parcels = get_parcels(num_parcels=new_boxes)
+            update_service_button(num_boxes=new_boxes, shipment_to_edit=shipment_to_edit, window=window)
+            package = new_boxes
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
             shipment_to_edit = request_shipment(shipment_to_edit) # update available services in case address changed
             package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(), default_service=shipment_to_edit.service)
+            # shipment_to_edit = request_shipment(shipment_to_edit) # update available services in case address changed
+            ...
 
         elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
@@ -219,6 +233,7 @@ def gui_listener(config: Config, shipments: List[ShipmentRequested]) -> List[Shi
 
         if package:
             window[event].update(package)
+        shipments[shipment_to_edit_index] = shipment_to_edit
 
 def shipment_editor(shipment_to_edit, window, event, values):
     #handler dict?

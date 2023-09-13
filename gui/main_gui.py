@@ -115,7 +115,7 @@ def results_frame(shipments: [ShipmentQueued]):
     return sg.Frame('', vertical_alignment="c", layout=result_layout, element_justification='center')
 
 
-def new_parcels_popup(location):
+def num_boxes_popup(location):
     # new_boxes = sg.popup_get_text("Enter a number")
     layout = [
         [sg.Combo(values=[i for i in range(1, 10)], enable_events=True, expand_x=True, readonly=True,

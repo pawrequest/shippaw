@@ -9,19 +9,16 @@ from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
 from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
-from gui.main_gui import new_date_selector, new_parcels_popup, new_service_popup
+from gui.main_gui import new_date_selector, num_boxes_popup, new_service_popup
 from shipper.addresser import sender_from_address_id
 from shipper.shipment import ShipmentRequested
 
 
-def boxes_click(shipment_to_edit, window):
-    new_parcels = get_new_parcels(location=window.mouse_location())
-    if new_parcels is None:
+def boxes_click(shipment_to_edit, window) -> int | None:
+    new_boxes = get_new_boxes(location=window.mouse_location())
+    if new_boxes is None:
         return None
-    num_boxes = len(new_parcels)
-    shipment_to_edit.parcels = new_parcels
-    update_service(num_boxes=num_boxes, shipment_to_edit=shipment_to_edit, window=window)
-    return num_boxes
+    return new_boxes
 
 
 def dropoff_click(config, shipment: ShipmentRequested):
@@ -50,7 +47,7 @@ def date_click(location, shipment_to_edit):
     return DATE_STRING(collection_date=new_collection_date)
 
 
-def update_service(num_boxes:int, shipment_to_edit, window):
+def update_service_button(num_boxes:int, shipment_to_edit:ShipmentRequested, window):
     window[SERVICE_KEY(shipment=shipment_to_edit)].update(
         SERVICE_STRING(num_boxes=num_boxes, service=shipment_to_edit.service))
 
@@ -81,22 +78,23 @@ def service_click(shipment_to_edit:ShipmentRequested, location, default_service:
     if new_service is None:
         return None
     shipment_to_edit.service = new_service
-    package = SERVICE_STRING(service=shipment_to_edit.service, num_boxes=len(shipment_to_edit.parcels))
+    package = SERVICE_STRING(service=new_service, num_boxes=len(shipment_to_edit.parcels))
     return package
 
 
 
 
-def get_new_parcels(location, parcel_contents="Radios") -> List[Parcel] | None:
-    window = new_parcels_popup(location=location)
+def get_new_boxes(location) -> int | None:
+    window = num_boxes_popup(location=location)
     e, v = window.read()
     if e == sg.WIN_CLOSED:
         window.close()
         return None
     if e == keys_and_strings.BOX_KEY():
-        new_boxes = int(v[e])
         window.close()
-        return get_parcels(num_parcels=new_boxes, contents=parcel_contents)
+        return int(v[e])
+
+
 
 
 def get_parcels(num_parcels: int, contents: str = 'Radios') -> list[Parcel]:
