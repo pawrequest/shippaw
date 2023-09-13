@@ -418,8 +418,15 @@ def maybe_update_commence(config: Config, shipment: ShipmentQueued):
     elif shipment.category == ShipmentCategory.SALE:
         cmc_update_package.update(commence_package_sale(shipment))
 
+    elif shipment.category == ShipmentCategory.SALE:
+        logger.warning(f'Category "Customer" not implemented for commence updater')
+
+
+
+
     else:
         logger.warning(f'Category {shipment.category} not recognised for commence updater')
+        shipment.is_logged_to_commence = False
         return shipment
 
     result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
