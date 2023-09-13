@@ -172,19 +172,11 @@ def gui_listener(config: Config, shipments: List[ShipmentRequested]) -> List[Shi
             sys.exit()
 
         if event == keys_and_strings.GO_SHIP_KEY():
-            # if sg.popup_yes_no('Queue and book the batch?') == 'Yes':
-            #     sg.popup_quick_message('Please Wait')
             window.close()
 
+            sg.popup_quick_message('Processing shipments, please wait...')
             for shipment in shipments:
-                # if not compare_before_send(shipment=shipment):
-                #     pass
-                sg.popup_quick_message('Processing shipments, please wait...')
-                processed = process_shipment(shipment_req=shipment, values=values, config=config)
-                if processed is not None:
-                    processed_shipments.append(processed)
-                else:
-                    continue
+                processed_shipments.append(process_shipment(shipment_req=shipment, values=values, config=config))
             return processed_shipments
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
