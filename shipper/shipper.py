@@ -11,82 +11,51 @@ from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
 from core.cmc_updater import PS_FUNCS, edit_commence
-from core.config import Config, logger, ImportMap
+from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
 from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
+from gui.keys_and_strings import SERVICE_STRING
 from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
 from shipper.edit_shipment import address_click, boxes_click, date_click, dropoff_click, get_parcels, service_click
-from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentForRequest, \
-    ShipmentGuiConfirmed, ShipmentInput, \
-    ShipmentPrepared, ShipmentCompleted, ShipmentQueued, ShipmentRequested, records_from_dbase, shipments_from_records
+from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
+    ShipmentForRequest, ShipmentGuiConfirmed, ShipmentInput, ShipmentPrepared, ShipmentQueued, ShipmentRequested
 from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
 
 
-class Shipper:
-    """ Utility class to hold config and DespatchBay client"""
-
-    def __init__(self, dbay_creds: DbayCreds):
-        global DESP_CLIENT
-        try:
-            # client = DespatchBaySDK(api_user=dbay_creds.api_user, api_key=dbay_creds.api_key)
-            client = DespatchBaySDK(**dbay_creds.__dict__)
-        except Exception as e:
-            logger.exception(e)
-            raise ApiException("Unable to intitialise DespatchBay client")
-        client = APIClientWrapper(client)
-        client = cast(DespatchBaySDK, client)
-        DESP_CLIENT = client
+def establish_client(dbay_creds: DbayCreds):
+    global DESP_CLIENT
+    try:
+        # client = DespatchBaySDK(api_user=dbay_creds.api_user, api_key=dbay_creds.api_key)
+        client = DespatchBaySDK(**dbay_creds.__dict__)
+    except Exception as e:
+        logger.exception(e)
+        raise ApiException("Unable to intitialise DespatchBay client")
+    client = APIClientWrapper(client)
+    client = cast(DespatchBaySDK, client)
+    DESP_CLIENT = client
 
 
 def dispatch(config: Config, shipments: List[ShipmentInput]):
-    """ Shipment processing pipeline - takes list of ShipmentInput and Config objects,
+    """ Shipment processing pipeline - takes list of validated shipments and Config objects,
     walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
     shipments_addressed = [address_shipment(shipment=shipment, home_address=config.home_address,
                                             home_contact=config.home_contact) for shipment in shipments]
     shipments_prepared = [prepare_shipment(shipment=shipment, default_shipping_service=config.default_shipping_service)
                           for shipment in shipments_addressed]
-    shipments_for_request = [pre_request_shipment(default_shipping_service=config.default_shipping_service,
+
+    shipments_for_request = [pre_request_shipment(default_shipping_service_id=config.default_shipping_service.service,
                                                   shipment=shipment) for shipment in shipments_prepared]
     shipments_requested = [request_shipment(shipment=shipment) for shipment in shipments_for_request]
-    shipments_complete = dispatch_loop(config=config, shipments=shipments_requested)
+
+    shipments_complete = gui_listener(config=config, shipments=shipments_requested)
     post_book(shipments=shipments_complete)
-
-    # if not booked_shipments:
-    #     logger.warning('No shipments, exiting')
-    #     sys.exit()
-
-#
-# def get_shipments(outbound: bool, import_mappings: dict, category: ShipmentCategory,
-#                   dbase_file: Path) -> List[ShipmentInput]:
-#     """ returns a list of validated shipments from a dbase file and a mapping dict"""
-#
-#     logger.info(f'DBase file og = {dbase_file}')
-#     import_map_name = f"{category.name.lower()}_mapping"
-#     import_map = import_mappings[import_map_name]
-#     logger.info(f'Import map = {import_map_name} - {import_map}')
-#
-#     records = records_from_dbase(dbase_file)
-#     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
-#                                        records=records)
-#     return shipments
-#
-
-def get_shipments(outbound: bool, import_map: ImportMap, category: ShipmentCategory,
-                  dbase_file: Path) -> List[ShipmentInput]:
-    """ returns a list of validated shipments from a dbase file and a mapping dict"""
-
-    logger.info(f'DBase file og = {dbase_file}')
-    records = records_from_dbase(dbase_file)
-    shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
-                                       records=records)
-    return shipments
 
 
 def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> ShipmentAddressed:
@@ -119,16 +88,15 @@ def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> S
                             date_menu_map=date_menu_map, service_menu_map=service_menu_map)
 
 
-def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service) -> ShipmentForRequest:
+def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service_id) -> ShipmentForRequest:
     """ gets actual CollectionDate, Service and Parcel objects"""
     shipment.parcels = get_parcels(num_parcels=shipment.boxes)
-    service_id = default_shipping_service.service
     shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
 
     # need a shipment_request to get a service, need a service to get a shipment_request.... (thanks dbay)
-    # so make a temp request to get all services, then get the actually available services from that
+    # so make a temp request using first available service, then match the one we want later
     temp_request = DESP_CLIENT.shipment_request(
-        service_id=service_id,
+        service_id=default_shipping_service_id,
         parcels=shipment.parcels,
         client_reference=shipment.customer_printable,
         collection_date=shipment.collection_date,
@@ -138,7 +106,7 @@ def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service) -
     )
 
     available_services = DESP_CLIENT.get_available_services(temp_request)
-    shipment.service = get_actual_service(default_service_id=default_shipping_service.service,
+    shipment.service = get_actual_service(default_service_id=default_shipping_service_id,
                                           available_services=available_services, shipment=shipment)
 
     return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
@@ -169,7 +137,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     if not shipment.is_to_book:
         return shipment
 
-    shipment:ShipmentBooked = book_shipment(shipment=shipment)
+    shipment: ShipmentBooked = book_shipment(shipment=shipment)
 
     shipment.label_location = download_shipment_label(shipment=shipment, config=config)
 
@@ -181,7 +149,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     return booked
 
 
-def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[ShipmentBooked | ShipmentQueued]:
+def gui_listener(config: Config, shipments: List[ShipmentRequested]) -> List[ShipmentBooked | ShipmentQueued]:
     """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking collection etc"""
@@ -192,7 +160,7 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
     else:
         sg.theme('Dark Blue')
 
-    window = main_window(shipments=shipments, outbound=config.outbound)
+    window = main_window(shipments=shipments)
     processed_shipments = []
 
     while True:
@@ -227,7 +195,8 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
             package = boxes_click(shipment_to_edit=shipment_to_edit, window=window)
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
-            package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location())
+            shipment_to_edit = request_shipment(shipment_to_edit) # update available services in case address changed
+            package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(), default_service=shipment_to_edit.service)
 
         elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
@@ -241,7 +210,7 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
         elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
             shipments = [s for s in shipments if s != shipment_to_edit]
             window.close()
-            window = main_window(shipments=shipments, outbound=config.outbound)
+            window = main_window(shipments=shipments)
 
         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
             sg.popup_ok(shipment_to_edit.address_as_str)
@@ -258,6 +227,11 @@ def dispatch_loop(config: Config, shipments: List[ShipmentRequested]) -> List[Sh
 
         if package:
             window[event].update(package)
+
+def shipment_editor(shipment_to_edit, window, event, values):
+    #handler dict?
+    ...
+
 
 
 def read_window_cboxs(values, shipment):
@@ -377,7 +351,8 @@ def download_label(label_folder_path: Path, label_text: str, doc_id: str):
     else:
         return label_location
 
-def download_shipment_label(shipment:ShipmentBooked, config:Config):
+
+def download_shipment_label(shipment: ShipmentBooked, config: Config):
     """" downlaods labels from given doc_id to given folder path"""
     doc_id = shipment.shipment_return.shipment_document_id
 
@@ -387,7 +362,6 @@ def download_shipment_label(shipment:ShipmentBooked, config:Config):
     else:
         label_folder = config.paths.inbound_labels
         label_filename = shipment.label_filename_inbound
-
 
     try:
         label_pdf: Document = DESP_CLIENT.get_labels(document_ids=doc_id,
@@ -441,7 +415,7 @@ def maybe_update_commence(config: Config, shipment: ShipmentQueued):
         logger.warning(f'Category {shipment.category} not recognised for commence updater')
         return shipment
 
-    result = edit_commence(pscript=config.paths.cmc_updater, table=shipment.category.value,
+    result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
                            record=shipment.shipment_name,
                            package=cmc_update_package, function=PS_FUNCS.APPEND.value)
     if result.returncode == 0:

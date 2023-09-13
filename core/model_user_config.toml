@@ -21,44 +21,6 @@ returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
                             Regards,\nGiles Toman\
                           """
 
-#[import_mappings.hire]
-#NAME = 'shipment_name'          # hire name
-#DELIVERY_A = 'address_as_str'   # string representation of customer address
-#DELIVERY_C = 'contact_name'          # contact name for the remote address
-#DELIVERY_E = 'email'            # email for remote address
-#DELIVERY_P = 'postcode'         # postcode of remote address
-#DELIVERY_T = 'telephone'        # telephone number for remote contact
-#DELIVERY_N = 'delivery_name'    # name of company at remote address
-#FIELD10 = 'customer'            # hire customer
-#BOXES = 'boxes'                 # number of boxes in shipment
-#SEND_OUT_D = 'send_out_date'    # hire record send out date
-#INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
-#OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
-#SEND_METHO = 'send_method'      # contains parcelforce?
-##FIELD13 = 'customer'            # hire customer remote dev
-#
-#
-#[import_mappings.sale]
-#NAME = 'shipment_name'          # sale name
-#FIELD9 = 'customer'             # sale customr
-#DELIVERY_A = 'address_as_str'   # string representation of customer address
-#DELIVERY_C = 'contact_name'          # contact name for the remote address
-#DELIVERY_E = 'email'            # email for remote address
-#DELIVERY_N = 'delivery_name'    # name of company at remote address
-#DELIVERY_P = 'postcode'         # postcode of remote address
-#DELIVERY_T = 'telephone'        # telephone number for remote contact
-#OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
-#INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
-#
-#[import_mappings.customer]
-#DELIV_ADDR = 'address_as_str'
-#DELIV_CONT = 'contact_name'
-#DELIV_EMAI = 'email'
-#DELIV_NAME = 'delivery_name'
-#DELIV_POST = 'postcode'
-#DELIV_TELE = 'telephone'
-#NAME = 'customer'
-
 
 [import_mappings.hire]
 shipment_name = 'NAME'

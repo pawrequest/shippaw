@@ -3,7 +3,6 @@ import logging
 import subprocess
 import sys
 import tomllib
-from datetime import date
 from pathlib import Path
 
 import PySimpleGUI as sg
@@ -62,18 +61,17 @@ class ImportMap(BaseModel):
 
 class HireMap(ImportMap):
     shipment_name: str
-    boxes: int
-    send_out_date: date
+    boxes: str
+    send_out_date: str
     send_method: str
-
-    outbound_id: str = None
-    inbound_id: str = None
+    outbound_id: str
+    inbound_id: str
 
 
 class SaleMap(ImportMap):
-    shipment_name:str
-    outbound_id: str = None
-    inbound_id: str = None
+    shipment_name: str
+    outbound_id: str
+    inbound_id: str
 
 
 def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
@@ -88,67 +86,17 @@ def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> Imp
         raise ValueError(f'Unknown ShipmentCategory {category}')
 
 
-class Config_pydantic(BaseModel):
+class Config(BaseModel):
     import_map: ImportMap
     home_address: HomeAddress
     home_contact: Contact
     dbay_creds: DbayCreds
     default_shipping_service: DefaultShippingService
     paths: PathsList
-    outbound: bool
     parcel_contents: str
-    sandbox: bool
     return_label_email_body: str
-
-
-def get_config_dict(toml_file) -> dict:
-    with open(toml_file, 'rb') as g:
-        return tomllib.load(g)
-
-
-def get_config_pydantic(outbound, category: ShipmentCategory) -> Config_pydantic:
-    config_dict = get_config_dict(toml_file=CONFIG_TOML)
-    sandbox = config_dict.get('sandbox')
-    dbay = config_dict.get('dbay')[scope_from_sandbox_func(sandbox=sandbox)]  # gets the names of env vars
-
-    return Config_pydantic(
-        import_map=get_import_map(category=category, mappings=config_dict['import_mappings']),
-        home_address=HomeAddress(**config_dict.get('home_address')),
-        home_contact=Contact(**config_dict.get('home_contact')),
-        dbay_creds=DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key']),
-        default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
-        paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
-        outbound=outbound,
-        parcel_contents=config_dict.get('parcel_contents'),
-        sandbox=sandbox,
-        return_label_email_body=config_dict.get('return_label_email_body'),
-    )
-
-
-class Config:
-    def __init__(self, config_dict: dict):
-        self.outbound = config_dict['outbound']
-        self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
-        self.parcel_contents: str = config_dict.get('parcel_contents')
-        self.sandbox: bool = config_dict.get('sandbox')
-        self.import_mappings: dict = config_dict.get('import_mappings')
-
-        self.home_address = HomeAddress(**config_dict.get('home_address'))
-        self.home_contact = Contact(**config_dict.get('home_contact'))
-        self.return_label_email_body = config_dict.get('return_label_email_body')
-
-        dbay = config_dict.get('dbay')[self.scope_from_sandbox()]  # gets the names of env vars
-        self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
-        self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
-
-    @classmethod
-    def from_toml(cls, mode: ShipMode, outbound: bool):
-        with open(CONFIG_TOML, 'rb') as g:
-            config_dict = tomllib.load(g)
-        config_dict['mode'] = mode
-        config_dict['outbound'] = outbound
-
-        return cls(config_dict=config_dict)
+    sandbox: bool
+    outbound: bool
 
     def creds_from_user(self) -> DbayCreds:
         scope = self.scope_from_sandbox()
@@ -157,26 +105,6 @@ class Config:
         creds = DbayCreds(api_user=api_user, api_key=api_key)
         return creds
 
-    def log_config(self):
-        [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
-
-    def scope_from_sandbox(self):
-        return ApiScope.SAND.value if self.sandbox else ApiScope.PRODUCTION.value
-
-    def get_dbay_client(self, creds: DbayCreds):
-        while True:
-            try:
-                client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-                dbay_account = client.get_account()
-                logger.info(f'Despatchbay account retrieved: {dbay_account}')
-            except AuthorizationException as e:
-                logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
-                creds = self.creds_from_user()
-                continue
-            else:
-                return client
-
-    #
     def install_cmc_lib_net(self):
         """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
         subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -197,7 +125,43 @@ class Config:
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
-#####
+
+def get_config_dict(toml_file) -> dict:
+    with open(toml_file, 'rb') as g:
+        return tomllib.load(g)
+
+
+def get_config(outbound, category: ShipmentCategory) -> Config:
+    config_dict = get_config_dict(toml_file=CONFIG_TOML)
+    sandbox = config_dict.get('sandbox')
+    dbay = config_dict.get('dbay')[scope_from_sandbox_func(sandbox=sandbox)]  # gets the names of env vars
+
+    return Config(
+        import_map=get_import_map(category=category, mappings=config_dict['import_mappings']),
+        home_address=HomeAddress(**config_dict.get('home_address')),
+        home_contact=Contact(**config_dict.get('home_contact')),
+        dbay_creds=DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key']),
+        default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
+        paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
+        outbound=outbound,
+        parcel_contents=config_dict.get('parcel_contents'),
+        sandbox=sandbox,
+        return_label_email_body=config_dict.get('return_label_email_body'),
+    )
+
+
+def get_dbay_client(creds: DbayCreds):
+    while True:
+        try:
+            client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
+            dbay_account = client.get_account()
+            logger.info(f'Despatchbay account retrieved: {dbay_account}')
+        except AuthorizationException as e:
+            logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
+            creds = creds_from_user()
+            continue
+        else:
+            return client
 
 
 def run_as_admin(cmd):
@@ -247,3 +211,10 @@ def set_despatch_env(api_user, api_key, sandbox):
 
 def scope_from_sandbox_func(sandbox):
     return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value
+
+
+def creds_from_user() -> DbayCreds:
+    api_user = sg.popup_get_text(f'Enter DespatchBay API User')
+    api_key = sg.popup_get_text(f'Enter DespatchBay API Key')
+    creds = DbayCreds(api_user=api_user, api_key=api_key)
+    return creds

@@ -1,17 +1,23 @@
 from pathlib import Path
 
+from pydantic import BeforeValidator
+from typing_extensions import Annotated
+
 from core.cmc_updater import PS_FUNCS, edit_commence
-from core.config import Config, get_config_pydantic
+from core.config import Config, get_config
 from core.enums import ShipMode, ShipmentCategory
-from shipper.shipment import shipments_from_records_gpt, records_from_dbase
-from shipper.shipper import Shipper
+from shipper.shipment import shipments_from_records, records_from_dbase
+from shipper.shipper import Shipper, establish_client
 
 script = 'C:\paul\AmDesp\scripts\cmc_updater.ps1'
 # in_file = r'E:\Dev\AmDesp\data\amherst_export.dbf'
-in_file = Path(r'C:\paul\AmDesp\data\amherst_export_sale.dbf')
+# in_file = Path(r'C:\paul\AmDesp\data\amherst_export_sale.dbf')
+in_file = Path(r'data/amherst_export_sale.dbf')
 outbound = True
 category = ShipmentCategory.SALE
 ship_mode = ShipMode.SHIP
+
+
 
 
 def do_commence():
@@ -31,12 +37,13 @@ def do_commence():
 def main():
     """mock env from input_file"""
     config = Config.from_toml(mode=ship_mode, outbound=outbound)
-    new_conf = get_config_pydantic(outbound=outbound, category=category)
-    shipper = Shipper(dbay_creds=new_conf.dbay_creds)
+    new_conf = get_config(outbound=outbound, category=category)
+    establish_client(dbay_creds=new_conf.dbay_creds)
+
     # shipments = get_shipments(outbound=outbound, category=category, dbase_file=in_file, import_map=new_conf.import_map)
     records = records_from_dbase(dbase_file=in_file)
-    shipments = shipments_from_records_gpt(category=category, import_map=new_conf.import_map, outbound=outbound,
-                                           records=records)
+    shipments = shipments_from_records(category=category, import_map=new_conf.import_map, outbound=outbound,
+                                       records=records)
     ...
 
 

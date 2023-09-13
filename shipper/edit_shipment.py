@@ -1,14 +1,14 @@
 from typing import List
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_entities import Parcel, Recipient, Sender
+from despatchbay.despatchbay_entities import Parcel, Recipient, Sender, Service
 
 import shipper.shipper
 from core.config import logger
 from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
-from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_MENU, SERVICE_STRING
+from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
 from gui.main_gui import new_date_selector, new_parcels_popup, new_service_popup
 from shipper.addresser import sender_from_address_id
 from shipper.shipment import ShipmentRequested
@@ -18,11 +18,10 @@ def boxes_click(shipment_to_edit, window):
     new_parcels = get_new_parcels(location=window.mouse_location())
     if new_parcels is None:
         return None
+    num_boxes = len(new_parcels)
     shipment_to_edit.parcels = new_parcels
-    update_service(new_parcels, shipment_to_edit, window)
-    return len(shipment_to_edit.parcels)
-
-    # update_parcels(new_parcels, shipment_to_edit, window)
+    update_service(num_boxes=num_boxes, shipment_to_edit=shipment_to_edit, window=window)
+    return num_boxes
 
 
 def dropoff_click(config, shipment: ShipmentRequested):
@@ -51,14 +50,9 @@ def date_click(location, shipment_to_edit):
     return DATE_STRING(collection_date=new_collection_date)
 
 
-def update_service(new_parcels, shipment_to_edit, window):
-    window[f'-{shipment_to_edit.shipment_name_printable}_SERVICE-'.upper()].update(
-        f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
-
-
-def update_service_el(new_parcels, shipment_to_edit, service_button):
-    service_button.update(
-        f'{shipment_to_edit.service.name} \n£{len(new_parcels) * shipment_to_edit.service.cost:.2f}')
+def update_service(num_boxes:int, shipment_to_edit, window):
+    window[SERVICE_KEY(shipment=shipment_to_edit)].update(
+        SERVICE_STRING(num_boxes=num_boxes, service=shipment_to_edit.service))
 
 
 def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
@@ -80,15 +74,17 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
     return ADDRESS_STRING(address=address_to_edit)
 
 
-def service_click(shipment_to_edit, location):
-    new_service = new_service_popup(default_service=shipment_to_edit.service.name,
-                                    menu_map=SERVICE_MENU(
-                                        shipment_to_edit.available_services),
-                                    location=location)
+def service_click(shipment_to_edit:ShipmentRequested, location, default_service:Service):
+    client = shipper.shipper.DESP_CLIENT
+    available_services = client.get_available_services(shipment_to_edit.shipment_request)
+    new_service = new_service_popup(menu_map=SERVICE_MENU(available_services), location=location, default_service=default_service)
     if new_service is None:
         return None
     shipment_to_edit.service = new_service
-    return SERVICE_STRING(service=new_service, num_boxes=len(shipment_to_edit.parcels))
+    package = SERVICE_STRING(service=shipment_to_edit.service, num_boxes=len(shipment_to_edit.parcels))
+    return package
+
+
 
 
 def get_new_parcels(location, parcel_contents="Radios") -> List[Parcel] | None:

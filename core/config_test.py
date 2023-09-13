@@ -13,8 +13,8 @@ CONFIG_TOML = DATA_DIR / 'user_config.toml'
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
 
-def test_from_toml():
-    for mode in ShipMode:
-        for outbound in [True, False]:
-            config = Config.from_toml(mode=mode, outbound=outbound)
-            assert config is not None
+# def test_from_toml():
+#     for mode in ShipMode:
+#         for outbound in [True, False]:
+#             config = Config.from_toml(mode=mode, outbound=outbound)
+#             assert config is not None

@@ -5,11 +5,11 @@ from typing import List
 
 import PySimpleGUI as sg
 
-from core.config import Config, logger, get_config_pydantic
+from core.config import Config, logger, get_config
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
-from shipper.shipment import ShipmentInput, records_from_dbase, shipments_from_records_gpt
-from shipper.shipper import Shipper, dispatch, get_shipments
+from shipper.shipment import ShipmentInput, records_from_dbase, shipments_from_records
+from shipper.shipper import dispatch, dispatch, establish_client
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -30,20 +30,11 @@ def main(args):
     outbound = 'out' == args.direction.value.lower()
     category = args.category
 
-    # config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
-    # shipper = Shipper(dbay_creds=config.dbay_creds)
-
-    new_conf = get_config_pydantic(outbound=outbound, category=category)
-    shipper = Shipper(dbay_creds=new_conf.dbay_creds)
+    config = get_config(outbound=outbound, category=category)
+    establish_client(dbay_creds=config.dbay_creds)
     records = records_from_dbase(dbase_file=args.file)
-    shipments = shipments_from_records_gpt(category=category, import_map=new_conf.import_map, outbound=outbound,
-                                           records=records)
-    ...
-    #
-    # shipments: List[ShipmentInput] = get_shipments(category=args.category, dbase_file=args.file,
-    #                                                import_mappings=config.import_mappings, outbound=outbound)
-
-
+    shipments = shipments_from_records(category=category, import_map=config.import_map, outbound=outbound,
+                                       records=records)
     if not shipments:
         logger.info('No shipments to process.')
         sys.exit()

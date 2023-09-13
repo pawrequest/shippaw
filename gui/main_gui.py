@@ -1,42 +1,41 @@
 import PySimpleGUI as sg
 from PySimpleGUI import Window
-from despatchbay.despatchbay_entities import CollectionDate
+from despatchbay.despatchbay_entities import CollectionDate, Service
 
 from core.config import logger
 from core.enums import DateTimeMasks
-from core.funcs import print_label, collection_date_to_datetime
+from core.funcs import collection_date_to_datetime, print_label
 from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
-from gui.keys_and_strings import SERVICE_STRING, DATE_STRING, ADDRESS_STRING
-from shipper.shipment import ShipmentRequested
+from gui.keys_and_strings import ADDRESS_STRING, DATE_STRING, SERVICE_STRING
+from shipper.shipment import ShipmentQueued, ShipmentRequested
 
 
-def main_window(outbound: bool, shipments: [ShipmentRequested]):
+def main_window(shipments: [ShipmentRequested]):
     logger.info('BULK SHIPPER WINDOW')
     sg.set_options(**default_params)
 
     return sg.Window('Bulk Shipper',
                      layout=[
-                         [headers(outbound)],
+                         [headers()],
                          # [[self.shipment_frame(shipment=shipment)] for shipment in shipments],
-                         [[shipment_frame(shipment=shipment, outbound=outbound)] for shipment in shipments],
+                         [[shipment_frame(shipment=shipment)] for shipment in shipments],
                          [sg.Button("LETS GO", k=keys_and_strings.GO_SHIP_KEY(), expand_y=True, expand_x=True)]
                      ],
                      finalize=True)
 
 
-def shipment_frame(shipment: ShipmentRequested, outbound: bool):
-    print_or_email = 'print' if outbound else 'email'
-
+def shipment_frame(shipment: ShipmentRequested):
+    print_or_email = 'print' if shipment.is_outbound else 'email'
     date_name = DATE_STRING(collection_date=shipment.collection_date)
-    sender_address_name = ADDRESS_STRING(address=shipment.sender.sender_address)
     recipient_address_name = ADDRESS_STRING(shipment.recipient.recipient_address)
     num_parcels = len(shipment.parcels)
 
     row = [
         customer_contact_button(shipment=shipment),
+        sender_button(shipment=shipment),
         recipient_button(recipient_address_name=recipient_address_name, shipment=shipment),
         date_button(date_name=date_name, shipment=shipment),
         parcels_button(num_parcels=num_parcels, shipment=shipment),
@@ -47,18 +46,19 @@ def shipment_frame(shipment: ShipmentRequested, outbound: bool):
         sg.Button('remove', k=keys_and_strings.REMOVE_KEY(shipment))
 
     ]
-    if not outbound:
-        row.insert(1, sender_button(sender_address_name=sender_address_name, shipment=shipment))
 
     layout = [row]
 
     return sg.Frame('', layout=layout, k=keys_and_strings.SHIPMENT_KEY(shipment), element_justification='center')
 
 
-def headers(outbound: bool):
+def headers():
+    # TODO  remove outbound
+    # but sender needs to not be a button for outbound, because it must remain defined by address id for collection to be booked
     heads = [
         # sg.Sizer(30, 0),
         sg.T('Contact / Customer', **address_head_params),
+        sg.T('Sender', **address_head_params),
         sg.T('Recipient', **address_head_params),
         sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
@@ -69,9 +69,6 @@ def headers(outbound: bool):
         sg.Push(),
         sg.Push(),
     ]
-
-    if not outbound:
-        heads.insert(1, sg.T('Sender', **address_head_params))
 
     return heads
 
@@ -92,7 +89,7 @@ def post_book(shipments: [ShipmentRequested]):
     window2.close()
 
 
-def results_frame(shipments: [ShipmentRequested]):
+def results_frame(shipments: [ShipmentQueued]):
     params = {
         'expand_x': True,
         'expand_y': True,
@@ -128,22 +125,21 @@ def new_parcels_popup(location):
     return sg.Window('', layout=layout, location=location, relative_location=(-50, -50))
 
 
-def new_service_popup(menu_map: dict, default_service: str, location):
-    men_def = [k for k in menu_map.keys()]
+def new_service_popup(menu_map: dict, location, default_service: Service):
 
-    layout = [[sg.Combo(k='-SERVICE-', values=men_def, enable_events=True, default_value=default_service,
+    layout = [[sg.Combo(k='-SERVICE-', values=list(menu_map.keys()), enable_events=True, default_value=default_service.name,
                         **option_menu_params)]]
     window = Window('Select a service', layout=layout, location=location, relative_location=(-100, -50))
 
     while True:
-        e, v = window.read()
-        if e == '-SERVICE-':
+        event, values = window.read()
+        if event == '-SERVICE-':
             window.close()
-            return menu_map.get(v['-SERVICE-'])
-        window.close()
-        return None
+            return menu_map.get(values['-SERVICE-'])
 
-    # return f'{datetime.strptime(collection_date.date, config.datetime_masks["DT_DB"]):%A\n%B %#d}'
+        if event in [sg.WIN_CLOSED, "Cancel"]:
+            break
+        window.close()
 
 
 def service_button(num_parcels, shipment):
@@ -164,15 +160,20 @@ def recipient_button(recipient_address_name, shipment: ShipmentRequested):
     return recipient_button
 
 
-def sender_button(sender_address_name, shipment) -> sg.Text:
-    sender_button = sg.Text(sender_address_name, enable_events=True,
-                            k=keys_and_strings.SENDER_KEY(shipment), **address_params)
+def sender_button(shipment) -> sg.Text:
+    if shipment.is_outbound:
+        sender_address_name = "Primary Collection Address"
+        sender_button = sg.Text(sender_address_name, **address_params)
+    else:
+        sender_address_name = ADDRESS_STRING(address=shipment.sender.sender_address)
+        sender_button = sg.Text(sender_address_name, k=keys_and_strings.SENDER_KEY(shipment), enable_events=True,
+                                **address_params)
 
     return sender_button
 
 
 def customer_contact_button(shipment):
-    return sg.T(f'{shipment.contact_name}\n{shipment.customer_printable}\n {shipment.address_as_str}',
+    return sg.T(f'{shipment.contact_name}\n{shipment.customer_printable}\n{shipment.address_as_str}',
                 enable_events=True,
                 k=keys_and_strings.CUSTOMER_KEY(shipment), **address_params)
 
