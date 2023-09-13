@@ -138,14 +138,10 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     shipment: ShipmentCmcUpdated = maybe_update_commence(config=config, shipment=shipment)
     if not shipment.is_to_book:
         return shipment
-
     shipment: ShipmentBooked = book_shipment(shipment=shipment)
-
     shipment.label_location = download_shipment_label(shipment=shipment, config=config)
-
     print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
                       shipment=shipment)
-
     booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
 
     return booked
@@ -418,7 +414,7 @@ def maybe_update_commence(config: Config, shipment: ShipmentQueued):
     elif shipment.category == ShipmentCategory.SALE:
         cmc_update_package.update(commence_package_sale(shipment))
 
-    elif shipment.category == ShipmentCategory.SALE:
+    elif shipment.category == ShipmentCategory.CUSTOMER:
         logger.warning(f'Category "Customer" not implemented for commence updater')
 
 
