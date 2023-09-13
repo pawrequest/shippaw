@@ -186,9 +186,9 @@ def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, ou
         -> List[ShipmentInput]:
     shipments = []
     for record in records:
-        [logger.info(f'INPUT RECORD - {k} : {v}') for k, v in record.items()]
         try:
             transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
+            [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
             shipment_input = ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
             shipments.append(shipment_input)
         except Exception as e:

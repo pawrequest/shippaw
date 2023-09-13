@@ -65,9 +65,9 @@ class DbayCreds:
     api_key: str
 
     @classmethod
-    def from_dict(cls, api_name_user, api_name_key):
-        return cls(api_user=os.environ.get(api_name_user),
-                   api_key=os.environ.get(api_name_key))
+    def from_dict(cls, api_user_envar, api_key_envar):
+        return cls(api_user=os.environ.get(api_user_envar),
+                   api_key=os.environ.get(api_key_envar))
 
     def validate(self):
         try:

@@ -49,3 +49,4 @@ record_sale = OrderedDict([
     ('DELIVERY_T', '01732 355577'),
     ('OUTBOUND_I', '100786-21454583\x00\x00\x00\x00\x00\x00\x00\x00'),
     ('FIELD9', 'Woodlands Primary School\x00')])
+

@@ -140,7 +140,7 @@ def get_config(outbound, category: ShipmentCategory) -> Config:
         import_map=get_import_map(category=category, mappings=config_dict['import_mappings']),
         home_address=HomeAddress(**config_dict.get('home_address')),
         home_contact=Contact(**config_dict.get('home_contact')),
-        dbay_creds=DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key']),
+        dbay_creds=DbayCreds.from_dict(api_user_envar=dbay['api_user'], api_key_envar=dbay['api_key']),
         default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
         paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
         outbound=outbound,
