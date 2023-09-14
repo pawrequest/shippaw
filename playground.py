@@ -7,7 +7,7 @@ from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, get_config
 from core.enums import ShipMode, ShipmentCategory
 from shipper.shipment import shipments_from_records, records_from_dbase
-from shipper.shipper import Shipper, establish_client
+from shipper.shipper import establish_client
 
 script = 'C:\paul\AmDesp\scripts\cmc_updater.ps1'
 # in_file = r'E:\Dev\AmDesp\data\amherst_export.dbf'
@@ -33,18 +33,19 @@ def do_commence():
     edit_commence(pscript="C:\paul\AmDesp\scripts\cmc_updater_funcs.ps1", function=function_name, table=table_name,
                   record=record_name, package=update_package)
 
-
-def main():
-    """mock env from input_file"""
-    new_conf = get_config(outbound=outbound, category=category)
-    establish_client(dbay_creds=new_conf.dbay_creds)
-
-    # shipments = get_shipments(outbound=outbound, category=category, dbase_file=in_file, import_map=new_conf.import_map)
-    records = records_from_dbase(dbase_file=in_file)
-    shipments = shipments_from_records(category=category, import_map=new_conf.import_map, outbound=outbound,
-                                       records=records)
-    ...
+#
+# def main():
+#     """mock env from input_file"""
+#     new_conf = get_config(outbound=outbound, category=category)
+#     establish_client(dbay_creds=new_conf.dbay_creds)
+#
+#     # shipments = get_shipments(outbound=outbound, category=category, dbase_file=in_file, import_map=new_conf.import_map)
+#     records = records_from_dbase(dbase_file=in_file)
+#     shipments = shipments_from_records(category=category, import_map=new_conf.import_map, outbound=outbound,
+#                                        records=records)
+#     ...
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    ...

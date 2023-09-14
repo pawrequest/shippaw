@@ -77,7 +77,7 @@ class DbayCreds:
 
 
 @dataclass
-class DefaultShippingService:
+class DefaultCarrier:
     courier: int
     service: int
 

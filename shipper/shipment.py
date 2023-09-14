@@ -1,7 +1,8 @@
-import logging
+import os
 import os
 import re
-from datetime import datetime, date
+import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -12,11 +13,9 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
 from typing_extensions import Annotated
 
-from core.config import logger, ImportMap
-from core.enums import BestMatch, Contact, ShipmentCategory, DateTimeMasks
-from core.funcs import get_type, collection_date_to_datetime
-
-
+from core.config import ImportMap, logger
+from core.enums import BestMatch, Contact, DateTimeMasks, ShipmentCategory
+from core.funcs import collection_date_to_datetime
 
 
 def parse_amherst_address_string(str_address: str):
@@ -32,7 +31,7 @@ def parse_amherst_address_string(str_address: str):
     return first_block if first_char.isnumeric() else firstline
 
 
-def commence_string(in_string:str):
+def commence_string(in_string: str):
     if '\x00' in in_string:
         in_string = in_string.split('\x00')[0]
     out_string = in_string.replace('\r\n', '\n')
@@ -40,6 +39,8 @@ def commence_string(in_string:str):
 
 
 MyStr = Annotated[str, BeforeValidator(commence_string)]
+
+
 class ShipmentInput(BaseModel):
     """ input validated"""
     model_config = ConfigDict(extra='allow')
@@ -65,7 +66,6 @@ class ShipmentInput(BaseModel):
             self.shipment_name = f'{self.customer} - {datetime.now():{DateTimeMasks.FILE.value}}'
         return self
 
-
     @property
     def shipment_name_printable(self):
         return re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
@@ -88,8 +88,6 @@ class ShipmentInput(BaseModel):
         return self.shipment_name == other.shipment_name
 
 
-
-
 class ShipmentAddressed(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -110,7 +108,7 @@ class ShipmentPrepared(ShipmentAddressed):
     candidate_keys: Optional[Dict] = None
 
 
-class ShipmentForRequest(ShipmentPrepared):
+class ShipmentPreRequest(ShipmentPrepared):
     collection_date: CollectionDate
     date_matched: bool
     service: Service
@@ -122,7 +120,7 @@ class ShipmentForRequest(ShipmentPrepared):
         return collection_date_to_datetime(self.collection_date)
 
 
-class ShipmentRequested(ShipmentForRequest):
+class ShipmentRequested(ShipmentPreRequest):
     shipment_request: ShipmentRequest
 
 
@@ -149,6 +147,7 @@ class ShipmentBooked(ShipmentQueued):
     @property
     def collection_booked_string(self):
         return f"Collection Booked for {self.collection_date_datetime:{DateTimeMasks.DISPLAY.value}} -" if self.is_booked else ""
+
     @property
     def label_filename_outbound(self):
         return f'{self.customer_printable} - Shipping Label - {self.collection_booked_string} booked at {self.timestamp}'
@@ -162,9 +161,6 @@ class ShipmentCompleted(ShipmentBooked):
     label_location: Path
     is_printed: bool = False
     is_emailed: bool = False
-
-
-
 
 
 def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[Dict]:
@@ -181,18 +177,24 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
         logger.exception(e)
 
 
-
-def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict])\
+def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
     shipments = []
     for record in records:
         try:
-            transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
-            [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
-            shipment_input = ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
-            shipments.append(shipment_input)
+            shipments.append(shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+                                                  record=record))
         except Exception as e:
             logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
             continue
-
+    if not shipments:
+        logger.info('No shipments to process.')
+        sys.exit()
     return shipments
+
+
+def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
+                         record: dict) -> ShipmentInput:
+    transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
+    [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
+    return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)

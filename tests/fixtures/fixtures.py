@@ -20,6 +20,25 @@ record_hire = OrderedDict([
     ('REPROGRAMM', False),
     ('SENDING_ST', 'Fine no problem')])
 
+record_hire_bad_postcode = OrderedDict([
+    ('NAME', 'Test - 16/08/2023 ref 31619'),
+    ('DELIVERY_A', '30 bennet close\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('DELIVERY_C', 'Test\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('DELIVERY_E', 'dsgdsa@dasgdg.com\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('DELIVERY_P', 'ME8 SP\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('DELIVERY_T', '07666 666666'),
+    ('DELIVERY_N', 'Test\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('BOXES', '1'),
+    ('STATUS', 'Quote given'),
+    ('FIELD10', 'Test\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+    ('SEND_OUT_D', datetime.date(2023, 8, 21)),
+    ('INBOUND_ID', None),
+    ('OUTBOUND_I', '100786-6341\r\n100786-6340\r\n100786-6336\x00'),
+    ('CUSTOMER_N', None),
+    ('DB_LABEL_P', True),
+    ('REPROGRAMM', False),
+    ('SENDING_ST', 'Fine no problem')])
+
 
 record_sale = OrderedDict([
     ('NAME', 'Woodlands Primary School - 01/09/2023 ref 313'),

@@ -1,3 +1,4 @@
+import sys
 from typing import Iterable
 
 import PySimpleGUI as sg
@@ -7,21 +8,15 @@ from fuzzywuzzy import fuzz
 
 import shipper.shipper
 from core.config import Config, logger
-from core.enums import BestMatch, Contact, FuzzyScores
+from core.enums import BestMatch, Contact, FuzzyScores, HomeAddress
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
 from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
 def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (Address | bool):
-    """ Gets an Address object representing the client location. tries direct search, then fuzzy search, then gui entry."""
-    # terms = {shipment.customer, shipment.delivery_name}
+    """ Gets an Address object representing the remote location. tries direct search, then fuzzy search, then gui entry."""
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
-
-    # if all(s not in shipment.str_to_match for s in [r'/']):
-    #     terms.add(shipment.str_to_match)
-    # else:
-    #     sg.popup_ok("Strange chars in address - matching may not work")
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
         return address
@@ -31,9 +26,10 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact)
         if address is None:
-            if sg.popup_yes_no(
-                    f"If you don't enter an address the shipment for {shipment.customer_printable} will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
-                return False
+            if sg.popup_yes_no(f"If you don't enter an address the shipment for {shipment.customer_printable} "
+                               f"will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
+                sg.popup_ok("it would crash now and i'm nt fixing it, so exit goodbye")
+                sys.exit(666)
             continue
         else:
             return address
@@ -103,7 +99,7 @@ def check_address_company(address: Address, shipment: ShipmentRequested) -> Addr
         return address if answer == 'Yes' else None
 
 
-def get_candidate_keys(postcode) -> dict:
+def get_candidate_keys(postcode, popup_func=None) -> dict:
     """takes a client and postcode, returns a dict with keys= dbay addresses as strings and values =  dbay address keys"""
     client = shipper.shipper.DESP_CLIENT
     candidate_keys_dict = None
@@ -113,7 +109,10 @@ def get_candidate_keys(postcode) -> dict:
                                    client.get_address_keys_by_postcode(postcode)}
         except ApiException as e:
             if "postcode" in str(e).lower():
-                postcode = sg.popup_get_text(f'Bad postcode - Try Again')
+                if popup_func:
+                    postcode = popup_func(f'Bad postcode - Try Again')
+                else:
+                    postcode = sg.popup_get_text(f'Bad postcode - Try Again')
                 if postcode is None:
                     break
             continue
@@ -168,7 +167,7 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 def fuzzy_address(shipment) -> Address:
     """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
     client = shipper.shipper.DESP_CLIENT
-    candidate_keys = get_candidate_keys(postcode=shipment.postcode)
+    candidate_keys = retry_with_backoff(get_candidate_keys, backoff_in_seconds=60, postcode=shipment.postcode)
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
@@ -225,7 +224,7 @@ def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
     return recip
 
 
-def get_home_sender_recip(home_contact, home_address, outbound) -> Sender | Recipient:
+def get_home_sender_recip(home_contact:Contact, home_address:HomeAddress, outbound:bool) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing """
     client = shipper.shipper.DESP_CLIENT
     return client.sender(address_id=home_address.address_id) if outbound \

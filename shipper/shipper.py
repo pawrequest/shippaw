@@ -13,7 +13,7 @@ from despatchbay.exceptions import ApiException
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, logger
 from core.desp_client_wrapper import APIClientWrapper
-from core.enums import Contact, DateTimeMasks, DbayCreds, ShipmentCategory
+from core.enums import Contact, DateTimeMasks, DbayCreds, HomeAddress, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
 from gui.keys_and_strings import SERVICE_STRING
@@ -24,7 +24,7 @@ from shipper.edit_shipment import address_click, boxes_click, date_click, dropof
     service_click, \
     update_service_button
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
-    ShipmentForRequest, ShipmentGuiConfirmed, ShipmentInput, ShipmentPrepared, ShipmentQueued, ShipmentRequested
+    ShipmentPreRequest, ShipmentGuiConfirmed, ShipmentInput, ShipmentPrepared, ShipmentQueued, ShipmentRequested
 from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
@@ -49,10 +49,10 @@ def dispatch(config: Config, shipments: List[ShipmentInput]):
     walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
     shipments_addressed = [address_shipment(shipment=shipment, home_address=config.home_address,
                                             home_contact=config.home_contact) for shipment in shipments]
-    shipments_prepared = [prepare_shipment(shipment=shipment, default_shipping_service=config.default_shipping_service)
+    shipments_prepared = [prepare_shipment(shipment=shipment, default_courier=config.default_carrier.courier)
                           for shipment in shipments_addressed]
 
-    shipments_for_request = [pre_request_shipment(default_shipping_service_id=config.default_shipping_service.service,
+    shipments_for_request = [pre_request_shipment(default_shipping_service_id=config.default_carrier.service,
                                                   shipment=shipment) for shipment in shipments_prepared]
     shipments_requested = [request_shipment(shipment=shipment) for shipment in shipments_for_request]
 
@@ -60,7 +60,7 @@ def dispatch(config: Config, shipments: List[ShipmentInput]):
     post_book(shipments=shipments_complete)
 
 
-def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> ShipmentAddressed:
+def address_shipment(shipment: ShipmentInput, home_address:HomeAddress, home_contact:Contact) -> ShipmentAddressed:
     """ gets Contact, Address, Sender and Recipient objects"""
     remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
     remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact)
@@ -78,10 +78,10 @@ def address_shipment(shipment: ShipmentInput, home_address, home_contact) -> Shi
                              remote_address=remote_address)
 
 
-def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> ShipmentPrepared:
+def prepare_shipment(shipment: ShipmentAddressed, default_courier) -> ShipmentPrepared:
     """ Gets objects for all available CollectionDates and Services, creates menu maps for gui"""
     available_dates = DESP_CLIENT.get_available_collection_dates(sender_address=shipment.sender,
-                                                                 courier_id=default_shipping_service.courier)
+                                                                 courier_id=default_courier)
     all_services = DESP_CLIENT.get_services()
     date_menu_map = keys_and_strings.DATE_MENU(available_dates)
     service_menu_map = keys_and_strings.SERVICE_MENU(all_services)
@@ -90,7 +90,7 @@ def prepare_shipment(shipment: ShipmentAddressed, default_shipping_service) -> S
                             date_menu_map=date_menu_map, service_menu_map=service_menu_map)
 
 
-def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service_id) -> ShipmentForRequest:
+def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service_id) -> ShipmentPreRequest:
     """ gets actual CollectionDate, Service and Parcel objects"""
     shipment.parcels = get_parcels(num_parcels=shipment.boxes)
     shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
@@ -111,10 +111,10 @@ def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service_id
     shipment.service = get_actual_service(default_service_id=default_shipping_service_id,
                                           available_services=available_services, shipment=shipment)
 
-    return ShipmentForRequest(**shipment.__dict__, **shipment.model_extra)
+    return ShipmentPreRequest(**shipment.__dict__, **shipment.model_extra)
 
 
-def request_shipment(shipment: ShipmentForRequest) -> ShipmentRequested:
+def request_shipment(shipment: ShipmentPreRequest) -> ShipmentRequested:
     """ gets shipment request"""
     shipment.shipment_request = get_shipment_request(shipment=shipment)
     return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
@@ -321,7 +321,7 @@ def get_actual_service(shipment, default_service_id: str, available_services: [S
         return available_services[0]
 
 
-def get_shipment_request(shipment: ShipmentForRequest) -> ShipmentRequest:
+def get_shipment_request(shipment: ShipmentPreRequest) -> ShipmentRequest:
     """ returns a shipment_request from shipment object"""
     label_text = shipment.customer_printable
     if not shipment.is_outbound:

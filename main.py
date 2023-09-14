@@ -5,7 +5,7 @@ from typing import List
 
 import PySimpleGUI as sg
 
-from core.config import Config, logger, get_config
+from core.config import Config, get_import_map, logger, get_config
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from shipper.shipment import ShipmentInput, records_from_dbase, shipments_from_records
@@ -30,14 +30,13 @@ def main(args):
     outbound = 'out' == args.direction.value.lower()
     category = args.category
 
-    config = get_config(outbound=outbound, category=category)
+    config = get_config()
+    import_map = get_import_map(category=category, mappings=config.import_mappings)
     establish_client(dbay_creds=config.dbay_creds)
     records = records_from_dbase(dbase_file=args.file)
-    shipments = shipments_from_records(category=category, import_map=config.import_map, outbound=outbound,
+    shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
-    if not shipments:
-        logger.info('No shipments to process.')
-        sys.exit()
+
 
     if args.shipping_mode == ShipMode.SHIP:
         dispatch(config=config, shipments=shipments)

@@ -5,6 +5,7 @@ import sys
 import time
 from datetime import datetime
 from pprint import pprint
+from typing import Callable
 
 import PySimpleGUI as sg
 import requests
@@ -55,7 +56,7 @@ def email_label(shipment: "ShipmentCompleted", body: str, collection_date: Colle
     # newmail.Send()
 
 
-def retry_with_backoff(fn, retries=5, backoff_in_seconds=1, *args, **kwargs, ):
+def retry_with_backoff(fn:Callable, retries=5, backoff_in_seconds=1, *args, **kwargs):
     x = 0
     while True:
         try:

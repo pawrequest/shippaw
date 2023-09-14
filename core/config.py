@@ -11,12 +11,13 @@ from despatchbay.exceptions import AuthorizationException
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
-    PathsList, ShipMode, ShipmentCategory
+from core.enums import ApiScope, Contact, DbayCreds, DefaultCarrier, HomeAddress, \
+    PathsList, ShipmentCategory
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
+MODEL_CONFIG_TOML = ROOT_DIR/ 'core' / 'model_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
 # config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
@@ -87,11 +88,11 @@ def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> Imp
 
 
 class Config(BaseModel):
-    import_map: ImportMap
+    import_mappings: dict[str, dict]
     home_address: HomeAddress
     home_contact: Contact
     dbay_creds: DbayCreds
-    default_shipping_service: DefaultShippingService
+    default_carrier: DefaultCarrier
     paths: PathsList
     parcel_contents: str
     return_label_email_body: str
@@ -124,25 +125,26 @@ class Config(BaseModel):
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
-
 def get_config_dict(toml_file) -> dict:
     with open(toml_file, 'rb') as g:
         return tomllib.load(g)
 
 
-def get_config(outbound, category: ShipmentCategory) -> Config:
-    config_dict = get_config_dict(toml_file=CONFIG_TOML)
-    sandbox = config_dict.get('sandbox')
-    dbay = config_dict.get('dbay')[scope_from_sandbox_func(sandbox=sandbox)]  # gets the names of env vars
+def get_config(toml_file=CONFIG_TOML, sandbox=None) -> Config:
+    config_dict = get_config_dict(toml_file=toml_file)
+    sandbox = sandbox or config_dict.get('sandbox')
+    scope = scope_from_sandbox_func(sandbox=sandbox)
+    dbay = config_dict.get('dbay')[scope]
+    dbay_creds = DbayCreds.from_dict(**dbay.get('envars'))
+    default_carrier = dbay.get('default_carrier')
 
     return Config(
-        import_map=get_import_map(category=category, mappings=config_dict['import_mappings']),
+        import_mappings=config_dict['import_mappings'],
         home_address=HomeAddress(**config_dict.get('home_address')),
         home_contact=Contact(**config_dict.get('home_contact')),
-        dbay_creds=DbayCreds.from_dict(api_user_envar=dbay['api_user'], api_key_envar=dbay['api_key']),
-        default_shipping_service=DefaultShippingService(courier=dbay['courier'], service=dbay['service']),
+        dbay_creds=dbay_creds,
+        default_carrier=DefaultCarrier(**default_carrier),
         paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
-        # outbound=outbound,
         parcel_contents=config_dict.get('parcel_contents'),
         sandbox=sandbox,
         return_label_email_body=config_dict.get('return_label_email_body'),
