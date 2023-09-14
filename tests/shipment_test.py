@@ -4,8 +4,11 @@ import pytest
 
 from core.config import get_import_map
 from core.enums import ShipmentCategory
-from shipper.shipment import ShipmentRequested, records_from_dbase, shipment_from_record
+from shipper import addresser
+from shipper.addresser import get_candidate_keys
+from shipper.shipment import ShipmentAddressed, ShipmentRequested, records_from_dbase, shipment_from_record
 from shipper.shipper import address_shipment, pre_request_shipment, prepare_shipment, request_shipment
+from tests.fixtures.fixtures import record_hire_bad_postcode
 
 hire_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\hire.dbf')
 sale_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\sale.dbf')
@@ -64,18 +67,11 @@ def test_record_to_requested(category, fixture_name, expected_type, request):
     fixture_instance = request.getfixturevalue(fixture_name)
     assert isinstance(fixture_instance, expected_type)
 
-#
-# def test_imported(config_from_toml):
-#     record = record_hire_bad_postcode
-#     shipment = shipment_from_record(category=ShipmentCategory.HIRE, record=record, outbound=True, import_map=get_import_map(category=ShipmentCategory.HIRE, mappings=config_from_toml.import_mappings))
-#     addressed = address_shipment(shipment=shipment, home_address=config_from_toml.home_address, home_contact=config_from_toml.home_contact)
-#     assert isinstance(addressed, ShipmentAddressed)
-#
 
-# def fake_popup(message):
+# def fake_popup():
 #     return "Da16 3hu"
 #
-
+#
 # def test_bad_postcode(config_from_toml, monkeypatch):
 #     # Use monkeypatch to override the popup function
 #     monkeypatch.setattr(addresser, 'get_candidate_keys',
@@ -98,5 +94,5 @@ def test_record_to_requested(category, fixture_name, expected_type, request):
 #     )
 #     assert isinstance(addressed, ShipmentAddressed)
 
-#
-#
+
+

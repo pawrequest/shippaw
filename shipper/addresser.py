@@ -110,7 +110,7 @@ def get_candidate_keys(postcode, popup_func=None) -> dict:
         except ApiException as e:
             if "postcode" in str(e).lower():
                 if popup_func:
-                    postcode = popup_func(f'Bad postcode - Try Again')
+                    postcode = popup_func()
                 else:
                     postcode = sg.popup_get_text(f'Bad postcode - Try Again')
                 if postcode is None:

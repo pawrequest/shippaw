@@ -126,9 +126,11 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact) -> Address | None:
+def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, testing=None) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
+    if testing:
+        return address
     window = comparison_address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
                                        address_as_str=shipment.address_as_str)
     while True:
