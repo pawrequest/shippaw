@@ -1,11 +1,11 @@
-from pathlib import Path
-
 import pytest
 
 from core.config import Config, get_config, get_import_map, MODEL_CONFIG_TOML
 from shipper.shipper import establish_client
 
-TOML_FILE = Path(r'E:\Dev\AmDesp\core\model_user_config.toml')
+from core.config import ROOT_DIR, DATA_DIR
+fixtures_dir = ROOT_DIR/ 'tests' / 'fixtures'
+TOML_FILE = ROOT_DIR / 'core' / 'model_user_config.toml'
 
 @pytest.fixture(autouse=True)
 def auto_establish_client(config_from_toml):

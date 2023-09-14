@@ -17,7 +17,7 @@ from core.enums import ApiScope, Contact, DbayCreds, DefaultCarrier, HomeAddress
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
-MODEL_CONFIG_TOML = ROOT_DIR/ 'core' / 'model_config.toml'
+MODEL_CONFIG_TOML = ROOT_DIR/ 'core' / 'model_user_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
 # config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.

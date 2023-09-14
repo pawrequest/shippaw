@@ -8,9 +8,13 @@ from core.enums import ShipmentCategory
 from shipper.shipment import ShipmentRequested, records_from_dbase, shipment_from_record
 from shipper.shipper import address_shipment, pre_request_shipment, prepare_shipment, request_shipment
 
-hire_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\hire.dbf')
-sale_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\sale.dbf')
-customer_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\customer.dbf')
+from core.config import ROOT_DIR
+
+fixtures_dir = ROOT_DIR/ 'tests' / 'fixtures'
+
+hire_dbf = fixtures_dir / 'hire.dbf'
+sale_dbf = fixtures_dir / 'sale.dbf'
+customer_dbf = fixtures_dir / 'customer.dbf'
 
 record_dict = {
     ShipmentCategory.HIRE: records_from_dbase(dbase_file=hire_dbf)[0],
@@ -55,7 +59,6 @@ def test_record_to_requested(category, shipment_requested_fixture):
     assert isinstance(shipment, ShipmentRequested)
     assert shipment.category == category
     assert isinstance(shipment.sender.sender_address, Address)
-
 
 # def fake_popup():
 #     return "Da16 3hu"

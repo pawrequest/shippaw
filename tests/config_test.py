@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
-CONFIG_TOML = r'E:\Dev\AmDesp\core\model_user_config.toml'
+from core.config import MODEL_CONFIG_TOML
 
 
 def test_config_toml(config_from_toml):
@@ -30,7 +30,7 @@ def test_config_toml_prod(config_from_toml_production):
 
 
 def test_get_dbay_client(config_from_toml):
-    config_dict = get_config_dict(toml_file=CONFIG_TOML)
+    config_dict = get_config_dict(toml_file=MODEL_CONFIG_TOML)
     for scope in ApiScope:
         dbay = config_dict.get('dbay')[scope.value]
         dbay_creds = DbayCreds.from_dict(**dbay.get('envars'))
