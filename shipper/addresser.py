@@ -3,26 +3,26 @@ from typing import Iterable
 
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address, Recipient, Sender
+from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-import shipper.shipper
-from core.config import Config, logger
+from core.config import logger
 from core.enums import BestMatch, Contact, FuzzyScores, HomeAddress
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
 from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
-def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (Address | bool):
+def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, client:DespatchBaySDK) -> (Address | bool):
     """ Gets an Address object representing the remote location. tries direct search, then fuzzy search, then gui entry."""
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
-    if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms):
+    if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms, client=client):
         return address
 
     logger.info({'No Explicit Match Found - getting fuzzy'})
-    fuzzy = fuzzy_address(shipment=shipment)
+    fuzzy = fuzzy_address(shipment=shipment, client=client)
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact)
         if address is None:
@@ -35,9 +35,8 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact) -> (
             return address
 
 
-def address_from_direct_search(postcode: str, search_terms: Iterable) -> Address | None:
+def address_from_direct_search(postcode: str, search_terms: Iterable, client: DespatchBaySDK) -> Address | None:
     """ return address from postcode and search terms, or None if no address found."""
-    client = shipper.shipper.DESP_CLIENT
     check_set = set(search_terms)
     for term in check_set:
         try:
@@ -99,9 +98,8 @@ def check_address_company(address: Address, shipment: ShipmentRequested) -> Addr
         return address if answer == 'Yes' else None
 
 
-def get_candidate_keys(postcode, popup_func=None) -> dict:
+def get_candidate_keys(postcode, client: DespatchBaySDK, popup_func=None) -> dict:
     """takes a client and postcode, returns a dict with keys= dbay addresses as strings and values =  dbay address keys"""
-    client = shipper.shipper.DESP_CLIENT
     candidate_keys_dict = None
     while not candidate_keys_dict:
         try:
@@ -164,9 +162,8 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     return BestMatch(str_matched=str_matched, address=best_address, category=best_category, score=best_score)
 
 
-def fuzzy_address(shipment) -> Address:
+def fuzzy_address(shipment, client: DespatchBaySDK) -> Address:
     """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
-    client = shipper.shipper.DESP_CLIENT
     candidate_keys = retry_with_backoff(get_candidate_keys, backoff_in_seconds=60, postcode=shipment.postcode)
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
@@ -180,53 +177,35 @@ def fuzzy_address(shipment) -> Address:
     return bestmatch.address
 
 
-def sender_from_address_id(address_id: str) -> Sender:
-    """ return a dbay sender object representing home address defined in toml / Shipper.config"""
-    client = shipper.shipper.DESP_CLIENT
-    return client.sender(address_id=address_id)
-
-
-def get_home_recipient(config: Config) -> Recipient:
-    """ return a dbay recipient object representing home address defined in toml / Shipper.config"""
-    client = shipper.shipper.DESP_CLIENT
-    address = client.get_address_by_key(config.home_address.dbay_key)
-    return client.recipient(
-        recipient_address=address, **config.home_contact.__dict__)
-
-
-def recip_from_contact_and_key(dbay_key: str, contact: Contact) -> Recipient:
+def recip_from_contact_and_key(dbay_key: str, contact: Contact, client: DespatchBaySDK) -> Recipient:
     """ return a dbay recipient object"""
-    client = shipper.shipper.DESP_CLIENT
     return client.recipient(recipient_address=client.get_address_by_key(dbay_key), **contact.__dict__)
 
 
 def sender_from_contact_address(contact: Contact,
-                                remote_address: Address) -> Sender:
-    client = shipper.shipper.DESP_CLIENT
+                                remote_address: Address, client: DespatchBaySDK) -> Sender:
     sender = client.sender(
         sender_address=remote_address, **contact.__dict__)
     return sender
 
 
-def get_remote_recipient(contact: Contact, remote_address: Address) -> Sender:
-    client = shipper.shipper.DESP_CLIENT
+def get_remote_recipient(contact: Contact, remote_address: Address, client: DespatchBaySDK) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=remote_address, **contact.__dict__)
     return recip
 
 
-def recip_from_contact_address(contact: Contact, address: Address) -> Sender:
-    client = shipper.shipper.DESP_CLIENT
+def recip_from_contact_address(contact: Contact, address: Address, client: DespatchBaySDK) -> Sender:
     recip = client.recipient(
         # recipient_address=remote_address, **contact._asdict())
         recipient_address=address, **contact.__dict__)
     return recip
 
 
-def get_home_sender_recip(home_contact:Contact, home_address:HomeAddress, outbound:bool) -> Sender | Recipient:
+def get_home_sender_recip(home_contact: Contact, home_address: HomeAddress, outbound: bool,
+                          client: DespatchBaySDK) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing """
-    client = shipper.shipper.DESP_CLIENT
     return client.sender(address_id=home_address.address_id) if outbound \
         else recip_from_contact_and_key(dbay_key=home_address.dbay_key,
-                                        contact=home_contact)
+                                        contact=home_contact, client=client)

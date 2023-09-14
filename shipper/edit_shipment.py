@@ -1,16 +1,13 @@
-from typing import List
-
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Parcel, Recipient, Sender, Service
+from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-import shipper.shipper
 from core.config import logger
 from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
 from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
-from gui.main_gui import new_date_selector, num_boxes_popup, new_service_popup
-from shipper.addresser import sender_from_address_id
+from gui.main_gui import new_date_selector, new_service_popup, num_boxes_popup
 from shipper.shipment import ShipmentRequested
 
 
@@ -21,13 +18,13 @@ def boxes_click(shipment_to_edit, window) -> int | None:
     return new_boxes
 
 
-def dropoff_click(config, shipment: ShipmentRequested):
-    client = shipper.shipper.DESP_CLIENT
-
+def dropoff_click(config, shipment: ShipmentRequested, client: DespatchBaySDK):
     if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') != 'Yes':
         return None
     logger.info('Converting to Dropoff')
-    shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
+    # shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
+    shipment.sender = client.sender(address_id=config.home_address.dropoff_sender_id)
+
     shipment.is_dropoff = True
     available_dates = client.get_available_collection_dates(sender_address=shipment.sender,
                                                             courier_id=config.default_courier.courier)
@@ -47,7 +44,7 @@ def date_click(location, shipment_to_edit):
     return DATE_STRING(collection_date=new_collection_date)
 
 
-def update_service_button(num_boxes:int, shipment_to_edit:ShipmentRequested, window):
+def update_service_button(num_boxes: int, shipment_to_edit: ShipmentRequested, window):
     window[SERVICE_KEY(shipment=shipment_to_edit)].update(
         SERVICE_STRING(num_boxes=num_boxes, service=shipment_to_edit.service))
 
@@ -71,17 +68,15 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
     return ADDRESS_STRING(address=address_to_edit)
 
 
-def service_click(shipment_to_edit:ShipmentRequested, location, default_service:Service):
-    client = shipper.shipper.DESP_CLIENT
+def service_click(shipment_to_edit: ShipmentRequested, location, default_service: Service, client: DespatchBaySDK):
     available_services = client.get_available_services(shipment_to_edit.shipment_request)
-    new_service = new_service_popup(menu_map=SERVICE_MENU(available_services), location=location, default_service=default_service)
+    new_service = new_service_popup(menu_map=SERVICE_MENU(available_services), location=location,
+                                    default_service=default_service)
     if new_service is None:
         return None
     shipment_to_edit.service = new_service
     package = SERVICE_STRING(service=new_service, num_boxes=len(shipment_to_edit.parcels))
     return package
-
-
 
 
 def get_new_boxes(location) -> int | None:
@@ -95,12 +90,9 @@ def get_new_boxes(location) -> int | None:
         return int(v[e])
 
 
-
-
-def get_parcels(num_parcels: int, contents: str = 'Radios') -> list[Parcel]:
+def get_parcels(num_parcels: int, client: DespatchBaySDK, contents: str = 'Radios') -> list[Parcel]:
     """ return an array of dbay parcel objects equal to the number of boxes provided
         uses arbitrary sizes because dbay api won't allow skipping even though website does"""
-    client = shipper.shipper.DESP_CLIENT
 
     return [client.parcel(
         contents=contents,
