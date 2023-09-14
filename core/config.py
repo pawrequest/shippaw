@@ -80,17 +80,6 @@ def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> Imp
     map_dict = mappings[category.value.lower()]
     return mapper_dict[category](**map_dict)
 
-def get_import_map_old(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
-    map_dict = mappings[category.value.lower()]
-    if category == ShipmentCategory.HIRE:
-        return HireMap(**map_dict)
-    elif category == ShipmentCategory.SALE:
-        return SaleMap(**map_dict)
-    elif category == ShipmentCategory.CUSTOMER:
-        return ImportMap(**map_dict)
-    else:
-        raise ValueError(f'Unknown ShipmentCategory {category}')
-
 
 class Config(BaseModel):
     import_mappings: dict[str, dict]
