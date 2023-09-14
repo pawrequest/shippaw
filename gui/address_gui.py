@@ -8,9 +8,9 @@ from gui.gui_params import address_fieldname_params, address_input_params
 from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
-def address_postcode_click(postcode: str) -> Address | None:
+def address_postcode_click(postcode: str, client= None) -> Address | None:
     """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
-    client = shipper.shipper.DESP_CLIENT
+    client = client or shipper.shipper.DESP_CLIENT
     while True:
         try:
             candidates = client.get_address_keys_by_postcode(postcode)
@@ -156,30 +156,3 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
             window.close()
             return address
 
-
-def compare_before_send(shipment: ShipmentRequested) -> True:
-    """ Gui loop, takes an address and shipment for contact details,
-    allows editing / replacing address and contact """
-    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=shipment.remote_contact,
-                                       address=shipment.remote_address,
-                                       address_as_str=shipment.address_as_str)
-    while True:
-        event, values = window.read()
-        if event == sg.WINDOW_CLOSED:
-            return None
-
-        if 'postal' in event.lower():
-            postcode = values.get(event.upper())
-            new_address = address_postcode_click(postcode=postcode)
-            if new_address:
-                # update_gui_from_address(address=new_address)
-                update_gui_from_address(address=new_address, window=window)
-
-        if 'company_name' in event.lower():
-            # copy customer name into address company name field
-            company_name_click(address=shipment.remote_address, customer=shipment.customer, values=values)
-            update_gui_from_address(address=shipment.remote_address, window=window)
-
-        if event == '-SUBMIT-':
-            window.close()
-            return True

@@ -1,15 +1,13 @@
 import argparse
 import sys
 from pathlib import Path
-from typing import List
 
-import PySimpleGUI as sg
-
-from core.config import Config, get_import_map, logger, get_config
+from core.config import CONFIG_TOML, config_from_dict, get_config_dict, logger
+from core.dbay_client import get_dbay_client
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
-from shipper.shipment import ShipmentInput, records_from_dbase, shipments_from_records
-from shipper.shipper import dispatch, dispatch, establish_client
+from shipper.shipment import records_from_dbase, shipments_from_records
+from shipper.shipper import dispatch, prepare_batch
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -29,16 +27,18 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
     outbound = direction == ShipDirection.OUT
     initial_checks()
 
-    config = get_config()
-    establish_client(dbay_creds=config.dbay_creds)
+    config = config_from_dict(get_config_dict(toml_file=CONFIG_TOML))
+    client = get_dbay_client(creds=config.dbay_creds)
 
     records = records_from_dbase(dbase_file=file)
-    import_map = get_import_map(category=category, mappings=config.import_mappings)
+    import_map = config.import_mappings[category.name.lower()]
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
+    shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
+
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
-            dispatch(config=config, shipments=shipments)
+            dispatch(config=config, prepared_shipments=shipments_prepared, client=client)
         sys.exit(0)
     else:
         return config, shipments

@@ -6,8 +6,6 @@ import tomllib
 from pathlib import Path
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import AuthorizationException
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -17,7 +15,7 @@ from core.enums import ApiScope, Contact, DbayCreds, DefaultCarrier, HomeAddress
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
-MODEL_CONFIG_TOML = ROOT_DIR/ 'core' / 'model_user_config.toml'
+MODEL_CONFIG_TOML = ROOT_DIR / 'core' / 'model_user_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
 # config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
@@ -70,19 +68,32 @@ class SaleMap(ImportMap):
     outbound_id: str
     inbound_id: str
 
+
 mapper_dict = {
     ShipmentCategory.HIRE: HireMap,
     ShipmentCategory.SALE: SaleMap,
     ShipmentCategory.CUSTOMER: ImportMap
 }
 
+
 def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
     map_dict = mappings[category.value.lower()]
     return mapper_dict[category](**map_dict)
 
 
+# def get_import_map_new(category: ShipmentCategory, mappings: dict[str, ImportMap]) -> ImportMap:
+#     map_dict = mappings[category.value.lower()]
+#     return mapper_dict[category](**map_dict)
+#
+
+def get_all_mappings(mappings: dict[str, dict]) -> dict[str, ImportMap]:
+    return {category.name.lower(): mapper_dict[category](**mappings[category.value.lower()])
+            for category in ShipmentCategory}
+
+
 class Config(BaseModel):
-    import_mappings: dict[str, dict]
+    # import_mappings: dict[str, dict]
+    import_mappings: dict[str, ImportMap]
     home_address: HomeAddress
     home_contact: Contact
     dbay_creds: DbayCreds
@@ -124,40 +135,24 @@ def get_config_dict(toml_file) -> dict:
         return tomllib.load(g)
 
 
-def get_config(toml_file=CONFIG_TOML, sandbox=None) -> Config:
-    config_dict = get_config_dict(toml_file=toml_file)
+def config_from_dict(config_dict, sandbox=None) -> Config:
+    # config_dict = get_config_dict(toml_file=toml_file)
     sandbox = sandbox or config_dict.get('sandbox')
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
-    dbay_creds = DbayCreds.from_dict(**dbay.get('envars'))
-
-    default_carrier = dbay.get('default_carrier')
+    mappings_dict = config_dict['import_mappings']
 
     return Config(
-        import_mappings=config_dict['import_mappings'],
+        import_mappings=get_all_mappings(mappings=mappings_dict),
         home_address=HomeAddress(**config_dict.get('home_address')),
         home_contact=Contact(**config_dict.get('home_contact')),
-        dbay_creds=dbay_creds,
-        default_carrier=DefaultCarrier(**default_carrier),
+        dbay_creds=DbayCreds.from_dict(**dbay.get('envars')),
+        default_carrier=DefaultCarrier(**dbay.get('default_carrier')),
         paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
         parcel_contents=config_dict.get('parcel_contents'),
         sandbox=sandbox,
         return_label_email_body=config_dict.get('return_label_email_body'),
     )
-
-
-def get_dbay_client(creds: DbayCreds):
-    while True:
-        try:
-            client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-            dbay_account = client.get_account()
-            logger.info(f'Despatchbay account retrieved: {dbay_account}')
-        except AuthorizationException as e:
-            logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
-            creds = creds_from_user()
-            continue
-        else:
-            return client
 
 
 def run_as_admin(cmd):
