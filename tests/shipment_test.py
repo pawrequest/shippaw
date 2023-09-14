@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from despatchbay.despatchbay_entities import Address
 
 from core.config import get_import_map
 from core.enums import ShipmentCategory
@@ -50,7 +51,10 @@ def shipment_requested_fixture(shipment_pre_request_fixture):
 
 @pytest.mark.parametrize("category", ShipmentCategory)
 def test_record_to_requested(category, shipment_requested_fixture):
-    assert isinstance(shipment_requested_fixture, ShipmentRequested)
+    shipment = shipment_requested_fixture
+    assert isinstance(shipment, ShipmentRequested)
+    assert shipment.category == category
+    assert isinstance(shipment.sender.sender_address, Address)
 
 
 # def fake_popup():
