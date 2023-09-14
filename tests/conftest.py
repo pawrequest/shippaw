@@ -14,7 +14,6 @@ def auto_establish_client(config_from_toml):
 
 @pytest.fixture()
 def config_from_toml() -> Config:
-    # return get_config(toml_file=Path(r'E:\Dev\AmDesp\tests\fixtures\user_config.toml'))
     return get_config(toml_file=TOML_FILE)
 
 
