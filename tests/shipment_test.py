@@ -4,17 +4,14 @@ import pytest
 
 from core.config import get_import_map
 from core.enums import ShipmentCategory
-from shipper import addresser
-from shipper.addresser import get_candidate_keys
-from shipper.shipment import ShipmentAddressed, ShipmentRequested, records_from_dbase, shipment_from_record
+from shipper.shipment import ShipmentRequested, records_from_dbase, shipment_from_record
 from shipper.shipper import address_shipment, pre_request_shipment, prepare_shipment, request_shipment
-from tests.fixtures.fixtures import record_hire_bad_postcode
 
 hire_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\hire.dbf')
 sale_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\sale.dbf')
 customer_dbf = Path(r'E:\Dev\AmDesp\tests\fixtures\customer.dbf')
 
-record_dict ={
+record_dict = {
     ShipmentCategory.HIRE: records_from_dbase(dbase_file=hire_dbf)[0],
     ShipmentCategory.SALE: records_from_dbase(dbase_file=sale_dbf)[0],
     ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=customer_dbf)[0],
@@ -51,21 +48,9 @@ def shipment_requested_fixture(shipment_pre_request_fixture):
     return request_shipment(shipment=shipment_pre_request_fixture)
 
 
-test_cases = [(category, fixture_name, expected_type)
-              for category in ShipmentCategory
-              for fixture_name, expected_type in [
-                  # ('shipment_input_fixture', ShipmentInput),
-                  # ('shipment_addressed_fixture', ShipmentAddressed),
-                  # ('shipment_prepared_fixture', ShipmentPrepared),
-                  # ('shipment_pre_request_fixture', ShipmentPreRequest),
-                  ('shipment_requested_fixture', ShipmentRequested),
-              ]]
-
-
-@pytest.mark.parametrize("category,fixture_name,expected_type", test_cases)
-def test_record_to_requested(category, fixture_name, expected_type, request):
-    fixture_instance = request.getfixturevalue(fixture_name)
-    assert isinstance(fixture_instance, expected_type)
+@pytest.mark.parametrize("category", ShipmentCategory)
+def test_record_to_requested(category, shipment_requested_fixture):
+    assert isinstance(shipment_requested_fixture, ShipmentRequested)
 
 
 # def fake_popup():
@@ -93,6 +78,3 @@ def test_record_to_requested(category, fixture_name, expected_type, request):
 #         home_contact=config_from_toml.home_contact
 #     )
 #     assert isinstance(addressed, ShipmentAddressed)
-
-
-
