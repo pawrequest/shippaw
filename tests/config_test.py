@@ -35,5 +35,4 @@ def test_get_dbay_client(config_from_toml):
         dbay = config_dict.get('dbay')[scope.value]
         dbay_creds = DbayCreds.from_dict(**dbay.get('envars'))
         client = get_dbay_client(creds=dbay_creds)
-        assert client is not None
         assert client.get_account() is not None

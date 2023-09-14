@@ -22,10 +22,6 @@ CONFIG_TOML = DATA_DIR / 'user_config.toml'
 # config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
-...
-
-
-# todo make customer work, customer name clobbers shipment name
 
 def get_amdesp_logger():
     new_logger = logging.getLogger(name='AmDesp')
