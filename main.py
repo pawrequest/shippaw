@@ -25,26 +25,23 @@ def initial_checks():
     is_internet_connected = is_connected()
 
 
-def main(args):
+def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDirection, file: Path):
+    outbound = direction == ShipDirection.OUT
     initial_checks()
-    outbound = 'out' == args.direction.value.lower()
-    category = args.category
 
     config = get_config()
-    import_map = get_import_map(category=category, mappings=config.import_mappings)
     establish_client(dbay_creds=config.dbay_creds)
-    records = records_from_dbase(dbase_file=args.file)
+
+    records = records_from_dbase(dbase_file=file)
+    import_map = get_import_map(category=category, mappings=config.import_mappings)
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
-
-
-    if args.shipping_mode == ShipMode.SHIP:
-        dispatch(config=config, shipments=shipments)
-
-    # elif args.shipping_mode == ShipMode.TRACK:
-    #     shipper.track()
-
-    sys.exit(0)
+    if __name__ == '__main__':
+        if shipping_mode == ShipMode.SHIP:
+            dispatch(config=config, shipments=shipments)
+        sys.exit(0)
+    else:
+        return config, shipments
 
 
 if __name__ == '__main__':
@@ -53,7 +50,6 @@ if __name__ == '__main__':
     direction_choices = [direc.name for direc in ShipDirection]
 
     parser = argparse.ArgumentParser(description="AmDesp Shipping Agent.")
-
     parser.add_argument('--mode', choices=mode_choices,
                         help="Choose shipping mode.")
     parser.add_argument('--category', choices=category_choices,
@@ -61,13 +57,17 @@ if __name__ == '__main__':
     parser.add_argument('--direction', choices=direction_choices,
                         help="Choose shipping direction.")
     parser.add_argument('--file', type=Path, help="Path to .dbf input file.")
+
     args = parser.parse_args()
 
     args.category = ShipmentCategory[args.category]
     args.shipping_mode = ShipMode[args.mode]
     args.direction = ShipDirection[args.direction]
-    while not args.file:
-        args.input_file = Path(sg.popup_get_file("Select input file"))
+    args.file = Path(args.file)
+
     logger.info(f'{args=}')
 
-    main(args)
+    main(category=args.category,
+         shipping_mode=args.shipping_mode,
+         direction=args.direction,
+         file=args.file)

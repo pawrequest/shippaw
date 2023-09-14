@@ -1,25 +1,18 @@
-from pathlib import Path
-
 import pytest
 from despatchbay.despatchbay_entities import Address
 
-from core.config import get_import_map
+from core.config import ROOT_DIR, get_import_map
 from core.enums import ShipmentCategory
 from shipper.shipment import ShipmentRequested, records_from_dbase, shipment_from_record
 from shipper.shipper import address_shipment, pre_request_shipment, prepare_shipment, request_shipment
 
-from core.config import ROOT_DIR
+fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'
 
-fixtures_dir = ROOT_DIR/ 'tests' / 'fixtures'
-
-hire_dbf = fixtures_dir / 'hire.dbf'
-sale_dbf = fixtures_dir / 'sale.dbf'
-customer_dbf = fixtures_dir / 'customer.dbf'
 
 record_dict = {
-    ShipmentCategory.HIRE: records_from_dbase(dbase_file=hire_dbf)[0],
-    ShipmentCategory.SALE: records_from_dbase(dbase_file=sale_dbf)[0],
-    ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=customer_dbf)[0],
+    ShipmentCategory.HIRE: records_from_dbase(dbase_file=fixtures_dir / 'hire.dbf')[0],
+    ShipmentCategory.SALE: records_from_dbase(dbase_file=fixtures_dir / 'sale.dbf')[0],
+    ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=fixtures_dir / 'customer.dbf')[0],
 }
 
 

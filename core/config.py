@@ -70,8 +70,17 @@ class SaleMap(ImportMap):
     outbound_id: str
     inbound_id: str
 
+mapper_dict = {
+    ShipmentCategory.HIRE: HireMap,
+    ShipmentCategory.SALE: SaleMap,
+    ShipmentCategory.CUSTOMER: ImportMap
+}
 
 def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
+    map_dict = mappings[category.value.lower()]
+    return mapper_dict[category](**map_dict)
+
+def get_import_map_old(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
     map_dict = mappings[category.value.lower()]
     if category == ShipmentCategory.HIRE:
         return HireMap(**map_dict)
@@ -132,6 +141,7 @@ def get_config(toml_file=CONFIG_TOML, sandbox=None) -> Config:
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
     dbay_creds = DbayCreds.from_dict(**dbay.get('envars'))
+
     default_carrier = dbay.get('default_carrier')
 
     return Config(

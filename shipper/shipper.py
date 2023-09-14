@@ -31,6 +31,14 @@ dotenv.load_dotenv()
 DESP_CLIENT: DespatchBaySDK | None = None
 
 
+class Shipper:
+    def __init__(self, config: Config, shipments: List[ShipmentInput], client: DespatchBaySDK):
+        self.config = config
+        self.shipments = shipments
+        establish_client(dbay_creds=config.dbay_creds)
+
+
+
 def establish_client(dbay_creds: DbayCreds):
     global DESP_CLIENT
     try:
