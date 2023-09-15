@@ -17,7 +17,11 @@ TOML_FILE = ROOT_DIR / 'core' / 'model_user_config.toml'
 @pytest.fixture(params=list(ShipmentCategory))
 def category(request):
     return request.param
-
+#
+# @pytest.fixture()
+# def category():
+#     return ShipmentCategory.HIRE
+#
 
 @pytest.fixture()
 def config_dict_from_toml():
