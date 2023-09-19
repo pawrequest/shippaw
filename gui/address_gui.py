@@ -8,19 +8,6 @@ from gui.gui_params import address_fieldname_params, address_input_params
 from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
-def address_postcode_click(postcode: str, client= None) -> Address | None:
-    """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
-    client = client or shipper.shipper.DESP_CLIENT
-    while True:
-        try:
-            candidates = client.get_address_keys_by_postcode(postcode)
-            new_address = address_from_postcode_popup(candidate_keys=candidates, client=client)
-        except Exception as e:
-            postcode = sg.popup_get_text("Enter Postcode (empty to cancel)")
-            if not postcode:
-                return None
-        else:
-            return new_address
 
 
 def comparison_address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
@@ -156,3 +143,15 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
             window.close()
             return address
 
+def address_postcode_click(postcode: str, client, address_popup=address_from_postcode_popup) -> Address | None:
+    """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
+    while True:
+        try:
+            candidates = client.get_address_keys_by_postcode(postcode)
+            new_address = address_popup(candidate_keys=candidates, client=client)
+        except Exception as e:
+            postcode = sg.popup_get_text("Enter Postcode (empty to cancel)")
+            if not postcode:
+                return None
+        else:
+            return new_address
