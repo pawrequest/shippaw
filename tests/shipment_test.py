@@ -7,7 +7,7 @@ from gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
 from shipper.shipment import ShipmentBooked, ShipmentRequested, records_from_dbase, shipment_from_record
 from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_shipment, queue_shipment, \
     read_window_cboxs, \
-    request_shipment
+    request_shipment, prepare_batch_dict
 
 from tests.config_test import dbay_client_sandbox, dbay_client_production, config_sandbox, config_production, config_dict_from_toml, category
 
@@ -75,6 +75,9 @@ def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, confi
     # booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
     ...
 
+def test_prepare_dict(dbay_client_sandbox, config_sandbox, ):
+
+    prepare_batch_dict
 
 
 

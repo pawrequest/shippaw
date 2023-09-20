@@ -192,6 +192,22 @@ def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, ou
         sys.exit()
     return shipments
 
+def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
+        -> Dict[str, ShipmentInput]:
+    shipments = {}
+    for record in records:
+        try:
+            shipment = shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+                                                  record=record)
+            shipments[shipment.shipment_name] = shipment
+        except Exception as e:
+            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+            continue
+    if not shipments:
+        logger.info('No shipments to process.')
+        sys.exit()
+    return shipments
+
 
 def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
                          record: dict) -> ShipmentInput:

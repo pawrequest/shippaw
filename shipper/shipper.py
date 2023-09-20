@@ -35,12 +35,12 @@ class Shipper:
         self.client = client
 
 
-def dispatch(config: Config, client: DespatchBaySDK, prepared_shipments: List[ShipmentRequested]):
-    """ Shipment processing pipeline - takes list of validated shipments and Config objects,
-    walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
-
-    shipments_complete = main_loop(config=config, shipments=prepared_shipments, client=client)
-    post_book(shipments=shipments_complete)
+# def dispatch(config: Config, client: DespatchBaySDK, prepared_shipments: List[ShipmentRequested]):
+#     """ Shipment processing pipeline - takes list of validated shipments and Config objects,
+#     walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
+#
+#     shipments_complete = dispatch_gui(config=config, shipments=prepared_shipments, client=client)
+#     post_book(shipments=shipments_complete)
 
 
 def prepare_batch(client, config, shipments):
@@ -54,6 +54,13 @@ def prepare_batch(client, config, shipments):
     shipments_requested = [request_shipment(shipment=shipment, client=client) for shipment in shipments_for_request]
     return shipments_requested
 
+
+def prepare_batch_dict(client, config, shipments_dict: dict[str, ShipmentInput]):
+    shipments_addressed = {key: address_shipment(shipment=shipment, home_address=config.home_address, home_contact=config.home_contact, client=client) for key, shipment in shipments_dict.items()}
+    shipments_prepared = {key: prepare_shipment(shipment=shipment, default_courier=config.default_carrier.courier, client=client) for key, shipment in shipments_addressed.items()}
+    shipments_for_request = {key: pre_request_shipment(default_shipping_service_id=config.default_carrier.service, shipment=shipment, client=client) for key, shipment in shipments_prepared.items()}
+    shipments_requested = {key: request_shipment(shipment=shipment, client=client) for key, shipment in shipments_for_request.items()}
+    return shipments_requested
 
 def address_shipment(shipment: ShipmentInput, home_address: HomeAddress, home_contact: Contact,
                      client: DespatchBaySDK) -> ShipmentAddressed:
@@ -142,7 +149,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     return booked
 
 
-def main_loop(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
+def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
     """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking collection etc"""
@@ -166,7 +173,6 @@ def main_loop(config: Config, shipments: List[ShipmentRequested], client:Despatc
 
         if event == keys_and_strings.GO_SHIP_KEY():
             window.close()
-
             return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
@@ -179,15 +185,7 @@ def main_loop(config: Config, shipments: List[ShipmentRequested], client:Despatc
         shipment_to_edit = shipments[shipment_to_edit_index]
 
         if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
-            new_boxes = get_new_boxes(location=window.mouse_location())
-            if new_boxes is None:
-                continue
-            shipment_to_edit.parcels = get_parcels(num_parcels=new_boxes, client=client)
-            update_service_button(num_boxes=new_boxes, shipment_to_edit=shipment_to_edit, window=window)
-            package = new_boxes
-
-            # todo test this works... was issues with service button? and using shipment index not shipment to mutate in list?
-            # package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
+            package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
             shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed

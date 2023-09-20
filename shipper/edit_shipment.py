@@ -12,9 +12,6 @@ from shipper.shipment import ShipmentRequested
 
 
 def boxes_click(shipment_to_edit, window, client) -> int | None:
-    # new_boxes = get_new_boxes(location=window.mouse_location())
-    # if new_boxes is None:
-    #     return None
     new_boxes = get_new_boxes(location=window.mouse_location())
     if new_boxes is None:
         return
