@@ -14,7 +14,7 @@ from shipper.shipment import ShipmentQueued, ShipmentRequested
 
 
 def main_window(shipments: [ShipmentRequested]):
-    logger.info('BULK SHIPPER WINDOW')
+    logger.debug('BULK SHIPPER WINDOW')
     sg.set_options(**default_params)
 
     return sg.Window('Bulk Shipper',

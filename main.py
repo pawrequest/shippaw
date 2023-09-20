@@ -72,7 +72,7 @@ if __name__ == '__main__':
     args.direction = ShipDirection[args.direction]
     args.file = Path(args.file)
 
-    logger.info(f'{args=}')
+    logger.debug(f'{args=}')
 
     main(category=args.category,
          shipping_mode=args.shipping_mode,

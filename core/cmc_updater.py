@@ -33,7 +33,7 @@ def edit_commence(pscript: str, function: str, table: str, record: str, package:
     if process_result.stderr:
         parse_std_err(process_result)
     else:
-        logger.info(f'COMMENCE UPDATER:\n{process_result.stdout}')
+        logger.debug(f'COMMENCE UPDATER:\n{process_result.stdout}')
     return process_result
 
 
@@ -46,11 +46,11 @@ class Commence():
         record_name_esc = f'"{record_name}"'
         process_command = [self.powershell_path, '-ExecutionPolicy', 'Unrestricted', '-Command',
                            self.cmc_updater_script, table_name, record_name_esc]
-        logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
+        logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
 
         process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         universal_newlines=True)
-        logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
+        logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
 
     def update_record(self, tablename, recordname, update_package):
         ...
@@ -93,11 +93,11 @@ class Commence():
 #         if input(f"Create New Record {record_name} in {table_name}? (y/n)").lower() == 'y':
 #             process_command.append('-insert')
 #             # process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
-#     logger.info(f'LAUNCH CMD POWERSHELL: {process_command}')
+#     logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
 #
 #     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
 #                                     universal_newlines=True)
-#     logger.info(f'POWERSHELL RESULT: {process_result.returncode}')
+#     logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
 #
 #     if process_result.stderr:
 #         parse_std_err(process_result)

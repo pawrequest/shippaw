@@ -33,9 +33,9 @@ def config_sandbox(config_dict_from_toml) -> Config:
     return config_from_dict(config_dict=config_dict_from_toml, sandbox=True)
 
 
-# def test_config_sandbox(config_sandbox):
-#     assert isinstance(config_sandbox, Config)
-#     assert config_sandbox.sandbox is True
+def test_config_sandbox(config_sandbox):
+    assert isinstance(config_sandbox, Config)
+    assert config_sandbox.sandbox is True
 
 
 @pytest.fixture()
@@ -43,9 +43,9 @@ def config_production(config_dict_from_toml) -> Config:
     return config_from_dict(config_dict=config_dict_from_toml, sandbox=False)
 
 
-# def test_config_prod(config_production):
-#     assert isinstance(config_production, Config)
-#     assert config_production.sandbox is False
+def test_config_prod(config_production):
+    assert isinstance(config_production, Config)
+    assert config_production.sandbox is False
 
 
 @pytest.fixture()

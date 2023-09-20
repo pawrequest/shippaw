@@ -15,7 +15,7 @@ class APIClientWrapperGPT(DespatchBaySDK):
     def _log_api_call(self, method_name, *args, **kwargs):
         """ Log API call with its name and parameters """
         self.api_calls += 1
-        logger.info(f"API call number {self.api_calls}: {method_name}")
+        logger.debug(f"API call number {self.api_calls}: {method_name}")
 
     def __getattr__(self, name):
         # Override the method to intercept API calls
@@ -41,7 +41,7 @@ class APIClientWrapper():
     def _log_api_call(self, method_name, *args, **kwargs):
         """ Log API call with its name and parameters """
         self.api_calls += 1
-        logger.info(f"API call number {self.api_calls}: {method_name}")
+        logger.debug(f"API call number {self.api_calls}: {method_name}")
 
     def __getattr__(self, name):
         # Override the method to intercept API calls
@@ -63,7 +63,7 @@ def get_dbay_client(creds: DbayCreds):
             client = APIClientWrapperGPT(api_user=creds.api_user, api_key=creds.api_key)
             # client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
             dbay_account = client.get_account()
-            logger.info(f'Despatchbay account retrieved: {dbay_account}')
+            logger.debug(f'Despatchbay account retrieved: {dbay_account}')
         except AuthorizationException as e:
             logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
             creds = creds_from_user()

@@ -418,7 +418,7 @@ def get_shipment_request(shipment: ShipmentPreRequest, client: DespatchBaySDK) -
         recipient_address=shipment.recipient,
         follow_shipment=True
     )
-    logger.info(f'SHIPMENT REQUEST:\n{request}')
+    logger.debug(f'SHIPMENT REQUEST:\n{request}')
     return request
 
 

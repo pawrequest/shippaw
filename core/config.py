@@ -141,6 +141,7 @@ def config_from_dict(config_dict, sandbox=None) -> Config:
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
     mappings_dict = config_dict['import_mappings']
+    logger.debug('mappings_dict: %s', mappings_dict)
 
     return Config(
         import_mappings=get_all_mappings(mappings=mappings_dict),

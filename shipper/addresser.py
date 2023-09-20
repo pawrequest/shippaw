@@ -40,15 +40,16 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
     check_set = set(search_terms)
     for term in check_set:
         try:
-            logger.info(f"ADDRESS SEARCH: {postcode} & {term}")
+            logger.info(f"Address Search: {postcode=} | {term=}")
             address = client.find_address(postcode, term)
+            logger.info(f"Address Match - {address.company_name if address.company_name else ''} + {address.street}")
             return address
         except ApiException as e1:
             if 'No Addresses Found At Postcode' in e1.args:
-                logger.info(f"ADDRESS SEARCH FAIL - {f'{postcode} + {term}'}")
+                logger.info(f"Address Search Fail - {postcode=} | {term=}")
             continue
     else:
-        logger.info(f"ALL ADDRESS SEARCHES FAIL - {f'{postcode=}, {check_set=}'}")
+        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
         sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
         return None
 
@@ -170,10 +171,10 @@ def fuzzy_address(shipment, client: DespatchBaySDK) -> Address:
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
         if get_explicit_match(shipment=shipment, candidate_address=candidate_address):
             return candidate_address
-        logger.info(f"{candidate_address=}")
+        logger.debug(f"{candidate_address=}")
         fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
-    logger.info(f'Bestmatch Address: {bestmatch.address}')
+    logger.debug(f'Bestmatch Address: {bestmatch.address}')
     return bestmatch.address
 
 

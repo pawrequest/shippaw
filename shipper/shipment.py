@@ -207,11 +207,13 @@ def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMa
     if not shipments:
         logger.info('No shipments to process.')
         sys.exit()
+    logger.info(f'{len(shipments)} shipments added to dict')
+
     return shipments
 
 
 def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
                          record: dict) -> ShipmentInput:
     transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
-    [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
+    [logger.debug(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
     return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)

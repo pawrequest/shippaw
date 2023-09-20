@@ -23,7 +23,7 @@
 #
 #     @classmethod
 #     def get_dbay_shipments(cls, import_mapping: dict, category: ShipmentCategory, dbase_file: str):
-#         logger.info(f'DBase file = {dbase_file}')
+#         logger.debug(f'DBase file = {dbase_file}')
 #         shipments_dict = {}
 #         shipments_list: [DbayShipment] = []
 #         try:
@@ -52,7 +52,7 @@
 #
 #
 # def get_dbay_shipments(import_mapping: dict, category: ShipmentCategory, dbase_file: str):
-#     logger.info(f'DBase file NEW = {dbase_file}')
+#     logger.debug(f'DBase file NEW = {dbase_file}')
 #     shipments_dict = {}
 #     try:
 #         for record in DBF(dbase_file):
