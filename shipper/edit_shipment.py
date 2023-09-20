@@ -52,7 +52,7 @@ def update_service_button(num_boxes: int, shipment_to_edit: ShipmentRequested, w
         SERVICE_STRING(num_boxes=num_boxes, service=shipment_to_edit.service))
 
 
-def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
+def address_click(target: Sender | Recipient, shipment: ShipmentRequested, client:DespatchBaySDK):
     """ Takes a Sender or Recipient and returns a new address for that sender or recipient or None if exit """
     contact = Contact(name=target.name, email=target.email, telephone=target.telephone)
     if isinstance(target, Sender):
@@ -63,7 +63,7 @@ def address_click(target: Sender | Recipient, shipment: ShipmentRequested):
         raise TypeError(f'add_click target must be Sender or Recipient, not {type(target)}')
 
     new_address = address_from_gui(shipment=shipment, address=address_to_edit,
-                                   contact=contact)
+                                   contact=contact, client=client)
     if new_address is None:
         return None
 

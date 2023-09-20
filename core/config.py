@@ -47,8 +47,8 @@ logger.info(f'AmDesp started, '
             f'\n{LOG_FILE=}'
             f'\n{CONFIG_TOML=}'
             )
-logger.addFilter(filter_log)
-
+# logger.addFilter(filter_log)
+#
 
 
 class ImportMap(BaseModel):
@@ -87,11 +87,6 @@ def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> Imp
     map_dict = mappings[category.value.lower()]
     return mapper_dict[category](**map_dict)
 
-
-# def get_import_map_new(category: ShipmentCategory, mappings: dict[str, ImportMap]) -> ImportMap:
-#     map_dict = mappings[category.value.lower()]
-#     return mapper_dict[category](**map_dict)
-#
 
 def get_all_mappings(mappings: dict[str, dict]) -> dict[str, ImportMap]:
     return {category.name.lower(): mapper_dict[category](**mappings[category.value.lower()])

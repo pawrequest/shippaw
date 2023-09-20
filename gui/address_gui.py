@@ -113,7 +113,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, testing=None) -> Address | None:
+def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, client:DespatchBaySDK, testing=None) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
     if testing:
@@ -127,7 +127,7 @@ def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact
 
         if 'postal' in event.lower():
             postcode = values.get(event.upper())
-            new_address = address_postcode_click(postcode=postcode)
+            new_address = address_postcode_click(postcode=postcode, client=client)
             if new_address:
                 # update_gui_from_address(address=new_address)
                 update_gui_from_address(address=new_address, window=window)

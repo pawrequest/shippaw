@@ -42,14 +42,14 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
         try:
             logger.info(f"Address Search: {postcode=} | {term=}")
             address = client.find_address(postcode, term)
-            logger.info(f"Address Match - {address.company_name if address.company_name else ''} + {address.street}")
+            logger.info(f"Address Match - {f'{address.company_name} - ' if address.company_name else ''}{address.street}")
             return address
         except ApiException as e1:
-            if 'No Addresses Found At Postcode' in e1.args:
+            if 'No Addresses Found At Postcode' in str(e1):
                 logger.info(f"Address Search Fail - {postcode=} | {term=}")
             continue
         except Exception as e2:
-            logger.exception(f"ADDRESS FAIL ARGS = - {e2.args}")
+            logger.exception(f"ADDRESS FAIL {str(e2)}")
             continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")

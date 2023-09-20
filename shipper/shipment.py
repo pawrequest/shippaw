@@ -176,7 +176,7 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
     except Exception as e:
         logger.exception(e)
 
-class ShipmentDict(dict[str, ShipmentInput]):
+class ShipmentDict(dict[str, ShipmentRequested]):
     pass
 def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
@@ -196,14 +196,12 @@ def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, ou
 def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> ShipmentDict:
     shipments = ShipmentDict()
+
     for record in records:
-        try:
-            shipment = shipment_from_record(category=category, import_map=import_map, outbound=outbound,
-                                                  record=record)
-            shipments[shipment.shipment_name] = shipment
-        except Exception as e:
-            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
-            continue
+        shipment = shipment_from_record(category=category, import_map=import_map, outbound=outbound, record=record)
+        shipments[shipment.shipment_name] = shipment
+
+
     if not shipments:
         logger.info('No shipments to process.')
         sys.exit()
@@ -211,9 +209,12 @@ def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMa
 
     return shipments
 
-
 def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
-                         record: dict) -> ShipmentInput:
+                         record: dict) -> ShipmentInput | None:
     transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
     [logger.debug(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
-    return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
+    try:
+        return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
+    except Exception as e:
+        logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+        return None

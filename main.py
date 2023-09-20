@@ -37,8 +37,7 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
                                        records=records)
     shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
 
-    # shipments_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=outbound, records=records)
-    # dicty = prepare_batch_dict(client=client, config=config, shipments_dict=shipments_dict)
+    dicty = prepare_batch_dict(client=client, config=config, shipments=shipments)
 
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:

@@ -44,7 +44,7 @@ class Shipper:
 #     post_book(shipments=shipments_complete)
 
 
-def prepare_batch(client, config, shipments):
+def prepare_batch(client, config, shipments: List[ShipmentInput]):
     shipments_addressed = [address_shipment(shipment=shipment, home_address=config.home_address,
                                             home_contact=config.home_contact, client=client) for shipment in shipments]
     shipments_prepared = [
@@ -55,14 +55,16 @@ def prepare_batch(client, config, shipments):
     shipments_requested = [request_shipment(shipment=shipment, client=client) for shipment in shipments_for_request]
     return shipments_requested
 
-
-def prepare_batch_dict(client, config, shipments_dict: dict[str, ShipmentInput]) -> ShipmentDict:
-    shipments_addressed = {key: address_shipment(shipment=shipment, home_address=config.home_address, home_contact=config.home_contact, client=client) for key, shipment in shipments_dict.items()}
-    shipments_prepared = {key: prepare_shipment(shipment=shipment, default_courier=config.default_carrier.courier, client=client) for key, shipment in shipments_addressed.items()}
-    shipments_for_request = {key: pre_request_shipment(default_shipping_service_id=config.default_carrier.service, shipment=shipment, client=client) for key, shipment in shipments_prepared.items()}
-    shipments_requested = ShipmentDict(
-        {key: request_shipment(shipment=shipment, client=client) for key, shipment in shipments_for_request.items()})
-    return shipments_requested
+def prepare_batch_dict(client, config, shipments):
+    shipments_addressed:List[ShipmentAddressed] = [address_shipment(shipment=shipment, home_address=config.home_address,
+                                            home_contact=config.home_contact, client=client) for shipment in shipments]
+    shipments_prepared:List[ShipmentPrepared] = [prepare_shipment(shipment=shipment, default_courier=config.default_carrier.courier, client=client)
+        for shipment in shipments_addressed]
+    shipments_for_request:List[ShipmentPreRequest] = [pre_request_shipment(default_shipping_service_id=config.default_carrier.service,
+                                                  shipment=shipment, client=client) for shipment in shipments_prepared]
+    shipments_requested:List[ShipmentRequested] = [request_shipment(shipment=shipment, client=client) for shipment in shipments_for_request]
+    dicty = {shipment.shipment_name:shipment for shipment in shipments_requested}
+    return ShipmentDict(**dicty)
 
 def address_shipment(shipment: ShipmentInput, home_address: HomeAddress, home_contact: Contact,
                      client: DespatchBaySDK) -> ShipmentAddressed:
@@ -134,14 +136,15 @@ def process_shipments_batch(shipments:List[ShipmentRequested],values: dict, conf
     sg.popup_quick_message('Processing shipments, please wait...')
     return [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in shipments]
 
-def process_shipments_batch_dict(shipment_dict:ShipmentDict, values: dict, config: Config, client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
+def process_shipments_batch_dict(shipment_dict:ShipmentDict, values: dict, config: Config, client:DespatchBaySDK) -> ShipmentDict:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
             logger.info('User quit')
             sys.exit()
     sg.popup_quick_message('Processing shipments, please wait...')
-    # todo typechecking
-    return [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in shipment_dict.values()]
+    processed = [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in shipment_dict.values()]
+    dicty = ShipmentDict({s.name: s for s in processed})
+    return dicty
 
 def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Config, client:DespatchBaySDK) -> ShipmentBooked | ShipmentQueued:
     """ queues and books shipment, updates commence, prints and emails label"""
@@ -158,6 +161,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
 
     return booked
+
 
 
 def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
@@ -209,10 +213,10 @@ def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:Desp
             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
 
         elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender)
+            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
 
         elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient)
+            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
 
         elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
             shipments = [s for s in shipments if s != shipment_to_edit]
@@ -243,10 +247,7 @@ def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:Despat
     listens for go_ship  button to start booking collection etc"""
     logger.info('GUI LOOP')
 
-    if config.sandbox:
-        sg.theme('Tan')
-    else:
-        sg.theme('Dark Blue')
+    sg.theme(f'{"Tan" if config.sandbox else "Dark Blue"}')
 
     window = main_window(shipments=shipment_dict.values())
     processed_shipments = []
@@ -261,12 +262,17 @@ def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:Despat
 
         if event == keys_and_strings.GO_SHIP_KEY():
             window.close()
-            return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
+            processed_shipments = process_shipments_batch_dict(shipment_dict=shipment_dict, values=values, config=config, client=client)
+            return processed_shipments
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
-        shipment_to_edit_index = next(
-            (i for i, shipment in enumerate(shipments) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()),
+
+        shipment_to_edit = next(
+            (i for i, shipment in enumerate(shipment_dict.values()) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()),
             None)
+        #
+        # shipment_to_edit = next((shipment in shipment_dict.values()) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper(), None)
+
 
         # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
         #                                             keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
@@ -286,10 +292,10 @@ def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:Despat
             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
 
         elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender)
+            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
 
         elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient)
+            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
 
         elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
             shipments = [s for s in shipments if s != shipment_to_edit]

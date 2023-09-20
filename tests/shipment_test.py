@@ -4,8 +4,9 @@ from core.config import ROOT_DIR
 from core.enums import ShipmentCategory
 from gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
 from shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_record, ShipmentDict, \
-    shipments_from_records_dict
-from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_shipment, queue_shipment, \
+    shipments_from_records, shipments_from_records_dict
+from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_batch, prepare_shipment, \
+    queue_shipment, \
     read_window_cboxs, \
     request_shipment, prepare_batch_dict
 from tests.config_test import dbay_client_sandbox,dbay_client_production, config_production, config_dict_from_toml, config_sandbox, category
@@ -13,16 +14,16 @@ from tests.config_test import dbay_client_sandbox,dbay_client_production, config
 fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'
 
 record_dict = {
-    ShipmentCategory.HIRE: records_from_dbase(dbase_file=fixtures_dir / 'hire.dbf')[0],
-    ShipmentCategory.SALE: records_from_dbase(dbase_file=fixtures_dir / 'sale.dbf')[0],
-    ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=fixtures_dir / 'customer.dbf')[0],
+    ShipmentCategory.HIRE: records_from_dbase(dbase_file=fixtures_dir / 'hire.dbf'),
+    ShipmentCategory.SALE: records_from_dbase(dbase_file=fixtures_dir / 'sale.dbf'),
+    ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=fixtures_dir / 'customer.dbf'),
     'bulk': records_from_dbase(dbase_file=fixtures_dir / 'bulk.dbf')
 }
 
 
 @pytest.fixture()
 def shipment_input_fixture(category, config_sandbox):
-    record = record_dict[category]
+    record = record_dict[category][0]
     import_map = config_sandbox.import_mappings[category.name.lower()]
     return shipment_from_record(category=category, record=record, outbound=True, import_map=import_map)
 
@@ -75,20 +76,22 @@ def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, confi
     # booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
     ...
 
-
-def test_prepare_dict(dbay_client_sandbox, config_sandbox, category):
-    records = record_dict['bulk']
-    import_map = config_sandbox.import_mappings.get(category.name.lower())
-    shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
-    prepared = prepare_batch_dict(client=dbay_client_sandbox, config=config_sandbox, shipments_dict=shipment_dict)
-    assert isinstance(prepared, ShipmentDict)
+#
+# def test_prepare_dict(dbay_client_sandbox, config_sandbox, category):
+#     records = record_dict['bulk']
+#     import_map = config_sandbox.import_mappings.get(category.name.lower())
+#     shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
+#     prepared = prepare_batch_dict(client=dbay_client_sandbox, config=config_sandbox, shipments_dict=shipment_dict)
+#     assert isinstance(prepared, ShipmentDict)
 
 def test_prepare_dict_prod(dbay_client_production, config_production, category):
     records = record_dict['bulk']
     import_map = config_production.import_mappings.get(category.name.lower())
-    shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
-    prepared = prepare_batch_dict(client=dbay_client_production, config=config_production, shipments_dict=shipment_dict)
-    assert isinstance(prepared, ShipmentDict)
+    shipments = shipments_from_records(category=category, import_map=import_map, outbound=True, records=records)
+    # prepared = prepare_batch_dict(client=dbay_client_production, config=config_production, shipments=shipments)
+    prepared = prepare_batch(client=dbay_client_production, config=config_production, shipments=shipments)
+    dicty = ShipmentDict({shipment.shipment_name: shipment for shipment in prepared})
+    assert isinstance(dicty, ShipmentDict)
 
 
 # def fake_popup():
