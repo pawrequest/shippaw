@@ -22,7 +22,8 @@ from shipper.edit_shipment import address_click, date_click, dropoff_click, get_
     service_click, \
     update_service_button, boxes_click
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
-    ShipmentGuiConfirmed, ShipmentInput, ShipmentPreRequest, ShipmentPrepared, ShipmentQueued, ShipmentRequested
+    ShipmentGuiConfirmed, ShipmentInput, ShipmentPreRequest, ShipmentPrepared, ShipmentQueued, ShipmentRequested, \
+    ShipmentDict
 from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
@@ -55,11 +56,12 @@ def prepare_batch(client, config, shipments):
     return shipments_requested
 
 
-def prepare_batch_dict(client, config, shipments_dict: dict[str, ShipmentInput]):
+def prepare_batch_dict(client, config, shipments_dict: dict[str, ShipmentInput]) -> ShipmentDict:
     shipments_addressed = {key: address_shipment(shipment=shipment, home_address=config.home_address, home_contact=config.home_contact, client=client) for key, shipment in shipments_dict.items()}
     shipments_prepared = {key: prepare_shipment(shipment=shipment, default_courier=config.default_carrier.courier, client=client) for key, shipment in shipments_addressed.items()}
     shipments_for_request = {key: pre_request_shipment(default_shipping_service_id=config.default_carrier.service, shipment=shipment, client=client) for key, shipment in shipments_prepared.items()}
-    shipments_requested = {key: request_shipment(shipment=shipment, client=client) for key, shipment in shipments_for_request.items()}
+    shipments_requested = ShipmentDict(
+        {key: request_shipment(shipment=shipment, client=client) for key, shipment in shipments_for_request.items()})
     return shipments_requested
 
 def address_shipment(shipment: ShipmentInput, home_address: HomeAddress, home_contact: Contact,
