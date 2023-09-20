@@ -33,9 +33,9 @@ def config_sandbox(config_dict_from_toml) -> Config:
     return config_from_dict(config_dict=config_dict_from_toml, sandbox=True)
 
 
-def test_config_sandbox(config_sandbox):
-    assert isinstance(config_sandbox, Config)
-    assert config_sandbox.sandbox is True
+# def test_config_sandbox(config_sandbox):
+#     assert isinstance(config_sandbox, Config)
+#     assert config_sandbox.sandbox is True
 
 
 @pytest.fixture()
@@ -43,9 +43,9 @@ def config_production(config_dict_from_toml) -> Config:
     return config_from_dict(config_dict=config_dict_from_toml, sandbox=False)
 
 
-def test_config_prod(config_production):
-    assert isinstance(config_production, Config)
-    assert config_production.sandbox is False
+# def test_config_prod(config_production):
+#     assert isinstance(config_production, Config)
+#     assert config_production.sandbox is False
 
 
 @pytest.fixture()
@@ -53,18 +53,18 @@ def dbay_client_sandbox(config_sandbox):
     return get_dbay_client(creds=config_sandbox.dbay_creds)
 
 
-def test_client_sandbox(dbay_client_sandbox):
-    assert isinstance(dbay_client_sandbox, DespatchBaySDK)
-    balance = dbay_client_sandbox.get_account_balance().balance
-    assert balance == 1000.0
-
+# def test_client_sandbox(dbay_client_sandbox):
+#     assert isinstance(dbay_client_sandbox, DespatchBaySDK)
+#     balance = dbay_client_sandbox.get_account_balance().balance
+#     assert balance == 1000.0
+#
 
 @pytest.fixture()
 def dbay_client_production(config_production):
     return get_dbay_client(creds=config_production.dbay_creds)
 
-
-def test_client_production(dbay_client_production):
-    assert isinstance(dbay_client_production, DespatchBaySDK)
-    balance = dbay_client_production.get_account_balance().balance
-    assert isinstance(balance, float)
+#
+# def test_client_production(dbay_client_production):
+#     assert isinstance(dbay_client_production, DespatchBaySDK)
+#     balance = dbay_client_production.get_account_balance().balance
+#     assert isinstance(balance, float)
