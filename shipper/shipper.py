@@ -20,7 +20,7 @@ from shipper.addresser import get_home_sender_recip, get_remote_recipient, remot
     sender_from_contact_address
 from shipper.edit_shipment import address_click, date_click, dropoff_click, get_new_boxes, get_parcels, \
     service_click, \
-    update_service_button
+    update_service_button, boxes_click
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
     ShipmentGuiConfirmed, ShipmentInput, ShipmentPreRequest, ShipmentPrepared, ShipmentQueued, ShipmentRequested
 from shipper.tracker import get_tracking
@@ -185,6 +185,9 @@ def main_loop(config: Config, shipments: List[ShipmentRequested], client:Despatc
             shipment_to_edit.parcels = get_parcels(num_parcels=new_boxes, client=client)
             update_service_button(num_boxes=new_boxes, shipment_to_edit=shipment_to_edit, window=window)
             package = new_boxes
+
+            # todo test this works... was issues with service button? and using shipment index not shipment to mutate in list?
+            # package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
 
         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
             shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed

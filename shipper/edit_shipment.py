@@ -11,11 +11,17 @@ from gui.main_gui import new_date_selector, new_service_popup, num_boxes_popup
 from shipper.shipment import ShipmentRequested
 
 
-def boxes_click(shipment_to_edit, window) -> int | None:
+def boxes_click(shipment_to_edit, window, client) -> int | None:
+    # new_boxes = get_new_boxes(location=window.mouse_location())
+    # if new_boxes is None:
+    #     return None
     new_boxes = get_new_boxes(location=window.mouse_location())
     if new_boxes is None:
-        return None
+        return
+    shipment_to_edit.parcels = get_parcels(num_parcels=new_boxes, client=client)
+    update_service_button(num_boxes=new_boxes, shipment_to_edit=shipment_to_edit, window=window)
     return new_boxes
+
 
 
 def dropoff_click(config, shipment: ShipmentRequested, client: DespatchBaySDK):
