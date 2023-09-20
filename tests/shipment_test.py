@@ -8,7 +8,7 @@ from shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_r
 from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_shipment, queue_shipment, \
     read_window_cboxs, \
     request_shipment, prepare_batch_dict
-from tests.config_test import dbay_client_sandbox, config_sandbox, config_dict_from_toml, category
+from tests.config_test import dbay_client_sandbox,dbay_client_production, config_production, config_dict_from_toml, config_sandbox, category
 
 fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'
 
@@ -81,6 +81,13 @@ def test_prepare_dict(dbay_client_sandbox, config_sandbox, category):
     import_map = config_sandbox.import_mappings.get(category.name.lower())
     shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
     prepared = prepare_batch_dict(client=dbay_client_sandbox, config=config_sandbox, shipments_dict=shipment_dict)
+    assert isinstance(prepared, ShipmentDict)
+
+def test_prepare_dict_prod(dbay_client_production, config_production, category):
+    records = record_dict['bulk']
+    import_map = config_production.import_mappings.get(category.name.lower())
+    shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
+    prepared = prepare_batch_dict(client=dbay_client_production, config=config_production, shipments_dict=shipment_dict)
     assert isinstance(prepared, ShipmentDict)
 
 

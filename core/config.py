@@ -20,6 +20,11 @@ CONFIG_TOML = DATA_DIR / 'user_config.toml'
 # config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
+def filter_log(record):
+    if "SOAP-ENV:Envelope" in record.getMessage():
+        return False
+    return True
+
 
 def get_amdesp_logger():
     new_logger = logging.getLogger(name='AmDesp')
@@ -42,6 +47,8 @@ logger.info(f'AmDesp started, '
             f'\n{LOG_FILE=}'
             f'\n{CONFIG_TOML=}'
             )
+logger.addFilter(filter_log)
+
 
 
 class ImportMap(BaseModel):

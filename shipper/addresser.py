@@ -48,6 +48,9 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
             if 'No Addresses Found At Postcode' in e1.args:
                 logger.info(f"Address Search Fail - {postcode=} | {term=}")
             continue
+        except Exception as e2:
+            logger.exception(f"ADDRESS FAIL ARGS = - {e2.args}")
+            continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
         sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
