@@ -39,7 +39,7 @@ def dispatch(config: Config, client: DespatchBaySDK, prepared_shipments: List[Sh
     """ Shipment processing pipeline - takes list of validated shipments and Config objects,
     walks through addressing and preparation steps before selectively booking collecitons and printing labels as per GUI"""
 
-    shipments_complete = gui_listener(config=config, shipments=prepared_shipments, client=client)
+    shipments_complete = main_loop(config=config, shipments=prepared_shipments, client=client)
     post_book(shipments=shipments_complete)
 
 
@@ -117,12 +117,17 @@ def request_shipment(shipment: ShipmentPreRequest, client:DespatchBaySDK) -> Shi
     return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
 
 
-def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Config, client:DespatchBaySDK) -> ShipmentBooked | ShipmentQueued:
-    """ queues and books shipment, updates commence, prints and emails label"""
+def process_shipments_batch(shipments:List[ShipmentRequested],values: dict, config: Config, client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
             logger.info('User quit')
             sys.exit()
+    sg.popup_quick_message('Processing shipments, please wait...')
+    return [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in shipments]
+
+def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Config, client:DespatchBaySDK) -> ShipmentBooked | ShipmentQueued:
+    """ queues and books shipment, updates commence, prints and emails label"""
+
     shipment: ShipmentGuiConfirmed = read_window_cboxs(shipment=shipment_req, values=values)
     shipment: ShipmentQueued = queue_shipment(shipment=shipment, client=client)
     shipment: ShipmentCmcUpdated = update_commence(config=config, shipment=shipment)
@@ -137,7 +142,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     return booked
 
 
-def gui_listener(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
+def main_loop(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
     """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking collection etc"""
@@ -162,10 +167,7 @@ def gui_listener(config: Config, shipments: List[ShipmentRequested], client:Desp
         if event == keys_and_strings.GO_SHIP_KEY():
             window.close()
 
-            sg.popup_quick_message('Processing shipments, please wait...')
-            for shipment in shipments:
-                processed_shipments.append(process_shipment(shipment_req=shipment, values=values, config=config, client=client))
-            return processed_shipments
+            return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
 
         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
         shipment_to_edit_index = next(
