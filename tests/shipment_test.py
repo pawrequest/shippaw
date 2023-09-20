@@ -1,15 +1,14 @@
 import pytest
-from despatchbay.despatchbay_entities import Address
 
 from core.config import ROOT_DIR
 from core.enums import ShipmentCategory
 from gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
-from shipper.shipment import ShipmentBooked, ShipmentRequested, records_from_dbase, shipment_from_record
+from shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_record, ShipmentDict, \
+    shipments_from_records_dict
 from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_shipment, queue_shipment, \
     read_window_cboxs, \
-    request_shipment, prepare_batch_dict
-
-from tests.config_test import dbay_client_sandbox, dbay_client_production, config_sandbox, config_production, config_dict_from_toml, category
+    request_shipment
+from tests.config_test import dbay_client_sandbox, config_sandbox, config_dict_from_toml, category
 
 fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'
 
@@ -17,11 +16,12 @@ record_dict = {
     ShipmentCategory.HIRE: records_from_dbase(dbase_file=fixtures_dir / 'hire.dbf')[0],
     ShipmentCategory.SALE: records_from_dbase(dbase_file=fixtures_dir / 'sale.dbf')[0],
     ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=fixtures_dir / 'customer.dbf')[0],
+    'bulk': records_from_dbase(dbase_file=fixtures_dir / 'bulk.dbf')
 }
 
 
 @pytest.fixture()
-def shipment_input_fixture(category, config_sandbox, request):
+def shipment_input_fixture(category, config_sandbox):
     record = record_dict[category]
     import_map = config_sandbox.import_mappings[category.name.lower()]
     return shipment_from_record(category=category, record=record, outbound=True, import_map=import_map)
@@ -66,7 +66,7 @@ def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, confi
 
     shipment_read = read_window_cboxs(shipment=shipment_requested_fixture, values=values)
     shipment_queued = queue_shipment(shipment=shipment_read, client=dbay_client_sandbox)
-    shipment_booked= book_shipment(shipment=shipment_queued, client=dbay_client_sandbox)
+    shipment_booked = book_shipment(shipment=shipment_queued, client=dbay_client_sandbox)
     assert isinstance(shipment_booked, ShipmentBooked)
 
     # shipment.label_location = download_shipment_label(shipment=shipment, config=config_from_toml_sandbox, client=dbay_client_sandbox)
@@ -75,11 +75,12 @@ def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, confi
     # booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
     ...
 
-def test_prepare_dict(dbay_client_sandbox, config_sandbox, ):
 
-    prepare_batch_dict
-
-
+def test_prepare_dict(dbay_client_sandbox, config_sandbox, category):
+    records = record_dict['bulk']
+    import_map = config_sandbox.import_mappings.get(category.name.lower())
+    shipment_dict = shipments_from_records_dict(category=category, import_map=import_map, outbound=True, records=records)
+    assert isinstance(shipment_dict, ShipmentDict)
 
 # def fake_popup():
 #     return "Da16 3hu"

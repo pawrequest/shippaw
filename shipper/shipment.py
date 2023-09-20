@@ -176,7 +176,8 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
     except Exception as e:
         logger.exception(e)
 
-
+class ShipmentDict(dict[str, ShipmentInput]):
+    pass
 def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
     shipments = []
@@ -193,8 +194,8 @@ def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, ou
     return shipments
 
 def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
-        -> Dict[str, ShipmentInput]:
-    shipments = {}
+        -> ShipmentDict:
+    shipments = ShipmentDict()
     for record in records:
         try:
             shipment = shipment_from_record(category=category, import_map=import_map, outbound=outbound,
