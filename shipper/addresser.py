@@ -9,7 +9,7 @@ from despatchbay.exceptions import ApiException
 
 from core.enums import Contact, HomeAddress
 from gui.address_gui import address_from_gui
-from shipper.fuzzy import fuzzy_address
+from shipper.fuzzy import fuzzy_address_script
 from shipper.shipment import ShipmentInput
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, clie
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms, client=client):
         return address
 
-    fuzzy = fuzzy_address(shipment=shipment, client=client)
+    fuzzy = fuzzy_address_script(shipment=shipment, client=client)
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact, client=client)
         if address is None:
