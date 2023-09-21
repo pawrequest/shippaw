@@ -1,5 +1,7 @@
 import ctypes
+import logging
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
 
@@ -7,32 +9,39 @@ import PySimpleGUI as sg
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from core.enums import ApiScope, Contact, DbayCreds, DefaultCarrier, HomeAddress, \
+from core.enums import ApiScope, Contact, DefaultCarrier, HomeAddress, \
     PathsList, ShipmentCategory
-from core.logger import amdesp_logger
+from core.dbay_client import DbayCreds
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
 MODEL_CONFIG_TOML = ROOT_DIR / 'core' / 'model_user_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
-# config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
+
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
-def filter_log(record):
-    if "SOAP-ENV:Envelope" in record.getMessage():
-        return False
-    return True
 
-logger = get
-logger.info(f'AmDesp started, '
-            f'\n{ROOT_DIR=}'
-            f'\n{DATA_DIR=}'
-            f'\n{LOG_FILE=}'
-            f'\n{CONFIG_TOML=}'
-            )
-# amdesp_logger.addFilter(filter_log)
-#
+logger = logging.getLogger(name=__name__)
+
+
+def configure_logging(log_file):
+    # formatter = logging.Formatter('{levelname:<8} {asctime} {message}', style='{')
+    formatter = logging.Formatter('{levelname:<8} {asctime} | {name}:{lineno} | {message}', style='{')
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+
+    root_logger.addHandler(stream_handler)
+
 
 
 class ImportMap(BaseModel):
@@ -109,11 +118,11 @@ class Config(BaseModel):
         try:
             self.paths.cmc_dll.exists()
         except Exception as e:
-            amdesp_logger.exception('Vovin CmcLibNet dll not found')
+            logger.exception('Vovin CmcLibNet dll not found')
             try:
                 self.install_cmc_lib_net()
             except Exception as e:
-                amdesp_logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
+                logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
 def get_config_dict(toml_file) -> dict:
@@ -127,13 +136,12 @@ def config_from_dict(config_dict, sandbox=None) -> Config:
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
     mappings_dict = config_dict['import_mappings']
-    amdesp_logger.debug('mappings_dict: %s', mappings_dict)
 
     return Config(
         import_mappings=get_all_mappings(mappings=mappings_dict),
         home_address=HomeAddress(**config_dict.get('home_address')),
         home_contact=Contact(**config_dict.get('home_contact')),
-        dbay_creds=DbayCreds.from_dict(**dbay.get('envars')),
+        dbay_creds=DbayCreds.from_envar_names(**dbay.get('envars')),
         default_carrier=DefaultCarrier(**dbay.get('default_carrier')),
         paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
         parcel_contents=config_dict.get('parcel_contents'),
@@ -170,21 +178,21 @@ def set_despatch_env(api_user, api_key, sandbox):
 
     # result1 = run_as_admin(cmd1)
     # if result1.returncode != 0:
-    #     amdesp_logger.error("Error:", result1.stderr)
+    #     logger.error("Error:", result1.stderr)
     # else:
-    #     amdesp_logger.info(f"Environment variable set: {api_user_str} : {api_user}")
+    #     logger.info(f"Environment variable set: {api_user_str} : {api_user}")
     #
     # result2 = run_as_admin(cmd2)
     # if result2.returncode != 0:
-    #     amdesp_logger.error("Error:", result2.stderr)
+    #     logger.error("Error:", result2.stderr)
     # else:
-    #     amdesp_logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+    #     logger.info(f"Environment variable set: {api_key_str} : {api_key}")
 
     result2 = run_as_admin(cmd3)
     if result2.returncode != 0:
-        amdesp_logger.error("Error:", result2.stderr)
+        logger.error("Error:", result2.stderr)
     else:
-        amdesp_logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+        logger.info(f"Environment variable set: {api_key_str} : {api_key}")
 
 
 def scope_from_sandbox_func(sandbox):

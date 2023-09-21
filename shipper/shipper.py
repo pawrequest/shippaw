@@ -1,3 +1,4 @@
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -12,7 +13,6 @@ from despatchbay.exceptions import ApiException
 
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config
-from core.logger import amdesp_logger
 from core.enums import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
@@ -27,6 +27,7 @@ from shipper.tracker import get_tracking
 
 dotenv.load_dotenv()
 
+logger = logging.getLogger(__name__)
 
 class Shipper:
     def __init__(self, config: Config, shipments: List[ShipmentInput], client: DespatchBaySDK):
@@ -122,7 +123,7 @@ def process_shipments_batch(shipments: List[ShipmentRequested], values: dict, co
         List[ShipmentBooked | ShipmentQueued]:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
-            amdesp_logger.info('User quit')
+            logger.info('User quit')
             sys.exit()
     sg.popup_quick_message('Processing shipments, please wait...')
     return [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in
@@ -133,7 +134,7 @@ def process_shipments_batch_dict(shipment_dict: ShipmentDict, values: dict, conf
                                  client: DespatchBaySDK) -> ShipmentDict:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
-            amdesp_logger.info('User quit')
+            logger.info('User quit')
             sys.exit()
     sg.popup_quick_message('Processing shipments, please wait...')
     processed = [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in
@@ -160,93 +161,11 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     return booked
 
 
-# def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
-#     """ pysimplegui main_loop, takes list of ShipmentRequested objects
-#     listens for user input to edit and update shipments
-#     listens for go_ship  button to start booking collection etc"""
-#     amdesp_logger.info('GUI LOOP')
-#
-#     if config.sandbox:
-#         sg.theme('Tan')
-#     else:
-#         sg.theme('Dark Blue')
-#
-#     window = main_window(shipments=shipments)
-#     processed_shipments = []
-#
-#     while True:
-#         package = None
-#         event, values = window.read()
-#
-#         if event == sg.WIN_CLOSED:
-#             window.close()
-#             sys.exit()
-#
-#         if event == keys_and_strings.GO_SHIP_KEY():
-#             window.close()
-#             return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
-#
-#         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
-#         shipment_to_edit_index = next(
-#             (i for i, shipment in enumerate(shipments) if shipment.shipment_name == event[0]), None)
-#
-#
-#         # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
-#         #                                             shipment.shipment_name_printable == event[0]))
-#         shipment_to_edit = shipments[shipment_to_edit_index]
-#
-#
-#         ...
-#
-#
-#         if event == gui.keys_and_strings.BOXES_KEY(shipment_to_edit):
-#             package = ShipmentEditor.BOXES(shipment_to_edit=shipment_to_edit, window=window, client=client)
-#
-#             # package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
-#
-#         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
-#             shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed
-#             package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(),client=client)
-#             ...
-#
-#
-#         elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
-#             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
-#
-#         elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-#             package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
-#
-#         elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-#             package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
-#
-#         elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
-#             shipments = [s for s in shipments if s != shipment_to_edit]
-#             window.close()
-#             window = main_window(shipments=shipments)
-#
-#         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
-#             sg.popup_ok(shipment_to_edit.address_as_str)
-#
-#         elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
-#             new_date = dropoff_click(config=config, shipment=shipment_to_edit, client=client)
-#             if new_date is None:
-#                 continue
-#             window[keys_and_strings.DATE_KEY(shipment_to_edit)].update(new_date)
-#             window[event].update(button_color='red')
-#
-#         else:
-#             sg.popup_error(f'Wrong event code from pysimplegui listener = {event}')
-#
-#         if package:
-#             window[event].update(package)
-#         shipments[shipment_to_edit_index] = shipment_to_edit
-
-
-def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client: DespatchBaySDK) -> ShipmentDict:
+def dispatch_gui(config: Config, shipment_dict: ShipmentDict, client: DespatchBaySDK) -> ShipmentDict:
     """ pysimplegui main_loop, takes list of ShipmentRequested objects
     listens for user input to edit and update shipments
     listens for go_ship  button to start booking collection etc"""
-    amdesp_logger.info('GUI LOOP')
+    logger.info('GUI LOOP')
 
     sg.theme(f'{"Tan" if config.sandbox else "Dark Blue"}')
 
@@ -347,7 +266,7 @@ def book_shipment(shipment: ShipmentQueued, client: DespatchBaySDK) -> ShipmentB
         raise e
     except Exception as e:
         sg.popup_error(f"Unable to Book {shipment.shipment_name_printable} due to: {e.args}")
-        amdesp_logger.exception(e)
+        logger.exception(e)
         raise e
     else:
         shipment.collection_return = client.get_collection(shipment.shipment_return.collection_id)
@@ -368,7 +287,7 @@ def get_collection_date(shipment: ShipmentPrepared, available_dates: List[Collec
         collection_date = available_dates[0]
         shipment.date_matched = False
 
-    amdesp_logger.info(
+    logger.info(
         f'Collection Date {"NOT" if not shipment.date_matched else ""} Matched to send out date: {collection_date.date}')
     return collection_date
 
@@ -398,7 +317,7 @@ def get_shipment_request(shipment: ShipmentPreRequest, client: DespatchBaySDK) -
         recipient_address=shipment.recipient,
         follow_shipment=True
     )
-    amdesp_logger.debug(f'SHIPMENT REQUEST:\n{request}')
+    logger.debug(f'SHIPMENT REQUEST:\n{request}')
     return request
 
 
@@ -414,7 +333,7 @@ def download_shipment_label(shipment: ShipmentBooked, config: Config, client: De
 
         label_pdf.download(label_path)
     except:
-        amdesp_logger.warning(f'Unable to download label for {shipment.shipment_name_printable} to {label_path}')
+        logger.warning(f'Unable to download label for {shipment.shipment_name_printable} to {label_path}')
     else:
         return label_path
 
@@ -467,11 +386,11 @@ def update_commence(config: Config, shipment: ShipmentQueued):
 
     elif shipment.category == ShipmentCategory.CUSTOMER:
         shipment.is_logged_to_commence = False
-        amdesp_logger.warning(f'Category "Customer" not implemented for commence updater')
+        logger.warning(f'Category "Customer" not implemented for commence updater')
         return shipment
 
     else:
-        amdesp_logger.warning(f'Category {shipment.category} not recognised for commence updater')
+        logger.warning(f'Category {shipment.category} not recognised for commence updater')
         shipment.is_logged_to_commence = False
         return shipment
 

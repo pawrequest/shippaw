@@ -1,13 +1,10 @@
-import os
 from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Optional
 
-from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import AuthorizationException
+from despatchbay.despatchbay_entities import Address
 
 
 class ShipmentCategory(Enum):
@@ -58,24 +55,6 @@ class ShipDirection(Enum):
     OUT = 'OUT'
 
 
-
-@dataclass
-class DbayCreds:
-    api_user: str
-    api_key: str
-
-    @classmethod
-    def from_dict(cls, api_user_envar, api_key_envar):
-        return cls(api_user=os.environ.get(api_user_envar),
-                   api_key=os.environ.get(api_key_envar))
-
-    def validate(self):
-        try:
-            return DespatchBaySDK(api_user=self.api_user, api_key=self.api_key).get_account()
-        except AuthorizationException as e:
-            return None
-
-
 @dataclass
 class DefaultCarrier:
     courier: int
@@ -117,6 +96,7 @@ class PathsList:
         self.inbound_labels: Path = Path()
         self.user_data = Path()
         self.dbase_export = Path()
+        self.logfile = Path()
 
     @classmethod
     def from_dict(cls, paths_dict: dict, root_dir):
@@ -130,7 +110,6 @@ class PathsList:
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
 
 
-# Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
 @dataclass
 class Contact:
     email: str
@@ -138,31 +117,6 @@ class Contact:
     name: str
 
 
-@dataclass
-class DespatchObjects:
-    # collection_date: Optional[CollectionDate] = None
-    collection_date: Optional[CollectionDate] = None
-    available_dates: Optional[List[CollectionDate]] = None
-    shipment_request: Optional[ShipmentRequest] = None
-    shipment_return: Optional[ShipmentReturn] = None
-    service: Optional[Service] = None
-    available_services: Optional[List[Service]] = None
-
-    #
-    # available_dates: Optional[List[CollectionDate]] = None
-    # shipment_request: Optional[ShipmentRequest] = None
-    # shipment_return: Optional[ShipmentReturn] = None
-    # service: Optional[Service] = None
-    # available_services: Optional[List[Service]] = None
-
-
-@dataclass
-class Email:
-    from_address: str
-    to_address: str
-    body: str
-    attachments: Any
-    subject: str
 
 
 @dataclass

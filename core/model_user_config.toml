@@ -101,7 +101,7 @@ data = 'data/'
 scripts = 'scripts/'
 outbound_labels = 'data/Parcelforce Labels/'
 inbound_labels = 'R:/Parcelforce Labels/'
-
+logfile = 'data/AmDesplog.txt'
 log_json = 'data/AmLog.json'
 cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'

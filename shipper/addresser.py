@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Iterable
 
@@ -7,21 +8,22 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from core.logger import amdesp_logger
 from core.enums import BestMatch, Contact, FuzzyScores, HomeAddress
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
+from gui.keys_and_strings import ADDRESS_STRING
 from shipper.shipment import ShipmentInput, ShipmentRequested
 
+logger = logging.getLogger(__name__)
 
-def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, client:DespatchBaySDK) -> (Address | bool):
+
+def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, client: DespatchBaySDK) -> (Address | bool):
     """ Gets an Address object representing the remote location. tries direct search, then fuzzy search, then gui entry."""
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms, client=client):
         return address
 
-    amdesp_logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment, client=client)
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact, client=client)
@@ -41,17 +43,18 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
     for term in check_set:
         try:
             address = client.find_address(postcode, term)
-            amdesp_logger.info(f"Address Match Success : {f'{postcode=} | address={address.company_name} - ' if address.company_name else ''}{address.street}")
+            logger.info(
+                f"Address Match Success : {f'{postcode=} | address={address.company_name} - ' if address.company_name else ''}{address.street}")
             return address
         except ApiException as e1:
             if 'No Addresses Found At Postcode' in str(e1):
-                amdesp_logger.info(f"Address Match Fail : {postcode=} | {term=}")
+                logger.info(f"Address Match Fail : {postcode=} | {term=}")
             continue
         except Exception as e2:
-            amdesp_logger.exception(f"Unknown exception in address_from_direct_search {str(e2)}")
+            logger.exception(f"Unknown exception in address_from_direct_search {str(e2)}")
             continue
     else:
-        amdesp_logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
+        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
         sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
         return None
 
@@ -64,41 +67,13 @@ def get_explicit_match(shipment: ShipmentRequested, candidate_address: Address) 
             shipment.delivery_name in candidate_address.company_name or
             candidate_address.company_name in shipment.delivery_name
     ):
+        logger.info(f'Explicit Match Found: {ADDRESS_STRING(candidate_address)}')
         return True
 
     if shipment.str_to_match == candidate_address.street:
         return True
 
     return False
-
-
-def check_address_company(address: Address, shipment: ShipmentRequested) -> Address | None:
-    """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
-
-    if not address.company_name:
-        amdesp_logger.info(f'No company name at address - passing check')
-        return address
-
-    if address.company_name == shipment.customer \
-            or address.company_name in shipment.address_as_str \
-            or address.company_name in shipment.delivery_name:
-        amdesp_logger.info(f'Address company name matches customer')
-        return address
-
-    else:
-        pop_msg = f'Company name @Found Address and Shipment Customer Name do not exactly match' \
-                  f'\n\nDatabase Details:' \
-                  f'\nCustomer = {shipment.customer}' \
-                  f'\nDelivery Name= {shipment.delivery_name}' \
-                  f'\nString Address from database=' \
-                  f'\n{shipment.address_as_str}' \
-                  f'\n\nFound Address Details:' \
-                  f'\nAddress Company Name= {address.company_name}' \
-                  f'\nStreet address= {address.street}' \
-                  f'\n\n[Yes] to accept matched address or [No] to edit / replace'
-
-        answer = sg.popup_yes_no(pop_msg, line_width=100)
-        return address if answer == 'Yes' else None
 
 
 def get_candidate_keys(postcode, client: DespatchBaySDK, popup_func=None) -> dict:
@@ -141,7 +116,7 @@ def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
 
 def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     """ return BestMatch from a list of FuzzyScores"""
-    amdesp_logger.info(f'Searching BestMatch from fuzzyscores')
+    logger.info(f'Searching BestMatch from fuzzyscores')
     best_address = None
     best_score = 0
     best_category = ""
@@ -152,13 +127,13 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
         max_score = f.scores[max_category]
 
         if max_score > best_score:
-            amdesp_logger.info(f'New BestMatch found with matchscore = {max_score}: {f.address}')
+            logger.info(f'New BestMatch found with matchscore = {max_score}: {f.address}')
             best_score = max_score
             best_category = max_category
             best_address = f.address
             str_matched = f.str_matched
         if max_score == 100:
-            amdesp_logger.info(f'BestMatch found with score of 100: {f.address}')
+            logger.info(f'BestMatch found with score of 100: {f.address}')
             # well we won't beat that?
             break
 
@@ -167,16 +142,18 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
 
 def fuzzy_address(shipment, client: DespatchBaySDK) -> Address:
     """ takes a client, shipment and candidate_keys dict, returns a fuzzy matched address"""
+    logger.info({'Getting Fuzzy Address'})
+
     candidate_keys = retry_with_backoff(get_candidate_keys, backoff_in_seconds=60, postcode=shipment.postcode)
     fuzzyscores = []
     for address_str, key in candidate_keys.items():
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
         if get_explicit_match(shipment=shipment, candidate_address=candidate_address):
             return candidate_address
-        amdesp_logger.debug(f"{candidate_address=}")
+        logger.debug(f"{candidate_address=}")
         fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
-    amdesp_logger.debug(f'Bestmatch Address: {bestmatch.address}')
+    logger.debug(f'Bestmatch Address: {bestmatch.address}')
     return bestmatch.address
 
 
@@ -199,16 +176,45 @@ def get_remote_recipient(contact: Contact, remote_address: Address, client: Desp
     return recip
 
 
-def recip_from_contact_address(contact: Contact, address: Address, client: DespatchBaySDK) -> Sender:
-    recip = client.recipient(
-        # recipient_address=remote_address, **contact._asdict())
-        recipient_address=address, **contact.__dict__)
-    return recip
-
-
 def get_home_sender_recip(home_contact: Contact, home_address: HomeAddress, outbound: bool,
                           client: DespatchBaySDK) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing """
     return client.sender(address_id=home_address.address_id) if outbound \
         else recip_from_contact_and_key(dbay_key=home_address.dbay_key,
                                         contact=home_contact, client=client)
+
+
+def check_address_company(address: Address, shipment: ShipmentRequested) -> Address | None:
+    """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
+
+    if not address.company_name:
+        logger.info(f'No company name at address - passing check')
+        return address
+
+    if address.company_name == shipment.customer \
+            or address.company_name in shipment.address_as_str \
+            or address.company_name in shipment.delivery_name:
+        logger.info(f'Address company name matches customer')
+        return address
+
+    else:
+        pop_msg = f'Company name @Found Address and Shipment Customer Name do not exactly match' \
+                  f'\n\nDatabase Details:' \
+                  f'\nCustomer = {shipment.customer}' \
+                  f'\nDelivery Name= {shipment.delivery_name}' \
+                  f'\nString Address from database=' \
+                  f'\n{shipment.address_as_str}' \
+                  f'\n\nFound Address Details:' \
+                  f'\nAddress Company Name= {address.company_name}' \
+                  f'\nStreet address= {address.street}' \
+                  f'\n\n[Yes] to accept matched address or [No] to edit / replace'
+
+        answer = sg.popup_yes_no(pop_msg, line_width=100)
+        return address if answer == 'Yes' else None
+
+
+def recip_from_contact_address(contact: Contact, address: Address, client: DespatchBaySDK) -> Sender:
+    recip = client.recipient(
+        # recipient_address=remote_address, **contact._asdict())
+        recipient_address=address, **contact.__dict__)
+    return recip

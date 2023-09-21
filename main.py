@@ -2,14 +2,13 @@ import argparse
 import sys
 from pathlib import Path
 
-from core.config import CONFIG_TOML, config_from_dict, get_config_dict
-from core.logger import amdesp_logger
+from core.config import CONFIG_TOML, config_from_dict, configure_logging, get_config_dict, LOG_FILE
 from core.dbay_client import get_dbay_client
 from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from gui.main_gui import post_book
 from shipper.shipment import shipments_from_file
-from shipper.shipper import dispatch_gui_dict, prepare_batch, ship_list_to_dict
+from shipper.shipper import dispatch_gui, prepare_batch, ship_list_to_dict
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -23,6 +22,7 @@ includes
 
 
 def intitial_config(category: ShipmentCategory):
+    configure_logging(LOG_FILE)
     is_connected()
     config = config_from_dict(get_config_dict(toml_file=CONFIG_TOML))
     client = get_dbay_client(creds=config.dbay_creds)
@@ -30,22 +30,19 @@ def intitial_config(category: ShipmentCategory):
     return config, client, import_map
 
 def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDirection, file: Path):
-    outbound = direction == ShipDirection.OUT
     config, client, import_map = intitial_config(category=category)
+    outbound = direction == ShipDirection.OUT
     shipments = shipments_from_file(category, file, import_map, outbound)
     shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
     dicty = ship_list_to_dict(shipments=shipments_prepared)
 
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
-            # completed = dispatch_gui(config=config, shipments=shipments_prepared, client=client)
-            completed = dispatch_gui_dict(config=config, shipment_dict=dicty, client=client)
+            completed = dispatch_gui(config=config, shipment_dict=dicty, client=client)
             post_book(shipments=completed)
-            # dispatch(config=config, prepared_shipments=shipments_prepared, client=client)
-
         sys.exit(0)
     else:
-        return config, shipments
+        return config, client, shipments
 
 
 if __name__ == '__main__':
@@ -68,8 +65,6 @@ if __name__ == '__main__':
     args.shipping_mode = ShipMode[args.mode]
     args.direction = ShipDirection[args.direction]
     args.file = Path(args.file)
-
-    amdesp_logger.debug(f'{args=}')
 
     main(category=args.category,
          shipping_mode=args.shipping_mode,

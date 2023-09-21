@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import sys
@@ -12,17 +13,16 @@ import requests
 import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
-from core.logger import amdesp_logger
 from core.enums import FieldsList, DateTimeMasks
 
-
+logger = logging.getLogger(__name__)
 def print_label(shipment):
     """ prints the labels stored at shipment.label_location """
     try:
         os.startfile(str(shipment.label_location), "print")
     except Exception as e:
         shipment.is_printed = False
-        amdesp_logger.warning(f"Failed to print label: {e}")
+        logger.warning(f"Failed to print label: {e}")
         return False
     else:
         shipment.is_printed = True
@@ -51,7 +51,7 @@ def email_label(shipment: "ShipmentCompleted", body: str, collection_date: Colle
         newmail.Attachments.Add(attach)
         newmail.Display()  # preview
     except Exception as e:
-        amdesp_logger.warning(f"Failed to email label: {e}")
+        logger.warning(f"Failed to email label: {e}")
         return False
     # newmail.Send()
 
@@ -62,14 +62,14 @@ def retry_with_backoff(fn:Callable, retries=5, backoff_in_seconds=1, *args, **kw
         try:
             return fn(*args, **kwargs)
         except Exception as e:
-            amdesp_logger.debug(f" {fn.__name__=} failed with {str(e)}")
+            logger.debug(f" {fn.__name__=} failed with {str(e)}")
             if x == retries:
                 sg.popup_error(f'Error, probably API rate limit, retries exhausted')
-                amdesp_logger.debug("Retries exhausted")
+                logger.debug("Retries exhausted")
                 raise
             sleep = (backoff_in_seconds * 2 ** x + random.uniform(0, 1))
             sg.popup_quick_message(f'Error, probably API rate limit, retrying in {sleep:.0f} seconds')
-            amdesp_logger.debug(f"Retrying {fn.__name__} after {sleep} seconds")
+            logger.debug(f"Retrying {fn.__name__} after {sleep} seconds")
             time.sleep(sleep)
             x += 1
 
@@ -104,11 +104,11 @@ def is_connected():
     timeout = 5
     try:
         request = requests.get(url, timeout=timeout)
-        amdesp_logger.debug("Internet is on")
+        logger.debug("Internet is on")
 
     except (requests.ConnectionError, requests.Timeout) as exception:
         input_blah = input(f"\n\nCONNECTION ERROR: UNABLE TO CONNECT TO GOOGLE: \n(enter to exit...)")
-        amdesp_logger.error(exception)
+        logger.error(exception)
         sys.exit(404)
 
     return True
