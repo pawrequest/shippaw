@@ -1,18 +1,16 @@
 import logging
 from enum import Enum
-from functools import partial
 
 import PySimpleGUI as sg
-from despatchbay.despatchbay_entities import Parcel, Recipient, Sender, Service
+from despatchbay.despatchbay_entities import Parcel
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config
 from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
 from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
-from gui.main_gui import main_window, new_date_selector, new_service_popup, num_boxes_popup
-from shipper.shipment import ShipmentRequested
+from gui.main_gui import get_new_boxes, new_date_selector, new_service_popup
+from shipper.shipment import ShipmentRequested, contact_from_shipment
 
 logger = logging.getLogger(__name__)
 
@@ -28,22 +26,6 @@ def boxes_click(shipment_to_edit, window, client) -> int | None:
     return new_boxes
 
 
-def dropoff_click_old(config, shipment: ShipmentRequested, client: DespatchBaySDK):
-    if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') != 'Yes':
-        return None
-    logger.info('Converting to Dropoff')
-    # shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
-    shipment.sender = client.sender(address_id=config.home_address.dropoff_sender_id)
-
-    shipment.is_dropoff = True
-    available_dates = client.get_available_collection_dates(sender_address=shipment.sender,
-                                                            courier_id=config.default_courier.courier)
-    shipment.date_menu_map = DATE_MENU(dates=available_dates)
-    new_date = available_dates[0]
-    shipment.available_dates = available_dates
-    if sg.popup_yes_no(f'Change date to {new_date.date}?') == 'Yes':
-        shipment.collection_date = new_date
-        return DATE_STRING(new_date)
 
 def dropoff_click(dropoff_sender_id:str, shipment_to_edit: ShipmentRequested, client: DespatchBaySDK, window):
     if not make_shipment_dropoff(dropoff_sender_id=dropoff_sender_id, shipment_to_edit=shipment_to_edit, client=client):
@@ -88,26 +70,9 @@ def update_service_button(num_boxes: int, shipment_to_edit: ShipmentRequested, w
         SERVICE_STRING(num_boxes=num_boxes, service=shipment_to_edit.service))
 
 
-def address_click(target: Sender | Recipient, shipment_to_edit: ShipmentRequested, client:DespatchBaySDK, window = None):
-    """ Takes a Sender or Recipient and returns a new address for that sender or recipient or None if exit """
-    contact = Contact(name=target.name, email=target.email, telephone=target.telephone)
-    if isinstance(target, Sender):
-        address_to_edit = shipment_to_edit.sender.sender_address
-    elif isinstance(target, Recipient):
-        address_to_edit = shipment_to_edit.recipient.recipient_address
-    else:
-        raise TypeError(f'add_click target must be Sender or Recipient, not {type(target)}')
-
-    new_address = address_from_gui(shipment=shipment_to_edit, address=address_to_edit,
-                                   contact=contact, client=client)
-    if new_address is None:
-        return None
-
-    address_to_edit = new_address
-    return ADDRESS_STRING(address=address_to_edit)
-
 def sender_click(shipment_to_edit: ShipmentRequested, client:DespatchBaySDK, window = None):
-    contact = Contact(name=shipment_to_edit.contact_name, email=shipment_to_edit.email, telephone=shipment_to_edit.telephone)
+    # contact = Contact(name=shipment_to_edit.contact_name, email=shipment_to_edit.email, telephone=shipment_to_edit.telephone)
+    contact = contact_from_shipment(shipment=shipment_to_edit)
     if new_address := address_from_gui(shipment=shipment_to_edit, address=shipment_to_edit.sender.sender_address,
                                    contact=contact, client=client):
         return ADDRESS_STRING(address=new_address)
@@ -130,17 +95,6 @@ def service_click(shipment_to_edit: ShipmentRequested, window, client: DespatchB
 
     package = SERVICE_STRING(service=new_service, num_boxes=num_boxes)
     return package
-
-
-def get_new_boxes(location) -> int | None:
-    window = num_boxes_popup(location=location)
-    e, v = window.read()
-    if e == sg.WIN_CLOSED:
-        window.close()
-        return None
-    if e == keys_and_strings.BOX_KEY():
-        window.close()
-        return int(v[e])
 
 
 def get_parcels(num_parcels: int, client: DespatchBaySDK, contents: str = 'Radios') -> list[Parcel]:

@@ -203,3 +203,14 @@ def new_date_selector(shipment: ShipmentRequested, popup_location) -> Collection
         if event == '-DATE-':
             window.close()
             return menu_map.get(values['-DATE-'])
+
+
+def get_new_boxes(location) -> int | None:
+    window = num_boxes_popup(location=location)
+    e, v = window.read()
+    if e == sg.WIN_CLOSED:
+        window.close()
+        return None
+    if e == keys_and_strings.BOX_KEY():
+        window.close()
+        return int(v[e])

@@ -60,6 +60,9 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
 def sender_or_recipient_from_home_address(home_contact: Contact, home_address: HomeAddress, outbound: bool,
                                           client: DespatchBaySDK) -> Sender | Recipient:
     """returns a sender object from home_address_id or recipient from home_address.dbay_key representing home address"""
-    return client.sender(address_id=home_address.address_id) if outbound \
-        else client.recipient(recipient_address=client.get_address_by_key(home_address.dbay_key), **home_contact.__dict__)
+    if outbound:
+        return client.sender(address_id=home_address.address_id)
+    else:
+        address = client.get_address_by_key(home_address.dbay_key)
+        return client.recipient(recipient_address=address, **home_contact.__dict__)
 

@@ -203,3 +203,7 @@ def shipments_from_file(category, file, import_map, outbound):
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
     return shipments
+
+
+def contact_from_shipment(shipment: ShipmentInput):
+    return Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
