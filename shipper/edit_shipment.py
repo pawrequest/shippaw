@@ -107,7 +107,7 @@ def address_click(target: Sender | Recipient, shipment_to_edit: ShipmentRequeste
     return ADDRESS_STRING(address=address_to_edit)
 
 def sender_click(shipment_to_edit: ShipmentRequested, client:DespatchBaySDK, window = None):
-    contact = Contact(name=shipment_to_edit.name, email=shipment_to_edit.email, telephone=shipment_to_edit.telephone)
+    contact = Contact(name=shipment_to_edit.contact_name, email=shipment_to_edit.email, telephone=shipment_to_edit.telephone)
     if new_address := address_from_gui(shipment=shipment_to_edit, address=shipment_to_edit.sender.sender_address,
                                    contact=contact, client=client):
         return ADDRESS_STRING(address=new_address)

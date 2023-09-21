@@ -17,8 +17,8 @@ from core.enums import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
 from gui.main_gui import main_window
-from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
-    sender_from_contact_address
+from shipper.addresser import sender_or_recipient_from_home_address, remote_address_script
+
 from shipper.edit_shipment import ShipmentEditor, get_parcels
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
     ShipmentGuiConfirmed, ShipmentInput, ShipmentPreRequest, ShipmentPrepared, ShipmentQueued, ShipmentRequested, \
@@ -63,15 +63,13 @@ def address_shipment(shipment: ShipmentInput, home_address: HomeAddress, home_co
     remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
     remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact, client=client)
     if shipment.is_outbound:
-        sender = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
-                                       outbound=shipment.is_outbound, client=client)
-        recipient = get_remote_recipient(contact=remote_contact,
-                                         remote_address=remote_address, client=client)
+        sender = sender_or_recipient_from_home_address(home_contact=home_contact, home_address=home_address,
+                                                       outbound=shipment.is_outbound, client=client)
+        recipient = client.recipient(recipient_address=remote_address, **remote_contact.__dict__)
     else:
-        sender = sender_from_contact_address(contact=remote_contact,
-                                             remote_address=remote_address, client=client)
-        recipient = get_home_sender_recip(home_contact=home_contact, home_address=home_address,
-                                          outbound=shipment.is_outbound, client=client)
+        sender = client.sender(sender_address=remote_address, **remote_contact.__dict__)
+        recipient = sender_or_recipient_from_home_address(home_contact=home_contact, home_address=home_address,
+                                                          outbound=shipment.is_outbound, client=client)
     return ShipmentAddressed(**shipment.__dict__, remote_contact=remote_contact, sender=sender, recipient=recipient,
                              remote_address=remote_address)
 

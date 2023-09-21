@@ -10,7 +10,7 @@ from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
 
-def comparison_address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
+def address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
     commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name,
                                             address_as_str=address_as_str)
     address_col = sg.Col(layout=[
@@ -113,13 +113,11 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, client:DespatchBaySDK, testing=None) -> Address | None:
+def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, client:DespatchBaySDK) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    if testing:
-        return address
-    window = comparison_address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
-                                       address_as_str=shipment.address_as_str)
+    window = address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
+                            address_as_str=shipment.address_as_str)
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED:
