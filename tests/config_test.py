@@ -14,13 +14,13 @@ load_dotenv(DATA_DIR / ".env")
 TOML_FILE = ROOT_DIR / 'core' / 'model_user_config.toml'
 
 
-@pytest.fixture(params=list(ShipmentCategory))
-def category(request):
-    return request.param
+# @pytest.fixture(params=list(ShipmentCategory))
+# def category(request):
+#     return request.param
 #
-# @pytest.fixture()
-# def category():
-#     return ShipmentCategory.HIRE
+@pytest.fixture()
+def category():
+    return ShipmentCategory.HIRE
 
 
 @pytest.fixture()

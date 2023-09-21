@@ -1,7 +1,6 @@
 import os
 import os
 import re
-import sys
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -95,7 +94,6 @@ class ShipmentAddressed(ShipmentInput):
     remote_address: Address
     sender: Sender
     recipient: Recipient
-    # remote_sender_recip: Optional[Union[Sender, Recipient]]
 
 
 class ShipmentPrepared(ShipmentAddressed):
@@ -176,39 +174,19 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
     except Exception as e:
         logger.exception(e)
 
+
 class ShipmentDict(dict[str, ShipmentRequested]):
     pass
+
+
 def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
-    # shipments = []
-    shipments = [shipment_from_record(category=category, import_map=import_map, outbound=outbound,
-                             record=record) for record in records]
-    # for record in records:
-    #     shipments.append(shipment_from_record(category=category, import_map=import_map, outbound=outbound,
-    #                                               record=record))
-    if not shipments:
-        logger.info('No shipments to process.')
-        sys.exit()
-    return shipments
-
-def shipments_from_records_dict(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
-        -> ShipmentDict:
-    shipments = ShipmentDict()
-
-    for record in records:
-        shipment = shipment_from_record(category=category, import_map=import_map, outbound=outbound, record=record)
-        shipments[shipment.shipment_name] = shipment
+    return [shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+                                 record=record) for record in records]
 
 
-    if not shipments:
-        logger.info('No shipments to process.')
-        sys.exit()
-    logger.info(f'{len(shipments)} shipments added to dict')
-
-    return shipments
-
-def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool,
-                         record: dict) -> ShipmentInput | None:
+def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool, record: dict) \
+        -> ShipmentInput | None:
     transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
     [logger.debug(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
     try:
