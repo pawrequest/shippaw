@@ -180,14 +180,12 @@ class ShipmentDict(dict[str, ShipmentRequested]):
     pass
 def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
-    shipments = []
-    for record in records:
-        try:
-            shipments.append(shipment_from_record(category=category, import_map=import_map, outbound=outbound,
-                                                  record=record))
-        except Exception as e:
-            logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
-            continue
+    # shipments = []
+    shipments = [shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+                             record=record) for record in records]
+    # for record in records:
+    #     shipments.append(shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+    #                                               record=record))
     if not shipments:
         logger.info('No shipments to process.')
         sys.exit()

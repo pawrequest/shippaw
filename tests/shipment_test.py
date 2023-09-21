@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import pytest
 
 from core.config import ROOT_DIR
@@ -10,20 +12,25 @@ from shipper.shipper import address_shipment, book_shipment, pre_request_shipmen
     read_window_cboxs, \
     request_shipment, prepare_batch_dict
 from tests.config_test import dbay_client_sandbox,dbay_client_production, config_production, config_dict_from_toml, config_sandbox, category
+from tests.fixtures.records import RECORDS_DICT
 
 fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'
 
-record_dict = {
-    ShipmentCategory.HIRE: records_from_dbase(dbase_file=fixtures_dir / 'hire.dbf'),
-    ShipmentCategory.SALE: records_from_dbase(dbase_file=fixtures_dir / 'sale.dbf'),
-    ShipmentCategory.CUSTOMER: records_from_dbase(dbase_file=fixtures_dir / 'customer.dbf'),
-    'bulk': records_from_dbase(dbase_file=fixtures_dir / 'bulk.dbf')
-}
+@pytest.fixture()
+def records_fixture(category) -> List[Dict]:
+    return RECORDS_DICT.get(category.name.lower())
 
+
+
+def test_dbf_import(category, records_fixture):
+    dbf_file = fixtures_dir / f'{category.name.lower()}.dbf'
+    records = records_from_dbase(dbase_file=dbf_file)
+    records_on_file = records_fixture
+    assert records == records_on_file
 
 @pytest.fixture()
 def shipment_input_fixture(category, config_sandbox):
-    record = record_dict[category][0]
+    record = RECORDS_DICT.get(category.name.lower())[0]
     import_map = config_sandbox.import_mappings[category.name.lower()]
     return shipment_from_record(category=category, record=record, outbound=True, import_map=import_map)
 
@@ -52,12 +59,6 @@ def shipment_requested_fixture(shipment_pre_request_fixture, dbay_client_sandbox
     return request_shipment(shipment=shipment_pre_request_fixture, client=dbay_client_sandbox)
 
 
-# def test_record_to_requested(category, shipment_requested_fixture):
-#     shipment = shipment_requested_fixture
-#     assert isinstance(shipment, ShipmentRequested)
-#     assert shipment.category == category
-#     assert isinstance(shipment.sender.sender_address, Address)
-
 def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, config_sandbox):
     assert config_sandbox.sandbox is True
     values = {
@@ -84,10 +85,9 @@ def test_sandbox_dispatch(dbay_client_sandbox, shipment_requested_fixture, confi
 #     prepared = prepare_batch_dict(client=dbay_client_sandbox, config=config_sandbox, shipments_dict=shipment_dict)
 #     assert isinstance(prepared, ShipmentDict)
 
-def test_prepare_dict_prod(dbay_client_production, config_production, category):
-    records = record_dict['bulk']
+def test_prepare_dict_prod(dbay_client_production, config_production, category, records_fixture):
     import_map = config_production.import_mappings.get(category.name.lower())
-    shipments = shipments_from_records(category=category, import_map=import_map, outbound=True, records=records)
+    shipments = shipments_from_records(category=category, import_map=import_map, outbound=True, records=records_fixture)
     # prepared = prepare_batch_dict(client=dbay_client_production, config=config_production, shipments=shipments)
     prepared = prepare_batch(client=dbay_client_production, config=config_production, shipments=shipments)
     dicty = ShipmentDict({shipment.shipment_name: shipment for shipment in prepared})
