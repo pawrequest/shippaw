@@ -10,6 +10,8 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
+import gui.keys_and_strings
+import shipper.edit_shipment
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, logger
 from core.enums import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
@@ -18,7 +20,7 @@ from gui import keys_and_strings
 from gui.main_gui import main_window, post_book
 from shipper.addresser import get_home_sender_recip, get_remote_recipient, remote_address_script, \
     sender_from_contact_address
-from shipper.edit_shipment import address_click, date_click, dropoff_click, get_new_boxes, get_parcels, \
+from shipper.edit_shipment import ShipmentEditor, address_click, date_click, dropoff_click, get_new_boxes, get_parcels, \
     service_click, \
     update_service_button, boxes_click
 from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
@@ -164,81 +166,86 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
 
 
 
-def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
-    """ pysimplegui main_loop, takes list of ShipmentRequested objects
-    listens for user input to edit and update shipments
-    listens for go_ship  button to start booking collection etc"""
-    logger.info('GUI LOOP')
-
-    if config.sandbox:
-        sg.theme('Tan')
-    else:
-        sg.theme('Dark Blue')
-
-    window = main_window(shipments=shipments)
-    processed_shipments = []
-
-    while True:
-        package = None
-        event, values = window.read()
-
-        if event == sg.WIN_CLOSED:
-            window.close()
-            sys.exit()
-
-        if event == keys_and_strings.GO_SHIP_KEY():
-            window.close()
-            return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
-
-        # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
-        shipment_to_edit_index = next(
-            (i for i, shipment in enumerate(shipments) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()),
-            None)
-
-        # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
-        #                                             keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
-        shipment_to_edit = shipments[shipment_to_edit_index]
-
-        if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
-            package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
-
-        elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
-            shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed
-            package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(),
-                                    default_service=shipment_to_edit.service, client=client)
-            # shipment_to_edit = request_shipment(shipment_to_edit) # update available services in case address changed
-            ...
-
-        elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
-            package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
-
-        elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
-
-        elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
-
-        elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
-            shipments = [s for s in shipments if s != shipment_to_edit]
-            window.close()
-            window = main_window(shipments=shipments)
-
-        elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
-            sg.popup_ok(shipment_to_edit.address_as_str)
-
-        elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
-            new_date = dropoff_click(config=config, shipment=shipment_to_edit, client=client)
-            if new_date is None:
-                continue
-            window[keys_and_strings.DATE_KEY(shipment_to_edit)].update(new_date)
-            window[event].update(button_color='red')
-
-        else:
-            sg.popup_error(f'Wrong event code from pysimplegui listener = {event}')
-
-        if package:
-            window[event].update(package)
-        shipments[shipment_to_edit_index] = shipment_to_edit
+# def dispatch_gui(config: Config, shipments: List[ShipmentRequested], client:DespatchBaySDK) -> List[ShipmentBooked | ShipmentQueued]:
+#     """ pysimplegui main_loop, takes list of ShipmentRequested objects
+#     listens for user input to edit and update shipments
+#     listens for go_ship  button to start booking collection etc"""
+#     logger.info('GUI LOOP')
+#
+#     if config.sandbox:
+#         sg.theme('Tan')
+#     else:
+#         sg.theme('Dark Blue')
+#
+#     window = main_window(shipments=shipments)
+#     processed_shipments = []
+#
+#     while True:
+#         package = None
+#         event, values = window.read()
+#
+#         if event == sg.WIN_CLOSED:
+#             window.close()
+#             sys.exit()
+#
+#         if event == keys_and_strings.GO_SHIP_KEY():
+#             window.close()
+#             return process_shipments_batch(shipments=shipments, values=values, config=config, client=client)
+#
+#         # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
+#         shipment_to_edit_index = next(
+#             (i for i, shipment in enumerate(shipments) if shipment.shipment_name == event[0]), None)
+#
+#
+#         # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
+#         #                                             shipment.shipment_name_printable == event[0]))
+#         shipment_to_edit = shipments[shipment_to_edit_index]
+#
+#
+#         ...
+#
+#
+#         if event == gui.keys_and_strings.BOXES_KEY(shipment_to_edit):
+#             package = ShipmentEditor.BOXES(shipment_to_edit=shipment_to_edit, window=window, client=client)
+#
+#             # package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
+#
+#         elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
+#             shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed
+#             package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(),client=client)
+#             ...
+#
+#
+#         elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
+#             package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
+#
+#         elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
+#             package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
+#
+#         elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
+#             package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
+#
+#         elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
+#             shipments = [s for s in shipments if s != shipment_to_edit]
+#             window.close()
+#             window = main_window(shipments=shipments)
+#
+#         elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
+#             sg.popup_ok(shipment_to_edit.address_as_str)
+#
+#         elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
+#             new_date = dropoff_click(config=config, shipment=shipment_to_edit, client=client)
+#             if new_date is None:
+#                 continue
+#             window[keys_and_strings.DATE_KEY(shipment_to_edit)].update(new_date)
+#             window[event].update(button_color='red')
+#
+#         else:
+#             sg.popup_error(f'Wrong event code from pysimplegui listener = {event}')
+#
+#         if package:
+#             window[event].update(package)
+#         shipments[shipment_to_edit_index] = shipment_to_edit
 
 
 def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:DespatchBaySDK) -> ShipmentDict:
@@ -253,7 +260,6 @@ def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:Despat
     processed_shipments = []
 
     while True:
-        package = None
         event, values = window.read()
 
         if event == sg.WIN_CLOSED:
@@ -265,64 +271,37 @@ def dispatch_gui_dict(config: Config, shipment_dict: ShipmentDict, client:Despat
             processed_shipments = process_shipments_batch_dict(shipment_dict=shipment_dict, values=values, config=config, client=client)
             return processed_shipments
 
-        # todo if values[event] == shipment_to_edit ie make .eq() in shipmentinput
+        shipment_to_edit = shipment_dict.get(event[0])
+        shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed
 
-        shipment_to_edit = next(
-            (i for i, shipment in enumerate(shipment_dict.values()) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()),
-            None)
-        #
-        # shipment_to_edit = next((shipment in shipment_dict.values()) if keys_and_strings.SHIPMENT_KEY(shipment) in event.upper(), None)
-
-
-        # shipment_to_edit: ShipmentRequested = next((shipment for shipment in shipments if
-        #                                             keys_and_strings.SHIPMENT_KEY(shipment) in event.upper()))
-        shipment_to_edit = shipments[shipment_to_edit_index]
-
-        if event == keys_and_strings.BOXES_KEY(shipment_to_edit):
-            package = boxes_click(shipment_to_edit=shipment_to_edit, window=window, client=client)
-
-        elif event == keys_and_strings.SERVICE_KEY(shipment_to_edit):
-            shipment_to_edit = request_shipment(shipment_to_edit, client=client)  # update available services in case address changed
-            package = service_click(shipment_to_edit=shipment_to_edit, location=window.mouse_location(),
-                                    default_service=shipment_to_edit.service, client=client)
-            # shipment_to_edit = request_shipment(shipment_to_edit) # update available services in case address changed
-            ...
-
-        elif event == keys_and_strings.DATE_KEY(shipment_to_edit):
-            package = date_click(location=window.mouse_location(), shipment_to_edit=shipment_to_edit)
-
-        elif event == keys_and_strings.SENDER_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.sender, client=client)
-
-        elif event == keys_and_strings.RECIPIENT_KEY(shipment_to_edit):
-            package = address_click(shipment=shipment_to_edit, target=shipment_to_edit.recipient, client=client)
-
-        elif event == keys_and_strings.REMOVE_KEY(shipment_to_edit):
-            shipments = [s for s in shipments if s != shipment_to_edit]
-            window.close()
-            window = main_window(shipments=shipments)
-
-        elif event == keys_and_strings.CUSTOMER_KEY(shipment_to_edit):
-            sg.popup_ok(shipment_to_edit.address_as_str)
-
-        elif event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
-            new_date = dropoff_click(config=config, shipment=shipment_to_edit, client=client)
-            if new_date is None:
-                continue
-            window[keys_and_strings.DATE_KEY(shipment_to_edit)].update(new_date)
-            window[event].update(button_color='red')
-
-        else:
-            sg.popup_error(f'Wrong event code from pysimplegui listener = {event}')
+        package = shipment_edit_package(client, config, event, shipment_to_edit, window)
 
         if package:
-            window[event].update(package)
-        shipments[shipment_to_edit_index] = shipment_to_edit
+            if package == 'REMOVE':
+                shipment_dict.pop(event[0])
+                window.close()
+                window = main_window(shipments=shipment_dict.values())
+                continue
+
+            else:
+                window[event].update(package)
+
+        shipment_dict[shipment_to_edit.shipment_name] = shipment_to_edit
 
 
-def shipment_editor(shipment_to_edit, window, event, values):
-    # handler dict?
-    ...
+def shipment_edit_package(client, config, event, shipment_to_edit, window):
+    kwargs = shipment_edit_kwargs(client, config, event, shipment_to_edit, window)
+    editor_func = ShipmentEditor[event[1]].value[0]
+    package = editor_func(**kwargs)
+    return package
+
+
+def shipment_edit_kwargs(client, config, event, shipment_to_edit, window):
+    kwargs = {'shipment_to_edit': shipment_to_edit, 'window': window, 'client': client}
+    if event == keys_and_strings.DROPOFF_KEY(shipment_to_edit):
+        kwargs['dropoff_sender_id'] = config.home_address.dropoff_sender_id
+    return kwargs
+
 
 
 def read_window_cboxs(values, shipment):
@@ -395,7 +374,7 @@ def get_collection_date(shipment: ShipmentPrepared, available_dates: List[Collec
         collection_date = available_dates[0]
         shipment.date_matched = False
 
-    logger.info(f'COLLECTION DATE {"NOT" if not shipment.date_matched else ""} MATCHED')
+    logger.info(f'Collection Date {"NOT" if not shipment.date_matched else ""} Matched to send out date: {collection_date.date}')
     return collection_date
 
 

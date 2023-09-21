@@ -9,7 +9,6 @@ from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
-from gui.keys_and_strings import ADDRESS_STRING, DATE_STRING, SERVICE_STRING
 from shipper.shipment import ShipmentQueued, ShipmentRequested
 
 
@@ -29,8 +28,8 @@ def main_window(shipments: [ShipmentRequested]):
 
 def shipment_frame(shipment: ShipmentRequested):
     print_or_email = 'print' if shipment.is_outbound else 'email'
-    date_name = DATE_STRING(collection_date=shipment.collection_date)
-    recipient_address_name = ADDRESS_STRING(shipment.recipient.recipient_address)
+    date_name = keys_and_strings.DATE_STRING(collection_date=shipment.collection_date)
+    recipient_address_name = keys_and_strings.ADDRESS_STRING(shipment.recipient.recipient_address)
     num_parcels = len(shipment.parcels)
 
     row = [
@@ -40,6 +39,7 @@ def shipment_frame(shipment: ShipmentRequested):
         date_button(date_name=date_name, shipment=shipment),
         parcels_button(num_parcels=num_parcels, shipment=shipment),
         service_button(num_parcels=num_parcels, shipment=shipment),
+        # sg.Checkbox('Book', default=True, k=(shipment.shipment_name, 'book')),
         sg.Checkbox('Book', default=True, k=keys_and_strings.BOOK_KEY(shipment)),
         sg.Checkbox(f'{print_or_email}', default=True, k=keys_and_strings.PRINT_EMAIL_KEY(shipment)),
         sg.Button('Drop-off', k=keys_and_strings.DROPOFF_KEY(shipment)),
@@ -53,7 +53,6 @@ def shipment_frame(shipment: ShipmentRequested):
 
 
 def headers():
-    # TODO  remove outbound
     # but sender needs to not be a button for outbound, because it must remain defined by address id for collection to be booked
     heads = [
         # sg.Sizer(30, 0),
@@ -63,9 +62,6 @@ def headers():
         sg.Text('Collection Date', **date_head_params),
         sg.T('Boxes', **boxes_head_params),
         sg.T('Service', **head_params),
-        # sg.T('Add Shipment', **head_params),
-        # sg.T('Book Collection', **head_params),
-        # sg.T(print_or_email.title(), **head_params),
         sg.Push(),
         sg.Push(),
     ]
@@ -102,7 +98,7 @@ def results_frame(shipments: [ShipmentQueued]):
         ship_res = [
             sg.Text(shipment.shipment_request.client_reference, **params),
             sg.Text(shipment.shipment_return.recipient_address.recipient_address.street, **params),
-            sg.Text(SERVICE_STRING(num_boxes=num_boxes, service=shipment.service), **params),
+            sg.Text(keys_and_strings.SERVICE_STRING(num_boxes=num_boxes, service=shipment.service), **params),
         ]
 
         if shipment.is_printed:
@@ -125,7 +121,7 @@ def num_boxes_popup(location):
     return sg.Window('', layout=layout, location=location, relative_location=(-50, -50))
 
 
-def new_service_popup(menu_map: dict, location, default_service: Service):
+def new_service_popup(menu_map: dict, location, default_service: Service) -> Service:
 
     layout = [[sg.Combo(k='-SERVICE-', values=list(menu_map.keys()), enable_events=True, default_value=default_service.name,
                         **option_menu_params)]]
@@ -165,7 +161,7 @@ def sender_button(shipment) -> sg.Text:
         sender_address_name = "Primary Collection Address"
         sender_button = sg.Text(sender_address_name, **address_params)
     else:
-        sender_address_name = ADDRESS_STRING(address=shipment.sender.sender_address)
+        sender_address_name = keys_and_strings.ADDRESS_STRING(address=shipment.sender.sender_address)
         sender_button = sg.Text(sender_address_name, k=keys_and_strings.SENDER_KEY(shipment), enable_events=True,
                                 **address_params)
 

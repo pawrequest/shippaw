@@ -24,7 +24,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, clie
     logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment, client=client)
     while True:
-        address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact)
+        address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact, client=client)
         if address is None:
             if sg.popup_yes_no(f"If you don't enter an address the shipment for {shipment.customer_printable} "
                                f"will be skipped. \n'Yes' to skip, 'No' to try again") == 'Yes':
@@ -40,16 +40,15 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
     check_set = set(search_terms)
     for term in check_set:
         try:
-            logger.info(f"Address Search: {postcode=} | {term=}")
             address = client.find_address(postcode, term)
-            logger.info(f"Address Match - {f'{address.company_name} - ' if address.company_name else ''}{address.street}")
+            logger.info(f"Address Match Success : {f'{postcode=} | address={address.company_name} - ' if address.company_name else ''}{address.street}")
             return address
         except ApiException as e1:
             if 'No Addresses Found At Postcode' in str(e1):
-                logger.info(f"Address Search Fail - {postcode=} | {term=}")
+                logger.info(f"Address Match Fail : {postcode=} | {term=}")
             continue
         except Exception as e2:
-            logger.exception(f"ADDRESS FAIL {str(e2)}")
+            logger.exception(f"Unknown exception in address_from_direct_search {str(e2)}")
             continue
     else:
         logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")

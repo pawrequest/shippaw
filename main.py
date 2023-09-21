@@ -8,7 +8,7 @@ from core.enums import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from gui.main_gui import post_book
 from shipper.shipment import records_from_dbase, shipments_from_records, shipments_from_records_dict
-from shipper.shipper import prepare_batch, dispatch_gui, prepare_batch_dict
+from shipper.shipper import dispatch_gui_dict, prepare_batch, prepare_batch_dict
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -35,13 +35,14 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
     import_map = config.import_mappings[category.name.lower()]
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
-    shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
+    # shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
 
     dicty = prepare_batch_dict(client=client, config=config, shipments=shipments)
 
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
-            completed = dispatch_gui(config=config, shipments=shipments_prepared, client=client)
+            # completed = dispatch_gui(config=config, shipments=shipments_prepared, client=client)
+            completed = dispatch_gui_dict(config=config, shipment_dict=dicty, client=client)
             post_book(shipments=completed)
             # dispatch(config=config, prepared_shipments=shipments_prepared, client=client)
 
