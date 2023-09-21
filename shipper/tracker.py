@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 from despatchbay.exceptions import ApiException
 
 import shipper.shipper
-from core.config import logger
+from core.logger import amdesp_logger
 
 
 def tracking_loop(ship_ids):
@@ -18,14 +18,14 @@ def tracking_loop(ship_ids):
 #                 tracking_loop(ship_ids=ship_ids)
 #             except ApiException as e:
 #                 if 'no tracking data' in e.args.__repr__().lower():
-#                     logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
+#                     amdesp_logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
 #                     sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
 #                 if 'not found' in e.args.__repr__().lower():
-#                     logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
+#                     amdesp_logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
 #                     sg.popup_error(f'Shipment ({shipment.shipment_name_printable}) not found')
 #
 #                 else:
-#                     logger.exception(f'ERROR for {shipment.shipment_name_printable}')
+#                     amdesp_logger.exception(f'ERROR for {shipment.shipment_name_printable}')
 #                     sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
 def track2(shipments):
@@ -36,14 +36,14 @@ def track2(shipments):
                     event, values = get_tracking(shipment_id=id).read()
                 except ApiException as e:
                     if 'no tracking data' in e.args.__repr__().lower():
-                        logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
+                        amdesp_logger.exception(f'No Tracking Data for {shipment.shipment_name_printable}')
                         sg.popup_error(f'No Tracking data for {shipment.shipment_name_printable}')
                     if 'not found' in e.args.__repr__().lower():
-                        logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
+                        amdesp_logger.exception(f'Shipment {shipment.shipment_name_printable} not found')
                         sg.popup_error(f'Shipment ({shipment.shipment_name_printable}) not found')
 
                     else:
-                        logger.exception(f'ERROR for {shipment.shipment_name_printable}')
+                        amdesp_logger.exception(f'ERROR for {shipment.shipment_name_printable}')
                         sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
 

@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 from PySimpleGUI import Window
 from despatchbay.despatchbay_entities import CollectionDate, Service
 
-from core.config import logger
+from core.logger import amdesp_logger
 from core.enums import DateTimeMasks
 from core.funcs import collection_date_to_datetime, print_label
 from gui import keys_and_strings
@@ -13,7 +13,7 @@ from shipper.shipment import ShipmentQueued, ShipmentRequested
 
 
 def main_window(shipments: [ShipmentRequested]):
-    logger.debug('BULK SHIPPER WINDOW')
+    amdesp_logger.debug('BULK SHIPPER WINDOW')
     sg.set_options(**default_params)
 
     return sg.Window('Bulk Shipper',

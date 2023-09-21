@@ -2,7 +2,7 @@ import json
 import subprocess
 from enum import Enum
 
-from core.config import logger
+from core.logger import amdesp_logger
 
 
 class PS_FUNCS(Enum):
@@ -33,7 +33,7 @@ def edit_commence(pscript: str, function: str, table: str, record: str, package:
     if process_result.stderr:
         parse_std_err(process_result)
     else:
-        logger.debug(f'COMMENCE UPDATER:\n{process_result.stdout}')
+        amdesp_logger.debug(f'COMMENCE UPDATER:\n{process_result.stdout}')
     return process_result
 
 
@@ -46,11 +46,11 @@ class Commence():
         record_name_esc = f'"{record_name}"'
         process_command = [self.powershell_path, '-ExecutionPolicy', 'Unrestricted', '-Command',
                            self.cmc_updater_script, table_name, record_name_esc]
-        logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
+        amdesp_logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
 
         process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         universal_newlines=True)
-        logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
+        amdesp_logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
 
     def update_record(self, tablename, recordname, update_package):
         ...
@@ -93,28 +93,28 @@ class Commence():
 #         if input(f"Create New Record {record_name} in {table_name}? (y/n)").lower() == 'y':
 #             process_command.append('-insert')
 #             # process_command = ['cmd.exe', '/c', 'start', '/wait'] + process_command
-#     logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
+#     amdesp_logger.debug(f'LAUNCH CMD POWERSHELL: {process_command}')
 #
 #     process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
 #                                     universal_newlines=True)
-#     logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
+#     amdesp_logger.debug(f'POWERSHELL RESULT: {process_result.returncode}')
 #
 #     if process_result.stderr:
 #         parse_std_err(process_result)
 #     else:
 #         stdoutput = process_result.stdout.split('\n')
-#         [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
+#         [amdesp_logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
 
 
 def parse_std_err(process_result):
     print(process_result.stderr)
     if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
-        logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
+        amdesp_logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
     # todo install cmclibnet and retry
     if "ERROR: Filters.Apply returned" in process_result.stderr:
         if "ERROR: Filters.Apply returned 0 results" in process_result.stderr:
-            logger.warning(f'No records found in Commence : {process_result.stderr}')
+            amdesp_logger.warning(f'No records found in Commence : {process_result.stderr}')
         else:
-            logger.warning(f'Multiple records found, Std Error: {process_result.stderr}')
+            amdesp_logger.warning(f'Multiple records found, Std Error: {process_result.stderr}')
     else:
-        logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')
+        amdesp_logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')

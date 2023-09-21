@@ -1,7 +1,5 @@
 import ctypes
-import logging
 import subprocess
-import sys
 import tomllib
 from pathlib import Path
 
@@ -11,6 +9,7 @@ from pydantic import BaseModel
 
 from core.enums import ApiScope, Contact, DbayCreds, DefaultCarrier, HomeAddress, \
     PathsList, ShipmentCategory
+from core.logger import amdesp_logger
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -25,29 +24,14 @@ def filter_log(record):
         return False
     return True
 
-
-def get_amdesp_logger():
-    new_logger = logging.getLogger(name='AmDesp')
-    # logfile = f'{__file__.replace("py", "log")}'
-    logging.basicConfig(
-        level=logging.INFO,
-        format='{asctime} {levelname:<8} {message}',
-        style='{',
-        handlers=[
-            logging.FileHandler(str(LOG_FILE), mode='a'),
-            logging.StreamHandler(sys.stdout)
-        ])
-    return new_logger
-
-
-logger = get_amdesp_logger()
+logger = get
 logger.info(f'AmDesp started, '
             f'\n{ROOT_DIR=}'
             f'\n{DATA_DIR=}'
             f'\n{LOG_FILE=}'
             f'\n{CONFIG_TOML=}'
             )
-# logger.addFilter(filter_log)
+# amdesp_logger.addFilter(filter_log)
 #
 
 
@@ -125,11 +109,11 @@ class Config(BaseModel):
         try:
             self.paths.cmc_dll.exists()
         except Exception as e:
-            logger.exception('Vovin CmcLibNet dll not found')
+            amdesp_logger.exception('Vovin CmcLibNet dll not found')
             try:
                 self.install_cmc_lib_net()
             except Exception as e:
-                logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
+                amdesp_logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
 def get_config_dict(toml_file) -> dict:
@@ -143,7 +127,7 @@ def config_from_dict(config_dict, sandbox=None) -> Config:
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
     mappings_dict = config_dict['import_mappings']
-    logger.debug('mappings_dict: %s', mappings_dict)
+    amdesp_logger.debug('mappings_dict: %s', mappings_dict)
 
     return Config(
         import_mappings=get_all_mappings(mappings=mappings_dict),
@@ -186,29 +170,24 @@ def set_despatch_env(api_user, api_key, sandbox):
 
     # result1 = run_as_admin(cmd1)
     # if result1.returncode != 0:
-    #     logger.error("Error:", result1.stderr)
+    #     amdesp_logger.error("Error:", result1.stderr)
     # else:
-    #     logger.info(f"Environment variable set: {api_user_str} : {api_user}")
+    #     amdesp_logger.info(f"Environment variable set: {api_user_str} : {api_user}")
     #
     # result2 = run_as_admin(cmd2)
     # if result2.returncode != 0:
-    #     logger.error("Error:", result2.stderr)
+    #     amdesp_logger.error("Error:", result2.stderr)
     # else:
-    #     logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+    #     amdesp_logger.info(f"Environment variable set: {api_key_str} : {api_key}")
 
     result2 = run_as_admin(cmd3)
     if result2.returncode != 0:
-        logger.error("Error:", result2.stderr)
+        amdesp_logger.error("Error:", result2.stderr)
     else:
-        logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+        amdesp_logger.info(f"Environment variable set: {api_key_str} : {api_key}")
 
 
 def scope_from_sandbox_func(sandbox):
     return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value
 
 
-def creds_from_user() -> DbayCreds:
-    api_user = sg.popup_get_text(f'Enter DespatchBay API User')
-    api_key = sg.popup_get_text(f'Enter DespatchBay API Key')
-    creds = DbayCreds(api_user=api_user, api_key=api_key)
-    return creds

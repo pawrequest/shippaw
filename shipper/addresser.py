@@ -7,7 +7,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from core.config import logger
+from core.logger import amdesp_logger
 from core.enums import BestMatch, Contact, FuzzyScores, HomeAddress
 from core.funcs import retry_with_backoff
 from gui.address_gui import address_from_gui
@@ -21,7 +21,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, clie
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms, client=client):
         return address
 
-    logger.info({'No Explicit Match Found - getting fuzzy'})
+    amdesp_logger.info({'No Explicit Match Found - getting fuzzy'})
     fuzzy = fuzzy_address(shipment=shipment, client=client)
     while True:
         address = address_from_gui(shipment=shipment, address=fuzzy, contact=remote_contact, client=client)
@@ -41,17 +41,17 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
     for term in check_set:
         try:
             address = client.find_address(postcode, term)
-            logger.info(f"Address Match Success : {f'{postcode=} | address={address.company_name} - ' if address.company_name else ''}{address.street}")
+            amdesp_logger.info(f"Address Match Success : {f'{postcode=} | address={address.company_name} - ' if address.company_name else ''}{address.street}")
             return address
         except ApiException as e1:
             if 'No Addresses Found At Postcode' in str(e1):
-                logger.info(f"Address Match Fail : {postcode=} | {term=}")
+                amdesp_logger.info(f"Address Match Fail : {postcode=} | {term=}")
             continue
         except Exception as e2:
-            logger.exception(f"Unknown exception in address_from_direct_search {str(e2)}")
+            amdesp_logger.exception(f"Unknown exception in address_from_direct_search {str(e2)}")
             continue
     else:
-        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
+        amdesp_logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
         sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
         return None
 
@@ -76,13 +76,13 @@ def check_address_company(address: Address, shipment: ShipmentRequested) -> Addr
     """compares address.company_name to shipment [customer, address_as_str, delivery_name]"""
 
     if not address.company_name:
-        logger.info(f'No company name at address - passing check')
+        amdesp_logger.info(f'No company name at address - passing check')
         return address
 
     if address.company_name == shipment.customer \
             or address.company_name in shipment.address_as_str \
             or address.company_name in shipment.delivery_name:
-        logger.info(f'Address company name matches customer')
+        amdesp_logger.info(f'Address company name matches customer')
         return address
 
     else:
@@ -141,7 +141,7 @@ def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
 
 def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
     """ return BestMatch from a list of FuzzyScores"""
-    logger.info(f'Searching BestMatch from fuzzyscores')
+    amdesp_logger.info(f'Searching BestMatch from fuzzyscores')
     best_address = None
     best_score = 0
     best_category = ""
@@ -152,13 +152,13 @@ def bestmatch_from_fuzzyscores(fuzzyscores: [FuzzyScores]) -> BestMatch:
         max_score = f.scores[max_category]
 
         if max_score > best_score:
-            logger.info(f'New BestMatch found with matchscore = {max_score}: {f.address}')
+            amdesp_logger.info(f'New BestMatch found with matchscore = {max_score}: {f.address}')
             best_score = max_score
             best_category = max_category
             best_address = f.address
             str_matched = f.str_matched
         if max_score == 100:
-            logger.info(f'BestMatch found with score of 100: {f.address}')
+            amdesp_logger.info(f'BestMatch found with score of 100: {f.address}')
             # well we won't beat that?
             break
 
@@ -173,10 +173,10 @@ def fuzzy_address(shipment, client: DespatchBaySDK) -> Address:
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
         if get_explicit_match(shipment=shipment, candidate_address=candidate_address):
             return candidate_address
-        logger.debug(f"{candidate_address=}")
+        amdesp_logger.debug(f"{candidate_address=}")
         fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
-    logger.debug(f'Bestmatch Address: {bestmatch.address}')
+    amdesp_logger.debug(f'Bestmatch Address: {bestmatch.address}')
     return bestmatch.address
 
 

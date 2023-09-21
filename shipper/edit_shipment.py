@@ -5,7 +5,8 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Parcel, Recipient, Sender, Service
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.config import Config, logger
+from core.config import Config
+from core.logger import amdesp_logger
 from core.enums import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
@@ -29,7 +30,7 @@ def boxes_click(shipment_to_edit, window, client) -> int | None:
 def dropoff_click_old(config, shipment: ShipmentRequested, client: DespatchBaySDK):
     if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') != 'Yes':
         return None
-    logger.info('Converting to Dropoff')
+    amdesp_logger.info('Converting to Dropoff')
     # shipment.sender = sender_from_address_id(address_id=config.home_address.dropoff_sender_id)
     shipment.sender = client.sender(address_id=config.home_address.dropoff_sender_id)
 
@@ -54,7 +55,7 @@ def dropoff_click(dropoff_sender_id:str, shipment_to_edit: ShipmentRequested, cl
 def make_shipment_dropoff(dropoff_sender_id, shipment_to_edit: ShipmentRequested, client: DespatchBaySDK):
     if sg.popup_yes_no('Convert To Dropoff? (y/n) (Shipment will NOT be collected!') != 'Yes':
         return None
-    logger.info('Converting to Dropoff')
+    amdesp_logger.info('Converting to Dropoff')
     shipment_to_edit.sender = client.sender(address_id=dropoff_sender_id)
     shipment_to_edit.is_dropoff = True
     return True
