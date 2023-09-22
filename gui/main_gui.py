@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 from PySimpleGUI import Window
 from despatchbay.despatchbay_entities import CollectionDate, Service
 
-from core.enums import DateTimeMasks
+from core.entities import DateTimeMasks
 from core.funcs import collection_date_to_datetime, print_label
 from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \

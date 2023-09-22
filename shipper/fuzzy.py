@@ -7,7 +7,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from core.enums import BestMatch, FuzzyScores
+from core.entities import BestMatch, FuzzyScores
 from core.funcs import retry_with_backoff
 from gui.keys_and_strings import ADDRESS_STRING
 from shipper.shipment import ShipmentRequested

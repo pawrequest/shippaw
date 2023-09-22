@@ -3,7 +3,7 @@ from despatchbay.despatchbay_entities import Address, AddressKey
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 import shipper.shipper
-from core.enums import Contact, FieldsList
+from core.entities import Contact, FieldsList
 from gui.gui_params import address_fieldname_params, address_input_params
 from shipper.shipment import ShipmentInput, ShipmentRequested
 

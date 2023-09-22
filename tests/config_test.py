@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from core.config import Config, MODEL_CONFIG_TOML, config_from_dict, get_config_dict
 from core.dbay_client import get_dbay_client
-from core.enums import ShipmentCategory
+from core.entities import ShipmentCategory
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'

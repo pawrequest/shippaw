@@ -3,7 +3,7 @@ from typing import Dict, List
 import pytest
 
 from core.config import ROOT_DIR
-from core.enums import ShipmentCategory
+from core.entities import ShipmentCategory
 from gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
 from shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_record, ShipmentDict, \
     shipments_from_records

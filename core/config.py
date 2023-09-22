@@ -9,9 +9,11 @@ import PySimpleGUI as sg
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from core.enums import ApiScope, Contact, DefaultCarrier, HomeAddress, \
-    PathsList, ShipmentCategory
 from core.dbay_client import DbayCreds
+from core.entities import ApiScope, Contact, DefaultCarrier, HomeAddress, \
+    PathsList, ShipmentCategory
+
+from core.entities import ImportMap, mapper_dict
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -21,69 +23,7 @@ CONFIG_TOML = DATA_DIR / 'user_config.toml'
 
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
-
 logger = logging.getLogger(name=__name__)
-
-
-def configure_logging(log_file):
-    # formatter = logging.Formatter('{levelname:<8} {asctime} {message}', style='{')
-    formatter = logging.Formatter('{levelname:<8} {asctime} | {name}:{lineno} | {message}', style='{')
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-
-
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    root_logger.addHandler(file_handler)
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-
-    root_logger.addHandler(stream_handler)
-
-
-
-class ImportMap(BaseModel):
-    address_as_str: str
-    contact_name: str
-    email: str
-    delivery_name: str
-    postcode: str
-    telephone: str
-    customer: str
-
-
-class HireMap(ImportMap):
-    shipment_name: str
-    boxes: str
-    send_out_date: str
-    send_method: str
-    outbound_id: str
-    inbound_id: str
-
-
-class SaleMap(ImportMap):
-    shipment_name: str
-    outbound_id: str
-    inbound_id: str
-
-
-mapper_dict = {
-    ShipmentCategory.HIRE: HireMap,
-    ShipmentCategory.SALE: SaleMap,
-    ShipmentCategory.CUSTOMER: ImportMap
-}
-
-
-def get_import_map(category: ShipmentCategory, mappings: dict[str, dict]) -> ImportMap:
-    map_dict = mappings[category.value.lower()]
-    return mapper_dict[category](**map_dict)
-
-
-def get_all_mappings(mappings: dict[str, dict]) -> dict[str, ImportMap]:
-    return {category.name.lower(): mapper_dict[category](**mappings[category.value.lower()])
-            for category in ShipmentCategory}
 
 
 class Config(BaseModel):
@@ -125,20 +65,38 @@ class Config(BaseModel):
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
+def configure_logging(log_file):
+    formatter = logging.Formatter('{levelname:<8} {asctime} | {name}:{lineno} | {message}', style='{')
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    root_logger.addHandler(stream_handler)
+
+
+def get_import_mappings(mappings: dict[str, dict]) -> dict[str, ImportMap]:
+    return {category.name.lower(): mapper_dict[category](**mappings[category.value.lower()])
+            for category in ShipmentCategory}
+
+
 def get_config_dict(toml_file) -> dict:
     with open(toml_file, 'rb') as g:
         return tomllib.load(g)
 
 
 def config_from_dict(config_dict, sandbox=None) -> Config:
-    # config_dict = get_config_dict(toml_file=toml_file)
     sandbox = sandbox or config_dict.get('sandbox')
     scope = scope_from_sandbox_func(sandbox=sandbox)
     dbay = config_dict.get('dbay')[scope]
     mappings_dict = config_dict['import_mappings']
 
     return Config(
-        import_mappings=get_all_mappings(mappings=mappings_dict),
+        import_mappings=get_import_mappings(mappings=mappings_dict),
         home_address=HomeAddress(**config_dict.get('home_address')),
         home_contact=Contact(**config_dict.get('home_contact')),
         dbay_creds=DbayCreds.from_envar_names(**dbay.get('envars')),
@@ -197,5 +155,3 @@ def set_despatch_env(api_user, api_key, sandbox):
 
 def scope_from_sandbox_func(sandbox):
     return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value
-
-

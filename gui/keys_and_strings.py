@@ -3,7 +3,7 @@ from typing import List
 
 from despatchbay.despatchbay_entities import Address, CollectionDate, Service
 
-from core.enums import DateTimeMasks
+from core.entities import DateTimeMasks
 # from shipper.edit_shipment import ShipmentEditor
 # from shipper.edit_shipment import boxes_click
 from shipper.shipment import ShipmentRequested

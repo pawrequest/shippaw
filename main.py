@@ -4,7 +4,7 @@ from pathlib import Path
 
 from core.config import CONFIG_TOML, config_from_dict, configure_logging, get_config_dict, LOG_FILE
 from core.dbay_client import get_dbay_client
-from core.enums import ShipDirection, ShipMode, ShipmentCategory
+from core.entities import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from gui.main_gui import post_book
 from shipper.shipment import shipments_from_file
@@ -32,7 +32,7 @@ def intitial_config(category: ShipmentCategory):
 def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDirection, file: Path):
     config, client, import_map = intitial_config(category=category)
     outbound = direction == ShipDirection.OUT
-    shipments = shipments_from_file(category, file, import_map, outbound)
+    shipments = shipments_from_file(category=category, file=file, import_map=import_map, outbound=outbound)
     shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
     dicty = ship_list_to_dict(shipments=shipments_prepared)
 

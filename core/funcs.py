@@ -13,7 +13,7 @@ import requests
 import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
-from core.enums import FieldsList, DateTimeMasks
+from core.entities import FieldsList, DateTimeMasks
 
 logger = logging.getLogger(__name__)
 def print_label(shipment):
@@ -30,7 +30,7 @@ def print_label(shipment):
 
 
 
-def email_label(shipment: "ShipmentCompleted", body: str, collection_date: CollectionDate, collection_address: Address):
+def email_label(shipment: 'ShipmentBooked', body: str, collection_date: CollectionDate, collection_address: Address):
     collection_date = collection_date_to_datetime(collection_date)
 
     try:

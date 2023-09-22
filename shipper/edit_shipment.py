@@ -5,7 +5,7 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Parcel
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.enums import Contact
+from core.entities import Contact
 from gui import keys_and_strings
 from gui.address_gui import address_from_gui
 from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING

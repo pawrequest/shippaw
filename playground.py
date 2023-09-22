@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config, config_from_dict
-from core.enums import ShipMode, ShipmentCategory
+from core.entities import ShipMode, ShipmentCategory
 from shipper.shipment import shipments_from_records, records_from_dbase
 from shipper.shipper import establish_client
 

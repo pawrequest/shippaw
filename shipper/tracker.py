@@ -4,12 +4,12 @@ import PySimpleGUI as sg
 from despatchbay.exceptions import ApiException
 
 import shipper.shipper
+from shipper.shipment import ShipmentRequested
 
 logger = logging.getLogger(__name__)
 
-def tracking_loop(ship_ids):
+def tracking_loop(ship_ids, client):
     for shipment_id in ship_ids:
-        client = shipper.shipper.DESP_CLIENT
         shipment_return = client.get_shipment(shipment_id).is_delivered
 
 #
@@ -30,6 +30,22 @@ def tracking_loop(ship_ids):
 #                     logger.exception(f'ERROR for {shipment.shipment_name_printable}')
 #                     sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
+# def tracking_loop(shipments: List[ShipmentRequested]):
+#     for shipment in shipments:
+#         if outbound_id := shipment.outbound_id:
+#             outbound_window = get_tracking(outbound_id)
+#             event, values = outbound_window.read()
+#         if inbound_id := shipment.inbound_id:
+#             inbound_window = get_tracking(inbound_id)
+#             event, values = inbound_window.read()
+
+
+def track():
+    # tracking_loop(shipments=self.shipments)
+    # track2(shipments=self.shipments)
+    ...
+
+
 def track2(shipments):
     for shipment in shipments:
         if ship_ids := [shipment.outbound_id, shipment.inbound_id]:
@@ -49,8 +65,7 @@ def track2(shipments):
                         sg.popup_error(f'ERROR for {shipment.shipment_name_printable}')
 
 
-def get_tracking(shipment_id):
-    client = shipper.shipper.DESP_CLIENT
+def get_tracking(shipment_id, client):
     shipment_return = client.get_shipment(shipment_id)
     delivered = shipment_return.is_delivered
 

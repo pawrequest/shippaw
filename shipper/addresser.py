@@ -7,7 +7,7 @@ from despatchbay.despatchbay_entities import Address, Recipient, Sender
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from core.enums import Contact, HomeAddress
+from core.entities import Contact, HomeAddress
 from gui.address_gui import address_from_gui
 from shipper.fuzzy import fuzzy_address_script
 from shipper.shipment import ShipmentInput

@@ -13,7 +13,7 @@ from despatchbay.exceptions import ApiException
 
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config
-from core.enums import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
+from core.entities import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
 from core.funcs import collection_date_to_datetime, email_label, print_label
 from gui import keys_and_strings
 from gui.main_gui import main_window
@@ -403,17 +403,3 @@ def update_commence(config: Config, shipment: ShipmentQueued):
         return shipment
 
 
-def tracking_loop(shipments: List[ShipmentRequested]):
-    for shipment in shipments:
-        if outbound_id := shipment.outbound_id:
-            outbound_window = get_tracking(outbound_id)
-            event, values = outbound_window.read()
-        if inbound_id := shipment.inbound_id:
-            inbound_window = get_tracking(inbound_id)
-            event, values = inbound_window.read()
-
-
-def track():
-    # tracking_loop(shipments=self.shipments)
-    # track2(shipments=self.shipments)
-    ...

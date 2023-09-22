@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from despatchbay.despatchbay_entities import Address
+from pydantic import BaseModel
 
 
 class ShipmentCategory(Enum):
@@ -131,3 +132,35 @@ class HomeAddress:
     postal_code: str
     country_code: Optional[str] = 'GB'
     dropoff_sender_id: Optional[int] = None
+
+
+class ImportMap(BaseModel):
+    address_as_str: str
+    contact_name: str
+    email: str
+    delivery_name: str
+    postcode: str
+    telephone: str
+    customer: str
+
+
+class HireMap(ImportMap):
+    shipment_name: str
+    boxes: str
+    send_out_date: str
+    send_method: str
+    outbound_id: str
+    inbound_id: str
+
+
+class SaleMap(ImportMap):
+    shipment_name: str
+    outbound_id: str
+    inbound_id: str
+
+
+mapper_dict = {
+    ShipmentCategory.HIRE: HireMap,
+    ShipmentCategory.SALE: SaleMap,
+    ShipmentCategory.CUSTOMER: ImportMap
+}

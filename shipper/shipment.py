@@ -13,8 +13,8 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
 from typing_extensions import Annotated
 
-from core.config import ImportMap
-from core.enums import BestMatch, Contact, DateTimeMasks, ShipmentCategory
+from core.entities import ImportMap
+from core.entities import BestMatch, Contact, DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime
 
 logger = logging.getLogger(__name__)
