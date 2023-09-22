@@ -7,7 +7,7 @@ from despatchbay.despatchbay_entities import Address, Recipient, Sender
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from core.entities import Contact, HomeAddress
+from core.entities import Contact, HomeAddress, AddressMatch
 from gui.address_gui import address_from_gui
 from shipper.fuzzy import fuzzy_address_script
 from shipper.shipment import ShipmentInput
@@ -20,6 +20,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, clie
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 
     if address := address_from_direct_search(postcode=shipment.postcode, search_terms=terms, client=client):
+        shipment.remote_address_matched = AddressMatch.DIRECT
         return address
 
     fuzzy = fuzzy_address_script(shipment=shipment, client=client)
@@ -32,6 +33,7 @@ def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, clie
                 sys.exit(666)
             continue
         else:
+            shipment.remote_address_matched = AddressMatch.GUI
             return address
 
 

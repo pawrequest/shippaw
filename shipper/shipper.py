@@ -288,7 +288,13 @@ def get_collection_date(shipment: ShipmentPrepared, available_dates: List[Collec
         shipment.date_matched = False
 
     logger.info(
-        f'Collection Date {"NOT" if not shipment.date_matched else ""} Matched to send out date: {collection_date.date}')
+        f'Collection Date = {collection_date.date}: {"NOT" if not shipment.date_matched else ""} '
+        f'Matched to send out date {f"({shipment.send_out_date.strftime(DateTimeMasks.DB.value)})" if shipment.send_out_date else ""}'
+    )
+
+    # logger.info(
+    #     f'Collection Date = {collection_date.date}: {"NOT" if not shipment.date_matched else ""}'
+    #     f' Matched to send out date {{shipment.send_out_date: {DateTimeMasks.FILE.value}} if shipment.send_out_date else ""}}')
     return collection_date
 
 

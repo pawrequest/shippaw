@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import Iterable
 
@@ -5,7 +6,7 @@ import PySimpleGUI as sg
 from PySimpleGUI import Window
 from despatchbay.despatchbay_entities import CollectionDate, Service
 
-from core.entities import DateTimeMasks
+from core.entities import DateTimeMasks, AddressMatch
 from core.funcs import collection_date_to_datetime, print_label
 from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \
@@ -14,6 +15,7 @@ from gui.gui_params import address_head_params, address_params, \
 from shipper.shipment import ShipmentQueued, ShipmentRequested
 
 logger = logging.getLogger(__name__)
+
 
 def main_window(shipments: [ShipmentRequested]):
     logger.debug('BULK SHIPPER WINDOW')
@@ -125,9 +127,9 @@ def num_boxes_popup(location):
 
 
 def new_service_popup(menu_map: dict, location, default_service: Service) -> Service:
-
-    layout = [[sg.Combo(k='-SERVICE-', values=list(menu_map.keys()), enable_events=True, default_value=default_service.name,
-                        **option_menu_params)]]
+    layout = [
+        [sg.Combo(k='-SERVICE-', values=list(menu_map.keys()), enable_events=True, default_value=default_service.name,
+                  **option_menu_params)]]
     window = Window('Select a service', layout=layout, location=location, relative_location=(-100, -50))
 
     while True:
@@ -154,19 +156,33 @@ def parcels_button(num_parcels, shipment):
 
 
 def recipient_button(recipient_address_name, shipment: ShipmentRequested):
+    params = copy.deepcopy(address_params)
+    if shipment.is_outbound:
+        if shipment.remote_address_matched in [AddressMatch.EXPLICIT, AddressMatch.DIRECT]:
+            params['background_color'] = 'green4'
+        elif shipment.remote_address_matched == AddressMatch.GUI:
+            params['background_color'] = 'orange4'
+        else:
+            logger.info("RECIPIENT COLOUR IS RED")
+            params['background_color'] = 'maroon4'
+
     recipient_button = sg.Text(recipient_address_name, enable_events=True,
-                               k=keys_and_strings.RECIPIENT_KEY(shipment), **address_params)
+                               k=keys_and_strings.RECIPIENT_KEY(shipment), **params)
     return recipient_button
 
 
 def sender_button(shipment) -> sg.Text:
     if shipment.is_outbound:
         sender_address_name = "Primary Collection Address"
-        sender_button = sg.Text(sender_address_name, **address_params)
+        sender_button = sg.Text(sender_address_name, **address_params, background_color='green')
     else:
+        if shipment.remote_address_matched in [AddressMatch.EXPLICIT, AddressMatch.DIRECT, AddressMatch.GUI]:
+            colour = 'green'
+        else:
+            colour = 'red'
         sender_address_name = keys_and_strings.ADDRESS_STRING(address=shipment.sender.sender_address)
         sender_button = sg.Text(sender_address_name, k=keys_and_strings.SENDER_KEY(shipment), enable_events=True,
-                                **address_params)
+                                **address_params, background_color=colour)
 
     return sender_button
 

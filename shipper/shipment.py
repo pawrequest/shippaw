@@ -13,7 +13,7 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
 from typing_extensions import Annotated
 
-from core.entities import ImportMap
+from core.entities import ImportMap, AddressMatch
 from core.entities import BestMatch, Contact, DateTimeMasks, ShipmentCategory
 from core.funcs import collection_date_to_datetime
 
@@ -60,6 +60,7 @@ class ShipmentInput(BaseModel):
     inbound_id: Optional[MyStr] = None
     outbound_id: Optional[MyStr] = None
     shipment_name: Optional[MyStr] = None
+    remote_address_matched: AddressMatch = AddressMatch.NOT
 
     @model_validator(mode='after')
     def ship_name(self) -> "ShipmentInput":
@@ -179,7 +180,7 @@ def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outb
         -> ShipmentInput | None:
     transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
     transformed_record['delivery_name'] = transformed_record['contact_name'] or transformed_record['delivery_name']
-    [logger.debug(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
+    [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
     try:
         return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
     except Exception as e:

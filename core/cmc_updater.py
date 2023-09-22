@@ -34,7 +34,7 @@ def edit_commence(pscript: str, function: str, table: str, record: str, package:
     if process_result.stderr:
         parse_std_err(process_result)
     else:
-        logger.debug(f'COMMENCE UPDATER:\n{process_result.stdout}')
+        logger.info(f'COMMENCE UPDATER:\n{process_result.stdout}')
     return process_result
 
 

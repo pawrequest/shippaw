@@ -115,7 +115,6 @@ function EditRecordAppend($record, $package)
 
 
 
-        # if input type is a string and current value is 1+, append
         If ($input_value -is [string] -and $db_val.Length -ge 1)
         {
             $new_val = $db_val + "  [AD]  " + $input_value

@@ -164,3 +164,11 @@ mapper_dict = {
     ShipmentCategory.SALE: SaleMap,
     ShipmentCategory.CUSTOMER: ImportMap
 }
+
+
+class AddressMatch(Enum):
+    DIRECT = auto()
+    FUZZY = auto()
+    NOT = auto()
+    EXPLICIT = auto()
+    GUI = auto()

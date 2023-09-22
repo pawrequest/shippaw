@@ -51,7 +51,7 @@ def get_dbay_client(creds: DbayCreds):
             client = APIClientWrapperOop(api_user=creds.api_user, api_key=creds.api_key)
             # client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
             dbay_account = client.get_account()
-            logger.debug(f'Despatchbay account retrieved: {dbay_account}')
+            logger.info(f'Despatchbay account retrieved: {dbay_account}')
         except AuthorizationException as e:
             logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
             creds = creds_from_user()

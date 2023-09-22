@@ -7,7 +7,7 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from core.entities import BestMatch, FuzzyScores
+from core.entities import BestMatch, FuzzyScores, AddressMatch
 from core.funcs import retry_with_backoff
 from gui.keys_and_strings import ADDRESS_STRING
 from shipper.shipment import ShipmentRequested
@@ -19,14 +19,16 @@ def fuzzy_address_script(shipment, client: DespatchBaySDK) -> Address:
     fuzzyscores:List[FuzzyScores] = []
     logger.info({'Getting Fuzzy Address'})
 
-    candidate_keys = retry_with_backoff(get_candidate_keys, backoff_in_seconds=60, postcode=shipment.postcode)
+    candidate_keys = retry_with_backoff(get_candidate_keys, backoff_in_seconds=60, postcode=shipment.postcode, client=client)
     for address_str, key in candidate_keys.items():
         candidate_address = retry_with_backoff(client.get_address_by_key, retries=5, backoff_in_seconds=60, key=key)
         if get_explicit_match(shipment=shipment, candidate_address=candidate_address):
+            shipment.remote_address_matched = AddressMatch.EXPLICIT
             return candidate_address
         fuzzyscores.append(get_fuzzy_scores(candidate_address=candidate_address, shipment=shipment))
     bestmatch = bestmatch_from_fuzzyscores(fuzzyscores=fuzzyscores)
-    logger.debug(f'Bestmatch Address: {bestmatch.address}')
+    logger.info(f'Bestmatch Address: {bestmatch.address}')
+    shipment.remote_address_matched = AddressMatch.FUZZY
     return bestmatch.address
 
 
@@ -49,7 +51,7 @@ def get_explicit_match(shipment: ShipmentRequested, candidate_address: Address) 
 
 def get_fuzzy_scores(candidate_address, shipment) -> FuzzyScores:
     """" return a Fuzzyscores representing distance from shipment details to candidate_address"""
-    logger.debug(f'Getting Fuzzy Scores for {ADDRESS_STRING(candidate_address)}')
+    logger.info(f'Getting Fuzzy Scores for {ADDRESS_STRING(candidate_address)}')
     address_str_to_match = shipment.str_to_match
 
     str_to_company = fuzz.partial_ratio(address_str_to_match, candidate_address.company_name)
