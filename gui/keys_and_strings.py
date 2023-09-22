@@ -96,7 +96,7 @@ def collection_booked_string(shipment):
     return f"Collection Booked for {shipment.collection_date_datetime:{DateTimeMasks.DISPLAY.value}} -" if shipment.is_booked else ""
 
 def label_filename_outbound(shipment):
-    return f'{shipment.customer_printable} - Shipping Label - {collection_booked_string} booked at {shipment.timestamp}'
+    return f'{shipment.customer_printable} - Shipping Label - {collection_booked_string(shipment)} booked at {shipment.timestamp}'
 
 def label_filename_inbound(shipment):
-    return f'{shipment.customer_printable} - Returns Label - {collection_booked_string} booked at {shipment.timestamp}'
+    return f'{shipment.customer_printable} - Returns Label - {collection_booked_string(shipment)} booked at {shipment.timestamp}'

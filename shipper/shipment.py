@@ -178,6 +178,7 @@ def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, ou
 def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool, record: dict) \
         -> ShipmentInput | None:
     transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
+    transformed_record['delivery_name'] = transformed_record['contact_name'] or transformed_record['delivery_name']
     [logger.debug(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
     try:
         return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)

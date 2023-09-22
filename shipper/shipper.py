@@ -2,7 +2,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Iterable
 
 import PySimpleGUI as sg
 import dotenv
@@ -117,7 +117,7 @@ def request_shipment(shipment: ShipmentPreRequest, client: DespatchBaySDK) -> Sh
     return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
 
 
-def process_shipments_batch(shipments: List[ShipmentRequested], values: dict, config: Config, client: DespatchBaySDK) -> \
+def process_shipments_batch(shipments: Iterable[ShipmentRequested], values: dict, config: Config, client: DespatchBaySDK) -> \
         List[ShipmentBooked | ShipmentQueued]:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
@@ -137,8 +137,8 @@ def process_shipments_batch_dict(shipment_dict: ShipmentDict, values: dict, conf
     sg.popup_quick_message('Processing shipments, please wait...')
     processed = [process_shipment(shipment_req=shipment, values=values, config=config, client=client) for shipment in
                  shipment_dict.values()]
-    dicty = ShipmentDict({s.name: s for s in processed})
-    return dicty
+
+    return ship_list_to_dict(processed)
 
 
 def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Config,
@@ -179,9 +179,11 @@ def dispatch_gui(config: Config, shipment_dict: ShipmentDict, client: DespatchBa
 
         if event == keys_and_strings.GO_SHIP_KEY():
             window.close()
-            processed_shipments = process_shipments_batch_dict(shipment_dict=shipment_dict, values=values,
+            # processed_shipments = process_shipments_batch_dict(shipment_dict=shipment_dict, values=values,
+            #                                                    config=config, client=client)
+            processed_shipments = process_shipments_batch(shipments=shipment_dict.values(), values=values,
                                                                config=config, client=client)
-            return processed_shipments
+            return ship_list_to_dict(processed_shipments)
 
         shipment_to_edit = shipment_dict.get(event[0])
         shipment_to_edit = request_shipment(shipment_to_edit,

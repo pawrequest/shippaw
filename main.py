@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -23,6 +24,8 @@ includes
 
 def intitial_config(category: ShipmentCategory):
     configure_logging(LOG_FILE)
+    logger = logging.getLogger(__name__)
+    logger.info(args)
     is_connected()
     config = config_from_dict(get_config_dict(toml_file=CONFIG_TOML))
     client = get_dbay_client(creds=config.dbay_creds)
@@ -39,7 +42,7 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
             completed = dispatch_gui(config=config, shipment_dict=dicty, client=client)
-            post_book(shipments=completed)
+            post_book(shipments=completed.values())
         sys.exit(0)
     else:
         return config, client, shipments

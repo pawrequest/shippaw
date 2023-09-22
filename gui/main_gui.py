@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 
 import PySimpleGUI as sg
 from PySimpleGUI import Window
@@ -71,7 +72,7 @@ def headers():
     return heads
 
 
-def post_book(shipments: [ShipmentRequested]):
+def post_book(shipments: Iterable[ShipmentRequested]):
     headers = []
     frame = results_frame(shipments=shipments)
     window2 = sg.Window('Booking Results:', layout=[[frame]])
