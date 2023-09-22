@@ -144,18 +144,6 @@ class ShipmentBooked(ShipmentQueued):
     is_booked: bool = False
     shipment_return: ShipmentReturn
 
-    @property
-    def collection_booked_string(self):
-        return f"Collection Booked for {self.collection_date_datetime:{DateTimeMasks.DISPLAY.value}} -" if self.is_booked else ""
-
-    @property
-    def label_filename_outbound(self):
-        return f'{self.customer_printable} - Shipping Label - {self.collection_booked_string} booked at {self.timestamp}'
-
-    @property
-    def label_filename_inbound(self):
-        return f'{self.customer_printable} - Returns Label - {self.collection_booked_string} booked at {self.timestamp}'
-
 
 class ShipmentCompleted(ShipmentBooked):
     label_location: Path

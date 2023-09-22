@@ -1,7 +1,9 @@
+import ctypes
 import json
 import logging
 import os
 import random
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -13,7 +15,7 @@ import requests
 import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
-from core.entities import FieldsList, DateTimeMasks
+from core.entities import ApiScope, FieldsList, DateTimeMasks
 
 logger = logging.getLogger(__name__)
 def print_label(shipment):
@@ -114,6 +116,50 @@ def is_connected():
     return True
 
 
-def get_type(cls, field: str):
-    type_hint = cls.__annotations__.get(field, None)
-    return type_hint.__name__ if type_hint else None
+def run_as_admin(cmd):
+    """
+    Run the given command as administrator
+    """
+    if ctypes.windll.shell32.IsUserAnAdmin():
+        return subprocess.run(cmd, shell=True)
+    else:
+        return subprocess.run(
+            ["powershell.exe", "-Command", f"Start-Process '{cmd[0]}' -ArgumentList '{' '.join(cmd[1:])}' -Verb RunAs"],
+            shell=True)
+
+
+def set_despatch_env(api_user, api_key, sandbox):
+    api_user_str = 'DESPATCH_API_USER'
+    if sandbox:
+        api_user_str += '_SANDBOX'
+
+    api_key_str = 'DESPATCH_API_KEY'
+    if sandbox:
+        api_key_str += '_SANDBOX'
+    #
+    # cmd1 = ["setx", api_user_str, api_user, "/M"]
+    # cmd2 = ["setx", api_key_str, api_key, "/M"]
+
+    cmd3 = [["setx", api_user_str, api_user, "/M"], ["setx", api_key_str, api_key, "/M"]]
+
+    # result1 = run_as_admin(cmd1)
+    # if result1.returncode != 0:
+    #     logger.error("Error:", result1.stderr)
+    # else:
+    #     logger.info(f"Environment variable set: {api_user_str} : {api_user}")
+    #
+    # result2 = run_as_admin(cmd2)
+    # if result2.returncode != 0:
+    #     logger.error("Error:", result2.stderr)
+    # else:
+    #     logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+
+    result2 = run_as_admin(cmd3)
+    if result2.returncode != 0:
+        logger.error("Error:", result2.stderr)
+    else:
+        logger.info(f"Environment variable set: {api_key_str} : {api_key}")
+
+
+def scope_from_sandbox_func(sandbox):
+    return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value

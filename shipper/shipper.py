@@ -339,10 +339,12 @@ def download_shipment_label(shipment: ShipmentBooked, config: Config, client: De
 def get_label_path(config: Config, shipment: ShipmentBooked) -> Path:
     if shipment.is_outbound:
         label_folder = config.paths.outbound_labels
-        label_filename = shipment.label_filename_outbound
+        # label_filename = shipment.label_filename_outbound
+        label_filename = keys_and_strings.label_filename_outbound(shipment)
     else:
         label_folder = config.paths.inbound_labels
-        label_filename = shipment.label_filename_inbound
+        label_filename = keys_and_strings.label_filename_inbound(shipment)
+        # label_filename = shipment.label_filename_inbound
     label_filename: str = label_filename.replace(':', '') + '.pdf'
     label_path = label_folder / label_filename
     return label_path

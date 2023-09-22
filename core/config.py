@@ -1,4 +1,3 @@
-import ctypes
 import logging
 import subprocess
 import sys
@@ -10,10 +9,11 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from core.dbay_client import DbayCreds
-from core.entities import ApiScope, Contact, DefaultCarrier, HomeAddress, \
+from core.entities import Contact, DefaultCarrier, HomeAddress, \
     PathsList, ShipmentCategory
 
 from core.entities import ImportMap, mapper_dict
+from core.funcs import scope_from_sandbox_func
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -108,50 +108,3 @@ def config_from_dict(config_dict, sandbox=None) -> Config:
     )
 
 
-def run_as_admin(cmd):
-    """
-    Run the given command as administrator
-    """
-    if ctypes.windll.shell32.IsUserAnAdmin():
-        return subprocess.run(cmd, shell=True)
-    else:
-        return subprocess.run(
-            ["powershell.exe", "-Command", f"Start-Process '{cmd[0]}' -ArgumentList '{' '.join(cmd[1:])}' -Verb RunAs"],
-            shell=True)
-
-
-def set_despatch_env(api_user, api_key, sandbox):
-    api_user_str = 'DESPATCH_API_USER'
-    if sandbox:
-        api_user_str += '_SANDBOX'
-
-    api_key_str = 'DESPATCH_API_KEY'
-    if sandbox:
-        api_key_str += '_SANDBOX'
-    #
-    # cmd1 = ["setx", api_user_str, api_user, "/M"]
-    # cmd2 = ["setx", api_key_str, api_key, "/M"]
-
-    cmd3 = [["setx", api_user_str, api_user, "/M"], ["setx", api_key_str, api_key, "/M"]]
-
-    # result1 = run_as_admin(cmd1)
-    # if result1.returncode != 0:
-    #     logger.error("Error:", result1.stderr)
-    # else:
-    #     logger.info(f"Environment variable set: {api_user_str} : {api_user}")
-    #
-    # result2 = run_as_admin(cmd2)
-    # if result2.returncode != 0:
-    #     logger.error("Error:", result2.stderr)
-    # else:
-    #     logger.info(f"Environment variable set: {api_key_str} : {api_key}")
-
-    result2 = run_as_admin(cmd3)
-    if result2.returncode != 0:
-        logger.error("Error:", result2.stderr)
-    else:
-        logger.info(f"Environment variable set: {api_key_str} : {api_key}")
-
-
-def scope_from_sandbox_func(sandbox):
-    return ApiScope.SAND.value if sandbox else ApiScope.PRODUCTION.value
