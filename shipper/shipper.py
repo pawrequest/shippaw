@@ -354,7 +354,7 @@ def get_label_path(config: Config, shipment: ShipmentBooked) -> Path:
 
 def commence_package_sale(shipment: ShipmentQueued):
     """returns dict to update database with collection details"""
-    return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()}'}
+    return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()} [AD]'}
 
 def return_notes(shipment: ShipmentQueued):
     return f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}}'
