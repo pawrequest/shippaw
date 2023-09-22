@@ -354,8 +354,10 @@ def get_label_path(config: Config, shipment: ShipmentBooked) -> Path:
 
 def commence_package_sale(shipment: ShipmentQueued):
     """returns dict to update database with collection details"""
-    return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()} [AD]'}
+    return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()}'}
 
+def return_notes(shipment: ShipmentQueued):
+    return f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}}'
 
 def commence_package_hire(shipment: ShipmentQueued):
     """returns dict to update database with collection details"""
@@ -363,8 +365,9 @@ def commence_package_hire(shipment: ShipmentQueued):
     if shipment.is_outbound:
         cmc_update_package['DB label printed'] = True
     else:
-        cmc_update_package[
-            'Return Notes'] = f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}} [AD]'
+        cmc_update_package['Return Notes'] = return_notes(shipment)
+        # cmc_update_package[
+        #     'Return Notes'] = f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}}'
         cmc_update_package['Pickup Arranged'] = True
 
     return cmc_update_package
