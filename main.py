@@ -8,7 +8,7 @@ from core.dbay_client import get_dbay_client
 from core.entities import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
 from gui.main_gui import post_book
-from shipper.shipment import shipments_from_file
+from shipper.shipment import shipments_from_file, ShipmentDict
 from shipper.shipper import dispatch_gui, prepare_batch, ship_list_to_dict
 
 """
@@ -41,8 +41,8 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
 
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
-            completed = dispatch_gui(config=config, shipment_dict=dicty, client=client)
-            post_book(shipments=completed.values())
+            completed:ShipmentDict = dispatch_gui(config=config, shipment_dict=dicty, client=client)
+            post_book(shipments=completed)
         sys.exit(0)
     else:
         return config, client, shipments

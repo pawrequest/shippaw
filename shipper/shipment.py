@@ -19,7 +19,7 @@ from core.funcs import collection_date_to_datetime
 
 logger = logging.getLogger(__name__)
 
-def parse_amherst_address_string(str_address: str):
+def parse_address_string(str_address: str):
     str_address = str_address.lower()
     words = str_address.split(" ")
     if 'unit' in ' '.join(words[:2]):
@@ -41,6 +41,23 @@ def commence_string(in_string: str):
 
 MyStr = Annotated[str, BeforeValidator(commence_string)]
 
+class AddresssBasic(BaseModel):
+    contact:Contact
+    postcode: MyStr
+    dbay_key:Optional[str] = None
+
+
+# class ShipmentTracking:
+#     inbound: str
+#     outbound: str
+# class ShipmentEssence(BaseModel):
+#     customer: MyStr
+#     address_as_str: MyStr
+#     boxes: int = 1
+#     contact: Contact
+#     send_out_date: date = datetime.today().date()
+#     tracking: ShipmentTracking
+#     shipment_name: Optional[MyStr] = None
 
 class ShipmentInput(BaseModel):
     """ input validated"""
@@ -74,7 +91,7 @@ class ShipmentInput(BaseModel):
 
     @property
     def str_to_match(self):
-        return parse_amherst_address_string(self.address_as_str)
+        return parse_address_string(self.address_as_str)
 
     @property
     def customer_printable(self):
@@ -91,6 +108,14 @@ class ShipmentInput(BaseModel):
 
 
 class ShipmentAddressed(ShipmentInput):
+    """address prep done"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    remote_contact: Contact
+    remote_address: Address
+    sender: Sender
+    recipient: Recipient
+
+class ShipmentAddressedNew(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
     remote_contact: Contact

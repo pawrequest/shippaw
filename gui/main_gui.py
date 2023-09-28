@@ -7,12 +7,12 @@ from PySimpleGUI import Window
 from despatchbay.despatchbay_entities import CollectionDate, Service
 
 from core.entities import DateTimeMasks, AddressMatch
-from core.funcs import collection_date_to_datetime, print_label
+from core.funcs import collection_date_to_datetime, print_label, print_label2
 from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \
     shipment_params
-from shipper.shipment import ShipmentQueued, ShipmentRequested
+from shipper.shipment import ShipmentQueued, ShipmentRequested, ShipmentBooked, ShipmentCompleted, ShipmentDict
 
 logger = logging.getLogger(__name__)
 
@@ -74,23 +74,28 @@ def headers():
     return heads
 
 
-def post_book(shipments: Iterable[ShipmentRequested]):
+def post_book(shipment_dict: ShipmentDict):
     headers = []
-    frame = results_frame(shipments=shipments)
+    frame = results_frame(shipment_dict=shipment_dict)
     window2 = sg.Window('Booking Results:', layout=[[frame]])
     while True:
         e2, v2 = window2.read()
         if e2 in [sg.WIN_CLOSED, 'Exit']:
             break
         if 'reprint' in e2.lower():
-            ship_in_play: ShipmentRequested = next((shipment for shipment in shipments if
-                                                    shipment.shipment_name_printable.lower() in e2.lower()))
-            print_label(ship_in_play)
+            # ship_in_play = next((shipment for shipment in shipments if
+            #                                         shipment.shipment_name_printable.lower() in e2.lower()))
+            ship_in_play = shipment_dict[e2[0]]
+            if isinstance(ship_in_play, ShipmentCompleted):
+                # print_label(ship_in_play)
+                print_label2(ship_in_play.label_location)
+            else:
+                sg.popup_quick_message('has no label')
 
     window2.close()
 
 
-def results_frame(shipments: [ShipmentQueued]):
+def results_frame(shipment_dict: ShipmentDict):
     params = {
         'expand_x': True,
         'expand_y': True,
@@ -98,7 +103,7 @@ def results_frame(shipments: [ShipmentQueued]):
     }
 
     result_layout = []
-    for shipment in shipments:
+    for shipment in shipment_dict.values():
         num_boxes = len(shipment.parcels)
         ship_res = [
             sg.Text(shipment.shipment_request.client_reference, **params),

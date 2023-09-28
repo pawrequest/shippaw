@@ -926,11 +926,11 @@ Sub Form_OnClick(ControlId)
         Case "CommandButton20"
             UnpackHire()
 
-        Case "CommandButton21"
-            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
+'        Case "CommandButton21"
+'            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
 '                 ShipHire("C:\AmDesp\data\AmShip.xml")
-                ShipHireDbase()
-            End if
+'                ShipHireDbase()
+'            End if
 
         Case "CommandButton22"
         ' Email customer about missing kit
@@ -955,8 +955,8 @@ End Sub
 Sub PackHire()
         Dim packedBy
 
-        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
 ' set who packed and when packed'
+        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
 
 
 ' ' if parcelforce in send method offer to launch amdesp to arrange shipping'

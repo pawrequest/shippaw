@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 from pprint import pprint
 from typing import Callable
 
@@ -28,6 +29,15 @@ def print_label(shipment):
         return False
     else:
         shipment.is_printed = True
+        return True
+def print_label2(file_path:Path):
+    """ prints the labels stored at shipment.label_location """
+    try:
+        os.startfile(str(file_path), "print")
+    except Exception as e:
+        logger.warning(f"Failed to print: {e}")
+        return False
+    else:
         return True
 
 

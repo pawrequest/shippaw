@@ -67,6 +67,22 @@ class Commence():
             return f'"{self.recordname}"'
 
 
+
+def parse_std_err(process_result):
+    print(process_result.stderr)
+    if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
+        logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
+    # todo install cmclibnet and retry
+    if "ERROR: Filters.Apply returned" in process_result.stderr:
+        if "ERROR: Filters.Apply returned 0 results" in process_result.stderr:
+            logger.warning(f'No records found in Commence : {process_result.stderr}')
+        else:
+            logger.warning(f'Multiple records found, Std Error: {process_result.stderr}')
+    else:
+        logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')
+
+
+
 #
 #
 # def update_commence(table_name: str, record_name: str, update_package: dict, script_path: str,
@@ -105,17 +121,3 @@ class Commence():
 #     else:
 #         stdoutput = process_result.stdout.split('\n')
 #         [logger.info(f'COMMENCE UPDATER - {i}') for i in stdoutput]
-
-
-def parse_std_err(process_result):
-    print(process_result.stderr)
-    if r"Vovin.CmcLibNet\Vovin.CmcLibNet.dll' because it does not exist." in process_result.stderr:
-        logger.warning(f'CmCLibNet is not installed : {process_result.stderr}')
-    # todo install cmclibnet and retry
-    if "ERROR: Filters.Apply returned" in process_result.stderr:
-        if "ERROR: Filters.Apply returned 0 results" in process_result.stderr:
-            logger.warning(f'No records found in Commence : {process_result.stderr}')
-        else:
-            logger.warning(f'Multiple records found, Std Error: {process_result.stderr}')
-    else:
-        logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')
