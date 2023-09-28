@@ -19,17 +19,17 @@ from despatchbay.despatchbay_entities import Address, CollectionDate
 from core.entities import ApiScope, FieldsList, DateTimeMasks
 
 logger = logging.getLogger(__name__)
-def print_label(shipment):
-    """ prints the labels stored at shipment.label_location """
-    try:
-        os.startfile(str(shipment.label_location), "print")
-    except Exception as e:
-        shipment.is_printed = False
-        logger.warning(f"Failed to print label: {e}")
-        return False
-    else:
-        shipment.is_printed = True
-        return True
+# def print_label(shipment):
+#     """ prints the labels stored at shipment.label_location """
+#     try:
+#         os.startfile(str(shipment.label_location), "print")
+#     except Exception as e:
+#         shipment.is_printed = False
+#         logger.warning(f"Failed to print label: {e}")
+#         return False
+#     else:
+#         shipment.is_printed = True
+#         return True
 def print_label2(file_path:Path):
     """ prints the labels stored at shipment.label_location """
     try:
@@ -65,7 +65,9 @@ def email_label(shipment: 'ShipmentBooked', body: str, collection_date: Collecti
     except Exception as e:
         logger.warning(f"Failed to email label: {e}")
         return False
-    # newmail.Send()
+    # else:
+        # newmail.Send()
+    # return True
 
 
 def retry_with_backoff(fn:Callable, retries=5, backoff_in_seconds=1, *args, **kwargs):

@@ -92,7 +92,7 @@ def pre_request_shipment(shipment: ShipmentPrepared, default_shipping_service_id
     shipment.parcels = get_parcels(num_parcels=shipment.boxes, client=client)
     shipment.collection_date = get_collection_date(shipment=shipment, available_dates=shipment.available_dates)
 
-    # need a shipment_request to get a service, need a service to get a shipment_request.... (thanks dbay)
+    # need a shipment_request to get a service with cost, need a service_id to get a shipment_request.... (thanks dbay)
     # so make a temp request using first available service, then match the one we want later
     temp_request = client.shipment_request(
         service_id=default_shipping_service_id,
@@ -152,7 +152,10 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
         return shipment
     shipment: ShipmentBooked = book_shipment(shipment=shipment, client=client)
     shipment.label_location = download_shipment_label(shipment=shipment, config=config, client=client)
-    print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
+    # print_email_label(print_email=shipment.is_to_print_email, email_body=config.return_label_email_body,
+    #                   shipment=shipment)
+    if shipment.is_to_print_email:
+        print_email_label(email_body=config.return_label_email_body,
                       shipment=shipment)
     booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
 
@@ -226,24 +229,15 @@ def read_window_cboxs(values, shipment):
     return ShipmentGuiConfirmed(**shipment.model_dump())
 
 
-def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
+def print_email_label(email_body, shipment: ShipmentBooked):
     """prints or emails label"""
-    shipment.is_printed = False
-    shipment.is_emailed = False
-
-    if not print_email:
-        return
-
     if shipment.is_outbound:
-        # print_label2(file_path=shipment.label_location)
-        print_label(shipment=shipment)
-        shipment.is_printed = True
+        shipment.is_printed = print_label2(file_path=shipment.label_location)
     else:
-        email_label(shipment=shipment,
+        shipment.is_emailed = email_label(shipment=shipment,
                     body=email_body,
                     collection_date=shipment.collection_return.date,
                     collection_address=shipment.collection_return.sender_address.sender_address)
-        shipment.is_emailed = True
 
 
 def queue_shipment(shipment: ShipmentRequested, client: DespatchBaySDK) -> ShipmentQueued:
