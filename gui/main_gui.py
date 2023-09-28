@@ -82,7 +82,7 @@ def post_book(shipment_dict: ShipmentDict):
         e2, v2 = window2.read()
         if e2 in [sg.WIN_CLOSED, 'Exit']:
             break
-        if 'reprint' in e2.lower():
+        if e2[1] == 'REPRINT':
             # ship_in_play = next((shipment for shipment in shipments if
             #                                         shipment.shipment_name_printable.lower() in e2.lower()))
             ship_in_play = shipment_dict[e2[0]]

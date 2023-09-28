@@ -14,7 +14,7 @@ from despatchbay.exceptions import ApiException
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config
 from core.entities import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, print_label
+from core.funcs import collection_date_to_datetime, email_label, print_label, print_label2
 from gui import keys_and_strings
 from gui.main_gui import main_window
 from shipper.addresser import sender_or_recipient_from_home_address, remote_address_script
@@ -235,6 +235,7 @@ def print_email_label(print_email: bool, email_body, shipment: ShipmentQueued):
         return
 
     if shipment.is_outbound:
+        # print_label2(file_path=shipment.label_location)
         print_label(shipment=shipment)
         shipment.is_printed = True
     else:
@@ -347,7 +348,6 @@ def download_shipment_label(shipment: ShipmentBooked, config: Config, client: De
 def get_label_path(config: Config, shipment: ShipmentBooked) -> Path:
     if shipment.is_outbound:
         label_folder = config.paths.outbound_labels
-        # label_filename = shipment.label_filename_outbound
         label_filename = keys_and_strings.label_filename_outbound(shipment)
     else:
         label_folder = config.paths.inbound_labels

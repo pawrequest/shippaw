@@ -1,6 +1,5 @@
 import logging
 import os
-import os
 import re
 from datetime import date, datetime
 from pathlib import Path
@@ -13,11 +12,12 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
 from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
 from typing_extensions import Annotated
 
-from core.entities import ImportMap, AddressMatch
 from core.entities import BestMatch, Contact, DateTimeMasks, ShipmentCategory
+from core.entities import ImportMap, AddressMatch
 from core.funcs import collection_date_to_datetime
 
 logger = logging.getLogger(__name__)
+
 
 def parse_address_string(str_address: str):
     str_address = str_address.lower()
@@ -41,10 +41,11 @@ def commence_string(in_string: str):
 
 MyStr = Annotated[str, BeforeValidator(commence_string)]
 
+
 class AddresssBasic(BaseModel):
-    contact:Contact
+    contact: Contact
     postcode: MyStr
-    dbay_key:Optional[str] = None
+    dbay_key: Optional[str] = None
 
 
 # class ShipmentTracking:
@@ -115,6 +116,7 @@ class ShipmentAddressed(ShipmentInput):
     sender: Sender
     recipient: Recipient
 
+
 class ShipmentAddressedNew(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -159,6 +161,7 @@ class ShipmentQueued(ShipmentGuiConfirmed):
     """ queued. ready to book"""
     shipment_id: str
     is_queued: bool
+    timestamp: str
 
 
 class ShipmentCmcUpdated(ShipmentQueued):

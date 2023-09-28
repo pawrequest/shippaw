@@ -41,8 +41,8 @@ def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDir
 
     if __name__ == '__main__':
         if shipping_mode == ShipMode.SHIP:
-            completed:ShipmentDict = dispatch_gui(config=config, shipment_dict=dicty, client=client)
-            post_book(shipments=completed)
+            completed= dispatch_gui(config=config, shipment_dict=dicty, client=client)
+            post_book(shipment_dict=completed)
         sys.exit(0)
     else:
         return config, client, shipments
