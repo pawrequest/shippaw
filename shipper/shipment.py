@@ -1,243 +1,227 @@
 import logging
+import os
 import re
-from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from dbfread.dbf import DBF, DBFNotFound
+import PySimpleGUI as sg
+from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
-    ShipmentRequest, ShipmentReturn, Collection
+    ShipmentRequest, ShipmentReturn
+from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
+from typing_extensions import Annotated
 
-from core.config import Config
-from core.config import logger
-from core.enums import BestMatch, Contact, DespatchObjects, ShipmentCategory
+from core.entities import BestMatch, Contact, DateTimeMasks, ShipmentCategory
+from core.entities import ImportMap, AddressMatch
+from core.funcs import collection_date_to_datetime
 
-
-@dataclass
-class Shipment:
-    def __init__(self, ship_dict: dict, category: ShipmentCategory):
-        """
-        :param ship_dict: a dictionary of shipment details
-        """
-
-        # input paramaters
-        self.is_dropoff: bool|None = None
-        self.is_outbound: bool|None = None
-        self.category = category.name.title()
-        self._shipment_name: str = ship_dict.get('shipment_name')
-        self._address_as_str: str = ship_dict.get('address_as_str')
-        self.boxes: int = int(ship_dict.get('boxes', 1))
-        self.customer: str = ship_dict.get('customer')
-        self.contact_name: str = ship_dict.get('contact')
-        self.email: str = ship_dict.get('email')
-        self.postcode: str = ship_dict.get('postcode')
-        self.send_out_date: datetime.date = ship_dict.get('send_out_date', datetime.today())
-        self.status: str = ship_dict.get('status')
-        self.telephone: str = ship_dict.get('telephone')
-        self.delivery_name = ship_dict.get('delivery_name')
-        self.inbound_id: Optional[str] = ship_dict.get('inbound_id')
-        self.outbound_id: Optional[str] = ship_dict.get('outbound_id')
-
-        self.printed = False
-        self.date_menu_map = dict()
-        self.service_menu_map: dict = dict()
-        self.candidate_keys = {}
-        self.parcels: [Parcel] = []
-        self.label_location: Path = Path()
-
-        self.remote_address: Address | None = None
-        self.remote_contact: Optional[Contact] = None
-        self.remote_sender_recip: Optional[Sender | Recipient] = None
-        self.sender = Sender
-        self.recipient = Recipient
-
-        self.date_matched = False
-
-        self.despatch_objects = DespatchObjects()
-
-        self.collection_date: Optional[CollectionDate] = None
-
-        self.shipment_request: Optional[ShipmentRequest] = None
-        self.shipment_return: Optional[ShipmentReturn] = None
-        self.service: Optional[Service] = None
-        self.available_services: Optional[List[Service]] = None
-        self.available_date: Optional[List[CollectionDate]] = None
-
-        self.default_service_matched: bool = False
-        self.bestmatch: Optional[BestMatch] = None
-        self.logged_to_commence: bool = False
-        self.remote_contact: Optional[Contact] = None
-
-        [logging.info(f'SHIPMENT - {self._shipment_name.upper()} - {var} : {getattr(self, var)}') for var in vars(self)]
-        logging.info('\n')
-
-    def __eq__(self, other):
-        return self._shipment_name == other._shipment_name
-
-    @property
-    def shipment_name_printable(self):
-        return re.sub(r'[:/\\|?*<">]', "_", self._shipment_name)
-
-    @property
-    def customer_printable(self):
-        return self.customer.replace("&", '"&"').replace("'", "''")
-
-    def to_dict(self):
-        allowed_types = [dict, str, tuple, list, int, float, set, bool, datetime, None]
-        result = {}
-        for attr_name in dir(self):
-            attr_value = getattr(self, attr_name)
-            if type(attr_value) in allowed_types:
-                result[attr_name] = attr_value
-        return result
-
-    @property
-    def str_to_match(self):
-        return parse_amherst_address_string(self._address_as_str)
-
-    @classmethod
-    def get_shipments(cls, config: Config, category: ShipmentCategory, dbase_file: str) -> list:
-        logger.info(f'DBase file og = {dbase_file}')
-        shipments: [Shipment] = []
-        try:
-            for record in DBF(dbase_file, encoding='cp1252'):
-                [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-                try:
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=config.import_mapping)
-                    shipment = cls(ship_dict=ship_dict, category=category)
-                    shipments.append(shipment)
-                except Exception as e:
-                    logger.exception(f'{record.__repr__()} - {e}')
-                    continue
-
-        except UnicodeDecodeError as e:
-            logging.exception(f'DBASE import error with {dbase_file} \n {e}')
-        except DBFNotFound as e:
-            logger.exception(f'.Dbf or Dbt are missing \n{e}')
-        except Exception as e:
-            logger.exception(e)
-            raise e
-        return shipments
-
-    @classmethod
-    def from_dbase_record(cls, record, ship_dict, category):
-        [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-        return cls(ship_dict=ship_dict, category=category)
+logger = logging.getLogger(__name__)
 
 
-class DbayShipment(Shipment):
-    def __init__(self, ship_dict, category):
-        super().__init__(category=category, ship_dict=ship_dict)
-
-        self.parcels: [Parcel] = []
-        self.remote_address: Address | None = None
-        self.sender_contact = None
-        self.remote_contact: Optional[Contact] = None
-        self.remote_sender_recip: Optional[Sender | Recipient] = None
-        self.sender = Sender
-        # self.recipient_contact = None
-
-        self.despatch_objects = DespatchObjects()
-        self.recipient: Recipient
-        self.collection_date: CollectionDate
-        self.shipment_request: ShipmentRequest
-        self.shipment_return: ShipmentReturn
-        self.service: Service
-        self.available_services: [List[Service]]
-        self.collection: Collection
-
-    @classmethod
-    def get_dbay_shipments(cls, import_mapping: dict, category: ShipmentCategory, dbase_file: str):
-        logger.info(f'DBase file = {dbase_file}')
-        shipments_dict = {}
-        shipments_list: [DbayShipment] = []
-        try:
-            for record in DBF(dbase_file):
-                [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-                try:
-                    ship_dict = shipdict_from_dbase(record=record, import_mapping=import_mapping)
-                    shipment = DbayShipment.from_dbase_record(record=record, ship_dict=ship_dict, category=category)
-                    shipments_dict.update({shipment.shipment_name_printable: shipment})
-                    shipments_list.append(shipment)
-                except Exception as e:
-                    logger.exception(f'{record.__repr__()} - {e}')
-                    continue
-
-        except UnicodeDecodeError as e:
-            logging.exception(f'DBASE import error with {dbase_file} \n {e}')
-            raise e
-        except DBFNotFound as e:
-            logger.exception(f'.Dbf or Dbt are missing \n{e}')
-            raise e
-        except Exception as e:
-            logger.exception(e)
-            raise e
-        # return shipments_dict
-        return shipments_list
-
-
-def get_dbay_shipments(import_mapping: dict, category: ShipmentCategory, dbase_file: str):
-    logger.info(f'DBase file NEW = {dbase_file}')
-    shipments_dict = {}
-    try:
-        for record in DBF(dbase_file):
-            [logger.debug(f'DBASE RECORD - {k} : {v}') for k, v in record.items()]
-            try:
-                ship_dict = shipdict_from_dbase(record=record, import_mapping=import_mapping)
-                shipment = DbayShipment.from_dbase_record(record=record, ship_dict=ship_dict, category=category)
-                shipments_dict.update({shipment.shipment_name_printable: shipment})
-            except Exception as e:
-                logger.exception(f'{record.__repr__()} - {e}')
-                continue
-
-    except UnicodeDecodeError as e:
-        logging.exception(f'DBASE import error with {dbase_file} \n {e}')
-    except DBFNotFound as e:
-        logger.exception(f'.Dbf or Dbt are missing \n{e}')
-    except Exception as e:
-        logger.exception(e)
-        raise e
-    return shipments_dict
-
-
-def parse_amherst_address_string(str_address: str):
+def parse_address_string(str_address: str):
     str_address = str_address.lower()
-    if 'unit' in ' '.join(str_address.split(" ")[0:2]):
-        first_block = ' '.join(str_address.split(" ")[0:2])
-        return first_block
+    words = str_address.split(" ")
+    if 'unit' in ' '.join(words[:2]):
+        first_block = ' '.join(words[:2])
     else:
-        first_block = str_address.split(" ")[0].split(",")[0]
+        first_block = words[0].split(",")[0]
     first_char = first_block[0]
-    # firstline = re.sub(r'[^\w\s]+', '', str_address.split("\n")[0].strip())
     firstline = str_address.split("\n")[0].strip()
 
     return first_block if first_char.isnumeric() else firstline
 
 
-def shipdict_from_dbase(record, import_mapping: dict):
-    ship_dict_from_dbf = {}
-    for k, v in record.items():
-        if v:
-            try:
-                if isinstance(v, str):
-                    v = v.split('\x00')[0]
-                # v = re.sub(r'[:/\\|?*<">]', "_", v)
-                # v = re.sub(r'[:/\\|?*<">]', "_", v)
-                k = import_mapping.get(k, k)
-
-                logging.info(f'SHIPDICT FROM DBASE - {k} : {v}')
-                ship_dict_from_dbf.update({k: v})
-            except Exception as error:
-                logger.exception(error)
-                raise
-
-    return ship_dict_from_dbf
+def commence_string(in_string: str):
+    if '\x00' in in_string:
+        in_string = in_string.split('\x00')[0]
+    out_string = in_string.replace('\r\n', '\n')
+    return out_string
 
 
-def to_snake_case(input_string: str) -> str:
-    """Convert a string to lowercase snake case."""
-    input_string = input_string.replace(" ", "_")
-    input_string = ''.join(c if c.isalnum() else '_' for c in input_string)
-    input_string = input_string.lower()
-    return input_string
+MyStr = Annotated[str, BeforeValidator(commence_string)]
+
+
+class AddresssBasic(BaseModel):
+    contact: Contact
+    postcode: MyStr
+    dbay_key: Optional[str] = None
+
+
+# class ShipmentTracking:
+#     inbound: str
+#     outbound: str
+# class ShipmentEssence(BaseModel):
+#     customer: MyStr
+#     address_as_str: MyStr
+#     boxes: int = 1
+#     contact: Contact
+#     send_out_date: date = datetime.today().date()
+#     tracking: ShipmentTracking
+#     shipment_name: Optional[MyStr] = None
+
+class ShipmentInput(BaseModel):
+    """ input validated"""
+    model_config = ConfigDict(extra='allow')
+    is_dropoff: bool = False
+    is_outbound: bool
+    category: ShipmentCategory
+    customer: MyStr
+    address_as_str: MyStr
+    boxes: int = 1
+    contact_name: MyStr
+    email: MyStr
+    postcode: MyStr
+    send_out_date: date = datetime.today().date()
+    telephone: MyStr
+    delivery_name: MyStr
+    inbound_id: Optional[MyStr] = None
+    outbound_id: Optional[MyStr] = None
+    shipment_name: Optional[MyStr] = None
+    remote_address_matched: AddressMatch = AddressMatch.NOT
+
+    @model_validator(mode='after')
+    def ship_name(self) -> "ShipmentInput":
+        if self.shipment_name is None:
+            self.shipment_name = f'{self.customer} - {datetime.now():{DateTimeMasks.FILE.value}}'
+        return self
+
+    @property
+    def shipment_name_printable(self):
+        return re.sub(r'[:/\\|?*<">]', "_", self.shipment_name)
+
+    @property
+    def str_to_match(self):
+        return parse_address_string(self.address_as_str)
+
+    @property
+    def customer_printable(self):
+        return self.customer.replace("&", 'and')
+
+    def __str__(self):
+        return self.shipment_name_printable
+
+    def __repr__(self):
+        return self.shipment_name_printable
+
+    def __eq__(self, other):
+        return self.shipment_name == other.shipment_name
+
+
+class ShipmentAddressed(ShipmentInput):
+    """address prep done"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    remote_contact: Contact
+    remote_address: Address
+    sender: Sender
+    recipient: Recipient
+
+
+class ShipmentAddressedNew(ShipmentInput):
+    """address prep done"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    remote_contact: Contact
+    remote_address: Address
+    sender: Sender
+    recipient: Recipient
+
+
+class ShipmentPrepared(ShipmentAddressed):
+    # todo bestmatch and cand keys should be in addressed?
+    available_dates: List[CollectionDate]
+    all_services: List[Service]
+    date_menu_map: Dict
+    service_menu_map: Dict
+    bestmatch: Optional[BestMatch] = None
+    candidate_keys: Optional[Dict] = None
+
+
+class ShipmentPreRequest(ShipmentPrepared):
+    collection_date: CollectionDate
+    date_matched: bool
+    service: Service
+    default_service_matched: bool
+    parcels: List[Parcel]
+
+    @property
+    def collection_date_datetime(self):
+        return collection_date_to_datetime(self.collection_date)
+
+
+class ShipmentRequested(ShipmentPreRequest):
+    shipment_request: ShipmentRequest
+
+
+class ShipmentGuiConfirmed(ShipmentRequested):
+    is_to_book: bool
+    is_to_print_email: bool
+
+
+class ShipmentQueued(ShipmentGuiConfirmed):
+    """ queued. ready to book"""
+    shipment_id: str
+    is_queued: bool
+    timestamp: str
+
+
+class ShipmentCmcUpdated(ShipmentQueued):
+    is_logged_to_commence: bool = False
+
+
+class ShipmentBooked(ShipmentQueued):
+    """ booked"""
+    is_booked: bool = False
+    shipment_return: ShipmentReturn
+
+
+class ShipmentCompleted(ShipmentBooked):
+    label_location: Path
+    is_printed: bool = False
+    is_emailed: bool = False
+
+
+def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[Dict]:
+    while not Path(dbase_file).exists():
+        dbase_file = sg.popup_get_file('Select a .dbf file to import', file_types=(('DBF Files', '*.dbf'),))
+
+    try:
+        return [record for record in DBF(dbase_file, encoding=encoding)]
+    except UnicodeDecodeError as e:
+        logger.exception(f'Char decoding import error with {dbase_file} \n {e}')
+    except DBFNotFound as e:
+        logger.exception(f'.Dbf or Dbt are missing \n{e}')
+    except Exception as e:
+        logger.exception(e)
+
+
+class ShipmentDict(dict[str, ShipmentRequested]):
+    pass
+
+
+def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
+        -> List[ShipmentInput]:
+    return [shipment_from_record(category=category, import_map=import_map, outbound=outbound,
+                                 record=record) for record in records]
+
+
+def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool, record: dict) \
+        -> ShipmentInput | None:
+    transformed_record = {k: record.get(v) for k, v in import_map.model_dump().items() if record.get(v)}
+    transformed_record['delivery_name'] = transformed_record['contact_name'] or transformed_record['delivery_name']
+    [logger.info(f'TRANSFORMED RECORD - {k} : {v}') for k, v in transformed_record.items()]
+    try:
+        return ShipmentInput(**transformed_record, category=category, is_outbound=outbound)
+    except Exception as e:
+        logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
+        return None
+
+
+def shipments_from_file(category, file, import_map, outbound):
+    records = records_from_dbase(dbase_file=file)
+    shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
+                                       records=records)
+    return shipments
+
+
+def contact_from_shipment(shipment: ShipmentInput):
+    return Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)

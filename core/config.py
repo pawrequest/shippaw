@@ -1,99 +1,42 @@
-import ctypes
 import logging
 import subprocess
 import sys
 import tomllib
+from pathlib import Path
 
 import PySimpleGUI as sg
-from pathlib import Path
-from dotenv import dotenv_values, load_dotenv
+from dotenv import load_dotenv
+from pydantic import BaseModel
 
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import AuthorizationException
+from core.dbay_client import DbayCreds
+from core.entities import Contact, DefaultCarrier, HomeAddress, \
+    PathsList, ShipmentCategory
 
-from core.enums import ApiScope, Contact, DbayCreds, DefaultShippingService, HomeAddress, \
-    PathsList, ShipMode
+from core.entities import ImportMap, mapper_dict
+from core.funcs import scope_from_sandbox_func
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
+MODEL_CONFIG_TOML = ROOT_DIR / 'core' / 'model_user_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
-# config_env = dotenv_values(DATA_DIR / ".env", verbose=True)
+
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
-...
+logger = logging.getLogger(name=__name__)
 
 
-
-def get_amdesp_logger():
-    new_logger = logging.getLogger(name='AmDesp')
-    # logfile = f'{__file__.replace("py", "log")}'
-    logging.basicConfig(
-        level=logging.INFO,
-        format='{asctime} {levelname:<8} {message}',
-        style='{',
-        handlers=[
-            logging.FileHandler(str(LOG_FILE), mode='a'),
-            logging.StreamHandler(sys.stdout)
-        ])
-    return new_logger
-
-
-logger = get_amdesp_logger()
-logger.info(f'AmDesp started, '
-            f'\n{__file__=}'
-            f'\n{sys.version=}'
-            f'\n{sys.executable=}'
-            f'\n{sys.path=}'
-            f'\n{ROOT_DIR=}'  
-            f'\n{DATA_DIR=}'
-            f'\n{LOG_FILE=}'
-            f'\n{CONFIG_TOML=}'
-            )
-
-class Config:
-    def __init__(self, config_dict: dict):
-        self.mode = config_dict['mode']
-        self.outbound = config_dict['outbound']
-        self.paths = PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR)
-        self.parcel_contents: str = config_dict.get('parcel_contents')
-        self.sandbox: bool = config_dict.get('sandbox')
-        self.import_mapping: dict = config_dict.get('import_mapping')
-
-        self.home_address = HomeAddress(**config_dict.get('home_address'))
-        self.home_contact = Contact(**config_dict.get('home_contact'))
-        self.return_label_email_body = config_dict.get('return_label_email_body')
-
-        dbay = config_dict.get('dbay')[self.scope_from_sandbox()] # gets the names of env vars
-        self.dbay_creds = DbayCreds.from_dict(api_name_user=dbay['api_user'], api_name_key=dbay['api_key'])
-        self.default_shipping_service = DefaultShippingService(courier=dbay['courier'], service=dbay['service'])
-
-    @classmethod
-    def from_toml(cls, mode: ShipMode, outbound:bool):
-        with open(CONFIG_TOML, 'rb') as g:
-            config_dict = tomllib.load(g)
-        config_dict['mode'] = mode
-        config_dict['outbound'] = outbound
-
-        return cls(config_dict=config_dict)
-    #
-    # def setup_amdesp(self, sandbox: bool, client: DespatchBaySDK):
-    #     # candidates = client.get_address_keys_by_postcode
-    #     """
-    #     check system environ variables
-    #     home address details - get dbay key
-    #     cmclibnet
-    #
-    #     """
-    #     if not self.check_system_env(dbay_dict=self.dbay, sandbox=sandbox):
-    #         logging.exception('Unable to set Environment variables')
-    #     if not self.home_address.get('dbay_key'):
-    #         postcode = self.home_address.get('postal_code')
-    #         if not postcode:
-    #             postcode = sg.popup_get_text('No Home Postcode - enter now')
-    #         candidates = client.get_address_keys_by_postcode(postcode)
-    #     #     address = address_chooser_popup(candidate_dict=candidates, client=client)
-    #     # self.setup_commence()
+class Config(BaseModel):
+    # import_mappings: dict[str, dict]
+    import_mappings: dict[str, ImportMap]
+    home_address: HomeAddress
+    home_contact: Contact
+    dbay_creds: DbayCreds
+    default_carrier: DefaultCarrier
+    paths: PathsList
+    parcel_contents: str
+    return_label_email_body: str
+    sandbox: bool
 
     def creds_from_user(self) -> DbayCreds:
         scope = self.scope_from_sandbox()
@@ -102,24 +45,10 @@ class Config:
         creds = DbayCreds(api_user=api_user, api_key=api_key)
         return creds
 
-    def log_config(self):
-        [logger.info(f'CONFIG - {var} : {getattr(self, var)}') for var in vars(self)]
-
-    def scope_from_sandbox(self):
-        return ApiScope.SAND.value if self.sandbox else ApiScope.PRODUCTION.value
-
-    def get_dbay_client(self, creds: DbayCreds):
-        while True:
-            try:
-                client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
-                dbay_account = client.get_account()
-                logger.info(f'Despatchbay account retrieved: {dbay_account}')
-            except AuthorizationException as e:
-                logger.warning(f'Unable to retrieve DBay account for {creds.api_user} : {creds.api_key}')
-                creds = self.creds_from_user()
-                continue
-            else:
-                return client
+    def install_cmc_lib_net(self):
+        """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
+        subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       check=True)
 
     def setup_commence(self):
         """
@@ -135,56 +64,47 @@ class Config:
             except Exception as e:
                 logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
-    #
-    def install_cmc_lib_net(self):
-        """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
-        subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       check=True)
+
+def configure_logging(log_file):
+    formatter = logging.Formatter('{levelname:<8} {asctime} | {name}:{lineno} | {message}', style='{')
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    root_logger.addHandler(stream_handler)
 
 
-#####
+def get_import_mappings(mappings: dict[str, dict]) -> dict[str, ImportMap]:
+    return {category.name.lower(): mapper_dict[category](**mappings[category.value.lower()])
+            for category in ShipmentCategory}
 
 
-def run_as_admin(cmd):
-    """
-    Run the given command as administrator
-    """
-    if ctypes.windll.shell32.IsUserAnAdmin():
-        return subprocess.run(cmd, shell=True)
-    else:
-        return subprocess.run(
-            ["powershell.exe", "-Command", f"Start-Process '{cmd[0]}' -ArgumentList '{' '.join(cmd[1:])}' -Verb RunAs"],
-            shell=True)
+def get_config_dict(toml_file) -> dict:
+    with open(toml_file, 'rb') as g:
+        return tomllib.load(g)
 
 
-def set_despatch_env(api_user, api_key, sandbox):
-    api_user_str = 'DESPATCH_API_USER'
-    if sandbox:
-        api_user_str += '_SANDBOX'
+def config_from_dict(config_dict, sandbox=None) -> Config:
+    sandbox = sandbox or config_dict.get('sandbox')
+    scope = scope_from_sandbox_func(sandbox=sandbox)
+    dbay = config_dict.get('dbay')[scope]
+    mappings_dict = config_dict['import_mappings']
 
-    api_key_str = 'DESPATCH_API_KEY'
-    if sandbox:
-        api_key_str += '_SANDBOX'
-    #
-    # cmd1 = ["setx", api_user_str, api_user, "/M"]
-    # cmd2 = ["setx", api_key_str, api_key, "/M"]
+    return Config(
+        import_mappings=get_import_mappings(mappings=mappings_dict),
+        home_address=HomeAddress(**config_dict.get('home_address')),
+        home_contact=Contact(**config_dict.get('home_contact')),
+        dbay_creds=DbayCreds.from_envar_names(**dbay.get('envars')),
+        default_carrier=DefaultCarrier(**dbay.get('default_carrier')),
+        paths=PathsList.from_dict(paths_dict=config_dict['paths'], root_dir=ROOT_DIR),
+        parcel_contents=config_dict.get('parcel_contents'),
+        sandbox=sandbox,
+        return_label_email_body=config_dict.get('return_label_email_body'),
+    )
 
-    cmd3 = [["setx", api_user_str, api_user, "/M"], ["setx", api_key_str, api_key, "/M"]]
 
-    # result1 = run_as_admin(cmd1)
-    # if result1.returncode != 0:
-    #     logger.error("Error:", result1.stderr)
-    # else:
-    #     logger.info(f"Environment variable set: {api_user_str} : {api_user}")
-    #
-    # result2 = run_as_admin(cmd2)
-    # if result2.returncode != 0:
-    #     logger.error("Error:", result2.stderr)
-    # else:
-    #     logger.info(f"Environment variable set: {api_key_str} : {api_key}")
-
-    result2 = run_as_admin(cmd3)
-    if result2.returncode != 0:
-        logger.error("Error:", result2.stderr)
-    else:
-        logger.info(f"Environment variable set: {api_key_str} : {api_key}")

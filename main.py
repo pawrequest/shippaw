@@ -1,12 +1,15 @@
 import argparse
+import logging
 import sys
 from pathlib import Path
 
-import PySimpleGUI as sg
-
-from core.config import Config, logger
-from core.enums import ShipmentCategory, ShipMode, ShipDirection
-from shipper.shipper import Shipper
+from core.config import CONFIG_TOML, config_from_dict, configure_logging, get_config_dict, LOG_FILE
+from core.dbay_client import get_dbay_client
+from core.entities import ShipDirection, ShipMode, ShipmentCategory
+from core.funcs import is_connected
+from gui.main_gui import post_book
+from shipper.shipment import shipments_from_file, ShipmentDict
+from shipper.shipper import dispatch_gui, prepare_batch, ship_list_to_dict
 
 """
 Amdesp - middleware to connect Commence RM to DespatchBay's shipping service.
@@ -14,40 +17,59 @@ includes
 + Commence vbs scripts for exporting records to xml,
 + python app with pysimplegui gui
 + powershell to check vbs into commence
-+ powershell to log shipment ids to commence
-+ Vovin CmcLibNet installer bundled for logging to Commence
++ wraps Vovin CmcLibNet to update commence database - installer bundled 
 """
 
-def main(args):
-    while not Path(args.input_file).exists():
-        args.input_file = sg.popup_get_file("Select input file")
-    args.category = ShipmentCategory[args.category]
-    outbound = 'out' == args.direction.lower()
-    config = Config.from_toml(mode=args.shipping_mode, outbound=outbound)
-    shipper = Shipper(config=config)
-    shipper.get_shipments(category=args.category, dbase_file=args.input_file)
-
-    if not shipper.shipments:
-        logger.info('No shipments to process.')
-        sys.exit()
-
-    if args.shipping_mode == ShipMode.SHIP.name:
-        shipper.dispatch()
-
-    elif args.shipping_mode == ShipMode.TRACK.name:
-        shipper.track()
 
 
-    sys.exit()
+def intitial_config(category: ShipmentCategory):
+    configure_logging(LOG_FILE)
+    logger = logging.getLogger(__name__)
+    logger.info(args)
+    is_connected()
+    config = config_from_dict(get_config_dict(toml_file=CONFIG_TOML))
+    client = get_dbay_client(creds=config.dbay_creds)
+    import_map = config.import_mappings[category.name.lower()]
+    return config, client, import_map
+
+def main(category: ShipmentCategory, shipping_mode: ShipMode, direction: ShipDirection, file: Path):
+    config, client, import_map = intitial_config(category=category)
+    outbound = direction == ShipDirection.OUT
+    shipments = shipments_from_file(category=category, file=file, import_map=import_map, outbound=outbound)
+    shipments_prepared = prepare_batch(shipments=shipments, client=client, config=config)
+    dicty = ship_list_to_dict(shipments=shipments_prepared)
+
+    if __name__ == '__main__':
+        if shipping_mode == ShipMode.SHIP:
+            completed= dispatch_gui(config=config, shipment_dict=dicty, client=client)
+            post_book(shipment_dict=completed)
+        sys.exit(0)
+    else:
+        return config, client, shipments
 
 
 if __name__ == '__main__':
+    mode_choices = [mode.name for mode in ShipMode]
+    category_choices = [category.name for category in ShipmentCategory]
+    direction_choices = [direc.name for direc in ShipDirection]
+
     parser = argparse.ArgumentParser(description="AmDesp Shipping Agent.")
-    parser.add_argument('shipping_mode', choices=[mode.name for mode in ShipMode], help="Choose shipping mode.")
-    parser.add_argument('direction', choices=[direc.name for direc in ShipDirection], help="Choose shipping direction.")
-    parser.add_argument('category', choices=[category.name for category in ShipmentCategory],
+    parser.add_argument('--mode', choices=mode_choices,
+                        help="Choose shipping mode.")
+    parser.add_argument('--category', choices=category_choices,
                         help="Choose shipment category.")
-    parser.add_argument('input_file', nargs='?', help="Path to input file.")
+    parser.add_argument('--direction', choices=direction_choices,
+                        help="Choose shipping direction.")
+    parser.add_argument('--file', type=Path, help="Path to .dbf input file.")
+
     args = parser.parse_args()
-    logger.info(f'{args=}')
-    main(args)
+
+    args.category = ShipmentCategory[args.category]
+    args.shipping_mode = ShipMode[args.mode]
+    args.direction = ShipDirection[args.direction]
+    args.file = Path(args.file)
+
+    main(category=args.category,
+         shipping_mode=args.shipping_mode,
+         direction=args.direction,
+         file=args.file)

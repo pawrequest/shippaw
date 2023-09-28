@@ -9,11 +9,8 @@ DIM length, atpos
 ' this will consist of checking consistency - like querying if you have chosen "Returned all OK" and not checked "Closed" etc
 ' and importantly, using the quantities of each item entered to build up the texty "Hire Sheet Text" field that is displayed on the hire
 ' sheet document
-Sub Form_OnLoad
-End Sub
-
 Sub Form_OnSave
-
+ 
   ' hstring holds the text description of the items hired in a hire record. It is built up piece by piece according to how many of
   ' each item has been hired. When complete, "hstring" is copied to the "Hire Sheet Text" field of the hire record
   Dim hstring
@@ -205,7 +202,7 @@ Sub Form_OnSave
 	If Weekday(Form.Field("Send Out Date").Value) = 7 Then
         MsgBox "The entered send/collect date is a Saturday ", vbOKOnly, "WARNING"
     End If
-
+	
 	'Warn if the day of week of the due back date is a weekend day
     If Weekday(Form.Field("Due Back Date").Value) = 1 Then
         MsgBox "The entered due back date is a Sunday ", vbOKOnly, "WARNING"
@@ -215,6 +212,7 @@ Sub Form_OnSave
         MsgBox "The entered due back date is a Saturday ", vbOKOnly, "WARNING"
     End If
 
+	
 	'Prevent saving a hire as "Returned" if the Actual Return Date field is in the future
     'If Form.Field("Actual Return Date").Value <> "" And Form.Field("Actual Return Date").Value > Date Then
     '    MsgBox "You cannot enter an actual 'equipment returned date' that is in the future!", vbCritical, "WARNING"
@@ -231,29 +229,29 @@ Sub Form_OnSave
     '    Form.Abort
     '    Exit Sub
     'End If
-
+	
 	'Prevent saving a hire if the "Send Out Date" is in the past
     'If Form.Field("Send Out Date").Value < Date Then
     '    MsgBox "You cannot enter a 'Send Out Date' that is in the past!", vbCritical, "WARNING"
     '    Form.MoveToField("Send Out Date")
     '    Form.Abort
     '    Exit Sub
-    'End If
-
+    'End If	
+	
     ' the fields referring to "UHF" now refer to whatever type of walkie-talkie is being hired
     ' if the user hasn't entered any quantities into the "charger" fields, calculate the appropriate numbers of charger units needed
 	' for "normal" walkie-talkies, this involves working out how many six slot and how many single chargers to send
 	    If Cint(Form.Field("Number UHF").Value) > 0 Then
-
+		
 			' work out six slots and singles needed
 			If Cint(Form.Field("Number UHF 6-way").Value) = 0 And Cint(Form.Field("Number Sgl Charger").Value) = 0 Then
-
+        
 				' this backslash division sign calculates the integer part of the result - the number of 6-way chargers needed
 				sixwaycharger = Form.Field("Number UHF").Value \ 6
-
+        
 				' this works out the "remainder" - the number of single chargers needed
 				singlecharger = Form.Field("Number UHF").Value Mod 6
-
+        
 				' if there are going to be 4 or 5 single chargers, send another 6-way charger instead
 				If singlecharger > 3  Then
 					sixwaycharger = sixwaycharger + 1
@@ -265,7 +263,7 @@ Sub Form_OnSave
 				Form.Field("Number Sgl Charger").Value = singlecharger
 
 			End If
-
+			
 			' if the radio type is a Tesunho, which doesn't have six slot chargers, we zero the number of six slots and set the number of singles same
 			' as the number of radios hired
 		    If Form.Field("Radio Type").Value > "Tesunho" Then
@@ -277,12 +275,12 @@ Sub Form_OnSave
 
     ' make up the standard item text description and price fields
 
-
+    
     If Cint(Form.Field("Number UHF").Value) > 0 Then
-
+	  
 	  ' insert description of radios used - as of Sep 2015 use the new "Radio Type" field for the description
 	  hstring = hstring + vbCrLf + "* " + Form.Field("Number UHF").Value + " x " + Form.Field("Radio Type").Value + " radios"
-
+	  
       ' Feb 2011: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv UHF Desc").Value = "Hire of " + Form.Field("Radio Type").Value + " walkie-talkie"
 
@@ -361,7 +359,7 @@ Sub Form_OnSave
       ' Feb 2011: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv EM Desc").Value = "Hire of earpiece/microphone"
       Form.Field("Inv EM Qty").Value = Form.Field("Number EM").Value
-
+	  
 	  ' Mar 2013: set price according to length of hire
 	  Select Case Form.Field("Weeks").Value
 	    Case 1
@@ -417,7 +415,7 @@ Sub Form_OnSave
   		  Form.Field("Inv Case Price").Value = "2.50"
 	  End Select
     End If
-
+    
     ' added March 2010 - "Madonna" type headsets
     If Cint(Form.Field("Number Headset").Value) > 0 Then
       hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Headset").Value + " x headsets with boom mics"
@@ -459,13 +457,13 @@ Sub Form_OnSave
   		  Form.Field("Inv Bighead Price").Value = "14.00"
 	  End Select
 	End If
-
+    
     ' added March 2010 - "parrot" type speaker / mics
     If Cint(Form.Field("Number Parrot").Value) > 0 Then
       hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Parrot").Value + " x remote speaker / microphones"
        ' Feb 2011: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv Parrot Desc").Value = "Hire of speaker / microphone"
-
+      
       Form.Field("Inv Parrot Qty").Value = Form.Field("Number Parrot").Value
 
 	  ' Mar 2013: set price according to length of hire
@@ -479,8 +477,8 @@ Sub Form_OnSave
 	    Case 4
   		  Form.Field("Inv Parrot Price").Value = "2.50"
 	  End Select
-
-
+	  
+	  
    End If
 
     ' added March 2010 - extra radio batteries
@@ -488,7 +486,7 @@ Sub Form_OnSave
       hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Batteries").Value + " x extra radio battery packs"
       ' Feb 2011: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv Batt Desc").Value = "Hire of spare battery pack"
-
+      
       Form.Field("Inv Batt Qty").Value = Form.Field("Number Batteries").Value
 
 	  ' Mar 2013: set price according to length of hire
@@ -506,26 +504,26 @@ Sub Form_OnSave
 
 	  End If
 
-    ' added April 2012 - ICOM mobile/base radios
+    ' added April 2012 - Mobile/base radios (updated July 2023)
     If Cint(Form.Field("Number Icom").Value) > 0 Then
       hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Icom").Value + " x vehicle/base radios"
       ' Feb 2011: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv Icom Desc").Value = "Hire of vehicle/base radios"
-
+      
       Form.Field("Inv Icom Qty").Value = Form.Field("Number Icom").Value
-
+    
 	' Oct 2013: set price according to length of hire
 	  Select Case Form.Field("Weeks").Value
 	    Case 1
-  		  Form.Field("Inv Icom Price").Value = "15.00"
+  		  Form.Field("Inv Icom Price").Value = "19.00"
 		Case 2
-  		  Form.Field("Inv Icom Price").Value = "20.00"
+  		  Form.Field("Inv Icom Price").Value = "26.00"
 	    Case 3
-  		  Form.Field("Inv Icom Price").Value = "24.00"
+  		  Form.Field("Inv Icom Price").Value = "31.00"
 	    Case 4
-  		  Form.Field("Inv Icom Price").Value = "29.00"
+  		  Form.Field("Inv Icom Price").Value = "36.00"
 	  End Select
-
+	
 	End If
 
 	' May 2014: added code to add to hstring the descriptions for the ICOM/base radio aerials and power options
@@ -533,7 +531,7 @@ Sub Form_OnSave
 	If Cint(Form.Field("Number Clipon Aerial").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Clipon Aerial").Value + " x clip-on aerials"
 	End If
-
+	
 	' Magmount aerials
 	If Cint(Form.Field("Number Magmount").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Magmount").Value + " x magnetic-mount aerials"
@@ -543,28 +541,28 @@ Sub Form_OnSave
 	If Form.Field("Number Aerial Adapt").Value > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Aerial Adapt").Value + " x aerial adapters for walkie talkies"
 	End If
-
+	
 	' car power leads
 	If Cint(Form.Field("Number ICOM Car Lead").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number ICOM Car Lead").Value + " x vehicle power leads"
 	End If
-
+	
 	' mains power supplies
 	If Cint(Form.Field("Number ICOM PSU").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number ICOM PSU").Value + " x base radio mains power supplies"
 	End If
-
+	
 	' April 2016: added code to add number of metal detector wands and radio repeaters to hstring (note that repeaters are only on the hire
 	' sheet, and not yet on the invoices)
-
+	
 	' wands - Feb 2018 wands to the invoice
 	If Cint(Form.Field("Number Wand").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Wand").Value + " x metal detector wands"
 	 ' Feb 2018: fill Invoice description field and price if quantity of item greater than 0
       Form.Field("Inv Wand Desc").Value = "Hire of metal detector wands"
-
+      
       Form.Field("Inv Wand Qty").Value = Form.Field("Number Wand").Value
-
+    
 	' Feb 2018: set price according to length of hire for wands
 	  Select Case Form.Field("Weeks").Value
 	    Case 1
@@ -576,29 +574,29 @@ Sub Form_OnSave
 	    Case 4
   		  Form.Field("Inv Wand Price").Value = "15.00"
 	  End Select
-
+		
 	End If
 
 	' September 2018: if no value already inserted into the number of security wand batteries field, insert 1 per wand by default
       If Form.Field("Number Wand Battery").Value = 0 Then
         Form.Field("Number Wand Battery").Value = Form.Field("Number Wand").Value
       End If
-
+	  
 	' September 2018: add to hstring text for metal detector wand batteries and battery chargers"
 	If Cint(Form.Field("Number Wand Battery").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Wand Battery").Value + " x metal detector wand batteries"
 	End If
-
+	
 	If Cint(Form.Field("Number Wand Charger").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Wand Charger").Value + " x metal detector battery chargers"
 	End If
-
+	
 	' repeaters
 	If Cint(Form.Field("Number Repeater").Value) > 0 Then
 	  hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Repeater").Value + " x repeaters"
 	End If
 
-
+	
     ' insert appropriate values into delivery and collection description fields - this case is for the usual we send, they return
     If Form.Field("Send / Collect").Value = "We send, cust return" Then
 
@@ -607,7 +605,7 @@ Sub Form_OnSave
       Form.Field("Inv Return Desc").Value = "Customer to Return"
 
       If Form.Field("Delivery Cost").Value = "" Then
-        Form.Field("Delivery Cost").Value = "11.00"
+        Form.Field("Delivery Cost").Value = "15.00"
       End If
 
     End If
@@ -620,7 +618,7 @@ Sub Form_OnSave
       Form.Field("Inv Return Desc").Value = "Customer to Return"
 
       Form.Field("Delivery Cost").Value = ""
-
+	  
 	  ' added late Oct 2013 - if the customer is to collect the kit from us, set the delivery name to  "** collected from office **"
 	  ' and delivery address and postcode fields to our office address
 	  ' modified Nov 2018 to leave the hirer name intact and only modify the address and postcode fields
@@ -637,11 +635,11 @@ Sub Form_OnSave
       Form.Field("Inv Return Desc").Value = "Cust. to advise when ready for collection"
 
       If Form.Field("Delivery Cost").Value = "" Then
-        Form.Field("Delivery Cost").Value = "27.00"
+        Form.Field("Delivery Cost").Value = "35.00"
       End If
 
     End If
-
+	
 	' deal with hire of megaphones (taken off the multi-megaphone price discount, but left code in place for the future - May 2014)
     If Cint(Form.Field("Number Megaphone").Value) = 1 Then
       hstring = hstring + vbCrLf + vbCrLf + "* " + Form.Field("Number Megaphone").Value + " Megaphone"
@@ -649,7 +647,7 @@ Sub Form_OnSave
       Form.Field("Inv Mega Desc").Value = "Hire of megaphone"
       Form.Field("Inv Mega Price").Value = "16.00"
       Form.Field("Inv Mega Qty").Value = Form.Field("Number Megaphone").Value
-
+      
       ' if no value already inserted into the "number of sets of batteries" field, insert 2 per megaphone by default
       If Cint(Form.Field("Number Megaphone Bat").Value) = 0 Then
         Form.Field("Number Megaphone Bat").Value = 2
@@ -681,9 +679,9 @@ Sub Form_OnSave
       hstring = hstring + vbCrLf + vbCrLf + "* 1 x megaphone battery charger unit"
     End If
 
-
-
-	' added May 2013 - if there is any text in the "Purchase Order" field, then insert it,
+	
+	
+	' added May 2013 - if there is any text in the "Purchase Order" field, then insert it, 
 	' prefixed with words "P.O. Number " into the displayed field on the invoice
 	If Form.Field("Purchase Order").Value <> "" Then
       Form.Field("Inv Purchase Order").Value = "P.O. Number " + Form.Field("Purchase Order").Value
@@ -692,9 +690,9 @@ Sub Form_OnSave
 	' added February 2018 - fill in the new "Invoice Date Fields"" using function MakeInvoiceDate
 	' this ensures that the dates are displayed correctly on the hire invoices and hire sheets
 	Form.Field("Inv Booked Date").Value = MakeInvoiceDate(Form.Field("Booked Date").Value)
-	Form.Field("Inv Send Out Date").Value = MakeInvoiceDate(Form.Field("Send Out Date").Value)
+	Form.Field("Inv Send Out Date").Value = MakeInvoiceDate(Form.Field("Send Out Date").Value)	
 	Form.Field("Inv Due Back Date").Value = MakeInvoiceDate(Form.Field("Due Back Date").Value)
-
+	
     ' add in the standard instruction sheet text if box is ticked
     If Form.Field("Instruc Walkies").Value Then
       hstring = hstring + vbCrLf + vbCrLf + "* 1 x Laminated walkie-talkie instruction sheet"
@@ -712,10 +710,10 @@ Sub Form_OnSave
 
     ' add the "Special Kit" field to the end of the list of items: this covers odd items, notes on damage to stuff sent out etc
     hstring = hstring + vbCrLf + vbCrLf + Form.Field("Special Kit").Value
-
+  
   ' finally put the built-up "hstring" variable into the Hire Sheet Text" field
   Form.Field("Hire Sheet Text").Value = hstring
-
+  
   ' make up the "All Address" field from the parts of the delivery name, contact, address and postcode, phone and email
   Form.Field("All Address").Value = Form.Field("Delivery Contact").Value + vbCrLf + Form.Field("Delivery Name").Value + vbCrLf + Form.Field("Delivery Address").Value + vbCrLf + Form.Field("Delivery Postcode").Value + vbCrLf + vbCrLf + Form.Field("Delivery Tel").Value + vbCrLf + vbCrLf + Form.Field("Delivery Email").Value
 
@@ -724,28 +722,28 @@ Sub Form_OnSave
   ' this makes it easier to refer to several times later on
   Dim cCust
   Set cCust = Form.Connection("To","Customer")
-  ' nstring is used to store the hire record's "Name" field, made up of the customer name (truncated to 27 chars if needed), the date and the
+  ' nstring is used to store the hire record's "Name" field, made up of the customer name (truncated to 27 chars if needed), the date and the 
   ' modified reference number (see refstring)
   Dim nstring
 
-  ' refstring is used to store the hire reference number field as a string, and then with its commas removed, it is then inserted into the
+  ' refstring is used to store the hire reference number field as a string, and then with its commas removed, it is then inserted into the 
   ' name field
   Dim refstring
-
+  
   nstring = ""
   refstring = ""
-
+ 
    ' put this here to test it out, instead of before hstring stuff, 10th March - seems a bit better in that the correct stuff all appears on
    ' second open of the form - BUT still does not save with correct name first time!
-
+	
     'If Form.Field("Name").Value = "newhire" And cCust.FieldValue("Name") <> "" Then
     '  refstring = Cstr(Form.Field("Reference Number").Value)
     '  refstring = Replace(refstring, ",", "")
     '  nstring = Left(cCust.FieldValue("Name"), 27) + " - " + Form.Field("Send Out Date").Value + " ref " + refstring
     '  Form.Field("Name").Value = nstring
-
+	
     'End If
-
+	
 	' this is Nigel's  code to make the link to the customer and insert the string into the name field
 	If Form.Field("Name").Value = "newhire" And Form.Connection("To", "Customer").ConnectedItemCount()  = 1   Then
       refstring = CStr(Form.Field("Reference Number").Value)
@@ -782,13 +780,14 @@ Sub Form_OnSave
 
    If Form.Field("Discount Percentage").Value = "" Then
       Form.Field("Discount Percentage").Value = cCust.FieldValue("Discount Percentage")
-    End If
+    End If    
 
    If Form.Field("Discount Description").Value = "" Then
       Form.Field("Discount Description").Value = cCust.FieldValue("Discount Description")
-    End If
+    End If    
+	
+  
 
-   Set cCust = Nothing
 
 End Sub
 
@@ -798,7 +797,6 @@ End Sub
 ' Jan 2013: added code for the four buttons that insert the due back dates for 1,2,3 week and month (4 week) hire periods
 ' Mar 2013: added code for the "Student Discount" button, and amended the charity discount rate from 20% to 25%
 ' Oct 2013: added code to allow user to "pull in" hire quantities from the linked customer record - from Autoquote
-
 Sub Form_OnClick(ControlId)
     Select Case ControlId
         Case "CommandButton1"
@@ -809,7 +807,7 @@ Sub Form_OnClick(ControlId)
 				Form.Field("Due Back Date").Value = DateAdd("d",9,Form.Field("Send Out Date").Value)
 				Form.Field("Due Back Date").Value = NotWeekends(Form.Field("Due Back Date").Value)
 				Form.Field("Weeks").Value = 1
-
+				
 			End If
         Case "CommandButton3"
             If Form.Field("Send Out Date").Value <> "" Then
@@ -817,14 +815,14 @@ Sub Form_OnClick(ControlId)
 				Form.Field("Due Back Date").Value = NotWeekends(Form.Field("Due Back Date").Value)
 				Form.Field("Weeks").Value = 2
 			End If
-
+            
         Case "CommandButton4"
             If Form.Field("Send Out Date").Value <> "" Then
 				Form.Field("Due Back Date").Value = DateAdd("d",23,Form.Field("Send Out Date").Value)
 				Form.Field("Due Back Date").Value = NotWeekends(Form.Field("Due Back Date").Value)
 				Form.Field("Weeks").Value = 3
 			End If
-
+      
         Case "CommandButton5"
             If Form.Field("Send Out Date").Value <> "" Then
 				Form.Field("Due Back Date").Value = DateAdd("d",32,Form.Field("Send Out Date").Value)
@@ -834,6 +832,7 @@ Sub Form_OnClick(ControlId)
         Case "CommandButton6"
             Form.Field("Discount Description").Value = "Student Discount"
             Form.Field("Discount Percentage").Value = "25%"
+
         Case "CommandButton7"
 			' this button "pulls" the equipment quantity fields from the corresponding fields in the
 			' customer record, that have been put there by being read in from "AutoQuote"
@@ -847,6 +846,7 @@ Sub Form_OnClick(ControlId)
 			Form.Field("Number Icom").Value = cCust.FieldValue("Number Icom")
 			Form.Field("Number Megaphone").Value = cCust.FieldValue("Number Megaphone")
 			Form.Field("Number Parrot").Value = cCust.FieldValue("Number Parrot")
+
 		Case "CommandButton8"
 		' if there is an email address in the "delivery contact" field enclosed in angle brackets, strip it out and put
 		' it into the email field leaving just the actual name in the contact name field
@@ -865,480 +865,74 @@ Sub Form_OnClick(ControlId)
 			' this button inserts the current date and time into the Unpacked Date and Unpacked Time fields
 			Form.Field("Unpacked Date").Value = "today"
 			Form.Field("Unpacked Time").Value = "now"
-
+		
 		Case "CommandButton11"
 			' this button inserts the description "Parcelforce" into the Send Method field
 			Form.Field("Send Method").Value = "Parcelforce / DB"
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Parcelforce/DB and we collect"
 			End If
-
+		
 		Case "CommandButton12"
 			' this button inserts the description "RUSH bike" into the Send Method field
 			Form.Field("Send Method").Value = "RUSH motorbike"
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "RUSH motorbike and we collect"
 			End If
-
+		
 		Case "CommandButton13"
 			' this button inserts the description "RUSH car/van" into the Send Method field
 			Form.Field("Send Method").Value = "RUSH car/van"
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "RUSH car/van and we collect"
 			End If
-
+		
 		Case "CommandButton14"
 			' this button inserts the description "Absolutely motorbike" into the Send Method field
 			Form.Field("Send Method").Value = "Absolutely motorbike"
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Absolutely motorbike and we collect"
 			End If
-
-        Case "CommandButton15"
-        ' get track'
-            GetTrack()
-
+		
+		Case "CommandButton15"
+			' this button writes the delivery details to a CSV text file on the PC's local disk, which can 
+			' then be uploaded into the Despatchbay web site
+			'dim fs,fname
+			'set fs=Server.CreateObject("Scripting.FileSystemObject")
+			'set fname=fs.CreateTextFile("c:\test.txt",true)
+			'fname.WriteLine("Hello World!")
+			'fname.Close
+			'set fname=nothing
+			'set fs=nothing
+			
+			Dim fso, DBtextfilename, DBstring
+			Set fso = CreateObject("Scripting.FileSystemObject")
+			Set DBtextfilename = fso.CreateTextFile("c:\Windows\temp\DBaddressfile.txt",True)
+			DBstring = Form.Field("Delivery Contact").Value + ", " + Form.Field("Delivery Address").Value + ", " + Form.Field("Delivery Postcode").Value + ", " + Form.Field("Delivery Telephone").Value + ", " + Form.Field("Delivery Telephone").Value
+			DBtextfilename.WriteLine(DBstring)
+			DBtextfilename.Close
+			
 		Case "CommandButton16"
 			' this button inserts the description "Absolutely car/van" into the Send Method field
-			Form.Field("Send Method").Value = "Absolutely car/van"
+			Form.Field("Send Method").Value = "Absolutely car/van"	
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Absolutely car/van and we collect"
 			End If
-
+		
 		Case "CommandButton17"
 			' this button inserts the description "Amherst Staff" into the Send Method field
-			Form.Field("Send Method").Value = "Amherst staff"
+			Form.Field("Send Method").Value = "Amherst staff"	
 			If Form.Field("Send / Collect").Value = "We send and pick up" Then
 				Form.Field("Send Method").Value = "Amherst staff and we collect"
 			End If
-
+		
 		Case "CommandButton18"
 		  ' this button inserts the current date into the "Actual Return Date"
 			Form.Field("Actual Return Date").Value = "today"
-
-'*************************************************************************'
-'******************  pss_buttons *****************************************'
-
-        Case "CommandButton19"
-            PackHire()
-
-
-        Case "CommandButton20"
-            UnpackHire()
-
-'        Case "CommandButton21"
-'            if MsgBox("Launch AmDesp to ship hire?",4) =6 Then
-'                 ShipHire("C:\AmDesp\data\AmShip.xml")
-'                ShipHireDbase()
-'            End if
-
-        Case "CommandButton22"
-        ' Email customer about missing kit
-            if MsgBox("Email " & Form.Field("Delivery Email").Value & "with a list of the 'Return Notes' field?", 4) = 6 Then
-                EmailMissingKit()
-            End if
-
-        Case "CommandButton23"
-        ' Send upcoming hire email'
-            if MsgBox("Send email about upcoming shipment?",4) = 6 Then
-                EmailSendOut()
-           End if
-
-
-
+		
     End Select
 End Sub
 
-
-'***************** pss funcs *******************'
-
-Sub PackHire()
-        Dim packedBy
-
-' set who packed and when packed'
-        packedBy = InputBox("Who packed this hire?", "Hire Packed by?")
-
-
-' ' if parcelforce in send method offer to launch amdesp to arrange shipping'
-'         If InStr(Form.Field("Send Method").Value, "Parcelforce") > 0 Then
-'             if MsgBox("Launch AmDesp to ship hire by parcelforce?",4) = 6 Then
-'                 ShipHire("C:\AmDesp\data\AmShip.xml")
-'             End if
-'         Else MsgBox("Send method is not Parcelforce so i won't launch Amdesp")
-'         End if
-
-' offer to email client about upcoming shipment'
-        if MsgBox("Send pre-shipping email?",4) = 6 Then
-            EmailSendOut()
-        End if
-
-' offer to save and close'
-        if MsgBox("Hire packed now by " & packedBy & " - save and close?", 4) = 6 Then
-            Form.Field("Packed Date").Value = "today"
-            Form.Field("Packed Time").Value = "now"
-            Form.Field("Status").Value = "Booked in and packed"
-            Form.Field("Packed By").Value = packedBy
-            Form.Save
-        End if
-End Sub
-
-Sub UnpackHire()
-        Dim unpackedBy, missing, newReturn
-
-' set who unpacked and when unpacked'
-        unpackedBy = InputBox("Who unpacked this hire?", "Hire Unpacked by?")
-
-' all ok? if so set returned ok and offer to save/close'
-        if MsgBox("all ok?",4) = 6 Then
-            if MsgBox("Close Hire save and exit?",4) = 6 Then
-                Form.Field("Status").Value = "Returned all OK"
-                Form.Field("Unpacked Date").Value = "today"
-                Form.Field("Unpacked Time").Value = "now"
-                Form.Field("Actual Return Date").Value = "today"
-                Form.Field("Unpacked By").Value = unpackedBy
-                Form.Field("Closed").Value = 1
-                Form.Save
-            End if
-
-' if not ok then offer to manually enter missing kit, else use missing-kit field on form'
-        Else
-            missing = InputBox("What was missing?" & vbNewLine & "(cancel to use existing 'Missing Kit' field)", "What's Missing?")
-            if missing <> "" Then
-                if MsgBox ("Replace Missing Kit field with:" & vbNewLine & missing, 4) = 6 Then
-                    Form.Field("Missing Kit").Value = missing
-                End if
-            End if
-
-' email customer about missing kit'
-        EmailMissingKit()
-
-' offer to save and exit'
-            if MsgBox("Set status to returned with problems, save, and exit?",4) = 6 Then
-                Form.Field("Status").Value = "Returned with problems"
-                Form.Field("Unpacked By").Value = unpackedBy
-                Form.Field("Actual Return Date").Value = "today"
-                Form.Field("Unpacked Date").Value = "today"
-                Form.Field("Unpacked Time").Value = "now"
-                Form.Save
-            End if
-
-        End if
-End Sub
-
-
-Sub EmailSendOut()
-'emails customer conforming address and schedule and gear'
-        Dim olApp : Set olApp = CreateObject("Outlook.Application")
-        Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
-        Dim cCust : Set cCust = Form.Connection("To","Customer")
-        Dim returnStr, del_email, sendMeth, invoice_email
-
-'tbc include parcelforce tracking numbers in email'
-'         MsgBox Form.Field("Tracking Numbers").value
-
-'*** create email ***'
-'* if invoice and delivery emails are differnt then combine into a string
-        invoice_email = cCust.FieldValue("Email")
-        del_email = Form.Field("Delivery Email").Value
-        if invoice_email <> del_email Then
-            del_email = del_email & ";" & invoice_email
-        End if
-
-' get send method from horrible strings
-        If InStr(Form.Field("Send / Collect").Value, "Cust. collect") > 0 OR InStr(Form.Field("Send / Collect").Value, "We pick up only") > 0 Then
-            sendMeth = "collected by yourself or at your expense "
-        Else sendMeth = "sent out "
-        End If
-
-' get return method from horrible strings'
-        if Form.Field("Send / Collect").Value = "We send, cust return" Or Form.Field("Send / Collect").Value = "Cust. collect/return" Then
-            returnStr = "Our records indicate you have not pre-paid for return shipping and are required to send the gear back at your expense." & vbNewLine & _
-            vbNewLine & "Please use a trackable service and send us the tracking details when you have dispatched the shipment."
-
-        Elseif Form.Field("Send / Collect").Value = "We send and pick up" Or Form.Field("Send / Collect").Value = "We pick up only" Then
-            returnStr = "Our records indicate that you have paid for return shipping - please contact us two days before the equipment will be ready to collect so that we can arrange the courier."
-        End if
-
-' compose email'
-        objMailItem.Subject = "Radio Hire - upcoming shipment details"
-        objMailItem.To = del_email
-        objMailItem.Body = "Hi," & vbNewLine & _
-                           vbNewLine & "Thanks for choosing to hire from Amherst." & vbNewLine & vbNewLine &"Your upcoming hire is due to be " & sendMeth & "on " & Form.Field("Send Out Date").Value & vbNewLine & vbNewLine & _
-                           "Please check the following details and contact us urgently if there are any discrepancies."& vbNewLine & _
-                           vbNewLine & "Delivery To:" & vbNewLine & vbNewLine & _
-                           Form.Field("Delivery Contact").Value & vbNewLine & _
-                           Form.Field("Delivery Address").Value & vbNewLine & _
-                           Form.Field("Delivery Postcode").Value & vbNewLine & _
-                           vbNewLine & "Hire Contents:" & Form.Field("Hire Sheet Text").Value & vbNewLine & _
-                           vbNewLine & "Your Hire is due back with us by the " & Form.Field("Due Back Date").Value &  vbNewLine & _
-                           vbNewLine & returnStr & vbNewLine & _
-                           vbNewLine & "Kind regards" & vbNewLine & "The Amherst team" & vbNewLine & vbNewLine & "(this email generated automatically)"
-
-'* Get user inputs*'
-'confirm/amend email address or cancel'
-        Dim email_or_change
-        email_or_change = MsgBox("Send email to: " & del_email & "?" & vbNewLine & _
-        "'No' to enter an alternative, 'Cancel' to abort emailing",3)
-        if email_or_change = 7 Then
-            del_email = InputBox("Enter new email address")
-        Elseif email_or_change = 2 Then
-            Exit Sub
-        End if
-
-' show user the email and get confirmation to send email'
-'         if MsgBox("Send this email to " & del_email &"?" & vbNewLine & objMailItem.Body,4) = 6 Then
-        objMailItem.Send
-        Form.Field("PreShip Emailed").Value = True
-'         MsgBox("EMAILED")
-'         End if
-
-' close objects'
-        Set olApp = Nothing
-        Set objMailItem = Nothing
-
-End Sub
-
-Sub EmailMissingKit()
-' emails 'Missing Kit' field to invoice and delivery email addresse
-        Dim cCust : Set cCust = Form.Connection("To","Customer")
-        Dim olApp : Set olApp = CreateObject("Outlook.Application")
-        Dim objMailItem : Set objMailItem = olApp.CreateItem(0)
-        Dim del_email, invoice_email
-
-' make email address string if delivery and invoice emails are different send to both
-        invoice_email = cCust.FieldValue("Email")
-        del_email = Form.Field("Delivery Email").Value
-        if invoice_email <> del_email Then
-            del_email = del_email & ";" & invoice_email
-        End if
-
-' ' give user chance to change email address'
-'         if MsgBox("Delivery / invoice email addresses were " & del_email & vbNewLine & "Send missing-kit email to this address?" & vbNewLine & "(no to enter new email address)",4) = 7 Then
-'         del_email = InputBox("Enter new email address")
-'         End if
-
-'compose email'
-        objMailItem.Subject = "Radio Hire - Missing Kit"
-        objMailItem.To = del_email
-        objMailItem.Body = "Hi," & vbNewLine & _
-                           vbNewLine & "Thanks for returning the hired equipment - I hope it worked well for your event." & vbNewLine & _
-                           vbNewLine & "Unfortunately the return was missing the following items - can you please look/check with colleagues to see if they can be recovered - otherwise i'll draw up an invoice for replacement." & vbNewLine & _
-                           "Kind regards," & vbNewLine & "the Amherst team" & vbNewLine & _
-                           vbNewLine & "MISSING KIT:" & vbNewLine & _
-                           Form.Field("Missing Kit").value & vbNewLine & vbNewLine & "(If you have already discussed missing items with us please disregard this automatically generated email)"
-
-' show user the email and if confirmed send email'
-        if MsgBox ("Confirm Email:" & vbNewLine & vbNewLine & objMailItem & vbNewLine & objMailItem.Body, 4) = 6 Then
-            objMailItem.Send
-            MsgBox("EMAILED")
-        End if
-
-' close objects'
-        Set olApp = Nothing
-        Set objMailItem = Nothing
-        Set cCust = Nothing
-
-End Sub
-
-
-
-
-Sub ShipHireDbase()
-'     Dim ddeApp, ddeTopic, ddeItem
-'     Set ddeApp = CreateObject("dde.application")
-'     ddeTopic = "MyDDEServer"
-'     ddeItem = "Topic|Item"
-'     ddeApp.RegisterService(ddeTopic)
-'     ddeApp.Connect ddeTopic, ddeItem
-'
-'     ' Get the hire name from the detail form
-'     Dim hireName
-'     hireName = ddeApp.Request("Value[Field:Name]")
-'
-'     ' Define the export template and export filepath
-'     Dim exportTemplate
-'     exportTemplate = "dbase"
-'     Dim exportFilePath
-'     exportFilePath = "C:\paul\AmDesp\data\dde_hire.dbf"
-'
-'     ' Execute the export command
-'     Dim exportCommand
-'     exportCommand = "[Export][" & exportTemplate & "][Name=" & hireName & "][" & exportFilePath & "]"
-'     ddeApp.Exec exportCommand
-'
-'     ddeApp.Disconnect
-'     Set ddeApp = Nothing
-    Dim commenceApp, commenceDB, hireRecord
-
-    ' Create an instance of the Commence application
-    Set commenceApp = CreateObject("Commence.Application")
-
-    ' Connect to the Commence database
-    Set commenceDB = commenceApp.Database
-
-    ' Get the hire record associated with the detail form
-    Set hireRecord = commenceDB.GetRecordByID("Hire", CStr(commenceApp.CurrentRecordID))
-
-    ' Get the hire name from the record
-    Dim hireName
-    hireName = hireRecord.GetField("name").Value
-
-    ' Define the export template and export filepath
-    Dim exportTemplate
-    exportTemplate = "dbase"
-    Dim exportFilePath
-    exportFilePath = "C:\paul\AmDesp\data\dde_hire.dbf"
-
-    ' Execute the export command
-    Dim exportCommand
-    exportCommand = "[Export][" & exportTemplate & "][Name=" & hireName & "][" & exportFilePath & "]"
-    commenceApp.ExecuteMacro exportCommand
-
-    ' Clean up resources
-    Set hireRecord = Nothing
-    Set commenceDB = Nothing
-    Set commenceApp = Nothing
-End Sub
-
-
-
-Sub ShipHire(xmlfile)
-        ' AmDesp'
-        Dim python_exe, python_script, commence_wrapper, str_error
-'         python_exe = "C:\AmDesp\dist\python.exe"
-        python_script = "C:\AmDesp\Main.py"
-        commence_wrapper = "C:\Program Files\Vovin\Vovin.CmcLibNet\Vovin.CmcLibNet.dll"
-        ExportItemDetailForm(xmlfile)
-        Dim oShell, currentCommand, my_command
-        Set oShell = CreateObject("Wscript.Shell")
-        currentCommand = "cmd /c python " & python_script & " " & xmlfile & Chr(34)
-        oShell.run currentCommand,1,true
-        set oShell = nothing
-End Sub
-
-
-
-Sub GetTrack()
-Dim WshShell, strCommand, WshShellExec, strOutput, psScript, ref_num
-
-ref_num = Form.Field("Reference Number").value
-psScript = "C:\AmDesp\vbs\get_track.ps1"
-strCommand = "powershell -executionpolicy bypass -noexit C:\AmDesp\vbs\get_track.ps1 " & ref_num
-
-Set WshShell = CreateObject("WScript.Shell")
-
-Set WshShellExec = WshShell.Exec(strCommand)
-strOutput = WshShellExec.StdOut.ReadAll()
-' WScript.Echo "Python returned: " & strOutput
-' WScript.Echo "Exec status: " & WshShellExec.Status
-MsgBox strOutput
-End Sub
-
-
-'**************** arno+ pss function to export item fields to xml  ***********'
-
-Sub ExportItemDetailForm(ByVal strPath)
-
-    Const CMC_DELIM = "<<%||%>>" 'string to delimit the retrieved data. Use any string you want, but make sure it is unlikely it may represent a name/value of a category or field
-    Const CMC_DELIM2 = "@#$%%$#@" 'string for secondary delimiter for use in parsing connections
-
-    Dim db, conv, f, arrFields, arrCons, strDDE
-    Set db = Application.Database
-    Set conv = db.GetConversation("Commence", "GetData")
-    strDDE = "[GetFieldNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & ")]"
-    arrFields = Split(conv.Request(strDDE), CMC_DELIM)
-    Dim xmlDoc : Set xmlDoc = CreateObject("Msxml2.DOMDocument.6.0")
-    xmlDoc.async = false
-    xmlDoc.loadXML("<root><ItemDetailForm/></root>") ' make root/itemdetailform'
-
-    Dim el
-    Dim objRoot : Set objRoot = xmlDoc.DocumentElement
-
-    Set el = xmlDoc.createElement("CategoryName")   ' create Root/itemdetailform/CategoryName'
-    el.text = sanitizeXMLString(Form.CategoryName)
-    objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("FormName")       ' create Root/itemdetailform/FormName'
-    el.text = sanitizeXMLString(Form.Name)
-    objRoot.childNodes.item(0).appendChild(el)
-    Set el = xmlDoc.createElement("Fields")         ' create Root/itemdetailform/Fields'
-    Dim fnode : Set fnode = objRoot.childNodes.item(0).appendChild(el)
-
-
-
-    Dim i
-    For i = 0 To UBound(arrFields) - 1
-        ' the idea is that if we cannot instatiate a field,
-        ' it isn't on the form, so we need to catch the errors
-        On Error Resume Next
-        Set f = Form.Field(arrFields(i))
-        On Error Goto 0
-        ' add to xml doc
-        Set el = xmlDoc.createElement("Field")
-        Dim n : Set n = fnode.appendChild(el) 'get reference to node
-        Set el = xmlDoc.createElement("FieldName")
-        el.text = sanitizeXMLString(f.Name)
-        n.appendChild(el)
-        Set el = xmlDoc.createElement("FieldValue")
-        el.text = sanitizeXMLString(f.Value)
-    n.appendChild(el)
-    Next
-    ' process customer connections
-    strDDE = "[GetConnectionNames(" & dq(Form.CategoryName) & "," & dq(CMC_DELIM) & "," & dq(CMC_DELIM2) & ")]"
-    arrCons = Split(conv.Request(strDDE), CMC_DELIM)
-    Dim connect, CustomerName
-    Set connect = Form.Connection("To", "Customer") ' customer connection please'
-
-
-    Set el = xmlDoc.createElement("Customer")       ' create Root/itemdetailform/Customer' ' DOES NOT WORK' #debug
-    Dim nodeCustomer : Set nodeCustomer = objRoot.childNodes.item(0).appendChild(el) ' node parent is root'
-    el.text = sanitizeXMLString(connect.ItemName)
-    Set el = xmlDoc.createElement("ToCategory")
-    xmlDoc.Save strPath
-
-
-    Set xmlDoc = Nothing
-    Set conv= Nothing
-    Set db = Nothing
-    Set el = Nothing
-    Set connect = Nothing
-    Set nodeCustomer = Nothing
-    Set objRoot = Nothing
-    Set fnode = Nothing
-    Set f = Nothing
-    Set n = Nothing
-    Set connect = Nothing
-
-
-End Sub
-
-public Function sanitizeXMLString(invalidString)
-' used to cleanup strings which interfere with xml format - AmDesp python reverses this'
-	Dim tmp, i
-	tmp = invalidString
-	'first replace ampersand
-	tmp = Replace(tmp, chr(38), "&amp;")
-	'then the other special characters
-	For i = 160 to 255
-		tmp = Replace(tmp, chr(i), "&#" & i & ";")
-	Next
-	'and then the special characters
-	tmp = Replace(tmp, chr(34), "&quot;")
-	tmp = Replace(tmp, chr(39), "&apos;")
-	tmp = Replace(tmp, chr(60), "&lt;")
-	tmp = Replace(tmp, chr(62), "&gt;")
-	'tmp = Replace(tmp, chr(32), "&nbsp;") ' (space)'
-	sanitizeXMLString = tmp
-end function
-
-Function dq(s)
-
-  dq = Chr(34) & s & Chr(34)
-
-End Function
-
-
-'********** end of pss      ************
-'******************************************
 
 '****** start of functions
 
@@ -1565,4 +1159,3 @@ Function MakeInvoiceDate(datefield)
   MakeInvoiceDate = WeekdayName(WeekDay(datefield), True) + " " + Cstr(Day(datefield)) +  " " + MonthName(Month(datefield)) + " " + Cstr(Year(datefield))
   
 End Function
-

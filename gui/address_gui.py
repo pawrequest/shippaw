@@ -3,28 +3,16 @@ from despatchbay.despatchbay_entities import Address, AddressKey
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
 import shipper.shipper
-from core.enums import Contact, FieldsList
+from core.entities import Contact, FieldsList
 from gui.gui_params import address_fieldname_params, address_input_params
-from shipper.shipment import Shipment
+from shipper.shipment import ShipmentInput, ShipmentRequested
 
 
-def address_postcode_click(postcode: str) -> Address | None:
-    """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
-    client = shipper.shipper.DESP_CLIENT
-    while True:
-        try:
-            candidates = client.get_address_keys_by_postcode(postcode)
-            new_address = address_from_postcode_popup(candidate_keys=candidates, client=client)
-        except Exception as e:
-            postcode = sg.popup_get_text("Enter Postcode (empty to cancel)")
-            if not postcode:
-                return None
-        else:
-            return new_address
 
 
-def comparison_address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
-    commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name, address_as_str=address_as_str)
+def address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
+    commence_frame = commence_address_frame(delivery_name=delivery_name, contact_name=contact.name,
+                                            address_as_str=address_as_str)
     address_col = sg.Col(layout=[
         [contact_frame(contact=contact)],
         [get_address_frame(address=address)],
@@ -125,11 +113,11 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: Shipment, address: Address, contact: Contact) -> Address | None:
+def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, client:DespatchBaySDK) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
-    window = comparison_address_window(delivery_name = shipment.delivery_name, contact=contact, address=address,
-                                       address_as_str=shipment._address_as_str)
+    window = address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,
+                            address_as_str=shipment.address_as_str)
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED:
@@ -137,13 +125,13 @@ def address_from_gui(shipment: Shipment, address: Address, contact: Contact) -> 
 
         if 'postal' in event.lower():
             postcode = values.get(event.upper())
-            new_address = address_postcode_click(postcode=postcode)
+            new_address = address_postcode_click(postcode=postcode, client=client)
             if new_address:
                 # update_gui_from_address(address=new_address)
                 update_gui_from_address(address=new_address, window=window)
 
         if 'company_name' in event.lower():
-            # copy customer name into address comany name field
+            # copy customer name into address company name field
             company_name_click(address=address, customer=shipment.customer, values=values)
             update_gui_from_address(address=address, window=window)
 
@@ -152,3 +140,16 @@ def address_from_gui(shipment: Shipment, address: Address, contact: Contact) -> 
             update_contact_from_gui(values=values, contact=contact)
             window.close()
             return address
+
+def address_postcode_click(postcode: str, client, address_popup=address_from_postcode_popup) -> Address | None:
+    """ calls address chooser for user to select an address from those existing at either provided or shipment postcode """
+    while True:
+        try:
+            candidates = client.get_address_keys_by_postcode(postcode)
+            new_address = address_popup(candidate_keys=candidates, client=client)
+        except Exception as e:
+            postcode = sg.popup_get_text("Enter Postcode (empty to cancel)")
+            if not postcode:
+                return None
+        else:
+            return new_address

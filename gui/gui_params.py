@@ -22,10 +22,12 @@ head_params = {
 
 date_params = {
     'size': (12, 2),
-    'justification': 'center',
+    # 'expand_y': True,
+    # 'justification': 'center',
     'pad': (5, 5),
     'border_width': 4,
     'relief': sg.RELIEF_GROOVE,
+
 }
 
 date_head_params = {
@@ -35,7 +37,7 @@ date_head_params = {
 }
 
 address_params = {
-    'size': (30, 2),
+    'size': (30, 4),
     'justification': 'center',
     'pad': (5, 5),
     'border_width': 4,
@@ -57,8 +59,8 @@ boxes_head_params = {
 }
 
 boxes_params = {
-    'size': (5, 2),
-    'justification': 'center',
+    'size': (5, 1),
+    # 'justification': 'center',
     'pad': (5, 5),
     'border_width': 4,
     'relief': sg.RELIEF_GROOVE,

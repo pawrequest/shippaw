@@ -1,5 +1,4 @@
-debug = true
-sandbox = true
+sandbox = false
 return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\
@@ -21,27 +20,44 @@ returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
                             Regards,\nGiles Toman\
                           """
 
-# rename keys
-[import_mapping]
-DELIVERY_A = 'address_as_str'   # string representation of customer address
-DELIVERY_C = 'contact'          # contact name for the remote address
-DELIVERY_E = 'email'            # email for remote address
-DELIVERY_N = 'delivery_name'    # name of company at remote address
-DELIVERY_P = 'postcode'         # postcode of remote address
-DELIVERY_R = 'delivery_ref'     # delivery reference for rush etc
-DELIVERY_T = 'telephone'        # telephone number for remote contact
-BOXES = 'boxes'                 # number of boxes in shipment
-#DB_LABEL_P = 'label_printed'    # has a label been printed? depric
-#SEND___COL = 'send_collect'     # any use?
-SEND_METHO = 'send_method'      # contains parcelforce?
-SEND_OUT_D = 'send_out_date'    # hire record send out date
-INBOUND_ID = 'inbound_id'       # # dbay shipment id for inbound cariage to get tracking
-OUTBOUND_I = 'outbound_id'      # dbay shipment id for outbound cariage to get tracking
-#STATUS = 'status'
-NAME = 'shipment_name'          # hire or sale name
-FIELD10 = 'customer'            # from hire
-FIELD17 = 'customer'            # customer from hire
-FIELD9 = 'customer'             # customer from sale category
+
+[import_mappings.hire]
+shipment_name = 'NAME'
+address_as_str = 'DELIVERY_A'
+contact_name = 'DELIVERY_C'
+email = 'DELIVERY_E'
+delivery_name = 'DELIVERY_N'
+postcode = 'DELIVERY_P'
+telephone = 'DELIVERY_T'
+customer = 'FIELD10'
+boxes = 'BOXES'
+send_out_date = 'SEND_OUT_D'
+send_method = 'SEND_METHO'
+outbound_id = 'OUTBOUND_I'
+inbound_id = 'INBOUND_ID'
+
+[import_mappings.sale]
+shipment_name = 'NAME'
+address_as_str = 'DELIVERY_A'
+contact_name = 'DELIVERY_C'
+email = 'DELIVERY_E'
+delivery_name = 'DELIVERY_N'
+postcode = 'DELIVERY_P'
+telephone = 'DELIVERY_T'
+customer = 'FIELD9'
+outbound_id = 'OUTBOUND_I'
+inbound_id = 'INBOUND_ID'
+
+[import_mappings.customer]
+address_as_str = 'DELIV_ADDR'
+contact_name = 'DELIV_CONT'
+email = 'DELIV_EMAI'
+delivery_name = 'DELIV_NAME'
+postcode = 'DELIV_POST'
+telephone = 'DELIV_TELE'
+customer = 'NAME'
+
+
 
 [home_contact]
 name = 'Giles Toman'
@@ -62,29 +78,34 @@ dropoff_sender_id = 328187
 
 
 [dbay]
-[dbay.sandbox]
+[dbay.sandbox.envars]
+api_user_envar = "DESPATCH_API_USER_SANDBOX"
+api_key_envar = "DESPATCH_API_KEY_SANDBOX"
+
+[dbay.sandbox.default_carrier]
 courier = 99
 service = 9992
-api_user = "DESPATCH_API_USER_SANDBOX"
-api_key = "DESPATCH_API_KEY_SANDBOX"
 
-[dbay.production]
+[dbay.production.envars]
+api_user_envar = "DESPATCH_API_USER"
+api_key_envar = "DESPATCH_API_KEY"
+
+[dbay.production.default_carrier]
 courier = 8  # parcelforce
 service = 101  # parcelforce 24
-api_user = "DESPATCH_API_USER"
-api_key = "DESPATCH_API_KEY"
 
 
 
 [paths]
 data = 'data/'
 scripts = 'scripts/'
-labels = 'data/Parcelforce Labels/'
+outbound_labels = 'data/Parcelforce Labels/'
+inbound_labels = 'R:/Parcelforce Labels/'
+logfile = 'data/AmDesplog.txt'
 log_json = 'data/AmLog.json'
 cmc_checkin = 'scripts/cmc_checkin.ps1'
 cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_updater = 'scripts/cmc_updater_funcs.ps1'
 cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
 cmc_installer = 'scripts/CmcLibNet_Setup.exe'
-stored_xml = 'data/AmShip.xml'
 user_data = 'data/user_data.pk'
-dbase_export = 'data/amherst_export.dbf'

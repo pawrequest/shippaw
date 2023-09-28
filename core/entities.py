@@ -1,18 +1,17 @@
-import os
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Optional
 
-from despatchbay.despatchbay_entities import Address, CollectionDate, Service, ShipmentRequest, ShipmentReturn
-from despatchbay.despatchbay_sdk import DespatchBaySDK
-from despatchbay.exceptions import AuthorizationException
+from despatchbay.despatchbay_entities import Address
+from pydantic import BaseModel
 
 
 class ShipmentCategory(Enum):
-    HIRE = 'HIRE'
-    SALE = 'SALE'
+    HIRE = 'Hire'
+    SALE = 'Sale'
+    CUSTOMER = 'Customer'
 
 
 @dataclass
@@ -49,44 +48,27 @@ class FuzzyScores:
 
 
 class ShipMode(Enum):
-    SHIP = 'SHIP'
-    TRACK = 'TRACK'
-
+    SHIP = auto()
+    TRACK = auto()
 
 class ShipDirection(Enum):
     IN = 'IN'
     OUT = 'OUT'
 
 
-
 @dataclass
-class DbayCreds:
-    api_user: str
-    api_key: str
-
-    @classmethod
-    def from_dict(cls, api_name_user, api_name_key):
-        return cls(api_user=os.environ.get(api_name_user),
-                   api_key=os.environ.get(api_name_key))
-
-    def validate(self):
-        try:
-            return DespatchBaySDK(api_user=self.api_user, api_key=self.api_key).get_account()
-        except AuthorizationException as e:
-            return None
-
-
-@dataclass
-class DefaultShippingService:
+class DefaultCarrier:
     courier: int
     service: int
 
 
 class DateTimeMasks(Enum):
     DISPLAY = '%A - %B %#d'
-    hire = '%d/%m/%Y'
+    HIRE = '%d/%m/%Y'
     DB = '%Y-%m-%d'
-    button_label = '%A \n%B %#d'
+    BUTTON = '%A \n%B %#d'
+    FILE = '%Y-%m-%d_%H-%M-%S'
+    COMMENCE = '%Y%m%d'
 
 
 class ApiScope(Enum):
@@ -98,7 +80,7 @@ class FieldsList(Enum):
     contact = ['telephone', 'name', 'email']
     address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
     export = ['category', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
-              'outbound_id', '_shipment_name', 'timestamp']
+              'outbound_id', 'shipment_name', 'timestamp']
     shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
                 'date', 'inbound_id', 'outbound_id', 'shipment_name']
 
@@ -109,24 +91,26 @@ class PathsList:
         self.log_json: Path = Path()
         self.cmc_logger: Path = Path()
         self.cmc_installer: Path = Path()
+        self.cmc_updater:Path = Path()
         self.cmc_dll: Path = Path()
-        self.labels: Path = Path()
+        self.outbound_labels: Path = Path()
+        self.inbound_labels: Path = Path()
         self.user_data = Path()
         self.dbase_export = Path()
+        self.logfile = Path()
 
     @classmethod
     def from_dict(cls, paths_dict: dict, root_dir):
         pl = cls()
         for name, path in paths_dict.items():
             setattr(pl, name, root_dir / path)
-        pl.labels.mkdir(parents=True, exist_ok=True)
+        pl.outbound_labels.mkdir(parents=True, exist_ok=True)
         return pl
 
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
 
 
-# Contact = namedtuple('Contact', ['email', 'telephone', 'name'])
 @dataclass
 class Contact:
     email: str
@@ -134,31 +118,6 @@ class Contact:
     name: str
 
 
-@dataclass
-class DespatchObjects:
-    # collection_date: Optional[CollectionDate] = None
-    collection_date: Optional[CollectionDate] = None
-    available_dates: Optional[List[CollectionDate]] = None
-    shipment_request: Optional[ShipmentRequest] = None
-    shipment_return: Optional[ShipmentReturn] = None
-    service: Optional[Service] = None
-    available_services: Optional[List[Service]] = None
-
-    #
-    # available_dates: Optional[List[CollectionDate]] = None
-    # shipment_request: Optional[ShipmentRequest] = None
-    # shipment_return: Optional[ShipmentReturn] = None
-    # service: Optional[Service] = None
-    # available_services: Optional[List[Service]] = None
-
-
-@dataclass
-class Email:
-    from_address: str
-    to_address: str
-    body: str
-    attachments: Any
-    subject: str
 
 
 @dataclass
@@ -173,3 +132,43 @@ class HomeAddress:
     postal_code: str
     country_code: Optional[str] = 'GB'
     dropoff_sender_id: Optional[int] = None
+
+
+class ImportMap(BaseModel):
+    address_as_str: str
+    contact_name: str
+    email: str
+    delivery_name: str
+    postcode: str
+    telephone: str
+    customer: str
+
+
+class HireMap(ImportMap):
+    shipment_name: str
+    boxes: str
+    send_out_date: str
+    send_method: str
+    outbound_id: str
+    inbound_id: str
+
+
+class SaleMap(ImportMap):
+    shipment_name: str
+    outbound_id: str
+    inbound_id: str
+
+
+mapper_dict = {
+    ShipmentCategory.HIRE: HireMap,
+    ShipmentCategory.SALE: SaleMap,
+    ShipmentCategory.CUSTOMER: ImportMap
+}
+
+
+class AddressMatch(Enum):
+    DIRECT = auto()
+    FUZZY = auto()
+    NOT = auto()
+    EXPLICIT = auto()
+    GUI = auto()
