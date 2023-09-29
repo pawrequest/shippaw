@@ -2,41 +2,11 @@ import json
 import logging
 import subprocess
 from enum import Enum
+from functools import partial
+
+import win32com.client
 
 logger = logging.getLogger(__name__)
-
-
-class PS_FUNCS(Enum):
-    OVERWRITE = "EditOverwrite"
-    APPEND = "EditAppend"
-    NEW = "NewRecord"
-    HIRES_CUSTOMER = "HiresByCustomer"
-    PRINT = "PrintRecord"
-
-
-def edit_commence(pscript: str, function: str, table: str, record: str, package: dict):
-    record_esc = f'"{record}"'
-    package_esc = json.dumps(package)  # .replace('"', '`"')
-    # package_esc = f'"{package_esc}"'
-    # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
-    #                     pscript, function, table, record_esc, package_esc]
-
-    process_command = ["powershell.exe", '-ExecutionPolicy', 'Unrestricted',
-                       '-File', pscript,
-                       '-functionName', function,
-                       '-tableName', table,
-                       # '-recordName', record_esc,
-                       '-recordName', record,
-                       '-updatePackageStr', package_esc
-                       ]
-    process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    if process_result.stderr:
-        parse_std_err(process_result)
-    else:
-        logger.info(f'COMMENCE UPDATER:\n{process_result.stdout}')
-    return process_result
-
 
 
 def parse_std_err(process_result):
@@ -52,7 +22,55 @@ def parse_std_err(process_result):
     else:
         logger.warning(f'Commence Updater failed, Std Error: {process_result.stderr}')
 
+def speak_to_commence():
+    cmc = win32com.client.Dispatch("Commence.DB")
+    conv = cmc.GetConversation("Commence", "GetData")
+    dde = "[FireTrigger(PYTHON_DDE, Customer, Test)]"
+    conv.Execute(dde)
 
+
+
+class PS_FUNCS(Enum):
+    OVERWRITE = "EditOverwrite"
+    APPEND = "EditAppend"
+    NEW = "NewRecord"
+    HIRES_CUSTOMER = "HiresByCustomer"
+    PRINT = "PrintRecord"
+    GET = "GetRecord"
+
+
+
+def edit_commence(pscript: str, function: PS_FUNCS, table: str, record: str, package: dict):
+    record_esc = f'"{record}"'
+    package_esc = json.dumps(package)  # .replace('"', '`"')
+    # package_esc = f'"{package_esc}"'
+    # process_command = [powershell, '-ExecutionPolicy', 'Unrestricted', '-File',
+    #                     pscript, function, table, record_esc, package_esc]
+
+    process_command = ["powershell.exe", '-ExecutionPolicy', 'Unrestricted',
+                       '-File', pscript,
+                       '-functionName', function.value,
+                       '-tableName', table,
+                       # '-recordName', record_esc,
+                       '-recordName', record,
+                       '-updatePackageStr', package_esc
+                       ]
+    process_result = subprocess.run(process_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    if process_result.stderr:
+        parse_std_err(process_result)
+    else:
+        logger.info(f'COMMENCE UPDATER:\n{process_result.stdout}')
+        print(f'COMMENCE UPDATER:\n{process_result.stdout}')
+    return process_result
+
+
+get_record = partial(edit_commence,
+                     pscript=r'C:\paul\AmDesp\scripts\cmc_updater_funcs.ps1',
+                     function=PS_FUNCS.PRINT,
+                     table='Customer',
+                     record='Test',
+                     package={})
 
 
 #

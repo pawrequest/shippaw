@@ -401,7 +401,10 @@ def update_commence(config: Config, shipment: ShipmentQueued):
 
     result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
                            record=shipment.shipment_name,
-                           package=cmc_update_package, function=PS_FUNCS.APPEND.value)
+                           package=cmc_update_package, function=PS_FUNCS.APPEND)
+    # result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
+    #                        record=shipment.shipment_name,
+    #                        package=cmc_update_package, function=PS_FUNCS.APPEND.value)
     if result.returncode == 0:
         shipment.is_logged_to_commence = True
         return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)

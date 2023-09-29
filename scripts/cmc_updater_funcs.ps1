@@ -131,12 +131,43 @@ function EditRecordAppend($record, $package)
     }
 }
 
+#function PrintRecord($recordName)
+#{
+#    write-host "Printing record: $recordName"
+#    $record = RecordByName $recordName
+#    Write-Host ToString($record)
+#}
+
+
 function PrintRecord($recordName)
 {
     write-host "Printing record: $recordName"
-    record = RecordByName $recordName
-    Write-Host $record
+    # filter table by record name
+    $filter = $cursor.Filters.Create(1, [Vovin.CmcLibNet.Database.FilterType]::Field)
+    $filter.FieldName = "Name"
+    $filter.FieldValue = $recordName
+    $filter.Qualifier = "EqualTo"
+    $result = $cursor.Filters.Apply()
+
+    If ($result -eq 1)
+    {
+        Write-Host One Record Retrieved
+        $rowset = $cursor.GetQueryRowSet().ColumnCount
+        write-host $rowset
+    }
+    Else
+    {
+        Write-Host ERROR: Filters.Apply returned $result results
+    }
+
+
 }
+
+
+
+
+
+
 
 
 switch ($functionName)
@@ -154,8 +185,6 @@ switch ($functionName)
 
     }
     "NewRecord" {
-
-
         $new_record = NewRecord
         $updatePackageMap["Name"] = $recordName
         $new_record = editRecordOverwrite $new_record $updatePackageMap
@@ -168,6 +197,11 @@ switch ($functionName)
     }
     "PrintRecord" {
         PrintRecord $recordName
+    }
+
+    "GetRecord" {
+        $record = RecordByName $recordName
+        Write-Host $record
     }
 }
 
