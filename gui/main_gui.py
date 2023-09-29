@@ -7,7 +7,7 @@ from PySimpleGUI import Window
 from despatchbay.despatchbay_entities import CollectionDate, Service
 
 from core.entities import DateTimeMasks, AddressMatch
-from core.funcs import collection_date_to_datetime, print_label, print_label2
+from core.funcs import collection_date_to_datetime, print_label2
 from gui import keys_and_strings
 from gui.gui_params import address_head_params, address_params, \
     boxes_head_params, boxes_params, date_head_params, date_params, default_params, head_params, option_menu_params, \

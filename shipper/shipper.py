@@ -14,7 +14,7 @@ from despatchbay.exceptions import ApiException
 from core.cmc_updater import PS_FUNCS, edit_commence
 from core.config import Config
 from core.entities import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, print_label, print_label2
+from core.funcs import collection_date_to_datetime, email_label, print_label2
 from gui import keys_and_strings
 from gui.main_gui import main_window
 from shipper.addresser import sender_or_recipient_from_home_address, remote_address_script
