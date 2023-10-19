@@ -63,7 +63,7 @@ class ShipmentInput(BaseModel):
     remote_address_matched: AddressMatch = AddressMatch.NOT
 
     @classmethod
-    def from_cmc_transaction(cls, table, transaction, outbound):
+    def from_cmc_transaction(cls, table: str, transaction: str, outbound: bool = True):
 
         with CmcContext() as cmc:
             transaction = cmc.get_record_with_customer(table, transaction)
@@ -73,10 +73,10 @@ class ShipmentInput(BaseModel):
                 if val := transaction.get(value):
                     ins[key] = val
                 else:
-                    new_key = FIELD_VARIATIONS.get(value)
-                    if val := transaction.get(new_key):
-                        ins[key] = val
-                    else:
+                    try:
+                        new_key = FIELD_VARIATIONS[value]
+                        ins[key] = transaction[new_key]
+                    except KeyError:
                         raise ValueError(f'No value for {value} or {new_key} in {transaction}')
 
             return cls(
