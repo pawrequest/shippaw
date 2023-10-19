@@ -8,17 +8,15 @@ import PySimpleGUI as sg
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from core.dbay_client import DbayCreds
-from core.entities import Contact, DefaultCarrier, HomeAddress, \
-    PathsList, ShipmentCategory
+from .dbay_client import DbayCreds
+from .entities import Contact, DefaultCarrier, HomeAddress, \
+    PathsList, ShipmentCategory, ImportMap, mapper_dict
+from .funcs import scope_from_sandbox_func
 
-from core.entities import ImportMap, mapper_dict
-from core.funcs import scope_from_sandbox_func
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
-MODEL_CONFIG_TOML = ROOT_DIR / 'core' / 'model_user_config.toml'
+MODEL_CONFIG_TOML = ROOT_DIR / 'src' / 'desp_am' / 'core' / 'model_user_config.toml'
 CONFIG_TOML = DATA_DIR / 'user_config.toml'
 
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
@@ -106,5 +104,3 @@ def config_from_dict(config_dict, sandbox=None) -> Config:
         sandbox=sandbox,
         return_label_email_body=config_dict.get('return_label_email_body'),
     )
-
-

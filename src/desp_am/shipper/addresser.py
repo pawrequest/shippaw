@@ -7,15 +7,14 @@ from despatchbay.despatchbay_entities import Address, Recipient, Sender
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 
-from core.entities import Contact, HomeAddress, AddressMatch
-from gui.address_gui import address_from_gui
-from shipper.fuzzy import fuzzy_address_script
-from shipper.shipment import ShipmentInput
+from ..core.entities import Contact, HomeAddress, AddressMatch
+from ..gui.address_gui import address_from_gui
+from .fuzzy import fuzzy_address_script
 
 logger = logging.getLogger(__name__)
 
 
-def remote_address_script(shipment: ShipmentInput, remote_contact: Contact, client: DespatchBaySDK) -> (Address | bool):
+def remote_address_script(shipment: 'ShipmentInput', remote_contact: Contact, client: DespatchBaySDK) -> (Address | bool):
     """ Gets an Address object representing the remote location. tries direct search, then fuzzy search, then gui entry."""
     terms = {shipment.customer, shipment.delivery_name, shipment.str_to_match}
 

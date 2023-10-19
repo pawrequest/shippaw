@@ -2,16 +2,12 @@ from typing import Dict, List
 
 import pytest
 
-from core.config import ROOT_DIR
-from core.entities import ShipmentCategory
-from gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
-from shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_record, ShipmentDict, \
+from src.desp_am.core.config import ROOT_DIR
+from src.desp_am.gui.keys_and_strings import BOOK_KEY, PRINT_EMAIL_KEY
+from src.desp_am.shipper.shipment import ShipmentBooked, records_from_dbase, shipment_from_record, ShipmentDict, \
     shipments_from_records
-from shipper.shipper import address_shipment, book_shipment, pre_request_shipment, prepare_batch, prepare_shipment, \
-    queue_shipment, \
-    read_window_cboxs, \
-    request_shipment
-from tests.config_test import dbay_client_sandbox,dbay_client_production, config_production, config_dict_from_toml, config_sandbox, category
+from src.desp_am.shipper.ship import address_shipment, book_shipment, pre_request_shipment, prepare_batch, prepare_shipment, \
+    queue_shipment, read_window_cboxs, request_shipment
 from tests.fixtures.records import RECORDS_DICT
 
 fixtures_dir = ROOT_DIR / 'tests' / 'fixtures'

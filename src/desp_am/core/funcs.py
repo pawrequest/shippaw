@@ -1,5 +1,4 @@
 import ctypes
-import json
 import logging
 import os
 import random
@@ -8,17 +7,17 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from pprint import pprint
 from typing import Callable
 
 import PySimpleGUI as sg
 import requests
-import win32com.client
 from despatchbay.despatchbay_entities import Address, CollectionDate
 
-from core.entities import ApiScope, FieldsList, DateTimeMasks
+from .entities import ApiScope, DateTimeMasks
 
 logger = logging.getLogger(__name__)
+
+
 # def print_label(shipment):
 #     """ prints the labels stored at shipment.label_location """
 #     try:
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 #     else:
 #         shipment.is_printed = True
 #         return True
-def print_label2(file_path:Path):
+def print_label2(file_path: Path):
     """ prints the labels stored at shipment.label_location """
     try:
         os.startfile(str(file_path), "print")
@@ -41,36 +40,7 @@ def print_label2(file_path:Path):
         return True
 
 
-
-def email_label(shipment: 'ShipmentBooked', body: str, collection_date: CollectionDate, collection_address: Address):
-    collection_date = collection_date_to_datetime(collection_date)
-
-    try:
-        ol = win32com.client.Dispatch('Outlook.Application')
-        newmail = ol.CreateItem(0)
-
-        col_address = f'{collection_address.company_name if collection_address.company_name else ""}'
-        col_address += f'{collection_address.street}'
-
-        body = body.replace("__--__ADDRESSREPLACE__--__", f'{col_address}')
-        body = body.replace("__--__DATEREPLACE__--__", f'{collection_date:{DateTimeMasks.DISPLAY.value}}')
-
-        newmail.To = shipment.email
-        newmail.Subject = "Radio Hire Return - Shipping Label Attached"
-        newmail.Body = body
-        attach = str(shipment.label_location)
-
-        newmail.Attachments.Add(attach)
-        newmail.Display()  # preview
-    except Exception as e:
-        logger.warning(f"Failed to email label: {e}")
-        return False
-    # else:
-        # newmail.Send()
-    # return True
-
-
-def retry_with_backoff(fn:Callable, retries=5, backoff_in_seconds=1, *args, **kwargs):
+def retry_with_backoff(fn: Callable, retries=5, backoff_in_seconds=1, *args, **kwargs):
     x = 0
     while True:
         try:

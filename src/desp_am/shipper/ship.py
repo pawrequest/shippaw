@@ -11,23 +11,21 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.documents_client import Document
 from despatchbay.exceptions import ApiException
 
-from core.cmc_updater import PS_FUNCS, edit_commence
-from core.config import Config
-from core.entities import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
-from core.funcs import collection_date_to_datetime, email_label, print_label2
-from gui import keys_and_strings
-from gui.main_gui import main_window
-from shipper.addresser import sender_or_recipient_from_home_address, remote_address_script
-
-from shipper.edit_shipment import ShipmentEditor, get_parcels
-from shipper.shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
+from .addresser import remote_address_script, sender_or_recipient_from_home_address
+from .edit_shipment import get_parcels, ShipmentEditor
+from .shipment import ShipmentAddressed, ShipmentBooked, ShipmentCmcUpdated, ShipmentCompleted, \
     ShipmentGuiConfirmed, ShipmentInput, ShipmentPreRequest, ShipmentPrepared, ShipmentQueued, ShipmentRequested, \
     ShipmentDict
-from shipper.tracker import get_tracking
+from ..core.config import Config
+from ..core.entities import Contact, DateTimeMasks, HomeAddress, ShipmentCategory
+from ..core.funcs import collection_date_to_datetime, print_label2
+from ..gui import keys_and_strings
+from ..gui.main_gui import main_window
 
 dotenv.load_dotenv()
 
 logger = logging.getLogger(__name__)
+
 
 class Shipper:
     def __init__(self, config: Config, shipments: List[ShipmentInput], client: DespatchBaySDK):
@@ -35,11 +33,12 @@ class Shipper:
         self.shipments = shipments
         self.client = client
 
+
 def ship_list_to_dict(shipments: List[ShipmentInput]) -> ShipmentDict:
     return ShipmentDict({shipment.shipment_name: shipment for shipment in shipments})
 
 
-def prepare_batch(client:DespatchBaySDK, config:Config, shipments:List[ShipmentInput]) -> List[ShipmentRequested]:
+def prepare_batch(client: DespatchBaySDK, config: Config, shipments: List[ShipmentInput]) -> List[ShipmentRequested]:
     shipments_addressed: List[ShipmentAddressed] = [
         address_shipment(shipment=shipment, home_address=config.home_address,
                          home_contact=config.home_contact, client=client) for shipment in shipments]
@@ -117,7 +116,8 @@ def request_shipment(shipment: ShipmentPreRequest, client: DespatchBaySDK) -> Sh
     return ShipmentRequested(**shipment.__dict__ | shipment.model_extra)
 
 
-def process_shipments_batch(shipments: Iterable[ShipmentRequested], values: dict, config: Config, client: DespatchBaySDK) -> \
+def process_shipments_batch(shipments: Iterable[ShipmentRequested], values: dict, config: Config,
+                            client: DespatchBaySDK) -> \
         List[ShipmentBooked | ShipmentQueued]:
     if not sg.popup_yes_no("Queue and book shipments?") == 'Yes':
         if sg.popup_ok_cancel("Ok to quit, cancel to continue booking") == 'OK':
@@ -156,7 +156,7 @@ def process_shipment(shipment_req: ShipmentRequested, values: dict, config: Conf
     #                   shipment=shipment)
     if shipment.is_to_print_email:
         print_email_label(email_body=config.return_label_email_body,
-                      shipment=shipment)
+                          shipment=shipment)
     booked = ShipmentCompleted(**shipment.__dict__, **shipment.model_extra)
 
     return booked
@@ -185,7 +185,7 @@ def dispatch_gui(config: Config, shipment_dict: ShipmentDict, client: DespatchBa
             # processed_shipments = process_shipments_batch_dict(shipment_dict=shipment_dict, values=values,
             #                                                    config=config, client=client)
             processed_shipments = process_shipments_batch(shipments=shipment_dict.values(), values=values,
-                                                               config=config, client=client)
+                                                          config=config, client=client)
             return ship_list_to_dict(processed_shipments)
 
         shipment_to_edit = shipment_dict.get(event[0])
@@ -235,9 +235,9 @@ def print_email_label(email_body, shipment: ShipmentBooked):
         shipment.is_printed = print_label2(file_path=shipment.label_location)
     else:
         shipment.is_emailed = email_label(shipment=shipment,
-                    body=email_body,
-                    collection_date=shipment.collection_return.date,
-                    collection_address=shipment.collection_return.sender_address.sender_address)
+                                          body=email_body,
+                                          collection_date=shipment.collection_return.date,
+                                          collection_address=shipment.collection_return.sender_address.sender_address)
 
 
 def queue_shipment(shipment: ShipmentRequested, client: DespatchBaySDK) -> ShipmentQueued:
@@ -356,8 +356,10 @@ def commence_package_sale(shipment: ShipmentQueued):
     """returns dict to update database with collection details"""
     return {'Delivery Notes': f'PF label printed {datetime.today().date().isoformat()} [AD]'}
 
+
 def return_notes(shipment: ShipmentQueued):
     return f'PF coll booked for {shipment.collection_date_datetime:{DateTimeMasks.HIRE.value}} on {datetime.today().date():{DateTimeMasks.HIRE.value}}'
+
 
 def commence_package_hire(shipment: ShipmentQueued):
     """returns dict to update database with collection details"""
@@ -376,40 +378,38 @@ def commence_package_hire(shipment: ShipmentQueued):
 def update_commence(config: Config, shipment: ShipmentQueued):
     """ updates commence if shipment is hire/sale"""
 
-    if config.sandbox:
-        if sg.popup_yes_no("Sandbox mode: Update Commence Anyway?") != 'Yes':
-            return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
-
-    id_to_store = 'Outbound ID' if shipment.is_outbound else 'Inbound ID'
-    cmc_update_package = {id_to_store: shipment.shipment_id}
-
-    if shipment.category == ShipmentCategory.HIRE:
-        cmc_update_package.update(commence_package_hire(shipment))
-
-    elif shipment.category == ShipmentCategory.SALE:
-        cmc_update_package.update(commence_package_sale(shipment))
-
-    elif shipment.category == ShipmentCategory.CUSTOMER:
-        shipment.is_logged_to_commence = False
-        logger.warning(f'Category "Customer" not implemented for commence updater')
-        return shipment
-
-    else:
-        logger.warning(f'Category {shipment.category} not recognised for commence updater')
-        shipment.is_logged_to_commence = False
-        return shipment
-
-    result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
-                           record=shipment.shipment_name,
-                           package=cmc_update_package, function=PS_FUNCS.APPEND)
+    # if config.sandbox:
+    #     if sg.popup_yes_no("Sandbox mode: Update Commence Anyway?") != 'Yes':
+    #         return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra, is_logged_to_commence=False)
+    #
+    # id_to_store = 'Outbound ID' if shipment.is_outbound else 'Inbound ID'
+    # cmc_update_package = {id_to_store: shipment.shipment_id}
+    #
+    # if shipment.category == ShipmentCategory.HIRE:
+    #     cmc_update_package.update(commence_package_hire(shipment))
+    #
+    # elif shipment.category == ShipmentCategory.SALE:
+    #     cmc_update_package.update(commence_package_sale(shipment))
+    #
+    # elif shipment.category == ShipmentCategory.CUSTOMER:
+    #     shipment.is_logged_to_commence = False
+    #     logger.warning(f'Category "Customer" not implemented for commence updater')
+    #     return shipment
+    #
+    # else:
+    #     logger.warning(f'Category {shipment.category} not recognised for commence updater')
+    #     shipment.is_logged_to_commence = False
+    #     return shipment
+    #
     # result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
     #                        record=shipment.shipment_name,
-    #                        package=cmc_update_package, function=PS_FUNCS.APPEND.value)
-    if result.returncode == 0:
-        shipment.is_logged_to_commence = True
-        return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
-    else:
-        shipment.is_logged_to_commence = False
-        return shipment
-
-
+    #                        package=cmc_update_package, function=PS_FUNCS.APPEND)
+    # # result = edit_commence(pscript=str(config.paths.cmc_updater), table=shipment.category.value,
+    # #                        record=shipment.shipment_name,
+    # #                        package=cmc_update_package, function=PS_FUNCS.APPEND.value)
+    # if result.returncode == 0:
+    #     shipment.is_logged_to_commence = True
+    #     return ShipmentCmcUpdated(**shipment.__dict__, **shipment.model_extra)
+    # else:
+    #     shipment.is_logged_to_commence = False
+    return shipment

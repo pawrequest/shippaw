@@ -1,13 +1,7 @@
 from pathlib import Path
 
-from pydantic import BeforeValidator
-from typing_extensions import Annotated
-
-from core.cmc_updater import PS_FUNCS, edit_commence
-from core.config import Config, config_from_dict
-from core.entities import ShipMode, ShipmentCategory
-from shipper.shipment import shipments_from_records, records_from_dbase
-from shipper.shipper import establish_client
+from src.desp_am.core.cmc_updater import PS_FUNCS, edit_commence
+from src.desp_am.core.entities import ShipMode, ShipmentCategory
 
 script = 'C:\paul\AmDesp\scripts\cmc_updater.ps1'
 # in_file = r'E:\Dev\AmDesp\data\amherst_export.dbf'

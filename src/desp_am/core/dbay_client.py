@@ -1,13 +1,13 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import cast
 
 import PySimpleGUI as sg
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import AuthorizationException
 
 logger = logging.getLogger(__name__)
+
 
 class APIClientWrapperOop(DespatchBaySDK):
     def __init__(self, *args, **kwargs):

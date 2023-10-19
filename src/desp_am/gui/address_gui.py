@@ -2,12 +2,8 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address, AddressKey
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-import shipper.shipper
-from core.entities import Contact, FieldsList
-from gui.gui_params import address_fieldname_params, address_input_params
-from shipper.shipment import ShipmentInput, ShipmentRequested
-
-
+from ..core.entities import Contact, FieldsList
+from .gui_params import address_fieldname_params, address_input_params
 
 
 def address_window(contact: Contact, address: Address, address_as_str, delivery_name: str):
@@ -113,7 +109,7 @@ def update_contact_from_gui(values: dict, contact: Contact):
         setattr(contact, field, value)
 
 
-def address_from_gui(shipment: ShipmentInput, address: Address, contact: Contact, client:DespatchBaySDK) -> Address | None:
+def address_from_gui(shipment: 'ShipmentInput', address: Address, contact: Contact, client:DespatchBaySDK) -> Address | None:
     """ Gui loop, takes an address and shipment for contact details,
     allows editing / replacing address and contact """
     window = address_window(delivery_name=shipment.delivery_name, contact=contact, address=address,

@@ -7,8 +7,8 @@ from core.config import CONFIG_TOML, config_from_dict, configure_logging, get_co
 from core.dbay_client import get_dbay_client
 from core.entities import ShipDirection, ShipMode, ShipmentCategory
 from core.funcs import is_connected
-from gui.main_gui import post_book
-from shipper.shipment import shipments_from_file, ShipmentDict
+from src.desp_am.gui.main_gui import post_book
+from shipper.shipment import shipments_from_file
 from shipper.shipper import dispatch_gui, prepare_batch, ship_list_to_dict
 
 """

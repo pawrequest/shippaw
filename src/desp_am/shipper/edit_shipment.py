@@ -5,12 +5,12 @@ import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Parcel
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 
-from core.entities import Contact
-from gui import keys_and_strings
-from gui.address_gui import address_from_gui
-from gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
-from gui.main_gui import get_new_boxes, new_date_selector, new_service_popup
-from shipper.shipment import ShipmentRequested, contact_from_shipment
+from ..core.entities import Contact
+from ..gui import keys_and_strings
+from ..gui.address_gui import address_from_gui
+from ..gui.keys_and_strings import ADDRESS_STRING, DATE_MENU, DATE_STRING, SERVICE_KEY, SERVICE_MENU, SERVICE_STRING
+from ..gui.main_gui import get_new_boxes, new_date_selector, new_service_popup
+from .shipment import ShipmentRequested, contact_from_shipment
 
 logger = logging.getLogger(__name__)
 

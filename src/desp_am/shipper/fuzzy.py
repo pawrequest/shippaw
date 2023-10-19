@@ -7,10 +7,9 @@ from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
 from fuzzywuzzy import fuzz
 
-from core.entities import BestMatch, FuzzyScores, AddressMatch
-from core.funcs import retry_with_backoff
-from gui.keys_and_strings import ADDRESS_STRING
-from shipper.shipment import ShipmentRequested
+from ..core.entities import BestMatch, FuzzyScores, AddressMatch
+from ..core.funcs import retry_with_backoff
+from ..gui.keys_and_strings import ADDRESS_STRING
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def fuzzy_address_script(shipment, client: DespatchBaySDK) -> Address:
     return bestmatch.address
 
 
-def get_explicit_match(shipment: ShipmentRequested, candidate_address: Address) -> bool:
+def get_explicit_match(shipment: 'ShipmentRequested', candidate_address: Address) -> bool:
     """Compares various shipment details to address and returns the address if matched, else None."""
     if candidate_address.company_name and (
             shipment.customer in candidate_address.company_name or

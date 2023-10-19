@@ -51,6 +51,7 @@ class ShipMode(Enum):
     SHIP = auto()
     TRACK = auto()
 
+
 class ShipDirection(Enum):
     IN = 'IN'
     OUT = 'OUT'
@@ -91,7 +92,7 @@ class PathsList:
         self.log_json: Path = Path()
         self.cmc_logger: Path = Path()
         self.cmc_installer: Path = Path()
-        self.cmc_updater:Path = Path()
+        self.cmc_updater: Path = Path()
         self.cmc_dll: Path = Path()
         self.outbound_labels: Path = Path()
         self.inbound_labels: Path = Path()
@@ -116,8 +117,6 @@ class Contact:
     email: str
     telephone: str
     name: str
-
-
 
 
 @dataclass

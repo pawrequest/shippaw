@@ -3,8 +3,6 @@ import logging
 import PySimpleGUI as sg
 from despatchbay.exceptions import ApiException
 
-import shipper.shipper
-from shipper.shipment import ShipmentRequested
 
 logger = logging.getLogger(__name__)
 
