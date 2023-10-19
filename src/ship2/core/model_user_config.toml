@@ -1,0 +1,111 @@
+sandbox = false
+return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
+                            Your prepaid label is attached for returning the radios.\n\
+                            Please print the label off and stick securely to the box.\n\
+                            Also make sure any old Parcelforce labels are removed - or the box could get delivered back to you!\n\n\
+                            Collection has been booked from:\n\
+                            __--__ADDRESSREPLACE__--__\n\
+                            on: __--__DATEREPLACE__--__\n\n\
+                            We are unable to provide accurate collection times - please contact us urgently if there will not be somebody at the collection address on the specified date.\n\
+                            If the collection is missed for any reason, you can also just take the box, with the label securely attached, and drop it at any Post Office, the carriage fee is already paid.\n\
+                            Thanks\n\
+                            Regards,\nGiles Toman\
+                          """
+parcel_contents = 'Radios'
+returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
+                            Your prepaid label is attached for returning the radios.\n\
+                            Please print the label off, stick securely to the box, and drop it at any Post Office, the carriage fee is already paid.\n\
+                            Please make very sure that any old Parcelforce labels are removed or overstuck - otherwise the box could be delivered back to you!\n\
+                            Thanks\n\
+                            Regards,\nGiles Toman\
+                          """
+
+
+[import_mappings.hire]
+shipment_name = 'NAME'
+address_as_str = 'DELIVERY_A'
+contact_name = 'DELIVERY_C'
+email = 'DELIVERY_E'
+delivery_name = 'DELIVERY_N'
+postcode = 'DELIVERY_P'
+telephone = 'DELIVERY_T'
+customer = 'FIELD10'
+boxes = 'BOXES'
+send_out_date = 'SEND_OUT_D'
+send_method = 'SEND_METHO'
+outbound_id = 'OUTBOUND_I'
+inbound_id = 'INBOUND_ID'
+
+[import_mappings.sale]
+shipment_name = 'NAME'
+address_as_str = 'DELIVERY_A'
+contact_name = 'DELIVERY_C'
+email = 'DELIVERY_E'
+delivery_name = 'DELIVERY_N'
+postcode = 'DELIVERY_P'
+telephone = 'DELIVERY_T'
+customer = 'FIELD9'
+outbound_id = 'OUTBOUND_I'
+inbound_id = 'INBOUND_ID'
+
+[import_mappings.customer]
+address_as_str = 'DELIV_ADDR'
+contact_name = 'DELIV_CONT'
+email = 'DELIV_EMAI'
+delivery_name = 'DELIV_NAME'
+postcode = 'DELIV_POST'
+telephone = 'DELIV_TELE'
+customer = 'NAME'
+
+
+
+[home_contact]
+name = 'Giles Toman'
+email = 'radios@amherst.co.uk'
+telephone = "0207 3289792"
+
+[home_address]
+address_id = 5536 # remove from .env
+dbay_key = 'NW64TE1003'
+company_name = 'Amherst Radio Center'
+street = '70 Kingsgate Road'
+locality = 'Kilburn'
+town_city = 'London'
+county = "London"
+postal_code = "NW6 4TE"
+country_code = "GB"
+dropoff_sender_id = 328187
+
+
+[dbay]
+[dbay.sandbox.envars]
+api_user_envar = "DESPATCH_API_USER_SANDBOX"
+api_key_envar = "DESPATCH_API_KEY_SANDBOX"
+
+[dbay.sandbox.default_carrier]
+courier = 99
+service = 9992
+
+[dbay.production.envars]
+api_user_envar = "DESPATCH_API_USER"
+api_key_envar = "DESPATCH_API_KEY"
+
+[dbay.production.default_carrier]
+courier = 8  # parcelforce
+service = 101  # parcelforce 24
+
+
+
+[paths]
+data = 'data/'
+scripts = 'scripts/'
+outbound_labels = 'data/Parcelforce Labels/'
+inbound_labels = 'R:/Parcelforce Labels/'
+logfile = 'data/AmDesplog.txt'
+log_json = 'data/AmLog.json'
+cmc_checkin = 'scripts/cmc_checkin.ps1'
+cmc_logger = 'scripts/log_tracking_to_Commence.ps1'
+cmc_updater = 'scripts/cmc_updater_funcs.ps1'
+cmc_dll = 'c:/Program Files/Vovin/Vovin.CmcLibNet/Vovin.CmcLibNet.dll'
+cmc_installer = 'scripts/CmcLibNet_Setup.exe'
+user_data = 'data/user_data.pk'
