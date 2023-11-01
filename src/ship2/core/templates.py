@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from office_tools.email_handler import Email, EmailHandler, GmailSender
 
-return_email = Email()
-return_email.send(GmailSender())
+
+parcel_contents = 'Radios'
 return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\
@@ -14,7 +16,16 @@ return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Thanks\n\
                             Regards,\nGiles Toman\
                           """
-parcel_contents = 'Radios'
+
+def returns_email(to_address:str, label_path:Path, body = return_label_email_body):
+    return Email(
+        to_address=to_address,
+        subject='Amherst Radios Returns Label',
+        body=body,
+        attachment_path=label_path,
+    )
+
+
 returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off, stick securely to the box, and drop it at any Post Office, the carriage fee is already paid.\n\
@@ -22,3 +33,11 @@ returns_collection_dropoff ="""Thanks for Hiring from Amherst.\n\
                             Thanks\n\
                             Regards,\nGiles Toman\
                           """
+
+def returns_dropoff_email(to_address:str, label_path:Path, body = returns_collection_dropoff):
+    return Email(
+        to_address=to_address,
+        subject='Amherst Radios Returns Label',
+        body=body,
+        attachment_path=label_path,
+    )
