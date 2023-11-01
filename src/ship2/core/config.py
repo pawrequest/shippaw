@@ -22,6 +22,10 @@ load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
 logger = logging.getLogger(name=__name__)
 
+api_user_envar_sand = "DESPATCH_API_USER_SANDBOX"
+api_key_envar_sand = "DESPATCH_API_KEY_SANDBOX"
+api_user_envar = "DESPATCH_API_USER"
+api_key_envar = "DESPATCH_API_KEY"
 
 class Config(BaseModel):
     # import_mappings: dict[str, dict]

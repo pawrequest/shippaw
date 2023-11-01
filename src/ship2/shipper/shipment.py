@@ -6,14 +6,13 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import PySimpleGUI as sg
+from commence_py.commence import CmcContext
 from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from office_am.cmc.commence import CmcContext
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ..core.entities import BestMatch, Contact, DateTimeMasks
-from ..core.entities import ImportMap, AddressMatch
+from ..core.entities import AddressMatch, BestMatch, Contact, DateTimeMasks, ImportMap
 from ..core.funcs import collection_date_to_datetime
 
 logger = logging.getLogger(__name__)
@@ -36,6 +35,7 @@ class AddresssBasic(BaseModel):
     contact: Contact
     postcode: str
     dbay_key: Optional[str] = None
+    address_str: str
 
 
 FIELD_VARIATIONS = {
@@ -68,16 +68,16 @@ class ShipmentInput(BaseModel):
         with CmcContext() as cmc:
             transaction = cmc.get_record_with_customer(table, transaction)
 
-            ins = {}
-            for key, value in field_map.items():
-                if val := transaction.get(value):
-                    ins[key] = val
+            in_data = {}
+            for pyname, cmcname in shipment_fieldmap.items():
+                if val := transaction.get(cmcname):
+                    in_data[pyname] = val
                 else:
                     try:
-                        new_key = FIELD_VARIATIONS[value]
-                        ins[key] = transaction[new_key]
+                        new_key = FIELD_VARIATIONS[cmcname]
+                        in_data[pyname] = transaction[new_key]
                     except KeyError:
-                        raise ValueError(f'No value for {value} or {new_key} in {transaction}')
+                        raise ValueError(f'No value for {cmcname} or {new_key} in {transaction}')
 
             return cls(
                 model_config=ConfigDict(extra='allow'),
@@ -85,7 +85,7 @@ class ShipmentInput(BaseModel):
                 is_outbound=outbound,
                 category=table,
                 remote_address_matched=AddressMatch.NOT,
-                **ins
+                **in_data
             )
 
     @model_validator(mode='after')
@@ -116,7 +116,7 @@ class ShipmentInput(BaseModel):
         return self.shipment_name == other.shipment_name
 
 
-cust_field_map = dict(
+customer_fieldmap = dict(
     address_as_str='Deliv Address',
     contact_name='Deliv Contact',
     email='Deliv Email',
@@ -125,7 +125,7 @@ cust_field_map = dict(
     telephone='Deliv Telephone',
 )
 
-field_map = dict(
+shipment_fieldmap = dict(
     shipment_name='Name',
     address_as_str='Delivery Address',
     contact_name='Delivery Contact',
