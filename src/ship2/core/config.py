@@ -10,8 +10,7 @@ from pydantic import BaseModel
 
 from .dbay_client import DbayCreds
 from .entities import Contact, DefaultCarrier, HomeAddress, \
-    PathsList, ImportMap, mapper_dict
-from .funcs import scope_from_sandbox_func
+    PathsList
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -72,7 +71,6 @@ def configure_logging(log_file):
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
     root_logger.addHandler(stream_handler)
-
 
 
 def get_config_dict(toml_file) -> dict:
