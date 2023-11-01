@@ -5,4 +5,5 @@ PySimpleGUI>=4.0.0
 python-dotenv>=1.0.0
 pywin32>=306
 Requests>=2.31.0
-commence_py
+commence-py
+office-tools
