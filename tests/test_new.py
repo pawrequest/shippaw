@@ -17,3 +17,4 @@ from src.desp_am.shipper.ship import dispatch_gui
 
 
 def test_ship2():
+    ...

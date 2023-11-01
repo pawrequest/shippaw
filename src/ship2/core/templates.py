@@ -1,3 +1,7 @@
+from office_tools.email_handler import Email, EmailHandler, GmailSender
+
+return_email = Email()
+return_email.send(GmailSender())
 return_label_email_body = """Thanks for Hiring from Amherst.\n\n\
                             Your prepaid label is attached for returning the radios.\n\
                             Please print the label off and stick securely to the box.\n\
