@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from .dbay_client import DbayCreds
 from .entities import Contact, DefaultCarrier, HomeAddress, \
-    PathsList, ShipmentCategory, ImportMap, mapper_dict
+    PathsList, ImportMap, mapper_dict
 from .funcs import scope_from_sandbox_func
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent

@@ -9,7 +9,6 @@ import PySimpleGUI as sg
 from dbfread import DBF, DBFNotFound
 from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Recipient, Sender, Service, \
     ShipmentRequest, ShipmentReturn
-from office_am.cmc.commence import CmcContext
 from pydantic import BaseModel, BeforeValidator, ConfigDict, model_validator
 from typing_extensions import Annotated
 
@@ -62,8 +61,6 @@ class AddresssBasic(BaseModel):
 #     shipment_name: Optional[MyStr] = None
 
 
-
-
 class ShipmentInput(BaseModel):
     """ input validated"""
     model_config = ConfigDict(extra='allow')
@@ -112,57 +109,6 @@ class ShipmentInput(BaseModel):
         return self.shipment_name == other.shipment_name
 
 
-
-cust_field_map = dict(
-     address_as_str = 'Deliv Address',
-     contact_name = 'Deliv Contact',
-     email = 'Deliv Email',
-     delivery_name = 'Deliv Name',
-     postcode = 'Deliv Postcode',
-     telephone = 'Deliv Telephone',
-)
-
-
-
-field_map = dict(
-    shipment_name='Name',
-    address_as_str='Delivery Address',
-    contact_name='Delivery Contact',
-    email='Delivery Email',
-    delivery_name='Delivery Name',
-    postcode='Delivery Postcode',
-    telephone='Delivery Telephone',
-    customer='To Customer',
-    boxes='Boxes',
-    send_out_date='Send Out Date',
-    send_method='Send Method',
-    outbound_id='Outbound ID',
-    inbound_id='Inbound ID',
-)
-
-
-def shipment_from_cmc(table, record_name, outbound) -> ShipmentInput:
-
-    ins = {}
-
-    with CmcContext() as cmc:
-        transaction = cmc.get_record_with_customer(table, record_name)
-
-        for key, value in field_map.items():
-            ins[key] = transaction.get(value)
-
-        return ShipmentInput(
-            model_config=ConfigDict(extra='allow'),
-            is_dropoff=False,
-            is_outbound=outbound,
-            category=table,
-            remote_address_matched = AddressMatch.NOT,
-            **ins
-        )
-
-
-
-
 class ShipmentAddressed(ShipmentInput):
     """address prep done"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -171,13 +117,6 @@ class ShipmentAddressed(ShipmentInput):
     sender: Sender
     recipient: Recipient
 
-class ShipmentAddressedNew(ShipmentInput):
-    """address prep done"""
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    remote_contact: Contact
-    remote_address: Address
-    sender: Sender
-    recipient: Recipient
 
 class ShipmentPrepared(ShipmentAddressed):
     # todo bestmatch and cand keys should be in addressed?
@@ -187,6 +126,7 @@ class ShipmentPrepared(ShipmentAddressed):
     service_menu_map: Dict
     bestmatch: Optional[BestMatch] = None
     candidate_keys: Optional[Dict] = None
+
 
 class ShipmentPreRequest(ShipmentPrepared):
     collection_date: CollectionDate
@@ -199,12 +139,15 @@ class ShipmentPreRequest(ShipmentPrepared):
     def collection_date_datetime(self):
         return collection_date_to_datetime(self.collection_date)
 
+
 class ShipmentRequested(ShipmentPreRequest):
     shipment_request: ShipmentRequest
+
 
 class ShipmentGuiConfirmed(ShipmentRequested):
     is_to_book: bool
     is_to_print_email: bool
+
 
 class ShipmentQueued(ShipmentGuiConfirmed):
     """ queued. ready to book"""
@@ -212,18 +155,22 @@ class ShipmentQueued(ShipmentGuiConfirmed):
     is_queued: bool
     timestamp: str
 
+
 class ShipmentCmcUpdated(ShipmentQueued):
     is_logged_to_commence: bool = False
+
 
 class ShipmentBooked(ShipmentQueued):
     """ booked"""
     is_booked: bool = False
     shipment_return: ShipmentReturn
 
+
 class ShipmentCompleted(ShipmentBooked):
     label_location: Path
     is_printed: bool = False
     is_emailed: bool = False
+
 
 def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[Dict]:
     while not Path(dbase_file).exists():
@@ -238,13 +185,16 @@ def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[D
     except Exception as e:
         logger.exception(e)
 
+
 class ShipmentDict(dict[str, ShipmentRequested]):
     pass
+
 
 def shipments_from_records(category: ShipmentCategory, import_map: ImportMap, outbound: bool, records: [dict]) \
         -> List[ShipmentInput]:
     return [shipment_from_record(category=category, import_map=import_map, outbound=outbound,
                                  record=record) for record in records]
+
 
 def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outbound: bool, record: dict) \
         -> ShipmentInput | None:
@@ -258,11 +208,13 @@ def shipment_from_record(category: ShipmentCategory, import_map: ImportMap, outb
         logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
         return None
 
+
 def shipments_from_file(category, file, import_map, outbound):
     records = records_from_dbase(dbase_file=file)
     shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
                                        records=records)
     return shipments
+
 
 def contact_from_shipment(shipment: ShipmentInput):
     return Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
