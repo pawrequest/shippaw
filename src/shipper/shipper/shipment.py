@@ -12,31 +12,11 @@ from despatchbay.despatchbay_entities import Address, CollectionDate, Parcel, Re
     ShipmentRequest, ShipmentReturn
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from .addresser import parse_address_string
 from ..core.entities import AddressMatch, BestMatch, Contact, DateTimeMasks, ImportMap
 from ..core.funcs import collection_date_to_datetime
 
 logger = logging.getLogger(__name__)
-
-
-def parse_address_string(str_address: str):
-    str_address = str_address.lower()
-    words = str_address.split(" ")
-    if 'unit' in ' '.join(words[:2]):
-        first_block = ' '.join(words[:2])
-    else:
-        first_block = words[0].split(",")[0]
-    first_char = first_block[0]
-    firstline = str_address.split("\n")[0].strip()
-
-    return first_block if first_char.isnumeric() else firstline
-
-
-class AddresssBasic(BaseModel):
-    contact: Contact
-    postcode: str
-    dbay_key: Optional[str] = None
-    address_str: str
-
 
 FIELD_VARIATIONS = {
     'Delivery Telephone': 'Delivery Tel',
@@ -214,20 +194,6 @@ class ShipmentCompleted(ShipmentBooked):
     is_emailed: bool = False
 
 
-def records_from_dbase(dbase_file: os.PathLike, encoding='iso-8859-1') -> List[Dict]:
-    while not Path(dbase_file).exists():
-        dbase_file = sg.popup_get_file('Select a .dbf file to import', file_types=(('DBF Files', '*.dbf'),))
-
-    try:
-        return [record for record in DBF(dbase_file, encoding=encoding)]
-    except UnicodeDecodeError as e:
-        logger.exception(f'Char decoding import error with {dbase_file} \n {e}')
-    except DBFNotFound as e:
-        logger.exception(f'.Dbf or Dbt are missing \n{e}')
-    except Exception as e:
-        logger.exception(e)
-
-
 class ShipmentDict(dict[str, ShipmentRequested]):
     pass
 
@@ -249,13 +215,6 @@ def shipment_from_record(category, import_map: ImportMap, outbound: bool, record
     except Exception as e:
         logger.exception(f'SHIPMENT CREATION FAILED: {record.__repr__()} - {e}')
         return None
-
-
-def shipments_from_file(category, file, import_map, outbound):
-    records = records_from_dbase(dbase_file=file)
-    shipments = shipments_from_records(category=category, import_map=import_map, outbound=outbound,
-                                       records=records)
-    return shipments
 
 
 def contact_from_shipment(shipment: ShipmentInput):

@@ -9,7 +9,7 @@ from despatchbay.exceptions import AuthorizationException
 logger = logging.getLogger(__name__)
 
 
-class APIClientWrapperOop(DespatchBaySDK):
+class DbayClientWrapper(DespatchBaySDK):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_calls = 0
@@ -17,10 +17,9 @@ class APIClientWrapperOop(DespatchBaySDK):
     def _log_api_call(self, method_name, *args, **kwargs):
         """ Log API call with its name and parameters """
         self.api_calls += 1
-        logger.debug(f"API call number {self.api_calls}: {method_name}")
+        logger.debug(f"API call number {self.api_calls}: {method_name}: {args=}, {kwargs=}")
 
     def __getattr__(self, name):
-        # Override the method to intercept API calls
         if hasattr(super(), name) and callable(getattr(super(), name)):
             method = getattr(super(), name)
 
@@ -44,12 +43,16 @@ class DbayCreds:
         return cls(api_user=os.environ.get(api_user_envar),
                    api_key=os.environ.get(api_key_envar))
 
+    @classmethod
+    def from_user(cls):
+        return cls(api_user=sg.popup_get_text(f'Enter DespatchBay API "User"'),
+                   api_key=sg.popup_get_text(f'Enter DespatchBay API "Key"'))
+
 
 def get_dbay_client(creds: DbayCreds):
     while True:
         try:
-            client = APIClientWrapperOop(api_user=creds.api_user, api_key=creds.api_key)
-            # client = DespatchBaySDK(api_user=creds.api_user, api_key=creds.api_key)
+            client = DbayClientWrapper(api_user=creds.api_user, api_key=creds.api_key)
             dbay_account = client.get_account()
             logger.info(f'Despatchbay account retrieved: {dbay_account}')
         except AuthorizationException as e:

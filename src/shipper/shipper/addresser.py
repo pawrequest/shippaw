@@ -1,17 +1,20 @@
 import logging
 import sys
-from typing import Iterable
+from typing import Iterable, Optional
 
 import PySimpleGUI as sg
 from despatchbay.despatchbay_entities import Address, Recipient, Sender
 from despatchbay.despatchbay_sdk import DespatchBaySDK
 from despatchbay.exceptions import ApiException
+from pydantic import BaseModel
 
 from ..core.entities import Contact, HomeAddress, AddressMatch
 from ..gui.address_gui import address_from_gui
 from .fuzzy import fuzzy_address_script
 
 logger = logging.getLogger(__name__)
+
+
 
 
 def remote_address_script(shipment: 'ShipmentInput', remote_contact: Contact, client: DespatchBaySDK) -> (Address | bool):
@@ -38,8 +41,9 @@ def remote_address_script(shipment: 'ShipmentInput', remote_contact: Contact, cl
 
 def address_from_direct_search(postcode: str, search_terms: Iterable, client: DespatchBaySDK) -> Address | None:
     """ return address from postcode and search terms, or None if no address found."""
-    check_set = set(search_terms)
-    for term in check_set:
+    search_terms = set(search_terms)
+    logger.info(f"Searching for {postcode=} | {search_terms=}")
+    for term in search_terms:
         try:
             address = client.find_address(postcode, term)
             logger.info(
@@ -50,7 +54,7 @@ def address_from_direct_search(postcode: str, search_terms: Iterable, client: De
                 logger.info(f"Address Match Fail : {postcode=} | {term=}")
             continue
     else:
-        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {check_set=}")
+        logger.info(f"ALL ADDRESS SEARCHES FAIL - {postcode=} | {search_terms=}")
         sg.popup_ok("Address Not Matched - please check it and consider updating Commence")
         return None
 
@@ -64,3 +68,22 @@ def sender_or_recipient_from_home_address(home_contact: Contact, home_address: H
         address = client.get_address_by_key(home_address.dbay_key)
         return client.recipient(recipient_address=address, **home_contact.__dict__)
 
+
+class AddresssBasic(BaseModel):
+    contact: Contact
+    postcode: str
+    dbay_key: Optional[str] = None
+    address_str: str
+
+
+def parse_address_string(str_address: str):
+    str_address = str_address.lower()
+    words = str_address.split(" ")
+    if 'unit' in ' '.join(words[:2]):
+        first_block = ' '.join(words[:2])
+    else:
+        first_block = words[0].split(",")[0]
+    first_char = first_block[0]
+    firstline = str_address.split("\n")[0].strip()
+
+    return first_block if first_char.isnumeric() else firstline

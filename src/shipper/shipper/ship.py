@@ -60,7 +60,7 @@ def address_shipment(shipment: ShipmentInput, home_address: HomeAddress, home_co
                      client: DespatchBaySDK) -> ShipmentAddressed:
     """ gets Contact, Address, Sender and Recipient objects"""
     remote_contact = Contact(name=shipment.contact_name, email=shipment.email, telephone=shipment.telephone)
-    remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact, client=client)
+    remote_address = remote_address_script(shipment=shipment, remote_contact=remote_contact, client=client, postcode = shipment.postcode)
     if shipment.is_outbound:
         sender = sender_or_recipient_from_home_address(home_contact=home_contact, home_address=home_address,
                                                        outbound=shipment.is_outbound, client=client)

@@ -15,52 +15,13 @@ from .entities import Contact, DefaultCarrier, HomeAddress, \
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 LOG_FILE = DATA_DIR / 'AmDesp.log'
-MODEL_CONFIG_TOML = ROOT_DIR / 'src' / 'desp_am' / 'core' / 'model_user_config.toml'
-CONFIG_TOML = DATA_DIR / 'user_config.toml'
+CONFIG_TOML = DATA_DIR / 'config.toml'
 
 load_dotenv(DATA_DIR / ".env")  # take environment variables from .env.
 
 logger = logging.getLogger(name=__name__)
 
-api_user_envar_sand = "DESPATCH_API_USER_SANDBOX"
-api_key_envar_sand = "DESPATCH_API_KEY_SANDBOX"
-api_user_envar = "DESPATCH_API_USER"
-api_key_envar = "DESPATCH_API_KEY"
 
-class Config(BaseModel):
-    # import_mappings: dict[str, dict]
-    home_address: HomeAddress
-    home_contact: Contact
-    dbay_creds: DbayCreds
-    default_carrier: DefaultCarrier
-    paths: PathsList
-    sandbox: bool
-
-    def creds_from_user(self) -> DbayCreds:
-        scope = self.scope_from_sandbox()
-        api_user = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API User')
-        api_key = sg.popup_get_text(f'Enter DespatchBay {scope.title()} API Key')
-        creds = DbayCreds(api_user=api_user, api_key=api_key)
-        return creds
-
-    def install_cmc_lib_net(self):
-        """ install Vovin CmcLibNet from exe at location specified in user_config.toml"""
-        subprocess.run([self.paths.cmc_installer, '/SILENT'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       check=True)
-
-    def setup_commence(self):
-        """
-        looks for CmcLibNet.dll at location specified in user_config.toml,
-        if not found, install it
-        """
-        try:
-            self.paths.cmc_dll.exists()
-        except Exception as e:
-            logger.exception('Vovin CmcLibNet dll not found')
-            try:
-                self.install_cmc_lib_net()
-            except Exception as e:
-                logger.exception('Vovin CmcLibNet installler not found - logging to commence is impossible')
 
 
 def configure_logging(log_file):
@@ -75,6 +36,16 @@ def configure_logging(log_file):
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
     root_logger.addHandler(stream_handler)
+
+
+class Config(BaseModel):
+    # import_mappings: dict[str, dict]
+    home_address: HomeAddress
+    home_contact: Contact
+    dbay_creds: DbayCreds
+    default_carrier: DefaultCarrier
+    paths: PathsList
+    sandbox: bool
 
 
 def get_config_dict(toml_file) -> dict:

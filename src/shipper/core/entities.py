@@ -55,41 +55,6 @@ class DateTimeMasks(Enum):
     COMMENCE = '%Y%m%d'
 
 
-class ApiScope(Enum):
-    SAND = 'sandbox'
-    PRODUCTION = 'production'
-
-
-class FieldsList(Enum):
-    contact = ['telephone', 'name', 'email']
-    address = ['company_name', 'street', 'locality', 'town_city', 'county', 'postal_code']
-    export = ['category', 'customer', 'boxes', 'recipient', 'sender', 'inbound_id',
-              'outbound_id', 'shipment_name', 'timestamp']
-    shipment = ['boxes', 'category', 'address_as_str', 'cost', 'email', 'postcode', 'telephone', 'search_term',
-                'date', 'inbound_id', 'outbound_id', 'shipment_name']
-
-
-@dataclass
-class PathsList:
-    def __init__(self):
-        self.log_json: Path = Path()
-        self.cmc_logger: Path = Path()
-        self.cmc_installer: Path = Path()
-        self.cmc_updater: Path = Path()
-        self.cmc_dll: Path = Path()
-        self.outbound_labels: Path = Path()
-        self.inbound_labels: Path = Path()
-        self.user_data = Path()
-        self.dbase_export = Path()
-        self.logfile = Path()
-
-    @classmethod
-    def from_dict(cls, paths_dict: dict, root_dir):
-        pl = cls()
-        for name, path in paths_dict.items():
-            setattr(pl, name, root_dir / path)
-        pl.outbound_labels.mkdir(parents=True, exist_ok=True)
-        return pl
 
 
 BestMatch = namedtuple('BestMatch', ['str_matched', 'address', 'category', 'score'])
