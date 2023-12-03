@@ -1,0 +1,30 @@
+[project]
+name = "amdesp"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "prosodyspeaks", email = "prosodyspeaks@gmail.com" }
+]
+dependencies = [
+    'despatchbay',
+    'fuzzywuzzy',
+    'pydantic',
+    'PySimpleGUI',
+    'python-dotenv',
+    'pywin32',
+    'Requests',
+]
+
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = ['pytest', 'typing_extensions']
+
+[tool.hatch.metadata]
+allow-direct-references = true
